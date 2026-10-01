@@ -121,9 +121,9 @@ test('row Add to queue remains a one-track action even when the Songs view is fi
   assert.deepEqual(calls, [['appendQueue', 'd'], ['flashAction', 'button-ref']]);
 });
 
-test('1.1.6 UI keeps filtering code but no longer reports 1.1.5', () => {
+test('1.1.7 UI keeps filtering code but no longer reports 1.1.5 or 1.1.6', () => {
   assert.match(html, /function baseFilteredTracks\(\)/);
   assert.match(html, /function sortedSongTracks\(\)\{return sortTrackList\(baseFilteredTracks\(\)\)\}/);
-  assert.match(html, /<span class="version">1\.1\.6<\/span>/);
-  assert.doesNotMatch(html, /<span class="version">1\.1\.5<\/span>/);
+  assert.match(html, /<span class="version">1\.1\.7<\/span>/);
+  assert.doesNotMatch(html, /<span class="version">1\.1\.5<\/span>/);\n  assert.doesNotMatch(html, /<span class="version">1\.1\.6<\/span>/);
 });

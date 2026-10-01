@@ -2,61 +2,79 @@
 
 `[VXG RealForever]`
 
-VexStream Music is a local-first music library and playback surface. This repository begins the durable public source/provenance history that was previously scattered across private continuity snapshots and versioned local artifacts.
+VexStream Music is a local-first music library and playback surface. This public repository is the durable source/provenance home for the product lineage that was previously preserved through private Vextreme-SDK continuity snapshots and versioned local artifacts.
 
-## Current recovery baseline
+## Current candidate: 1.1.7
 
-The current executable baseline is **VexStream Music 1.1.5** supplied as a Windows PE artifact.
+The current candidate repairs the filtered-Songs playback regression **and** the executable startup/version guard that caused the prior 1.1.6 candidate to reopen an already-running 1.1.5 session.
+
+### User behavior
+
+A Songs search or genre filter is a **display lens**, not the playback universe.
+
+- row/double-click Play uses the full sorted library;
+- idle player Play in Songs uses the full sorted library;
+- **Play all** uses the full sorted library;
+- **Shuffle all** uses the full sorted library;
+- with shuffle active, the chosen song remains current and every other library song becomes shuffled future playback;
+- row-level **Add to queue** remains an intentional one-track action;
+- bulk selection/queue still acts only on tracks the user explicitly selected.
+
+### Startup/version invariant
+
+The Windows executable has multiple representations of its version: served UI, server/helper string data, and a compiled machine-code comparison used when probing an already-running VexStream session at `/health`.
+
+All of them must agree with the shipped release version. 1.1.6 failed this invariant: its UI/data markers said 1.1.6, while the compiled startup comparison still recognized 1.1.5 as “this same version.” That allowed 1.1.6 to open the old 1.1.5 server and exit.
+
+1.1.7 patches and tests that compiled guard explicitly.
+
+## Exact recovery baseline
 
 ```text
 VexStreamMusic-1.1.5.exe
 sha256=e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f
 bytes=6903808
+Go=1.23.2
+GOOS=windows
+GOARCH=amd64
 ```
 
-The 1.1.5 executable contains its browser UI as an embedded UTF-8 HTML/JavaScript document. That exact UI has been recovered into `src/ui/index.html` and is used as the provenance anchor for the first repository-backed refinement.
+The 1.1.5 executable contains its browser UI as one embedded UTF-8 HTML/JavaScript document. That exact document was recovered and is the source anchor for the current UI refinement.
 
-The original Go backend source for 1.1.5 has **not** been recovered into this repository. Do not mistake the recovered UI or the patcher for a full source reconstruction.
+The original stripped Go backend source for 1.1.5 has **not** been reconstructed or claimed. The release patcher therefore fails closed on the exact 1.1.5 executable digest and on exact recovered code/data windows.
 
-## 1.1.6 regression repair
-
-1.1.5 let the Songs search/genre filter accidentally become the playback universe. Starting playback from a filtered Songs result therefore replaced the queue with only the visible filtered subset. Clearing the filter later did not restore the full library queue.
-
-1.1.6 separates those concerns:
+## Repository layout
 
 ```text
-Songs search / genre filter = display lens
-Songs playback context       = full sorted library
+src/ui/index.html
+  recovered and repaired current browser UI
+
+tests/ui-queue-regression.test.mjs
+  executable JS behavior tests for filtered playback / queue semantics
+
+tests/artifact-regression.py
+  exact compiled-artifact identity, version-consistency, and byte-diff tests
+
+tools/patch_v1_1_5_to_v1_1_7.py
+  deterministic, digest-bound formation from the exact supplied 1.1.5 executable
+
+docs/1.1.7-FILTERED-PLAYBACK-AND-LAUNCH-GUARD.md
+  causal diagnosis, regression boundary, and evidence limitations
 ```
 
-When shuffle is enabled, the chosen track remains current and every other library track is in the shuffled future queue. **Play all**, **Shuffle all**, and idle player Play no longer inherit the Songs filter. Row-level **Add to queue** remains an intentional one-track action.
-
-See `docs/1.1.6-FILTERED-PLAYBACK-REGRESSION.md` and `tests/ui-queue-regression.test.mjs`.
-
-## Reproducing the Windows 1.1.6 patch
-
-The patcher is deliberately fail-closed. It only accepts the exact qualified 1.1.5 executable SHA-256 above, patches the exact embedded UI function, preserves the embedded Go-string byte length, and advances the three equal-width version markers to `1.1.6`.
-
-```bash
-python tools/patch_v1_1_5_to_v1_1_6.py \
-  VexStreamMusic-1.1.5.exe \
-  VexStreamMusic-1.1.6.exe
-```
-
-Current qualified output from that exact input:
+## Current qualification
 
 ```text
-VexStreamMusic-1.1.6.exe
-sha256=431148f2ef5fd3d2c76828d171955babc0a439ff7e65530a05af5a2ed375c156
-bytes=6903808
+UI behavior tests          7 PASS / 0 FAIL
+artifact regression tests 15 PASS / 0 FAIL
+inline JS syntax parse     PASS
+patch reproducibility      PASS
+wrong-baseline rejection   PASS
+Windows runtime smoke      NOT_RUN_NO_WINDOWS_EXECUTION_SURFACE
 ```
 
-This is a deterministic binary refinement of the supplied 1.1.5 build, **not** a from-source Go rebuild. Windows behavioral validation remains distinct from the structural/source regression tests in this repository.
+The absence of a Windows execution surface is kept explicit. Structural/artifact proof does not masquerade as target-Windows runtime proof.
 
-## Local checks
+## Historical continuity
 
-```bash
-node --test tests/ui-queue-regression.test.mjs
-```
-
-The test suite verifies the recovered 1.1.6 UI behavior directly.
+The earlier private continuity checkpoint remains in `vgong24/Vextreme-SDK` draft PR #1630. It is provenance/history, not the active public VexStream source writer.

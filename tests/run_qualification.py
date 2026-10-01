@@ -52,7 +52,7 @@ def main() -> int:
 
     report = {
         "schemaVersion": "vexstream.release-qualification/v1",
-        "appVersion": "2.1.0",
+        "appVersion": "2.2.0",
         "sourceRoot": str(root),
         "artifact": str(args.artifact.resolve()) if args.artifact else None,
         "steps": steps,

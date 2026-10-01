@@ -19,7 +19,7 @@ from typing import Any
 
 from playwright.sync_api import Page, sync_playwright
 
-VERSION = "2.1.0"
+VERSION = "2.2.0"
 
 TRACKS: list[dict[str, Any]] = [
     {
@@ -124,11 +124,11 @@ window.fetch=async function(path,opts={{}}){{
   else if(p==='/api/discovery/radio'){{
     const body=opts.body?JSON.parse(opts.body):{{}};
     const branch=!!body.seed;
-    d={{schemaVersion:'vexstream.discovery-candidates/v1',seed:branch?{{kind:'provider',providerId:body.seed.providerId,title:body.seed.title,channel:body.seed.channel,url:body.seed.url,duration:body.seed.duration}}:{{kind:'library',trackId:body.trackId,title:'Track 1',artist:'Artist 1',album:'Album',genre:'Test'}},basis:{{provider:'youtube',method:'SEARCH_DERIVED',queries:branch?['Branch Artist music']:['Artist 1 Test','Artist 1 Album']}},candidates:branch?[
-      {{providerId:'BRANCH12345',title:'Branch Result',channel:'Branch Artist',url:'https://www.youtube.com/watch?v=BRANCH12345',thumbnail:'',duration:202,libraryMatch:{{state:'NOT_IN_LIBRARY'}}}}
+    d={{schemaVersion:'vexstream.discovery-candidates/v2',seed:branch?{{kind:'provider',providerId:body.seed.providerId,title:body.seed.title,channel:body.seed.channel,url:body.seed.url,duration:body.seed.duration}}:{{kind:'library',trackId:body.trackId,title:'Track 1',artist:'Artist 1',album:'Album',genre:'Test',year:'2006'}},basis:{{provider:'youtube',method:'SEARCH_DERIVED_MULTI_AXIS',creatorCap:2,selection:'ROUND_ROBIN',queries:branch?[{{axis:'CLOSER',label:'Closer',query:'Branch Artist music'}},{{axis:'VERSIONS',label:'Versions',query:'Candidate New cover remix live'}}]:[{{axis:'CLOSER',label:'Closer',query:'Artist 1 Album'}},{{axis:'NEIGHBORHOOD',label:'Neighborhood',query:'Test music'}},{{axis:'ERA',label:'Same era',query:'2006 Test music'}},{{axis:'VERSIONS',label:'Versions',query:'Track 1 cover remix live'}}]}},candidates:branch?[
+      {{providerId:'BRANCH12345',title:'Branch Result',channel:'Branch Artist',url:'https://www.youtube.com/watch?v=BRANCH12345',thumbnail:'',duration:202,axis:'CLOSER',axisLabel:'Closer',libraryMatch:{{state:'NOT_IN_LIBRARY'}}}}
     ]:[
-      {{providerId:'abcDEF12345',title:'Candidate New',channel:'Candidate Artist',url:'https://www.youtube.com/watch?v=abcDEF12345',thumbnail:'',duration:201,libraryMatch:{{state:'NOT_IN_LIBRARY'}}}},
-      {{providerId:'xyzXYZ67890',title:'Track 2',channel:'Artist 2',url:'https://www.youtube.com/watch?v=xyzXYZ67890',thumbnail:'',duration:11,libraryMatch:{{state:'IN_LIBRARY',trackId:'t2',title:'Track 2',artist:'Artist 2',score:120,relation:'SAME_SOURCE'}}}}
+      {{providerId:'abcDEF12345',title:'Candidate New',channel:'Candidate Artist',url:'https://www.youtube.com/watch?v=abcDEF12345',thumbnail:'',duration:201,axis:'NEIGHBORHOOD',axisLabel:'Neighborhood',libraryMatch:{{state:'NOT_IN_LIBRARY'}}}},
+      {{providerId:'xyzXYZ67890',title:'Track 2',channel:'Artist 2',url:'https://www.youtube.com/watch?v=xyzXYZ67890',thumbnail:'',duration:11,axis:'ERA',axisLabel:'Same era',libraryMatch:{{state:'IN_LIBRARY',trackId:'t2',title:'Track 2',artist:'Artist 2',score:120,relation:'SAME_SOURCE'}}}}
     ],generatedAt:new Date().toISOString()}};
   }}
   else if(p==='/api/system/preflight') d={{issues:[],liveInstances:[],scan:{{running:false}},library:{{tracks:4,sources:1}},importRuntime:{{ready:true}}}};
@@ -256,7 +256,8 @@ def run(html_path: Path, executable: str | None) -> dict[str, Any]:
             page.evaluate("window.__mockRequests=[]; state.queue=['t1','t2','t3']; state.queueIndex=0; audio.__state.paused=false; audio.__state.src='/media/t1'; audio.dataset.trackId='t1'")
             page.evaluate("startDiscoveryFromTrack('t1')")
             page.wait_for_function("discoverySession.frames.length===1")
-            require(not page.locator("#radioDiscoverPane").evaluate("e=>e.classList.contains('hidden')"), "radio pane did not open")
+            require(not page.locator("#radioDiscoverPane").evaluate("e=>e.classList.contains('hidden')"), "Explore pane did not open")
+            require(page.locator("#radioDiscoverTab").inner_text().strip() == "🌐 Explore", "Explore tab label/icon missing")
             require(page.locator("#radioCandidates .radio-card").count() == 2, "metadata candidate list did not render")
             require(page.evaluate("state.queue.join(',')") == "t1,t2,t3", "discovery metadata mutated normal queue")
             paths=page.evaluate("window.__mockRequests.map(x=>x.path)")
@@ -264,6 +265,9 @@ def run(html_path: Path, executable: str | None) -> dict[str, Any]:
             require("/api/import/start" not in paths, "radio metadata discovery started an import")
             text=page.locator("#radioCandidates").inner_text()
             require("Not in library" in text and "In library" in text, f"library match badges missing: {text}")
+            require("Neighborhood" in text and "Same era" in text, f"multi-axis labels missing: {text}")
+            require("Explore from here" in text, f"branch language missing: {text}")
+            require("Balanced search-derived map" in page.locator("#radioSeed").inner_text(), "balanced exploration basis missing")
             require(page.locator("#radioCandidates").get_by_role("button", name="Play local").count()==1, "exact local match did not expose Play local")
 
             page.evaluate("previewDiscoveryCandidate(0)")
@@ -288,7 +292,7 @@ def run(html_path: Path, executable: str | None) -> dict[str, Any]:
             page.evaluate("clearDiscovery()")
             require(page.evaluate("discoverySession.frames.length") == 0, "Clear discovery did not clear session")
 
-        checked("temporary-radio-session-branches-previews-and-preserves-normal-queue", discovery_session_contract)
+        checked("temporary-explore-session-branches-previews-diversifies-and-preserves-normal-queue", discovery_session_contract)
 
         def discovery_add_to_library_handoff() -> None:
             page.evaluate("window.__mockRequests=[]")
@@ -302,7 +306,7 @@ def run(html_path: Path, executable: str | None) -> dict[str, Any]:
             require(page.evaluate("state.queue.join(',')") != "abcDEF12345", "provider candidate entered local queue")
             page.evaluate("clearDiscovery(); topScreen('library'); showView('songs')")
 
-        checked("radio-add-to-library-hands-off-to-existing-import-review", discovery_add_to_library_handoff)
+        checked("explore-add-to-library-hands-off-to-existing-import-review", discovery_add_to_library_handoff)
 
         def adaptive_navigation_contract() -> None:
             page.click("#libraryNavToggle")

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "vexstream.ui-runtime-regression/v1",
-  "appVersion": "2.1.0",
-  "html": "/mnt/data/vexstream-2.1.0-src/ui/index.html",
+  "appVersion": "2.2.0",
+  "html": "/mnt/data/vexstream-2.2.0-src/ui/index.html",
   "checks": [
     {
       "name": "initial-render-has-no-browser-runtime-error",
@@ -20,11 +20,11 @@
       "status": "PASS"
     },
     {
-      "name": "temporary-radio-session-branches-previews-and-preserves-normal-queue",
+      "name": "temporary-explore-session-branches-previews-diversifies-and-preserves-normal-queue",
       "status": "PASS"
     },
     {
-      "name": "radio-add-to-library-hands-off-to-existing-import-review",
+      "name": "explore-add-to-library-hands-off-to-existing-import-review",
       "status": "PASS"
     },
     {

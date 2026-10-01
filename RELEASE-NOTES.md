@@ -1,31 +1,30 @@
-# VexStream Music 2.1.0 release notes
+# VexStream Music 2.2.0 release notes
 
-## Discovery Session v0
+## 🌐 Explore — multi-axis candidate diversity
 
-2.1.0 adds an intentionally temporary discovery/radio surface without turning provider results into library tracks or queue entries.
+2.2.0 refines the temporary provider exploration map after 2.1.0 target use showed excessive repetition from the same artist/channel.
 
-### New
+### Changed
 
-- `⋯ → Discover more like this` from a local track.
-- Metadata-only, search-derived provider candidate map.
-- One visible YouTube embedded preview player at a time.
-- Candidate library-match badges using existing duplicate/source identity logic.
-- **Play local** for exact local source matches.
-- **Add to library…** handoff to the established inspect/duplicate/import flow.
-- Branch **More like this** from any provider candidate.
-- Back navigation across discovery frames.
-- Clear lifecycle and in-memory session persistence across Library/Discover tab navigation.
-- Start radio from the current local track.
+- Track action renamed to **🌐 Explore from this song**.
+- Discover sub-surface renamed from **Radio** to **🌐 Explore**.
+- Candidate branch action renamed to **🌐 Explore from here**.
+- Candidate generation now uses multiple labeled factual directions instead of two seed-heavy searches.
+- Candidate pools are interleaved round-robin.
+- A single creator/channel is capped at two candidates per frame.
+- Candidate cards expose their exploration axis: **Closer**, **Neighborhood**, **Same era**, or **Versions**.
+- Seed year is carried into exploration when local metadata provides it.
 
-### Explicit boundaries
+### Preserved
 
-- Discovery does not alter the normal VexStream queue unless the human later chooses a local playback action.
-- Preview does not download or promote a candidate into the library.
-- Candidate generation is `SEARCH_DERIVED`, not represented as YouTube algorithmic recommendation.
-- Provider preview uses the visible YouTube player; VexStream does not suppress provider ads or controls.
-- Discovery frames are not persisted across app/page exit in v0.
-- No AI ranking is required or performed by v0.
+- Explore does not mutate the normal library queue.
+- Preview does not download.
+- Add to library uses the existing inspect / duplicate / import flow.
+- Back reuses prior metadata frames.
+- Unsaved exploration remains memory-only.
+- YouTube preview remains one visible embedded player; VexStream does not suppress provider ads or controls.
+- 2.0.x playback and Windows import-runtime repairs remain intact.
 
-### Preserved repairs
+### Provider truth boundary
 
-2.0.0 filtered-Songs playback semantics and 2.0.1 Windows import-runtime repair remain unchanged.
+Candidate generation is explicitly `SEARCH_DERIVED_MULTI_AXIS`. The result map is diversified by VexStream's deterministic projection; it is not represented as YouTube's consumer recommendation algorithm.

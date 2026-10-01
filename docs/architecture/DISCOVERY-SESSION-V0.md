@@ -1,3 +1,7 @@
+# Historical note
+
+**Superseded for current behavior by `EXPLORE-SESSION-V1.md` in VexStream Music 2.2.0.** This document remains the formation record for the original temporary-session lifecycle.
+
 # Discovery Session v0
 
 `[VXG RealForever]`

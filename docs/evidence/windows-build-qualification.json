@@ -1,8 +1,8 @@
 {
   "schemaVersion": "vexstream.windows-build-qualification/v1",
-  "appVersion": "2.1.0",
-  "sourceRoot": "/mnt/data/vexstream-2.1.0-src",
-  "artifact": "/mnt/data/vexstream-2.1.0-dist/VexStreamMusic-2.1.0.exe",
+  "appVersion": "2.2.0",
+  "sourceRoot": "/mnt/data/vexstream-2.2.0-src",
+  "artifact": "/mnt/data/vexstream-2.2.0-build/VexStreamMusic-2.2.0.exe",
   "goVersion": "go version go1.23.2 linux/amd64",
   "steps": [
     {
@@ -37,7 +37,7 @@
         "-trimpath",
         "-ldflags=-H=windowsgui -s -w",
         "-o",
-        "/mnt/data/vexstream-2.1.0-dist/VexStreamMusic-2.1.0.exe",
+        "/mnt/data/vexstream-2.2.0-build/VexStreamMusic-2.2.0.exe",
         "main.go",
         "procattr_windows.go"
       ],
@@ -48,8 +48,8 @@
     }
   ],
   "artifactProjection": {
-    "byteLength": 6946304,
-    "sha256": "b9f96ed8ba8025a8533d3738f10cb1bcbb4e74c29e6411f0d82dcef8cb9492b5",
+    "byteLength": 6952448,
+    "sha256": "9b0fbc8f46b3a637744e8902545a3108a56eba00a451f7795bc7a283acb81336",
     "machine": "AMD64",
     "peMagic": "PE32+",
     "subsystem": "WINDOWS_GUI"

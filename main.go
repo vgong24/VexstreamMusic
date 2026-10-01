@@ -32,7 +32,7 @@ import (
 //go:embed ui/index.html media_bridge.py
 var assets embed.FS
 
-const version = "2.1.0"
+const version = "2.2.0"
 
 type Config struct {
 	Sources []string `json:"sources"`
@@ -82,8 +82,14 @@ type DiscoverySeed struct {
 	Artist     string  `json:"artist,omitempty"`
 	Album      string  `json:"album,omitempty"`
 	Genre      string  `json:"genre,omitempty"`
+	Year       string  `json:"year,omitempty"`
 	Channel    string  `json:"channel,omitempty"`
 	Duration   float64 `json:"duration,omitempty"`
+}
+type DiscoveryQuery struct {
+	Axis  string `json:"axis"`
+	Label string `json:"label"`
+	Query string `json:"query"`
 }
 type DiscoveryLibraryMatch struct {
 	State      string `json:"state"`
@@ -101,6 +107,9 @@ type DiscoveryCandidate struct {
 	URL          string                `json:"url,omitempty"`
 	Thumbnail    string                `json:"thumbnail,omitempty"`
 	Duration     float64               `json:"duration,omitempty"`
+	Axis         string                `json:"axis,omitempty"`
+	AxisLabel    string                `json:"axisLabel,omitempty"`
+	Query        string                `json:"query,omitempty"`
 	LibraryMatch DiscoveryLibraryMatch `json:"libraryMatch"`
 }
 type TrackOverlay struct {
@@ -2671,28 +2680,94 @@ func appendUniqueString(rows []string, value string) []string {
 	}
 	return append(rows, value)
 }
-func discoveryQueries(seed DiscoverySeed) []string {
+func appendDiscoveryQuery(rows []DiscoveryQuery, axis, label, query string) []DiscoveryQuery {
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return rows
+	}
+	for _, row := range rows {
+		if strings.EqualFold(strings.TrimSpace(row.Query), query) {
+			return rows
+		}
+	}
+	return append(rows, DiscoveryQuery{Axis: axis, Label: label, Query: query})
+}
+func discoveryQueries(seed DiscoverySeed) []DiscoveryQuery {
 	artist := firstNonEmpty(seed.Artist, seed.Channel)
 	title := strings.TrimSpace(seed.Title)
 	album := strings.TrimSpace(seed.Album)
 	genre := strings.TrimSpace(seed.Genre)
-	queries := []string{}
-	if artist != "" && genre != "" {
-		queries = appendUniqueString(queries, artist+" "+genre)
-	} else if artist != "" {
-		queries = appendUniqueString(queries, artist+" music")
-	}
+	year := strings.TrimSpace(seed.Year)
+	queries := []DiscoveryQuery{}
 	if artist != "" && album != "" {
-		queries = appendUniqueString(queries, artist+" "+album)
-	} else if artist != "" && title != "" {
-		queries = appendUniqueString(queries, artist+" "+title)
+		queries = appendDiscoveryQuery(queries, "CLOSER", "Closer", artist+" "+album)
+	} else if artist != "" && genre != "" {
+		queries = appendDiscoveryQuery(queries, "CLOSER", "Closer", artist+" "+genre)
+	} else if artist != "" {
+		queries = appendDiscoveryQuery(queries, "CLOSER", "Closer", artist+" music")
 	} else if title != "" {
-		queries = appendUniqueString(queries, title)
+		queries = appendDiscoveryQuery(queries, "CLOSER", "Closer", title)
 	}
-	if len(queries) > 2 {
-		queries = queries[:2]
+	if genre != "" {
+		queries = appendDiscoveryQuery(queries, "NEIGHBORHOOD", "Neighborhood", genre+" music")
+	} else if year != "" {
+		queries = appendDiscoveryQuery(queries, "NEIGHBORHOOD", "Neighborhood", year+" music")
+	}
+	if year != "" && genre != "" {
+		queries = appendDiscoveryQuery(queries, "ERA", "Same era", year+" "+genre+" music")
+	} else if year != "" {
+		queries = appendDiscoveryQuery(queries, "ERA", "Same era", year+" music")
+	}
+	if title != "" {
+		queries = appendDiscoveryQuery(queries, "VERSIONS", "Versions", title+" cover remix live")
 	}
 	return queries
+}
+func discoveryCreatorKey(c DiscoveryCandidate) string {
+	return normalizeMusicText(c.Channel)
+}
+func selectDiscoveryCandidates(pools [][]DiscoveryCandidate, limit, creatorCap int) []DiscoveryCandidate {
+	if limit <= 0 {
+		return nil
+	}
+	if creatorCap <= 0 {
+		creatorCap = limit
+	}
+	positions := make([]int, len(pools))
+	seen := map[string]bool{}
+	creatorCounts := map[string]int{}
+	selected := []DiscoveryCandidate{}
+	for len(selected) < limit {
+		addedRound := false
+		for poolIndex, pool := range pools {
+			for positions[poolIndex] < len(pool) {
+				candidate := pool[positions[poolIndex]]
+				positions[poolIndex]++
+				key := discoveryCandidateKey(candidate)
+				if key == "" || seen[key] {
+					continue
+				}
+				creator := discoveryCreatorKey(candidate)
+				if creator != "" && creatorCounts[creator] >= creatorCap {
+					continue
+				}
+				seen[key] = true
+				if creator != "" {
+					creatorCounts[creator]++
+				}
+				selected = append(selected, candidate)
+				addedRound = true
+				break
+			}
+			if len(selected) >= limit {
+				break
+			}
+		}
+		if !addedRound {
+			break
+		}
+	}
+	return selected
 }
 func discoveryCandidateKey(c DiscoveryCandidate) string {
 	if id := strings.ToLower(strings.TrimSpace(c.ProviderID)); id != "" {
@@ -2768,7 +2843,7 @@ func (a *App) discoveryRadio(w http.ResponseWriter, r *http.Request) {
 		a.mu.RLock()
 		for _, track := range a.tracks {
 			if track.ID == id {
-				seed = DiscoverySeed{Kind: "library", TrackID: track.ID, ProviderID: track.ProviderID, URL: track.SourceURL, Title: track.Title, Artist: firstNonEmpty(track.Artist, track.SourceArtist), Album: track.Album, Genre: track.Genre, Channel: track.Channel, Duration: track.Duration}
+				seed = DiscoverySeed{Kind: "library", TrackID: track.ID, ProviderID: track.ProviderID, URL: track.SourceURL, Title: track.Title, Artist: firstNonEmpty(track.Artist, track.SourceArtist), Album: track.Album, Genre: track.Genre, Year: track.Year, Channel: track.Channel, Duration: track.Duration}
 				break
 			}
 		}
@@ -2790,13 +2865,12 @@ func (a *App) discoveryRadio(w http.ResponseWriter, r *http.Request) {
 	}
 	queries := discoveryQueries(seed)
 	if len(queries) == 0 {
-		jsonOut(w, 400, map[string]string{"error": "Discovery could not form a provider search from this seed."})
+		jsonOut(w, 400, map[string]string{"error": "Explore could not form a provider search from this seed."})
 		return
 	}
-	candidates := []DiscoveryCandidate{}
-	seen := map[string]bool{}
+	pools := make([][]DiscoveryCandidate, 0, len(queries))
 	for _, query := range queries {
-		out, e := a.bridgeJSON("search", "search", query, "--limit", "6")
+		out, e := a.bridgeJSON("search", "search", query.Query, "--limit", "6")
 		if e != nil {
 			if pf, ok := e.(*ProviderFailure); ok {
 				jsonOut(w, 502, map[string]any{"error": pf.Error(), "problem": pf.Problem})
@@ -2806,6 +2880,8 @@ func (a *App) discoveryRadio(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		rows, _ := out["results"].([]any)
+		pool := []DiscoveryCandidate{}
+		poolSeen := map[string]bool{}
 		for _, value := range rows {
 			row, ok := value.(map[string]any)
 			if !ok {
@@ -2816,24 +2892,23 @@ func (a *App) discoveryRadio(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			key := discoveryCandidateKey(candidate)
-			if key == "" || seen[key] {
+			if key == "" || poolSeen[key] {
 				continue
 			}
-			seen[key] = true
+			poolSeen[key] = true
+			candidate.Axis = query.Axis
+			candidate.AxisLabel = query.Label
+			candidate.Query = query.Query
 			candidate.LibraryMatch = a.discoveryLibraryMatch(candidate)
-			candidates = append(candidates, candidate)
-			if len(candidates) >= 12 {
-				break
-			}
+			pool = append(pool, candidate)
 		}
-		if len(candidates) >= 12 {
-			break
-		}
+		pools = append(pools, pool)
 	}
+	candidates := selectDiscoveryCandidates(pools, 16, 2)
 	jsonOut(w, 200, map[string]any{
-		"schemaVersion": "vexstream.discovery-candidates/v1",
+		"schemaVersion": "vexstream.discovery-candidates/v2",
 		"seed":          seed,
-		"basis":         map[string]any{"provider": "youtube", "method": "SEARCH_DERIVED", "queries": queries},
+		"basis":         map[string]any{"provider": "youtube", "method": "SEARCH_DERIVED_MULTI_AXIS", "queries": queries, "creatorCap": 2, "selection": "ROUND_ROBIN"},
 		"candidates":    candidates,
 		"generatedAt":   time.Now().UTC().Format(time.RFC3339Nano),
 	})

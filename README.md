@@ -1,75 +1,85 @@
-# VexStream Music 2.1.0 — Discovery Session v0
+# VexStream Music 2.2.0 — 🌐 Explore multi-axis refinement
 
 `[VXG RealForever]`
 
-VexStream Music 2.1.0 is the first source-native discovery/radio capability on top of the accepted 2.0.x playback and Windows import-runtime repairs.
+VexStream Music 2.2.0 keeps the source-native 2.x playback/import baseline and refines the temporary discovery capability after real use showed that the first Radio/search recipe clustered too heavily around the same artist.
 
-## Discovery is a temporary map, not the library queue
+## 🌐 Explore from this song
 
-From a local track's `⋯` menu choose **Discover more like this**. VexStream forms a temporary, metadata-first candidate map using the existing YouTube search runtime.
+The human-facing language is now **Explore** rather than a second use of “Discover” or a queue-shaped “Radio”.
+
+From a local track's `⋯` menu choose:
 
 ```text
-DISCOVERY_SESSION != LIBRARY_QUEUE
+🌐 Explore from this song
+```
+
+VexStream forms a temporary metadata map without changing the ordinary library queue.
+
+## Multi-axis candidate map
+
+2.1.0 fetched two seed-heavy searches in sequence. The first successful artist-centric query could fill most of the frame before another direction was represented.
+
+2.2.0 instead forms factual search axes and balances them:
+
+```text
+Closer        artist / album depth
+Neighborhood  genre breadth
+Same era      year + genre breadth when available
+Versions      cover / remix / live interpretations
+```
+
+Each axis gets its own candidate pool. VexStream projects the final frame round-robin and caps one creator/channel at two candidates per frame.
+
+```text
+provider=youtube
+method=SEARCH_DERIVED_MULTI_AXIS
+selection=ROUND_ROBIN
+creatorCap=2
+```
+
+This is still search-derived exploration, not a claim that YouTube exposed its consumer recommendation graph.
+
+## Candidate actions
+
+- **Preview** — one visible YouTube embedded player; does not enter the VexStream queue.
+- **Play local** — used when the candidate is the same known source as a local track.
+- **Add to library…** — existing inspect → duplicate review → import flow.
+- **🌐 Explore from here** — branches a child exploration frame.
+- **Back** — reuses the prior metadata frame without another provider call.
+- **Clear discovery** — destroys the temporary session.
+
+## Boundaries
+
+```text
+EXPLORE_SESSION != LIBRARY_QUEUE
 PREVIEWED != DOWNLOADED
 PROVIDER_RESULT != AI_RECOMMENDATION
-MORE_LIKE_THIS != COMMIT_TO_PLAYLIST
+AI_RANKING != PROVIDER_RANKING
 ```
 
-The initial candidate basis is deliberately labeled `SEARCH_DERIVED`. VexStream is not claiming access to YouTube's consumer recommendation graph.
+The map is metadata-first; media is requested only for the candidate the human elects to preview.
 
-### Candidate actions
+## Preserved behavior
 
-- **Preview** — opens the candidate in one visible YouTube embedded player. It does not add the item to the VexStream queue or library.
-- **Play local** — shown when the provider candidate is the same source as a local track.
-- **Add to library…** — hands the provider URL into the existing inspect → duplicate review → import flow.
-- **More like this** — forms a child discovery frame from that candidate.
-- **Back** — restores the prior frame from memory without rebuilding the old candidate map.
-- **Clear discovery** — ends the temporary session.
-
-Leaving Discover stops provider preview playback but preserves the in-memory candidate frames. Returning to Discover resumes the map. Unsaved discovery state naturally disappears when the VexStream page/app process ends.
-
-## Provider preview boundary
-
-The preview surface is one visible YouTube iframe at a time. VexStream does not cover the player, suppress provider controls, or try to suppress provider advertising. Candidate metadata is cheap to hold; media is only requested for the candidate the human elects to preview.
-
-## Library awareness
-
-Candidate metadata is compared with the existing VexStream duplicate/provenance logic. Each candidate projects one of:
-
-```text
-IN_LIBRARY
-LIKELY_MATCH
-POSSIBLE_MATCH
-NOT_IN_LIBRARY
-```
-
-An exact source match can play the local copy. Non-local candidates remain external until the human explicitly enters the existing Add-to-library workflow.
-
-## AI seam
-
-Discovery v0 is deterministic and usable without AI. A later VexLife/AI actor can read the seed, candidate metadata, library-match state, and branch history to rank or explain the map. AI ranking must remain distinct from provider generation.
-
-## Preserved 2.0.x behavior
-
-- Songs search/genre filtering remains a display lens; Songs playback uses the full sorted library.
-- Explicit row/bulk queue actions remain scoped to human intent.
-- Windows YouTube setup keeps search readiness separate from FFmpeg/import readiness and discovers nested WinGet FFmpeg installations.
-- Real `/media/<track>` full/range byte regression remains part of source qualification.
+- Songs filtering remains a display lens; playback uses the full sorted library.
+- Queue actions remain explicitly intent-scoped.
+- Windows import setup keeps search readiness separate from FFmpeg/import readiness.
+- Real `/media/<track>` full/range-byte regression remains in qualification.
+- Explore remains in-memory and does not persist across app/page exit.
 
 ## Qualification
-
-Run:
 
 ```bash
 python3 tests/run_qualification.py --root . --browser-executable /path/to/chromium
 ```
 
-Current source qualification includes static/source checks, deterministic Chromium interaction checks, real source-built media delivery, Go regressions (including Discovery Session helpers and Windows import runtime), and the Python bridge.
+Current source proof includes static/source checks, Chromium interaction checks, real source-built media delivery, Go exploration/duplicate/import regressions, and Python bridge checks.
 
 Build Windows:
 
 ```bash
-python3 tests/build_windows.py --root . --output ../VexStreamMusic-2.1.0.exe
+python3 tests/build_windows.py --root . --output ../VexStreamMusic-2.2.0.exe
 ```
 
-See `docs/architecture/DISCOVERY-SESSION-V0.md` and `RELEASE-MANIFEST.json` for the explicit lifecycle and proof boundary.
+See `docs/architecture/EXPLORE-SESSION-V1.md` and `RELEASE-MANIFEST.json`.

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "vexstream.static-release-checks/v1",
-  "appVersion": "2.1.0",
-  "sourceRoot": "/mnt/data/vexstream-2.1.0-src",
+  "appVersion": "2.2.0",
+  "sourceRoot": "/mnt/data/vexstream-2.2.0-src",
   "artifact": null,
   "checks": [
     {
@@ -177,11 +177,15 @@
       "status": "PASS"
     },
     {
-      "name": "discovery-radio-route-present",
+      "name": "discovery-explore-route-present",
       "status": "PASS"
     },
     {
-      "name": "discovery-radio-ui-present",
+      "name": "discovery-explore-ui-present",
+      "status": "PASS"
+    },
+    {
+      "name": "discovery-multi-axis-diversity-present",
       "status": "PASS"
     },
     {

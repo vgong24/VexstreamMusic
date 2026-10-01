@@ -336,10 +336,10 @@ Regression gates:
 - Chromium checks prove partial readiness attempts setup but does not advance to import start.
 
 
-## 2.1.0 — DISCOVERY_SESSION_V0
+## 2.2.0 — DISCOVERY_SESSION_V0
 
 ```text
-status=FORMED_IN_SOURCE_NATIVE_2.1.0
+status=FORMED_IN_SOURCE_NATIVE_2.2.0
 trigger=human request for radio/discovery without committing provider candidates to queue/library
 providerCandidateBasis=SEARCH_DERIVED
 normalQueueMutation=NONE_FROM_METADATA_OR_PREVIEW

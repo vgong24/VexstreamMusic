@@ -1,12 +1,12 @@
-# Pull request projection — VexStream Music 2.1.0
+# Pull request projection — VexStream Music 2.2.0
 
 ## Purpose
 
-Advance the existing source-native VexStream PR #1 from the working 2.0.1 import-runtime baseline to Discovery Session v0.
+Advance the existing source-native VexStream PR #1 from the working 2.0.1 import-runtime baseline to Explore Session v1 multi-axis refinement.
 
-## 2.1.0 change
+## 2.2.0 change
 
-- temporary `More like this` discovery from local tracks;
+- temporary `🌐 Explore from this song` branching from local tracks;
 - metadata-first, search-derived candidate frames;
 - one visible YouTube provider preview at a time;
 - library-match annotations using existing duplicate/provenance logic;

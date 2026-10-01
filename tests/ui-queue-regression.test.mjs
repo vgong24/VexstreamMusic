@@ -42,6 +42,8 @@ function makePlaybackHarness({ shuffle = false, view = 'songs' } = {}) {
     state: { tracks, queue: [], queueIndex: -1, shuffle },
     currentView: view,
     recentTracks: () => [tracks[2], tracks[0]],
+    // Deliberately represents an active Songs filter. The fixed Songs playback
+    // path must not use this as its playback universe.
     sortedSongTracks: () => [tracks[1], tracks[3]],
     sortTrackList: rows => [...rows],
     shuf: rows => [...rows].reverse(),
@@ -71,6 +73,7 @@ test('Songs shuffle starts on the chosen result and includes every library song 
   assert.equal(context.state.queue[0], 'b');
   assert.deepEqual(new Set(context.state.queue), new Set(['a', 'b', 'c', 'd']));
   assert.equal(context.state.queue.length, 4);
+  // Deterministic reverse shuffle proves that only the future portion is shuffled.
   assert.deepEqual(Array.from(context.state.queue), ['b', 'd', 'c', 'a']);
   assert.deepEqual(calls.at(-1), ['playIndex', 0]);
 });
@@ -81,6 +84,8 @@ test('Home recent-track playback context remains unchanged', () => {
   assert.deepEqual(Array.from(context.state.queue), ['c', 'a']);
   assert.equal(context.state.queueIndex, 0);
 });
+
+
 
 test('idle player Play in Songs also starts from the full library, not the filtered projection', () => {
   const tracks = ['a', 'b', 'c', 'd'].map(id => ({ id }));
@@ -125,5 +130,6 @@ test('1.1.7 UI keeps filtering code but no longer reports 1.1.5 or 1.1.6', () =>
   assert.match(html, /function baseFilteredTracks\(\)/);
   assert.match(html, /function sortedSongTracks\(\)\{return sortTrackList\(baseFilteredTracks\(\)\)\}/);
   assert.match(html, /<span class="version">1\.1\.7<\/span>/);
-  assert.doesNotMatch(html, /<span class="version">1\.1\.5<\/span>/);\n  assert.doesNotMatch(html, /<span class="version">1\.1\.6<\/span>/);
+  assert.doesNotMatch(html, /<span class="version">1\.1\.5<\/span>/);
+  assert.doesNotMatch(html, /<span class="version">1\.1\.6<\/span>/);
 });

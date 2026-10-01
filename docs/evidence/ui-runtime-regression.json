@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "vexstream.ui-runtime-regression/v1",
+  "appVersion": "2.0.0",
+  "html": "/mnt/data/vexstream-2.0.0-src/ui/index.html",
+  "checks": [
+    {
+      "name": "initial-render-has-no-browser-runtime-error",
+      "status": "PASS"
+    },
+    {
+      "name": "version-badge-is-current",
+      "status": "PASS"
+    },
+    {
+      "name": "youtube-runtime-distinguishes-search-ready-from-import-ready",
+      "status": "PASS"
+    },
+    {
+      "name": "adaptive-navigation-collapses-and-becomes-narrow-overlay",
+      "status": "PASS"
+    },
+    {
+      "name": "song-fields-and-title-space-are-user-configurable",
+      "status": "PASS"
+    },
+    {
+      "name": "library-search-normalizes-apostrophes-and-token-prefixes",
+      "status": "PASS"
+    },
+    {
+      "name": "whole-track-import-shows-duplicate-and-quality-advisory",
+      "status": "PASS"
+    },
+    {
+      "name": "youtube-import-prefills-high-confidence-existing-library-artist-suggestion",
+      "status": "PASS"
+    },
+    {
+      "name": "narrow-window-uses-track-cards-with-player-controls-in-bounds",
+      "status": "PASS"
+    },
+    {
+      "name": "track-actions-are-contextual-and-playlist-selection-is-inline",
+      "status": "PASS"
+    },
+    {
+      "name": "artist-grid-cards-are-navigation-first",
+      "status": "PASS"
+    },
+    {
+      "name": "artist-detail-searches-and-sorts-scoped-songs",
+      "status": "PASS"
+    },
+    {
+      "name": "artist-album-shelf-is-collapsible-bounded-and-filters-songs",
+      "status": "PASS"
+    },
+    {
+      "name": "album-detail-reaches-every-credited-artist-and-preserves-lattice-context",
+      "status": "PASS"
+    },
+    {
+      "name": "repeat-album-and-artist-scope-clicks-return-to-scope-root-only",
+      "status": "PASS"
+    },
+    {
+      "name": "now-playing-links-to-details-artist-album-and-brand-returns-home",
+      "status": "PASS"
+    },
+    {
+      "name": "songs-filter-is-display-lens-not-playback-or-queue-universe",
+      "status": "PASS"
+    },
+    {
+      "name": "double-click-starts-visible-library-sequence",
+      "status": "PASS"
+    },
+    {
+      "name": "double-click-switches-track-midstream",
+      "status": "PASS"
+    },
+    {
+      "name": "next-control-advances",
+      "status": "PASS"
+    },
+    {
+      "name": "previous-control-returns",
+      "status": "PASS"
+    },
+    {
+      "name": "play-pause-control-toggles",
+      "status": "PASS"
+    },
+    {
+      "name": "queue-timeline-preserves-history-current-and-up-next",
+      "status": "PASS"
+    },
+    {
+      "name": "add-to-queue-action-is-explicit-and-acknowledged",
+      "status": "PASS"
+    },
+    {
+      "name": "album-opens-to-track-terrain-and-queues-at-collection-scope",
+      "status": "PASS"
+    },
+    {
+      "name": "drag-reorders-timeline-without-losing-current-node",
+      "status": "PASS"
+    },
+    {
+      "name": "shuffle-reorders-visible-future-and-next-follows-it",
+      "status": "PASS"
+    },
+    {
+      "name": "collapsed-queue-does-not-cover-player-controls",
+      "status": "PASS"
+    },
+    {
+      "name": "play-recovers-current-track-after-unloaded-source",
+      "status": "PASS"
+    },
+    {
+      "name": "non-destructive-start-crop-is-applied",
+      "status": "PASS"
+    },
+    {
+      "name": "non-destructive-end-crop-advances-queue",
+      "status": "PASS"
+    },
+    {
+      "name": "full-interaction-run-has-no-browser-runtime-error",
+      "status": "PASS"
+    }
+  ],
+  "console": [],
+  "pageErrors": [],
+  "environment": {
+    "python": "3.13.5",
+    "playwright": "1.57.0",
+    "browser": "144.0.7559.96"
+  },
+  "finalState": {
+    "queue": [
+      "t1",
+      "t2",
+      "t3",
+      "t4"
+    ],
+    "queueIndex": 1,
+    "current": "t2",
+    "src": "/media/t2",
+    "trackId": "t2",
+    "paused": false,
+    "currentTime": 0,
+    "title": "Track 2",
+    "meta": "Artist 2 · Album",
+    "playText": "❚❚",
+    "queueOpen": false,
+    "queueCountText": "4",
+    "queueNextText": "2 next",
+    "queueMiniText": "4"
+  },
+  "status": "PASS"
+}

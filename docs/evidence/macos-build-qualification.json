@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "vexstream.macos-build-qualification/v2",
+  "appVersion": "2.0.0",
+  "sourceRoot": "/mnt/data/vexstream-2.0.0-src",
+  "goVersion": "go version go1.23.2 linux/amd64",
+  "steps": [
+    {
+      "command": [
+        "gofmt",
+        "-d",
+        "main.go",
+        "procattr_windows.go",
+        "procattr_unix.go"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "status": "PASS"
+    },
+    {
+      "architecture": "arm64",
+      "phase": "go-vet",
+      "command": [
+        "go",
+        "vet",
+        "main.go",
+        "procattr_unix.go"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "status": "PASS"
+    },
+    {
+      "architecture": "arm64",
+      "phase": "go-build",
+      "command": [
+        "go",
+        "build",
+        "-trimpath",
+        "-ldflags=-s -w",
+        "-o",
+        "/mnt/data/vexstream-2.0.0-build/macos/VexStreamMusic-2.0.0-macOS-Apple-Silicon",
+        "main.go",
+        "procattr_unix.go"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "status": "PASS"
+    },
+    {
+      "architecture": "amd64",
+      "phase": "go-vet",
+      "command": [
+        "go",
+        "vet",
+        "main.go",
+        "procattr_unix.go"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "status": "PASS"
+    },
+    {
+      "architecture": "amd64",
+      "phase": "go-build",
+      "command": [
+        "go",
+        "build",
+        "-trimpath",
+        "-ldflags=-s -w",
+        "-o",
+        "/mnt/data/vexstream-2.0.0-build/macos/VexStreamMusic-2.0.0-macOS-Intel",
+        "main.go",
+        "procattr_unix.go"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "architecture": "arm64",
+      "binary": "/mnt/data/vexstream-2.0.0-build/macos/VexStreamMusic-2.0.0-macOS-Apple-Silicon",
+      "binaryProjection": {
+        "byteLength": 6566002,
+        "sha256": "8562ca8cab8855d620991f7ec8ac0e551bb1d7674147d03078090b6b2639f80c",
+        "format": "Mach-O 64-bit",
+        "architecture": "arm64",
+        "cpuType": "0x0100000c",
+        "executable": true
+      },
+      "sha256": "8562ca8cab8855d620991f7ec8ac0e551bb1d7674147d03078090b6b2639f80c",
+      "signed": false,
+      "notarized": false
+    },
+    {
+      "architecture": "amd64",
+      "binary": "/mnt/data/vexstream-2.0.0-build/macos/VexStreamMusic-2.0.0-macOS-Intel",
+      "binaryProjection": {
+        "byteLength": 6854816,
+        "sha256": "9922cd9b84ae173e8664ce5585956a1a5e00adb8f40f67be4bd7d2d0968d92f5",
+        "format": "Mach-O 64-bit",
+        "architecture": "amd64",
+        "cpuType": "0x01000007",
+        "executable": true
+      },
+      "sha256": "9922cd9b84ae173e8664ce5585956a1a5e00adb8f40f67be4bd7d2d0968d92f5",
+      "signed": false,
+      "notarized": false
+    }
+  ],
+  "distributionMode": "RAW_EXECUTABLE_PLUS_REUSABLE_TERMINAL_GUIDE",
+  "hostExecution": "NOT_RUN_ON_MACOS",
+  "codeSigning": "NOT_PERFORMED",
+  "notarization": "NOT_PERFORMED",
+  "status": "PASS_CROSS_BUILD_AND_RAW_BINARY_STRUCTURE__REAL_MAC_HOST_ACCEPTANCE_PENDING"
+}

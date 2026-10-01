@@ -1,80 +1,68 @@
-# VexStream Music
+# VexStream Music 2.0.0 — source-native continuity baseline
 
 `[VXG RealForever]`
 
-VexStream Music is a local-first music library and playback surface. This public repository is the durable source/provenance home for the product lineage that was previously preserved through private Vextreme-SDK continuity snapshots and versioned local artifacts.
+VexStream Music 2.0.0 is the first release line formed from the recovered, byte-reproducible **1.1.5 complete source tree** inside the new public `vgong24/VexstreamMusic` continuity.
 
-## Current candidate: 1.1.7
+2.0.0 is intentionally not a rewrite. It preserves the qualified 1.1.5 product surface—local playback, persistent `History ← Current → Up Next`, Albums/Artists terrain, playlists, playback crops, duplicate-aware YouTube intake, normalized search, artist suggestions, responsive shell, and Windows/macOS source lineage—while making one user-requested playback semantic explicit and adding a missing real-server regression gate.
 
-The current candidate repairs the filtered-Songs playback regression **and** the executable startup/version guard that caused the prior 1.1.6 candidate to reopen an already-running 1.1.5 session.
+## 2.0.0 playback semantic
 
-### User behavior
+A Songs search or genre filter is a **display lens**, not a hidden replacement for the playback universe.
 
-A Songs search or genre filter is a **display lens**, not the playback universe.
+```text
+filtered Songs rows
+  = what is visible / selectable
 
-- row/double-click Play uses the full sorted library;
-- idle player Play in Songs uses the full sorted library;
-- **Play all** uses the full sorted library;
-- **Shuffle all** uses the full sorted library;
-- with shuffle active, the chosen song remains current and every other library song becomes shuffled future playback;
-- row-level **Add to queue** remains an intentional one-track action;
-- bulk selection/queue still acts only on tracks the user explicitly selected.
+full sorted library
+  = Songs playback universe
 
-### Startup/version invariant
+explicit Add to queue / bulk Queue
+  = only the tracks the user intentionally queues
+```
 
-The Windows executable has multiple representations of its version: served UI, server/helper string data, and a compiled machine-code comparison used when probing an already-running VexStream session at `/health`.
+Therefore:
 
-All of them must agree with the shipped release version. 1.1.6 failed this invariant: its UI/data markers said 1.1.6, while the compiled startup comparison still recognized 1.1.5 as “this same version.” That allowed 1.1.6 to open the old 1.1.5 server and exit.
+- row/double-click Play from filtered Songs starts the selected track inside the full sorted library;
+- with Shuffle active, the selected song remains current and every other library song appears once in shuffled future playback;
+- **Play all** and **Shuffle all** use the full library even while a search is visible;
+- row **Add to queue** remains a one-track action;
+- bulk queue actions remain scoped to explicit selection;
+- Home/recent and collection-scoped playback retain their established scopes.
 
-1.1.7 patches and tests that compiled guard explicitly.
+## Source continuity
 
-## Exact recovery baseline
+The recovered 1.1.5 source archive is independently bound by:
+
+```text
+VexStreamMusic-1.1.5-Source.zip
+sha256=15d54909bd9227d4e0ef67f4879503d7e7fdf80366781f8ec2723a0d375c1243
+```
+
+and reproducibly builds the accepted historical Windows artifact:
 
 ```text
 VexStreamMusic-1.1.5.exe
 sha256=e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f
-bytes=6903808
-Go=1.23.2
-GOOS=windows
-GOARCH=amd64
 ```
 
-The 1.1.5 executable contains its browser UI as one embedded UTF-8 HTML/JavaScript document. That exact document was recovered and is the source anchor for the current UI refinement.
+2.0.0 continues from that source—not from the rejected 1.1.6/1.1.7 binary-patching experiment.
 
-The original stripped Go backend source for 1.1.5 has **not** been reconstructed or claimed. The release patcher therefore fails closed on the exact 1.1.5 executable digest and on exact recovered code/data windows.
-
-## Repository layout
+## Qualification layers
 
 ```text
-src/ui/index.html
-  recovered and repaired current browser UI
-
-tests/ui-queue-regression.test.mjs
-  executable JS behavior tests for filtered playback / queue semantics
-
-tests/artifact-regression.py
-  exact compiled-artifact identity, version-consistency, and byte-diff tests
-
-tools/patch_v1_1_5_to_v1_1_7.py
-  deterministic, digest-bound formation from the exact supplied 1.1.5 executable
-
-docs/1.1.7-FILTERED-PLAYBACK-AND-LAUNCH-GUARD.md
-  causal diagnosis, regression boundary, and evidence limitations
+A  static / source / syntax
+B  deterministic Chromium UI interaction
+C  real source-built HTTP server + real MP3 scan + exact full/range media bytes
+D  platform build/artifact structure
+E  target-host human playback acceptance
 ```
 
-## Current qualification
+A–D can be automated from source. E remains a distinct real Windows/macOS product acceptance surface.
 
-```text
-UI behavior tests          7 PASS / 0 FAIL
-artifact regression tests 15 PASS / 0 FAIL
-inline JS syntax parse     PASS
-patch reproducibility      PASS
-wrong-baseline rejection   PASS
-Windows runtime smoke      NOT_RUN_NO_WINDOWS_EXECUTION_SURFACE
+Run:
+
+```bash
+python3 tests/run_qualification.py --root . --browser-executable /path/to/chromium
+python3 tests/build_windows.py --root . --output ../VexStreamMusic-2.0.0.exe
 ```
-
-The absence of a Windows execution surface is kept explicit. Structural/artifact proof does not masquerade as target-Windows runtime proof.
-
-## Historical continuity
-
-The earlier private continuity checkpoint remains in `vgong24/Vextreme-SDK` draft PR #1630. It is provenance/history, not the active public VexStream source writer.

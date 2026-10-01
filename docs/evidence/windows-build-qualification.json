@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "vexstream.windows-build-qualification/v1",
+  "appVersion": "2.0.0",
+  "sourceRoot": "/mnt/data/vexstream-2.0.0-src",
+  "artifact": "/mnt/data/vexstream-2.0.0-build/VexStreamMusic-2.0.0.exe",
+  "goVersion": "go version go1.23.2 linux/amd64",
+  "steps": [
+    {
+      "command": [
+        "gofmt",
+        "-d",
+        "main.go",
+        "procattr_windows.go",
+        "procattr_unix.go"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "go",
+        "vet",
+        "main.go",
+        "procattr_windows.go"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "go",
+        "build",
+        "-trimpath",
+        "-ldflags=-H=windowsgui -s -w",
+        "-o",
+        "/mnt/data/vexstream-2.0.0-build/VexStreamMusic-2.0.0.exe",
+        "main.go",
+        "procattr_windows.go"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "",
+      "status": "PASS"
+    }
+  ],
+  "artifactProjection": {
+    "byteLength": 6904320,
+    "sha256": "c9aacf0bae57ec33827057de4099aaf35794c19d8551f5ba5bd5453c0259bcf4",
+    "machine": "AMD64",
+    "peMagic": "PE32+",
+    "subsystem": "WINDOWS_GUI"
+  },
+  "status": "PASS"
+}

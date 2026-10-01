@@ -314,3 +314,23 @@ status=HARDENED_IN_2.0.0
 ```
 
 The deterministic Chromium harness intentionally mocks `HTMLAudioElement` and the API. It proves browser state-machine behavior but not server media bytes. 2.0.0 adds a real source-built server regression with a real MP3 fixture, library scan, exact full response, `Accept-Ranges: bytes`, and exact `206` range response. Browser decoder/audio-device acceptance remains a separate target-host gate.
+
+---
+
+## R2X — Windows WinGet FFmpeg no-upgrade result misclassified as import setup failure
+
+```text
+firstObserved=2.0.0_TARGET_WINDOWS
+status=REPAIRED_IN_2.0.1
+surface=Discover -> YouTube import setup
+```
+
+Observed target-host behavior showed a healthy pip/yt-dlp installation followed by WinGet's "No available upgrade found. No newer package versions are available from the configured sources." The 2.0.0 bootstrap had combined Python dependency setup and WinGet FFmpeg installation inside one PowerShell command, so the native WinGet result was promoted into `IMPORT_RUNTIME_SETUP_FAILED`. FFmpeg discovery also checked PATH plus WinGet Links but not the nested WinGet package directory.
+
+2.0.1 separates the effects, discovers `ffmpeg.exe` beneath `Microsoft/WinGet/Packages/Gyan.FFmpeg_*`, preserves search-only readiness when FFmpeg is pending, and preflights `importReady` before `/api/import/start`.
+
+Regression gates:
+
+- `import_runtime_test.go` proves nested WinGet package discovery and ignores unrelated packages;
+- static checks require direct/idempotent Windows setup and forbid a PowerShell bootstrap inside `setupWindowsImportTools`;
+- Chromium checks prove partial readiness attempts setup but does not advance to import start.

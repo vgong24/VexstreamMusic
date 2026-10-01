@@ -112,7 +112,7 @@ Build and structurally qualify the versioned Windows executable:
 
 ```bash
 python tests/build_windows.py \
-  --output ../VexStreamMusic-2.0.0-Windows/VexStreamMusic-2.0.0.exe \
+  --output ../VexStreamMusic-2.0.1-Windows/VexStreamMusic-2.0.1.exe \
   --report docs/evidence/windows-build-qualification.json
 ```
 
@@ -120,7 +120,7 @@ Then bind the final artifact into the full qualification run:
 
 ```bash
 python tests/run_qualification.py \
-  --artifact ../VexStreamMusic-2.0.0-Windows/VexStreamMusic-2.0.0.exe \
+  --artifact ../VexStreamMusic-2.0.1-Windows/VexStreamMusic-2.0.1.exe \
   --browser-executable /path/to/chromium
 ```
 
@@ -130,7 +130,7 @@ Build and structurally qualify both raw macOS architectures:
 
 ```bash
 python tests/build_macos.py \
-  --output-dir ../VexStreamMusic-2.0.0-macOS \
+  --output-dir ../VexStreamMusic-2.0.1-macOS \
   --report docs/evidence/macos-build-qualification.json
 ```
 
@@ -142,16 +142,16 @@ Build the exact user-facing one-ZIP package:
 
 ```bash
 python tests/build_all_platforms.py \
-  --output-dir ../VexStreamMusic-2.0.0-release \
+  --output-dir ../VexStreamMusic-2.0.1-release \
   --report docs/evidence/all-platforms-distribution.json
 ```
 
 The canonical member set is exactly:
 
 ```text
-Windows/VexStreamMusic-2.0.0.exe
-Mac Silicon/VexStreamMusic-2.0.0-macOS-Apple-Silicon
+Windows/VexStreamMusic-2.0.1.exe
+Mac Silicon/VexStreamMusic-2.0.1-macOS-Apple-Silicon
 Mac Silicon/COPY-PASTE-TO-TERMINAL.md
-Mac Intel/VexStreamMusic-2.0.0-macOS-Intel
+Mac Intel/VexStreamMusic-2.0.1-macOS-Intel
 Mac Intel/COPY-PASTE-TO-TERMINAL.md
 ```

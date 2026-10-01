@@ -1,52 +1,51 @@
-# VexStream Music 2.0.0 — source-native continuity baseline
+# VexStream Music 2.0.1 — Windows import-runtime repair
 
 `[VXG RealForever]`
 
-VexStream Music 2.0.0 is the first release line formed from the recovered, byte-reproducible **1.1.5 complete source tree** inside the new public `vgong24/VexstreamMusic` continuity.
+VexStream Music 2.0.1 continues the source-native 2.x line established from the byte-reproducible 1.1.5 source tree. It preserves the 2.0.0 playback/filter correction and repairs the Windows YouTube import bootstrap observed during target-host use.
 
-2.0.0 is intentionally not a rewrite. It preserves the qualified 1.1.5 product surface—local playback, persistent `History ← Current → Up Next`, Albums/Artists terrain, playlists, playback crops, duplicate-aware YouTube intake, normalized search, artist suggestions, responsive shell, and Windows/macOS source lineage—while making one user-requested playback semantic explicit and adding a missing real-server regression gate.
+## 2.0.1 repair
 
-## 2.0.0 playback semantic
+A Windows host can have a healthy private Python/yt-dlp runtime while FFmpeg is already installed through WinGet but not visible on the VexStream process PATH. In 2.0.0 the setup path bundled Python provisioning and `winget install Gyan.FFmpeg` into one PowerShell command. WinGet can report "No available upgrade found" for an already-installed package, which caused the whole setup request to be surfaced as a failure even though YouTube search was already usable.
 
-A Songs search or genre filter is a **display lens**, not a hidden replacement for the playback universe.
+2.0.1 separates those states and effects:
 
 ```text
-filtered Songs rows
-  = what is visible / selectable
-
-full sorted library
-  = Songs playback universe
-
-explicit Add to queue / bulk Queue
-  = only the tracks the user intentionally queues
+Python + yt-dlp ready
+    !=
+FFmpeg ready
+    !=
+MP3 import ready
 ```
 
-Therefore:
+On Windows:
 
-- row/double-click Play from filtered Songs starts the selected track inside the full sorted library;
-- with Shuffle active, the selected song remains current and every other library song appears once in shuffled future playback;
-- **Play all** and **Shuffle all** use the full library even while a search is visible;
-- row **Add to queue** remains a one-track action;
-- bulk queue actions remain scoped to explicit selection;
-- Home/recent and collection-scoped playback retain their established scopes.
+- the private Python virtual environment is created directly, without a monolithic PowerShell bootstrap;
+- pip/yt-dlp setup and WinGet/FFmpeg setup are separate commands;
+- VexStream searches both the WinGet Links directory and nested `Gyan.FFmpeg_*` package directories for `ffmpeg.exe`;
+- a WinGet no-upgrade/nonzero result does not erase already-earned YouTube search readiness;
+- `Download & add` performs an import-readiness preflight and will not call `/api/import/start` until FFmpeg is actually discoverable;
+- the UI explicitly distinguishes "YouTube search is ready" from "MP3 download is ready".
+
+## Preserved 2.0.0 playback semantic
+
+Songs search/genre filtering remains a display lens. Playback from Songs uses the full sorted library; explicit Add-to-queue and bulk Queue operations remain intent-scoped.
 
 ## Source continuity
 
-The recovered 1.1.5 source archive is independently bound by:
+The 2.x source line remains grounded in the exact recovered 1.1.5 source archive:
 
 ```text
 VexStreamMusic-1.1.5-Source.zip
 sha256=15d54909bd9227d4e0ef67f4879503d7e7fdf80366781f8ec2723a0d375c1243
 ```
 
-and reproducibly builds the accepted historical Windows artifact:
+which reproducibly builds the historical 1.1.5 Windows artifact:
 
 ```text
 VexStreamMusic-1.1.5.exe
 sha256=e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f
 ```
-
-2.0.0 continues from that source—not from the rejected 1.1.6/1.1.7 binary-patching experiment.
 
 ## Qualification layers
 
@@ -54,15 +53,16 @@ sha256=e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f
 A  static / source / syntax
 B  deterministic Chromium UI interaction
 C  real source-built HTTP server + real MP3 scan + exact full/range media bytes
-D  platform build/artifact structure
-E  target-host human playback acceptance
+D  Go import-runtime unit regression
+E  platform build/artifact structure
+F  target-host Windows import acceptance
 ```
 
-A–D can be automated from source. E remains a distinct real Windows/macOS product acceptance surface.
+A–E are source-automated. F remains a distinct target-Windows confirmation because WinGet/package registration is a Windows-host effect.
 
 Run:
 
 ```bash
 python3 tests/run_qualification.py --root . --browser-executable /path/to/chromium
-python3 tests/build_windows.py --root . --output ../VexStreamMusic-2.0.0.exe
+python3 tests/build_windows.py --root . --output ../VexStreamMusic-2.0.1.exe
 ```

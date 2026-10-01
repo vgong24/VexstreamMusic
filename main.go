@@ -32,7 +32,7 @@ import (
 //go:embed ui/index.html media_bridge.py
 var assets embed.FS
 
-const version = "2.0.0"
+const version = "2.0.1"
 
 type Config struct {
 	Sources []string `json:"sources"`
@@ -2380,6 +2380,27 @@ func findBrew() string {
 	}
 	return firstExecutable(candidates...)
 }
+func findWindowsWinGetFFmpeg(local string) string {
+	packages := filepath.Join(local, "Microsoft", "WinGet", "Packages")
+	roots, _ := filepath.Glob(filepath.Join(packages, "Gyan.FFmpeg_*"))
+	for _, root := range roots {
+		found := ""
+		_ = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info == nil || info.IsDir() {
+				return nil
+			}
+			if strings.EqualFold(info.Name(), "ffmpeg.exe") {
+				found = path
+				return filepath.SkipAll
+			}
+			return nil
+		})
+		if found != "" {
+			return found
+		}
+	}
+	return ""
+}
 func ffmpegPath() string {
 	candidates := []string{}
 	if p, e := exec.LookPath("ffmpeg"); e == nil {
@@ -2390,7 +2411,10 @@ func ffmpegPath() string {
 	}
 	if runtime.GOOS == "windows" {
 		local := os.Getenv("LOCALAPPDATA")
-		candidates = append(candidates, filepath.Join(local, "Microsoft", "WinGet", "Links", "ffmpeg.exe"))
+		candidates = append(candidates,
+			filepath.Join(local, "Microsoft", "WinGet", "Links", "ffmpeg.exe"),
+			findWindowsWinGetFFmpeg(local),
+		)
 	}
 	return firstExecutable(candidates...)
 }
@@ -2457,21 +2481,43 @@ func (a *App) setupWindowsImportTools() (string, error) {
 	local := os.Getenv("LOCALAPPDATA")
 	venv := filepath.Join(local, "VexStreamMusic", "runtime", "venv")
 	py := filepath.Join(venv, "Scripts", "python.exe")
-	base, extra := "", ""
-	if p, e := exec.LookPath("py.exe"); e == nil {
-		base = p
-		extra = "-3"
-	} else if p, e := exec.LookPath("python.exe"); e == nil {
-		base = p
-	} else {
-		return "", errors.New("Python 3 was not found. Install Python 3.10+ first, then retry")
+	if _, e := os.Stat(py); e != nil {
+		base := ""
+		args := []string{}
+		if p, lookErr := exec.LookPath("py.exe"); lookErr == nil {
+			base = p
+			args = []string{"-3", "-m", "venv", venv}
+		} else if p, lookErr := exec.LookPath("python.exe"); lookErr == nil {
+			base = p
+			args = []string{"-m", "venv", venv}
+		} else {
+			return "", errors.New("Python 3 was not found. Install Python 3.10+ first, then retry")
+		}
+		if e = runSetupCommand(5*time.Minute, base, args...); e != nil {
+			return "", fmt.Errorf("could not create the private VexStream Python runtime: %w", e)
+		}
 	}
-	create := "& '" + strings.ReplaceAll(base, "'", "''") + "' " + extra + " -m venv '" + strings.ReplaceAll(venv, "'", "''") + "'"
-	script := "$ErrorActionPreference='Stop'; if(-not (Test-Path '" + strings.ReplaceAll(py, "'", "''") + "')){" + create + "; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}}; & '" + strings.ReplaceAll(py, "'", "''") + "' -m pip install --upgrade pip 'yt-dlp[default,curl-cffi]'; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; if(-not (Get-Command ffmpeg.exe -ErrorAction SilentlyContinue)){ if(Get-Command winget.exe -ErrorAction SilentlyContinue){ winget install --id Gyan.FFmpeg -e --accept-package-agreements --accept-source-agreements --silent }}"
-	if e := runSetupCommand(20*time.Minute, "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script); e != nil {
-		return "", e
+	if e := runSetupCommand(15*time.Minute, py, "-m", "pip", "install", "--upgrade", "pip", "yt-dlp[default,curl-cffi]"); e != nil {
+		return "", fmt.Errorf("could not install YouTube discovery dependencies: %w", e)
 	}
-	return "YouTube import tools are ready.", nil
+	if !validPython(py) {
+		return "", errors.New("the private VexStream Python runtime was created but yt-dlp/curl-cffi did not validate")
+	}
+	if ffmpegPath() == "" {
+		if winget, e := exec.LookPath("winget.exe"); e == nil {
+			installErr := runSetupCommand(20*time.Minute, winget, "install", "--id", "Gyan.FFmpeg", "-e", "--accept-package-agreements", "--accept-source-agreements", "--silent")
+			if ffmpegPath() != "" {
+				return "YouTube search, inspection, and MP3 import tools are ready on this PC.", nil
+			}
+			if installErr != nil {
+				return "YouTube search and source inspection are ready, but FFmpeg is still not discoverable. WinGet may already have FFmpeg installed or may have declined an upgrade. VexStream will keep search available; run setup again after FFmpeg is available.", nil
+			}
+		}
+	}
+	if ffmpegPath() == "" {
+		return "YouTube search and source inspection are ready. MP3 import still needs FFmpeg. Install Gyan.FFmpeg with WinGet (or put ffmpeg.exe on PATH), then run setup again.", nil
+	}
+	return "YouTube search, inspection, and MP3 import tools are ready on this PC.", nil
 }
 func (a *App) setupDarwinImportTools() (string, error) {
 	base := findDarwinPython()

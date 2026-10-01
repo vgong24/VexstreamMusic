@@ -1,8 +1,8 @@
 {
   "schemaVersion": "vexstream.static-release-checks/v1",
-  "appVersion": "2.0.0",
-  "sourceRoot": "/mnt/data/vexstream-2.0.0-src",
-  "artifact": "/mnt/data/vexstream-2.0.0-build/VexStreamMusic-2.0.0.exe",
+  "appVersion": "2.0.1",
+  "sourceRoot": "/mnt/data/vexstream-2.0.1-src",
+  "artifact": null,
   "checks": [
     {
       "name": "go-version-binding",
@@ -38,6 +38,18 @@
     },
     {
       "name": "import-readiness-split-present",
+      "status": "PASS"
+    },
+    {
+      "name": "windows-winget-ffmpeg-discovery-present",
+      "status": "PASS"
+    },
+    {
+      "name": "windows-import-setup-is-direct-and-idempotent",
+      "status": "PASS"
+    },
+    {
+      "name": "import-start-readiness-preflight-present",
       "status": "PASS"
     },
     {
@@ -166,14 +178,6 @@
     },
     {
       "name": "embedded-javascript-syntax",
-      "status": "PASS"
-    },
-    {
-      "name": "versioned-executable-name",
-      "status": "PASS"
-    },
-    {
-      "name": "executable-present",
       "status": "PASS"
     }
   ],

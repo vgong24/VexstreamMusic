@@ -10,7 +10,7 @@ from pathlib import Path
 import struct
 import subprocess
 
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 EXPECTED_NAME = f"VexStreamMusic-{VERSION}.exe"
 
 

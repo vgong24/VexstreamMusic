@@ -19,7 +19,7 @@ from typing import Any
 
 from playwright.sync_api import Page, sync_playwright
 
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 
 TRACKS: list[dict[str, Any]] = [
     {
@@ -212,7 +212,7 @@ def run(html_path: Path, executable: str | None) -> dict[str, Any]:
             page.evaluate("refreshImportStatus()")
             page.wait_for_timeout(50)
             text = page.locator("#ytRuntime").inner_text()
-            require("YouTube search is ready." in text, f"partial readiness not projected: {text}")
+            require("YouTube search is ready" in text and "FFmpeg" in text, f"partial readiness not projected: {text}")
             require(page.locator("#setupYt").count() == 1, "finish-setup action missing for partial readiness")
             require(page.locator("#setupYt").inner_text().strip() == "Finish import setup", "partial readiness action label drift")
             page.evaluate("window.__mockImportStatus={ready:true,searchReady:true,ffmpegReady:true,importReady:true,detail:'All ready'}")
@@ -221,6 +221,26 @@ def run(html_path: Path, executable: str | None) -> dict[str, Any]:
             require("YouTube import is ready." in page.locator("#ytRuntime").inner_text(), "full import readiness not projected")
 
         checked("youtube-runtime-distinguishes-search-ready-from-import-ready", import_readiness_split_contract)
+
+        def import_start_preflight_contract() -> None:
+            page.evaluate("window.__mockImportStatus={ready:true,searchReady:true,ffmpegReady:false,importReady:false,detail:'Search works; FFmpeg pending'}")
+            page.evaluate("window.__mockRequests=[]")
+            result = page.evaluate("ensureImportRuntimeReady()")
+            require(result is False, f"partial runtime was incorrectly accepted: {result}")
+            paths = page.evaluate("window.__mockRequests.map(x=>x.path)")
+            require("/api/import/status" in paths, f"runtime status was not checked: {paths}")
+            require("/api/import/setup" in paths, f"setup was not attempted before import: {paths}")
+            require("/api/import/start" not in paths, f"import started without FFmpeg readiness: {paths}")
+            require("Finish import setup before downloading." in page.locator("#ytPlan").inner_text(), "partial runtime did not leave a clear download hold")
+
+            page.evaluate("window.__mockImportStatus={ready:true,searchReady:true,ffmpegReady:true,importReady:true,detail:'All ready'}")
+            page.evaluate("window.__mockRequests=[]")
+            result = page.evaluate("ensureImportRuntimeReady()")
+            require(result is True, "fully ready runtime was not accepted")
+            paths = page.evaluate("window.__mockRequests.map(x=>x.path)")
+            require(paths == ["/api/import/status"], f"ready runtime should not rerun setup: {paths}")
+
+        checked("youtube-download-preflights-runtime-before-import", import_start_preflight_contract)
 
         def adaptive_navigation_contract() -> None:
             page.click("#libraryNavToggle")

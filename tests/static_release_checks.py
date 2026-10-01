@@ -10,7 +10,7 @@ import re
 import subprocess
 import tempfile
 
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 EXPECTED_EXE = f"VexStreamMusic-{VERSION}.exe"
 
 
@@ -62,7 +62,10 @@ def main() -> int:
     checked("single-master-multiplatform-distribution-builder-present", lambda: require((root / "tests" / "build_all_platforms.py").is_file() and "Mac Silicon" in (root / "tests" / "build_all_platforms.py").read_text(encoding="utf-8") and "COPY-PASTE-TO-TERMINAL.md" in (root / "tests" / "build_all_platforms.py").read_text(encoding="utf-8"), "one-master-ZIP platform distribution contract missing"))
     checked("mac-youtube-runtime-bootstrap-present", lambda: require("func (a *App) setupDarwinImportTools()" in main_go and "/opt/homebrew/bin/python3" in main_go and 'brew, "install", "ffmpeg"' in main_go and 'runtime.GOOS == "darwin"' in main_go, "macOS YouTube runtime bootstrap contract missing"))
     checked("mac-private-import-venv-present", lambda: require('return filepath.Join(venv, "bin", "python3")' in main_go and "importRuntimePythonPath" in main_go, "macOS app-local import runtime path missing"))
-    checked("import-readiness-split-present", lambda: require("ffmpegReady" in main_go and "importReady" in main_go and "YouTube search is ready." in html and "Finish import setup" in html, "search/import readiness split missing"))
+    checked("import-readiness-split-present", lambda: require("ffmpegReady" in main_go and "importReady" in main_go and "YouTube search is ready; MP3 download still needs FFmpeg." in html and "Finish import setup" in html, "search/import readiness split missing"))
+    checked("windows-winget-ffmpeg-discovery-present", lambda: require("findWindowsWinGetFFmpeg" in main_go and 'filepath.Join(local, "Microsoft", "WinGet", "Packages")' in main_go and 'strings.EqualFold(info.Name(), "ffmpeg.exe")' in main_go, "WinGet FFmpeg package discovery missing"))
+    checked("windows-import-setup-is-direct-and-idempotent", lambda: require('runSetupCommand(15*time.Minute, py, "-m", "pip", "install", "--upgrade", "pip", "yt-dlp[default,curl-cffi]")' in main_go and 'exec.LookPath("winget.exe")' in main_go and 'powershell.exe' not in main_go[main_go.index("func (a *App) setupWindowsImportTools()"):main_go.index("func (a *App) setupDarwinImportTools()")], "Windows import setup still depends on monolithic PowerShell bootstrap"))
+    checked("import-start-readiness-preflight-present", lambda: require("async function ensureImportRuntimeReady()" in html and "if(!await ensureImportRuntimeReady())return;" in html and "projectImportRuntimeStatus" in html, "Download & add can still bypass runtime readiness preflight"))
 
     def duplicate_ids() -> None:
         parser_ = IdCollector()

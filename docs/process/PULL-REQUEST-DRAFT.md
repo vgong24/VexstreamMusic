@@ -1,10 +1,10 @@
-# Pull request projection — VexStream Music 2.0.0 source-native recovery
+# Pull request projection — VexStream Music 2.0.1 source-native recovery
 
 `[VXG RealForever]`
 
 ## Summary
 
-Promote the exact recovered 1.1.5 buildable source lineage into the public VexStream Music repository, form 2.0.0 from source, repair the Songs-filter playback-scope defect, and add a real server/media regression gate.
+Promote the exact recovered 1.1.5 buildable source lineage into the public VexStream Music repository, form 2.0.1 from source, repair the Songs-filter playback-scope defect, and add a real server/media regression gate.
 
 ## Source baseline
 
@@ -16,7 +16,7 @@ reproduced historical Windows EXE
 sha256=e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f
 ```
 
-## 2.0.0 change
+## 2.0.1 change
 
 - search/genre filters remain Songs display lenses;
 - Songs playback resolves against the full sorted library;
@@ -28,4 +28,4 @@ sha256=e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f
 
 ## Preserved boundaries
 
-No VexLife federation, network exposure, friend sharing, AI music generation, YouTube publication, or unrelated interaction redesign is introduced by 2.0.0.
+No VexLife federation, network exposure, friend sharing, AI music generation, YouTube publication, or unrelated interaction redesign is introduced by 2.0.1.

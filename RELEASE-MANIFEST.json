@@ -2,82 +2,86 @@
   "schemaVersion": "vexstream.release-manifest/v2",
   "continuity": "[VXG RealForever]",
   "product": "VexStream Music",
-  "version": "2.0.0",
-  "releaseClass": "SOURCE_NATIVE_PLAYBACK_CONTINUITY_BASELINE",
+  "version": "2.0.1",
+  "releaseClass": "WINDOWS_IMPORT_RUNTIME_REPAIR",
   "sourceAncestor": {
     "name": "VexStreamMusic-1.1.5-Source.zip",
     "sha256": "15d54909bd9227d4e0ef67f4879503d7e7fdf80366781f8ec2723a0d375c1243",
     "reproducedWindowsExeSha256": "e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f"
   },
+  "previousSourceNativeVersion": "2.0.0",
   "change": {
+    "windowsImportBootstrap": "SEPARATED_DIRECT_EFFECTS",
+    "wingetFFmpegDiscovery": "NESTED_PACKAGE_AWARE",
+    "wingetNoUpgrade": "NON_FATAL_WHEN_SEARCH_RUNTIME_READY",
+    "searchReadyImportPending": "EXPLICIT_PARTIAL_READY",
+    "importStartPreflight": "REQUIRES_IMPORT_READY",
     "filteredSongs": "DISPLAY_LENS",
-    "songsPlaybackUniverse": "FULL_SORTED_LIBRARY",
-    "shuffleSelectedTrackRemainsCurrent": true,
-    "explicitQueueActionsRemainScoped": true,
-    "realMediaServerRegressionAdded": true
+    "songsPlaybackUniverse": "FULL_SORTED_LIBRARY"
   },
   "artifacts": {
     "windows": {
-      "filename": "VexStreamMusic-2.0.0.exe",
-      "bytes": 6904320,
-      "sha256": "c9aacf0bae57ec33827057de4099aaf35794c19d8551f5ba5bd5453c0259bcf4",
+      "filename": "VexStreamMusic-2.0.1.exe",
+      "bytes": 6917120,
+      "sha256": "c1e66b1443dc852d7415cfc9e6138992470e0567d060856b3235eb4eaaccd2e6",
       "format": "PE32+ AMD64 Windows GUI"
     },
     "macOSAppleSilicon": {
-      "filename": "VexStreamMusic-2.0.0-macOS-Apple-Silicon",
+      "filename": "VexStreamMusic-2.0.1-macOS-Apple-Silicon",
       "bytes": 6566002,
-      "sha256": "8562ca8cab8855d620991f7ec8ac0e551bb1d7674147d03078090b6b2639f80c",
+      "sha256": "dcc014ab72a67c2dac9ac123212982d30fd37ada03af8be085195d31756b5652",
       "format": "Mach-O 64-bit arm64 raw executable"
     },
     "macOSIntel": {
-      "filename": "VexStreamMusic-2.0.0-macOS-Intel",
+      "filename": "VexStreamMusic-2.0.1-macOS-Intel",
       "bytes": 6854816,
-      "sha256": "9922cd9b84ae173e8664ce5585956a1a5e00adb8f40f67be4bd7d2d0968d92f5",
+      "sha256": "6867788caa10a3a8566829adbccc771d7e0733a05af81ddaec4c83809b474be5",
       "format": "Mach-O 64-bit amd64 raw executable"
     },
     "master": {
-      "filename": "VexStreamMusic-2.0.0-All-Platforms.zip",
-      "bytes": 8399642,
-      "sha256": "946c0cd53f0bf67abff74a65f7e0f0abb90f699db37daa72f78898ad21122cbb",
+      "filename": "VexStreamMusic-2.0.1-All-Platforms.zip",
+      "bytes": 8405587,
+      "sha256": "231f3fd6a81603fc54f5ad738b018e145108be563113d3a3c2c17fd559d7910c",
       "memberCount": 5
     }
   },
   "qualification": {
-    "staticChecks": "43 PASS",
-    "chromiumInteractions": "32 PASS, 0 FAIL, 0 page errors",
+    "staticChecks": "44 PASS",
+    "chromiumInteractions": "33 PASS, 0 page errors",
     "realMediaServer": "7 PASS",
-    "goDuplicateQualityArtistSuggestionTests": "PASS",
+    "goRegressionTests": "PASS including WinGet FFmpeg discovery",
     "pythonBridge": "compile PASS; self-test PASS",
     "windowsBuild": "PASS",
     "macOSBuild": "arm64 + amd64 cross-build PASS; real Mac host acceptance pending",
     "distribution": "PASS"
   },
   "doesNotProve": [
+    "real Windows WinGet installation behavior on the affected host",
     "real Windows audio-device output",
     "real Mac audio-device output",
-    "real browser decoder playback time advancement on target host"
+    "real provider download completion on target host"
   ],
   "sourceInventoryExcludesSelf": true,
   "sourceInventory": [
     {
       "path": "BUILD.md",
-      "bytes": 712,
-      "sha256": "1e55d67074cbe5f011516b9f9d937db5b579e87e59277543bbb04f3690e4c925"
+      "bytes": 747,
+      "sha256": "633c7152611b6ba9f3628e7a870147b06ae0e034b64d7a4ea5e4c7ac038e1de6"
     },
     {
       "path": "CHECKPOINT.md",
-      "bytes": 685,
-      "sha256": "94a2a301e4118ecd7a0a48840f224b48415a88bf01d6a1eec609289fa9516d07"
+      "bytes": 726,
+      "sha256": "87265953b8235b70fc4d96c2ef361635c7649a5dba53083abb5b9a4198916d4e"
     },
     {
       "path": "README.md",
-      "bytes": 2583,
-      "sha256": "0efc1ed1c730d2ba5f2b311b189f185b7e95ff14ac5d1a046b048a84455bae66"
+      "bytes": 2788,
+      "sha256": "918201783a83e0e809780d0971dacfaea263cadc55cf590bd3a3b20a129d1fd0"
     },
     {
       "path": "RELEASE-NOTES.md",
-      "bytes": 1190,
-      "sha256": "c715fb3d33aeff6e9ed186ef746a59687fd044037ffd0517b195e1c08eb8be78"
+      "bytes": 1265,
+      "sha256": "a5cd03bab76c0c205e895b90ce2efb3de2c7c368d09d7bb5f3c37d632686b75f"
     },
     {
       "path": "docs/architecture/VEXSTREAM-CREATION-PUBLISHING-FRONTIER.md",
@@ -86,58 +90,58 @@
     },
     {
       "path": "docs/evidence/all-platforms-distribution.json",
-      "bytes": 6858,
-      "sha256": "4d4fdc8cf0383ef0cae6c30f43eb4842f0544fbc7f06039fd45a72a0c6d82b19"
+      "bytes": 6856,
+      "sha256": "9a2ff67f4175c4e3da51b35ae9bb6fd7d2bc7d9baa6999f44f3b968dcfce97c4"
     },
     {
       "path": "docs/evidence/macos-build-qualification.json",
-      "bytes": 3157,
-      "sha256": "80671cc703dc7ee3ed4ad6fd251e8713cf64057f1609c84f6be27ca91637f114"
+      "bytes": 3133,
+      "sha256": "a88543d86e3c532083cb470b053f6dbebf4f58a11caf14f3c4d918d59c9fc42f"
     },
     {
       "path": "docs/evidence/qualification-summary.json",
-      "bytes": 12784,
-      "sha256": "2c7766633442c02d62d3d1840a3c7ce455fcfe7ea76e2e4d21c78d810659c5f4"
+      "bytes": 12875,
+      "sha256": "7a09fcd494acbd768ae7265f88a3a3389b438d943f59a2f058956fafa3aaca38"
     },
     {
       "path": "docs/evidence/real-media-server-regression.json",
       "bytes": 920,
-      "sha256": "cfd0783ffe88d94f85e09c98ce3435ff76b70a70269ab273da71e76b5c7a6177"
+      "sha256": "d5a839d049390948cb6edd935b6c4396f5458eed80f777e61662eeeaf2b24068"
     },
     {
       "path": "docs/evidence/static-release-checks.json",
-      "bytes": 3971,
-      "sha256": "17dd9b65b774ecfd27611d3134d7ef9f9c2623a7eec67b03909b99974acdf9dc"
+      "bytes": 4052,
+      "sha256": "00625c0dd7bfc7e4bde6dd2d7139ef4b13446d08fe4256874562242ab08e9542"
     },
     {
       "path": "docs/evidence/ui-runtime-regression.json",
-      "bytes": 4034,
-      "sha256": "8c5c2991c9129810f5f22c5443bace1951c89e235c070117991b423e6bfd4ada"
+      "bytes": 4137,
+      "sha256": "7a78cd3a39c1b1c2ab400333e55dd0c5af61caa050365f35f467bae914a1b89a"
     },
     {
       "path": "docs/evidence/windows-build-qualification.json",
       "bytes": 1304,
-      "sha256": "feb598373a8fa6596b1b83a32db4178820bfd05546b1bdbc47c5d749c4711fff"
+      "sha256": "810c7ab63335193340ff372bfb40946d94884be256bed607db7e3a543e23f02b"
     },
     {
       "path": "docs/process/GITHUB-PLACEMENT.md",
       "bytes": 732,
-      "sha256": "e21eb314a603e522d150b20af26358ea1da329264d4225ac00d93ca1ff22a912"
+      "sha256": "65bfe79e46bc33cbcd302a69df36c15bfd31da2b660243ad42aa37af440c5147"
     },
     {
       "path": "docs/process/PULL-REQUEST-DRAFT.md",
       "bytes": 1301,
-      "sha256": "1d4aee34e851d8e1aadb7970f534f92cef9bd9b6da2acbc03cefa6ba97b1ff64"
+      "sha256": "ecd9064c6d41adf638f36478780c6f3517616b03d3d8903c16a7ebb3d848fceb"
     },
     {
       "path": "docs/process/REGRESSION-LEDGER.md",
-      "bytes": 14734,
-      "sha256": "50cb6bcaaafd2c0b95b2aea400093f98cc0291a80884947b6cc41092a9f5ca29"
+      "bytes": 15983,
+      "sha256": "15a002bd8c996534d833ad9a523f84260d6caf0f69cfc82d460cf7f3e39f13ea"
     },
     {
       "path": "docs/process/RELEASE-QUALIFICATION.md",
       "bytes": 7788,
-      "sha256": "40f980112aeed02334bade0df321548df025b831a3e7192271b0ed9b592afca5"
+      "sha256": "fe368125b75f2888cd7f51ccc38df88c05d0f01296f1960affab6531f1b934ea"
     },
     {
       "path": "duplicate_logic_test.go",
@@ -145,14 +149,19 @@
       "sha256": "d6c21a7b5ab84bfcb104e4082ba6ddfe871d34073d9a33d462863ce9fd598930"
     },
     {
+      "path": "import_runtime_test.go",
+      "bytes": 1116,
+      "sha256": "5b1463fd50130b38821d61671f964cdf979081629b9d7064445c699694edf909"
+    },
+    {
       "path": "main.go",
-      "bytes": 140087,
-      "sha256": "31be0ea9a23a224e295ae1a45b1bb4d01b4e70c78d989cb3b4e8560ddb3d883e"
+      "bytes": 141446,
+      "sha256": "5287364d52d7e27a0a3fbe2943d6e362ff16662a378964d0857bb2340755085f"
     },
     {
       "path": "media_bridge.py",
       "bytes": 25091,
-      "sha256": "2ba67557585917e8975b29475a3d8d519f4d7b160eb96aa86ba34954d6aa477a"
+      "sha256": "f7378501400fd52101533cd5c6557d688b84d6dc8bbfeea69bb03eec725967f7"
     },
     {
       "path": "procattr_unix.go",
@@ -167,17 +176,17 @@
     {
       "path": "tests/build_all_platforms.py",
       "bytes": 7974,
-      "sha256": "942139799aaafa6226f9816e65da7b6dd6368f2f63633a1d7577a7e028c0bee3"
+      "sha256": "dd7d22b700ec356cddde9d1e9998ae8cdcbc6c7d6d32e67f59004d84b2c41ae0"
     },
     {
       "path": "tests/build_macos.py",
       "bytes": 4656,
-      "sha256": "194c9a04865d08e41c07d58c4151283c1680b9483a64ad49d5bf9194cf3996f6"
+      "sha256": "b83235428ecc756839f82c411d5d09f6505c474adb3f8ebedeba5aa0089a1b80"
     },
     {
       "path": "tests/build_windows.py",
       "bytes": 3835,
-      "sha256": "76e42ab200d428a5c773123f082a73e3a7e0e32be564ec6f740931ee132efbf8"
+      "sha256": "084dc7174c9ca65d941d96555c0c43532179e2258cc1f88bb85c74bb6cba6e4b"
     },
     {
       "path": "tests/fixtures/vexstream-test-tone.mp3",
@@ -187,7 +196,7 @@
     {
       "path": "tests/media_server_regression.py",
       "bytes": 6706,
-      "sha256": "aa50502e11e39b4238d7a8ef95ba89d4430668a447c44108023cf93d967fa94f"
+      "sha256": "17439128814f425f06085e3e4397cbe6543c7566596335e06d17ba8c2f3325fd"
     },
     {
       "path": "tests/requirements-test.txt",
@@ -196,23 +205,23 @@
     },
     {
       "path": "tests/run_qualification.py",
-      "bytes": 2992,
-      "sha256": "8cdea94cd3d7af6b5c32b8d380ae5c6ecc63ac9b76e2ba545c874b23af63225b"
+      "bytes": 3018,
+      "sha256": "c4cdd0aad3f38be577ecd9a2790715d85c613e4f744f28e7aab1273eec4e763d"
     },
     {
       "path": "tests/static_release_checks.py",
-      "bytes": 12658,
-      "sha256": "b82b7ab67d5f5f81cd136ad51e74e8ff49a468defb1315c98438e5344cc49df5"
+      "bytes": 13737,
+      "sha256": "a68245165fcaab221c29ee751312c269e9d5ad583761da2fca24554b8019c67a"
     },
     {
       "path": "tests/ui_runtime_regression.py",
-      "bytes": 49449,
-      "sha256": "81a1a46f55a83112f1559ddea6a28f73dbcd4fa0302c25c9a4c9f16d131de1aa"
+      "bytes": 51044,
+      "sha256": "8cf3d5e30ea655883efd3beb161c983f073e212e70b46cc7b8c9c9a5e680c0af"
     },
     {
       "path": "ui/index.html",
-      "bytes": 180802,
-      "sha256": "f31ba38110e3ccae5b465a02c8b6aec6ca903ea14edd0a19261515da1110ee7d"
+      "bytes": 181942,
+      "sha256": "5a59bac14ba537383e53cdc942fc070a16469bc1c979c14330cc5f49cc592597"
     }
   ]
 }

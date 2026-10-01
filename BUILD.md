@@ -1,4 +1,4 @@
-# Build VexStream Music 2.0.0
+# Build VexStream Music 2.0.1
 
 `[VXG RealForever]`
 
@@ -8,14 +8,14 @@
 python3 tests/run_qualification.py --root . --browser-executable /path/to/chromium
 ```
 
-The suite covers static/source invariants, deterministic Chromium interaction behavior, a real source-built server/media regression, Go duplicate/quality/artist-inference tests, and the Python bridge.
+The suite covers static/source invariants, deterministic Chromium interaction behavior, real source-built server/media delivery, Go duplicate/quality/artist-inference tests, Windows WinGet FFmpeg discovery tests, and the Python bridge.
 
 ## Windows
 
 ```bash
 python3 tests/build_windows.py \
   --root . \
-  --output ../VexStreamMusic-2.0.0.exe \
+  --output ../VexStreamMusic-2.0.1.exe \
   --report docs/evidence/windows-build-qualification.json
 ```
 

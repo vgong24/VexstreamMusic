@@ -11,7 +11,7 @@ import stat
 import struct
 import subprocess
 
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 ARCH_CPU = {
     "arm64": 0x0100000C,
     "amd64": 0x01000007,

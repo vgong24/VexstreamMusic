@@ -20,7 +20,7 @@ import time
 import urllib.error
 import urllib.request
 
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 FIXTURE_SHA256 = "602e675b3d27d2496ac968172b68ca1dc74ddaec455be92d41b51ec65fa359a7"
 
 

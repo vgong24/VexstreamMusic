@@ -12,7 +12,7 @@ import subprocess
 import sys
 import zipfile
 
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 MASTER_NAME = f"VexStreamMusic-{VERSION}-All-Platforms.zip"
 
 

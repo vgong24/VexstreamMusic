@@ -1,7 +1,7 @@
 {
   "schemaVersion": "vexstream.ui-runtime-regression/v1",
-  "appVersion": "2.0.0",
-  "html": "/mnt/data/vexstream-2.0.0-src/ui/index.html",
+  "appVersion": "2.0.1",
+  "html": "/mnt/data/vexstream-2.0.1-src/ui/index.html",
   "checks": [
     {
       "name": "initial-render-has-no-browser-runtime-error",
@@ -13,6 +13,10 @@
     },
     {
       "name": "youtube-runtime-distinguishes-search-ready-from-import-ready",
+      "status": "PASS"
+    },
+    {
+      "name": "youtube-download-preflights-runtime-before-import",
       "status": "PASS"
     },
     {

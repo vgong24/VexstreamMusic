@@ -1,54 +1,54 @@
 {
   "schemaVersion": "vexstream.all-platform-distribution/v1",
-  "appVersion": "2.0.0",
-  "sourceRoot": "/mnt/data/vexstream-2.0.0-src",
-  "masterZip": "/mnt/data/vexstream-2.0.0-dist/VexStreamMusic-2.0.0-All-Platforms.zip",
-  "masterZipSha256": "946c0cd53f0bf67abff74a65f7e0f0abb90f699db37daa72f78898ad21122cbb",
+  "appVersion": "2.0.1",
+  "sourceRoot": "/mnt/data/vexstream-2.0.1-src",
+  "masterZip": "/mnt/data/vexstream-2.0.1-dist/VexStreamMusic-2.0.1-All-Platforms.zip",
+  "masterZipSha256": "231f3fd6a81603fc54f5ad738b018e145108be563113d3a3c2c17fd559d7910c",
   "memberCount": 5,
   "artifacts": {
     "windows": {
-      "path": "Windows/VexStreamMusic-2.0.0.exe",
-      "sha256": "c9aacf0bae57ec33827057de4099aaf35794c19d8551f5ba5bd5453c0259bcf4"
+      "path": "Windows/VexStreamMusic-2.0.1.exe",
+      "sha256": "c1e66b1443dc852d7415cfc9e6138992470e0567d060856b3235eb4eaaccd2e6"
     },
     "arm64": {
-      "path": "Mac Silicon/VexStreamMusic-2.0.0-macOS-Apple-Silicon",
-      "sha256": "8562ca8cab8855d620991f7ec8ac0e551bb1d7674147d03078090b6b2639f80c"
+      "path": "Mac Silicon/VexStreamMusic-2.0.1-macOS-Apple-Silicon",
+      "sha256": "dcc014ab72a67c2dac9ac123212982d30fd37ada03af8be085195d31756b5652"
     },
     "amd64": {
-      "path": "Mac Intel/VexStreamMusic-2.0.0-macOS-Intel",
-      "sha256": "9922cd9b84ae173e8664ce5585956a1a5e00adb8f40f67be4bd7d2d0968d92f5"
+      "path": "Mac Intel/VexStreamMusic-2.0.1-macOS-Intel",
+      "sha256": "6867788caa10a3a8566829adbccc771d7e0733a05af81ddaec4c83809b474be5"
     }
   },
   "steps": [
     {
       "command": [
-        "/opt/pyvenv/bin/python3",
-        "/mnt/data/vexstream-2.0.0-src/tests/build_windows.py",
+        "/opt/pyvenv/bin/python",
+        "/mnt/data/vexstream-2.0.1-src/tests/build_windows.py",
         "--root",
-        "/mnt/data/vexstream-2.0.0-src",
+        "/mnt/data/vexstream-2.0.1-src",
         "--output",
-        "/mnt/data/vexstream-2.0.0-dist/build/VexStreamMusic-2.0.0.exe",
+        "/mnt/data/vexstream-2.0.1-dist/build/VexStreamMusic-2.0.1.exe",
         "--report",
-        "/mnt/data/vexstream-2.0.0-dist/build/windows.json"
+        "/mnt/data/vexstream-2.0.1-dist/build/windows.json"
       ],
       "exitCode": 0,
-      "stdout": "{\n  \"schemaVersion\": \"vexstream.windows-build-qualification/v1\",\n  \"appVersion\": \"2.0.0\",\n  \"sourceRoot\": \"/mnt/data/vexstream-2.0.0-src\",\n  \"artifact\": \"/mnt/data/vexstream-2.0.0-dist/build/VexStreamMusic-2.0.0.exe\",\n  \"goVersion\": \"go version go1.23.2 linux/amd64\",\n  \"steps\": [\n    {\n      \"command\": [\n        \"gofmt\",\n        \"-d\",\n        \"main.go\",\n        \"procattr_windows.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"command\": [\n        \"go\",\n        \"vet\",\n        \"main.go\",\n        \"procattr_windows.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"command\": [\n        \"go\",\n        \"build\",\n        \"-trimpath\",\n        \"-ldflags=-H=windowsgui -s -w\",\n        \"-o\",\n        \"/mnt/data/vexstream-2.0.0-dist/build/VexStreamMusic-2.0.0.exe\",\n        \"main.go\",\n        \"procattr_windows.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    }\n  ],\n  \"artifactProjection\": {\n    \"byteLength\": 6904320,\n    \"sha256\": \"c9aacf0bae57ec33827057de4099aaf35794c19d8551f5ba5bd5453c0259bcf4\",\n    \"machine\": \"AMD64\",\n    \"peMagic\": \"PE32+\",\n    \"subsystem\": \"WINDOWS_GUI\"\n  },\n  \"status\": \"PASS\"\n}\n",
+      "stdout": "{\n  \"schemaVersion\": \"vexstream.windows-build-qualification/v1\",\n  \"appVersion\": \"2.0.1\",\n  \"sourceRoot\": \"/mnt/data/vexstream-2.0.1-src\",\n  \"artifact\": \"/mnt/data/vexstream-2.0.1-dist/build/VexStreamMusic-2.0.1.exe\",\n  \"goVersion\": \"go version go1.23.2 linux/amd64\",\n  \"steps\": [\n    {\n      \"command\": [\n        \"gofmt\",\n        \"-d\",\n        \"main.go\",\n        \"procattr_windows.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"command\": [\n        \"go\",\n        \"vet\",\n        \"main.go\",\n        \"procattr_windows.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"command\": [\n        \"go\",\n        \"build\",\n        \"-trimpath\",\n        \"-ldflags=-H=windowsgui -s -w\",\n        \"-o\",\n        \"/mnt/data/vexstream-2.0.1-dist/build/VexStreamMusic-2.0.1.exe\",\n        \"main.go\",\n        \"procattr_windows.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    }\n  ],\n  \"artifactProjection\": {\n    \"byteLength\": 6917120,\n    \"sha256\": \"c1e66b1443dc852d7415cfc9e6138992470e0567d060856b3235eb4eaaccd2e6\",\n    \"machine\": \"AMD64\",\n    \"peMagic\": \"PE32+\",\n    \"subsystem\": \"WINDOWS_GUI\"\n  },\n  \"status\": \"PASS\"\n}\n",
       "stderr": "",
       "status": "PASS"
     },
     {
       "command": [
-        "/opt/pyvenv/bin/python3",
-        "/mnt/data/vexstream-2.0.0-src/tests/build_macos.py",
+        "/opt/pyvenv/bin/python",
+        "/mnt/data/vexstream-2.0.1-src/tests/build_macos.py",
         "--root",
-        "/mnt/data/vexstream-2.0.0-src",
+        "/mnt/data/vexstream-2.0.1-src",
         "--output-dir",
-        "/mnt/data/vexstream-2.0.0-dist/build/mac",
+        "/mnt/data/vexstream-2.0.1-dist/build/mac",
         "--report",
-        "/mnt/data/vexstream-2.0.0-dist/build/macos.json"
+        "/mnt/data/vexstream-2.0.1-dist/build/macos.json"
       ],
       "exitCode": 0,
-      "stdout": "{\n  \"schemaVersion\": \"vexstream.macos-build-qualification/v2\",\n  \"appVersion\": \"2.0.0\",\n  \"sourceRoot\": \"/mnt/data/vexstream-2.0.0-src\",\n  \"goVersion\": \"go version go1.23.2 linux/amd64\",\n  \"steps\": [\n    {\n      \"command\": [\n        \"gofmt\",\n        \"-d\",\n        \"main.go\",\n        \"procattr_windows.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"architecture\": \"arm64\",\n      \"phase\": \"go-vet\",\n      \"command\": [\n        \"go\",\n        \"vet\",\n        \"main.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"architecture\": \"arm64\",\n      \"phase\": \"go-build\",\n      \"command\": [\n        \"go\",\n        \"build\",\n        \"-trimpath\",\n        \"-ldflags=-s -w\",\n        \"-o\",\n        \"/mnt/data/vexstream-2.0.0-dist/build/mac/VexStreamMusic-2.0.0-macOS-Apple-Silicon\",\n        \"main.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"architecture\": \"amd64\",\n      \"phase\": \"go-vet\",\n      \"command\": [\n        \"go\",\n        \"vet\",\n        \"main.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"architecture\": \"amd64\",\n      \"phase\": \"go-build\",\n      \"command\": [\n        \"go\",\n        \"build\",\n        \"-trimpath\",\n        \"-ldflags=-s -w\",\n        \"-o\",\n        \"/mnt/data/vexstream-2.0.0-dist/build/mac/VexStreamMusic-2.0.0-macOS-Intel\",\n        \"main.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    }\n  ],\n  \"artifacts\": [\n    {\n      \"architecture\": \"arm64\",\n      \"binary\": \"/mnt/data/vexstream-2.0.0-dist/build/mac/VexStreamMusic-2.0.0-macOS-Apple-Silicon\",\n      \"binaryProjection\": {\n        \"byteLength\": 6566002,\n        \"sha256\": \"8562ca8cab8855d620991f7ec8ac0e551bb1d7674147d03078090b6b2639f80c\",\n        \"format\": \"Mach-O 64-bit\",\n        \"architecture\": \"arm64\",\n        \"cpuType\": \"0x0100000c\",\n        \"executable\": true\n      },\n      \"sha256\": \"8562ca8cab8855d620991f7ec8ac0e551bb1d7674147d03078090b6b2639f80c\",\n      \"signed\": false,\n      \"notarized\": false\n    },\n    {\n      \"architecture\": \"amd64\",\n      \"binary\": \"/mnt/data/vexstream-2.0.0-dist/build/mac/VexStreamMusic-2.0.0-macOS-Intel\",\n      \"binaryProjection\": {\n        \"byteLength\": 6854816,\n        \"sha256\": \"9922cd9b84ae173e8664ce5585956a1a5e00adb8f40f67be4bd7d2d0968d92f5\",\n        \"format\": \"Mach-O 64-bit\",\n        \"architecture\": \"amd64\",\n        \"cpuType\": \"0x01000007\",\n        \"executable\": true\n      },\n      \"sha256\": \"9922cd9b84ae173e8664ce5585956a1a5e00adb8f40f67be4bd7d2d0968d92f5\",\n      \"signed\": false,\n      \"notarized\": false\n    }\n  ],\n  \"distributionMode\": \"RAW_EXECUTABLE_PLUS_REUSABLE_TERMINAL_GUIDE\",\n  \"hostExecution\": \"NOT_RUN_ON_MACOS\",\n  \"codeSigning\": \"NOT_PERFORMED\",\n  \"notarization\": \"NOT_PERFORMED\",\n  \"status\": \"PASS_CROSS_BUILD_AND_RAW_BINARY_STRUCTURE__REAL_MAC_HOST_ACCEPTANCE_PENDING\"\n}\n",
+      "stdout": "{\n  \"schemaVersion\": \"vexstream.macos-build-qualification/v2\",\n  \"appVersion\": \"2.0.1\",\n  \"sourceRoot\": \"/mnt/data/vexstream-2.0.1-src\",\n  \"goVersion\": \"go version go1.23.2 linux/amd64\",\n  \"steps\": [\n    {\n      \"command\": [\n        \"gofmt\",\n        \"-d\",\n        \"main.go\",\n        \"procattr_windows.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"architecture\": \"arm64\",\n      \"phase\": \"go-vet\",\n      \"command\": [\n        \"go\",\n        \"vet\",\n        \"main.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"architecture\": \"arm64\",\n      \"phase\": \"go-build\",\n      \"command\": [\n        \"go\",\n        \"build\",\n        \"-trimpath\",\n        \"-ldflags=-s -w\",\n        \"-o\",\n        \"/mnt/data/vexstream-2.0.1-dist/build/mac/VexStreamMusic-2.0.1-macOS-Apple-Silicon\",\n        \"main.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"architecture\": \"amd64\",\n      \"phase\": \"go-vet\",\n      \"command\": [\n        \"go\",\n        \"vet\",\n        \"main.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"architecture\": \"amd64\",\n      \"phase\": \"go-build\",\n      \"command\": [\n        \"go\",\n        \"build\",\n        \"-trimpath\",\n        \"-ldflags=-s -w\",\n        \"-o\",\n        \"/mnt/data/vexstream-2.0.1-dist/build/mac/VexStreamMusic-2.0.1-macOS-Intel\",\n        \"main.go\",\n        \"procattr_unix.go\"\n      ],\n      \"exitCode\": 0,\n      \"stdout\": \"\",\n      \"stderr\": \"\",\n      \"status\": \"PASS\"\n    }\n  ],\n  \"artifacts\": [\n    {\n      \"architecture\": \"arm64\",\n      \"binary\": \"/mnt/data/vexstream-2.0.1-dist/build/mac/VexStreamMusic-2.0.1-macOS-Apple-Silicon\",\n      \"binaryProjection\": {\n        \"byteLength\": 6566002,\n        \"sha256\": \"dcc014ab72a67c2dac9ac123212982d30fd37ada03af8be085195d31756b5652\",\n        \"format\": \"Mach-O 64-bit\",\n        \"architecture\": \"arm64\",\n        \"cpuType\": \"0x0100000c\",\n        \"executable\": true\n      },\n      \"sha256\": \"dcc014ab72a67c2dac9ac123212982d30fd37ada03af8be085195d31756b5652\",\n      \"signed\": false,\n      \"notarized\": false\n    },\n    {\n      \"architecture\": \"amd64\",\n      \"binary\": \"/mnt/data/vexstream-2.0.1-dist/build/mac/VexStreamMusic-2.0.1-macOS-Intel\",\n      \"binaryProjection\": {\n        \"byteLength\": 6854816,\n        \"sha256\": \"6867788caa10a3a8566829adbccc771d7e0733a05af81ddaec4c83809b474be5\",\n        \"format\": \"Mach-O 64-bit\",\n        \"architecture\": \"amd64\",\n        \"cpuType\": \"0x01000007\",\n        \"executable\": true\n      },\n      \"sha256\": \"6867788caa10a3a8566829adbccc771d7e0733a05af81ddaec4c83809b474be5\",\n      \"signed\": false,\n      \"notarized\": false\n    }\n  ],\n  \"distributionMode\": \"RAW_EXECUTABLE_PLUS_REUSABLE_TERMINAL_GUIDE\",\n  \"hostExecution\": \"NOT_RUN_ON_MACOS\",\n  \"codeSigning\": \"NOT_PERFORMED\",\n  \"notarization\": \"NOT_PERFORMED\",\n  \"status\": \"PASS_CROSS_BUILD_AND_RAW_BINARY_STRUCTURE__REAL_MAC_HOST_ACCEPTANCE_PENDING\"\n}\n",
       "stderr": "",
       "status": "PASS"
     }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "vexstream.macos-build-qualification/v2",
-  "appVersion": "2.0.0",
-  "sourceRoot": "/mnt/data/vexstream-2.0.0-src",
+  "appVersion": "2.0.1",
+  "sourceRoot": "/mnt/data/vexstream-2.0.1-src",
   "goVersion": "go version go1.23.2 linux/amd64",
   "steps": [
     {
@@ -40,7 +40,7 @@
         "-trimpath",
         "-ldflags=-s -w",
         "-o",
-        "/mnt/data/vexstream-2.0.0-build/macos/VexStreamMusic-2.0.0-macOS-Apple-Silicon",
+        "/mnt/data/vexstream-2.0.1-build/VexStreamMusic-2.0.1-macOS-Apple-Silicon",
         "main.go",
         "procattr_unix.go"
       ],
@@ -72,7 +72,7 @@
         "-trimpath",
         "-ldflags=-s -w",
         "-o",
-        "/mnt/data/vexstream-2.0.0-build/macos/VexStreamMusic-2.0.0-macOS-Intel",
+        "/mnt/data/vexstream-2.0.1-build/VexStreamMusic-2.0.1-macOS-Intel",
         "main.go",
         "procattr_unix.go"
       ],
@@ -85,31 +85,31 @@
   "artifacts": [
     {
       "architecture": "arm64",
-      "binary": "/mnt/data/vexstream-2.0.0-build/macos/VexStreamMusic-2.0.0-macOS-Apple-Silicon",
+      "binary": "/mnt/data/vexstream-2.0.1-build/VexStreamMusic-2.0.1-macOS-Apple-Silicon",
       "binaryProjection": {
         "byteLength": 6566002,
-        "sha256": "8562ca8cab8855d620991f7ec8ac0e551bb1d7674147d03078090b6b2639f80c",
+        "sha256": "dcc014ab72a67c2dac9ac123212982d30fd37ada03af8be085195d31756b5652",
         "format": "Mach-O 64-bit",
         "architecture": "arm64",
         "cpuType": "0x0100000c",
         "executable": true
       },
-      "sha256": "8562ca8cab8855d620991f7ec8ac0e551bb1d7674147d03078090b6b2639f80c",
+      "sha256": "dcc014ab72a67c2dac9ac123212982d30fd37ada03af8be085195d31756b5652",
       "signed": false,
       "notarized": false
     },
     {
       "architecture": "amd64",
-      "binary": "/mnt/data/vexstream-2.0.0-build/macos/VexStreamMusic-2.0.0-macOS-Intel",
+      "binary": "/mnt/data/vexstream-2.0.1-build/VexStreamMusic-2.0.1-macOS-Intel",
       "binaryProjection": {
         "byteLength": 6854816,
-        "sha256": "9922cd9b84ae173e8664ce5585956a1a5e00adb8f40f67be4bd7d2d0968d92f5",
+        "sha256": "6867788caa10a3a8566829adbccc771d7e0733a05af81ddaec4c83809b474be5",
         "format": "Mach-O 64-bit",
         "architecture": "amd64",
         "cpuType": "0x01000007",
         "executable": true
       },
-      "sha256": "9922cd9b84ae173e8664ce5585956a1a5e00adb8f40f67be4bd7d2d0968d92f5",
+      "sha256": "6867788caa10a3a8566829adbccc771d7e0733a05af81ddaec4c83809b474be5",
       "signed": false,
       "notarized": false
     }

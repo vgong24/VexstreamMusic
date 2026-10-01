@@ -1,0 +1,261 @@
+{
+  "schemaVersion": "vexstream.release-manifest/v2",
+  "continuity": "[VXG RealForever]",
+  "product": "VexStream Music",
+  "version": "2.2.0",
+  "releaseClass": "EXPLORE_SESSION_V1_MULTI_AXIS",
+  "sourceAncestor": {
+    "name": "VexStreamMusic-1.1.5-Source.zip",
+    "sha256": "15d54909bd9227d4e0ef67f4879503d7e7fdf80366781f8ec2723a0d375c1243",
+    "reproducedWindowsExeSha256": "e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f"
+  },
+  "previousSourceNativeVersion": "2.1.0",
+  "change": {
+    "humanLabel": "🌐 Explore",
+    "exploreSession": "TEMPORARY_IN_MEMORY_V1",
+    "candidateGeneration": "YOUTUBE_SEARCH_DERIVED_MULTI_AXIS_METADATA",
+    "axes": [
+      "CLOSER",
+      "NEIGHBORHOOD",
+      "ERA",
+      "VERSIONS"
+    ],
+    "selection": "ROUND_ROBIN",
+    "creatorCap": 2,
+    "frameLimit": 16,
+    "providerPreview": "ONE_VISIBLE_YOUTUBE_EMBED",
+    "libraryMatch": "EXISTING_DUPLICATE_PROVENANCE_LOGIC",
+    "branching": "CHILD_FRAME_WITH_BACK",
+    "normalQueueMutation": "NONE_FROM_METADATA_OR_PREVIEW",
+    "libraryPromotion": "EXPLICIT_EXISTING_IMPORT_REVIEW",
+    "aiRequired": false,
+    "aiSeam": "AXIS_LABELED_CANDIDATE_MAP_RANKING_LATER",
+    "filteredSongs": "DISPLAY_LENS",
+    "songsPlaybackUniverse": "FULL_SORTED_LIBRARY",
+    "windowsImportRuntimeRepair": "PRESERVED_FROM_2.0.1"
+  },
+  "artifacts": {
+    "windows": {
+      "filename": "VexStreamMusic-2.2.0.exe",
+      "bytes": 6952448,
+      "sha256": "9b0fbc8f46b3a637744e8902545a3108a56eba00a451f7795bc7a283acb81336",
+      "format": "PE32+ AMD64 Windows GUI"
+    },
+    "macOSAppleSilicon": {
+      "filename": "VexStreamMusic-2.2.0-macOS-Apple-Silicon",
+      "bytes": 6599570,
+      "sha256": "b14d65962c7b8eea3306bfc3b524e0d04b3ffaab45f7e2fca3633580d2dd676f",
+      "format": "Mach-O 64-bit arm64 raw executable"
+    },
+    "macOSIntel": {
+      "filename": "VexStreamMusic-2.2.0-macOS-Intel",
+      "bytes": 6892224,
+      "sha256": "2add48d3f74aec2e7d11d9b60d92da8c0417185c43f65a6af6dbac32f0394344",
+      "format": "Mach-O 64-bit amd64 raw executable"
+    },
+    "master": {
+      "filename": "VexStreamMusic-2.2.0-All-Platforms.zip",
+      "bytes": 8444590,
+      "sha256": "972093b14163b32f7959964253d34380caf414d68f5f627c4352e74575392e58",
+      "format": "ZIP",
+      "memberCount": 5
+    }
+  },
+  "qualification": {
+    "staticChecks": "51 PASS",
+    "chromiumInteractions": "35 PASS, 0 page errors",
+    "realMediaServer": "7 PASS",
+    "goRegressionTests": "PASS including multi-axis query/round-robin creator-cap helpers, duplicate logic, and WinGet FFmpeg discovery",
+    "pythonBridge": "compile PASS; self-test PASS",
+    "windowsBuild": "PASS",
+    "macOSBuild": "arm64 + amd64 cross-build PASS; real Mac host acceptance pending",
+    "distribution": "PASS"
+  },
+  "doesNotProve": [
+    "real YouTube search result breadth/relevance on the target host",
+    "that every axis yields equally useful candidates for every seed",
+    "every candidate permits YouTube embedding",
+    "provider advertising behavior for a specific preview",
+    "real Windows browser/provider preview acceptance",
+    "real provider import completion after Add to library on target host",
+    "real Mac host acceptance"
+  ],
+  "sourceInventoryExcludesSelf": true,
+  "sourceInventory": [
+    {
+      "path": "BUILD.md",
+      "bytes": 947,
+      "sha256": "f45b09ee71d0fc7a01cc120384cbd502abdce2c93eadb9db6796413fe0bfda98"
+    },
+    {
+      "path": "CHECKPOINT.md",
+      "bytes": 934,
+      "sha256": "07903db286d92e4d0037f4c5c53b07061340f13480c2512485b647e548846b9f"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3028,
+      "sha256": "e2e496bf6ef73b5f4b7e911b6f7c2ef09e7b81181ae5890f39b96b981a3eb388"
+    },
+    {
+      "path": "RELEASE-NOTES.md",
+      "bytes": 1488,
+      "sha256": "00aa9875c59ca2e80c45cd2ab85f4a39ee0bdbee83a2ad32ded17cc62349dac1"
+    },
+    {
+      "path": "discovery_radio_test.go",
+      "bytes": 3519,
+      "sha256": "f731844dbd7377f8839843ccfd3a45d7322b63a92b32ca1d4b77aa4cf7379bd3"
+    },
+    {
+      "path": "docs/architecture/DISCOVERY-SESSION-V0.md",
+      "bytes": 3837,
+      "sha256": "c91f9adeecd40b29ab2e3725ca1d8e41488cec408684ddef3a0d428aa5924c34"
+    },
+    {
+      "path": "docs/architecture/EXPLORE-SESSION-V1.md",
+      "bytes": 2656,
+      "sha256": "07d50db342feefddf2dbeca36a608637c8d0288f5d3da48e7213a23b612688f9"
+    },
+    {
+      "path": "docs/architecture/VEXSTREAM-CREATION-PUBLISHING-FRONTIER.md",
+      "bytes": 4970,
+      "sha256": "3d44150b98e25f4b167d72a4a6c9e003b44bde7e2068b4a4b2e1469706f2b90a"
+    },
+    {
+      "path": "docs/evidence/all-platforms-distribution.json",
+      "bytes": 6856,
+      "sha256": "e37291b8e181b4332022c4a77e1a92ce60b0f831fea5feb02e0f4f8db3043722"
+    },
+    {
+      "path": "docs/evidence/macos-build-qualification.json",
+      "bytes": 3149,
+      "sha256": "5ee8f6901242f43487ce503c8cca7a736f4706e4f0a672b1581aec99517421cd"
+    },
+    {
+      "path": "docs/evidence/qualification-summary.json",
+      "bytes": 13936,
+      "sha256": "0c9b7f9790b2e5b9c4b4aba56821d8293d48e3329785878c36ff3e0f6346fee4"
+    },
+    {
+      "path": "docs/evidence/real-media-server-regression.json",
+      "bytes": 920,
+      "sha256": "d42beedabb6e569c62dbb1b28b6f7fc0026c2352986085c01a627854119603d1"
+    },
+    {
+      "path": "docs/evidence/static-release-checks.json",
+      "bytes": 4722,
+      "sha256": "0b460eef10e1214f65e5b22c181c3d08360ee1674832cba8d3124244aa769b80"
+    },
+    {
+      "path": "docs/evidence/ui-runtime-regression.json",
+      "bytes": 4385,
+      "sha256": "20aff2f894bb3f4cd6e29e9a401e177f9ba2c635da1def3698f5a5c2da9098f6"
+    },
+    {
+      "path": "docs/evidence/windows-build-qualification.json",
+      "bytes": 1304,
+      "sha256": "70b3d15f430043feb36f563ecca7b4f2dfaf28a54a6b161911e0ab569be3f0d3"
+    },
+    {
+      "path": "docs/process/GITHUB-PLACEMENT.md",
+      "bytes": 437,
+      "sha256": "3c50f72af52446550e981110a248fd8abdb4cd73623c97cc1eae1666212b7570"
+    },
+    {
+      "path": "docs/process/PULL-REQUEST-DRAFT.md",
+      "bytes": 984,
+      "sha256": "26ac386a5b425680ff0f28b1b35985e05ca7ec631a3fb14be3521e9b4cc4ba69"
+    },
+    {
+      "path": "docs/process/REGRESSION-LEDGER.md",
+      "bytes": 16595,
+      "sha256": "e38927fcd23e2c751730691e7fc6f59ce558e25cfa8dd16171b11b357babbfa8"
+    },
+    {
+      "path": "docs/process/RELEASE-QUALIFICATION.md",
+      "bytes": 7788,
+      "sha256": "fe368125b75f2888cd7f51ccc38df88c05d0f01296f1960affab6531f1b934ea"
+    },
+    {
+      "path": "duplicate_logic_test.go",
+      "bytes": 2730,
+      "sha256": "d6c21a7b5ab84bfcb104e4082ba6ddfe871d34073d9a33d462863ce9fd598930"
+    },
+    {
+      "path": "import_runtime_test.go",
+      "bytes": 1116,
+      "sha256": "5b1463fd50130b38821d61671f964cdf979081629b9d7064445c699694edf909"
+    },
+    {
+      "path": "main.go",
+      "bytes": 151520,
+      "sha256": "fac39f33ea40a9c8433f2a36f27a0dcf7c9030ae6ff7fd4dc9f4059aa34171ed"
+    },
+    {
+      "path": "media_bridge.py",
+      "bytes": 25091,
+      "sha256": "ebfd5397218188208e14d0f6d27b4fb234065e51c9236e7e566659f292a7eaec"
+    },
+    {
+      "path": "procattr_unix.go",
+      "bytes": 209,
+      "sha256": "9a9e39b96072d97940aec34752b0e0d2382e93775ec74bc5dde6a18915d4e512"
+    },
+    {
+      "path": "procattr_windows.go",
+      "bytes": 249,
+      "sha256": "e1ea6b252d40a09e04a5fdf6e2c8a9abafdbfb9ee5d31088877873ad4285da44"
+    },
+    {
+      "path": "tests/build_all_platforms.py",
+      "bytes": 7974,
+      "sha256": "f75114d03b291a7f6a03ee2cc7942355ab3c735d038e670f2bfb2bd3d0a649d1"
+    },
+    {
+      "path": "tests/build_macos.py",
+      "bytes": 4656,
+      "sha256": "eb5b7fd29964e4ce0bc703628367547c547b4a7a1e4d8fa445acae90efc3621a"
+    },
+    {
+      "path": "tests/build_windows.py",
+      "bytes": 3835,
+      "sha256": "3a784d8e0a4e75319f0aaa050a6194768d993f878f37e0319bb16236d6128520"
+    },
+    {
+      "path": "tests/fixtures/vexstream-test-tone.mp3",
+      "bytes": 1953,
+      "sha256": "602e675b3d27d2496ac968172b68ca1dc74ddaec455be92d41b51ec65fa359a7"
+    },
+    {
+      "path": "tests/media_server_regression.py",
+      "bytes": 6706,
+      "sha256": "0b419046374fb7dd198cc70aee346db15f77d51e57af42879271b8216b1023df"
+    },
+    {
+      "path": "tests/requirements-test.txt",
+      "bytes": 19,
+      "sha256": "df7696acf1e200684a962c8b7cb25363273b8239093235e68bb3f60231a9799f"
+    },
+    {
+      "path": "tests/run_qualification.py",
+      "bytes": 3045,
+      "sha256": "907e39e9b26ebfc4ffc283d55117837f16e74d1d12c196fc311832a255013320"
+    },
+    {
+      "path": "tests/static_release_checks.py",
+      "bytes": 15947,
+      "sha256": "e8cad077590f65438b591c6f9d7214a7580c4ec216da3a97a597be88a686423f"
+    },
+    {
+      "path": "tests/ui_runtime_regression.py",
+      "bytes": 57516,
+      "sha256": "b5ceab7f730e831197067ee4a8257f8276aa0111222227de98411b305bfa2758"
+    },
+    {
+      "path": "ui/index.html",
+      "bytes": 193329,
+      "sha256": "a5e96a02e7f1000ec9e20210f6a022646dd7b99c1d4819d08ed3bed2029d28af"
+    }
+  ]
+}

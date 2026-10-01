@@ -10,7 +10,7 @@ import re
 import subprocess
 import tempfile
 
-VERSION = "2.0.1"
+VERSION = "2.1.0"
 EXPECTED_EXE = f"VexStreamMusic-{VERSION}.exe"
 
 
@@ -104,6 +104,12 @@ def main() -> int:
     checked("duplicate-quality-comparison-present", lambda: require("SourceQuality AudioQuality" in main_go and "QualityComparison" in main_go and "source creator matches existing artist" in main_go and "sourceQuality" in bridge and "source_audio_quality" in bridge, "duplicate identity/quality comparison contract missing"))
     checked("duplicate-logic-regression-test-present", lambda: require((root / "duplicate_logic_test.go").is_file() and "Paramore: Ain't It Fun [OFFICIAL VIDEO]" in (root / "duplicate_logic_test.go").read_text(encoding="utf-8"), "duplicate regression test missing"))
     checked("existing-library-artist-suggestion-present", lambda: require("inferExistingArtistSuggestion" in main_go and "titleStartsWithArtistCredit" in main_go and "artistSuggestion" in main_go and "importArtistSuggestion" in html and "Matched existing library artist" in html and "Missy Elliott - Lose Control" in (root / "duplicate_logic_test.go").read_text(encoding="utf-8"), "existing-library artist suggestion contract missing"))
+    checked("discovery-radio-route-present", lambda: require('/api/discovery/radio' in main_go and 'func (a *App) discoveryRadio' in main_go and 'SEARCH_DERIVED' in main_go, "metadata-only discovery route missing"))
+    checked("discovery-radio-ui-present", lambda: require('id="radioDiscoverTab"' in html and 'id="radioDiscoverPane"' in html and 'Discover more like this' in html and 'Previewed ≠ downloaded' in html, "radio discovery UI contract missing"))
+    checked("discovery-provider-preview-is-visible-youtube-embed", lambda: require('id="radioPreviewFrame"' in html and 'referrerpolicy="strict-origin-when-cross-origin"' in html and 'youtube.com/embed/' in html and 'allow="autoplay; encrypted-media; picture-in-picture"' in html, "visible provider preview contract missing"))
+    checked("discovery-session-is-memory-only-and-queue-separate", lambda: require('let discoverySession={frames:[]' in html and 'state.queue' not in html[html.index('function renderDiscoverySession'):html.index('function renderYouTubeResults')] and "localStorage.setItem('vexstream.discovery" not in html, "discovery session leaked into queue/persistence"))
+    checked("discovery-library-match-uses-existing-duplicate-semantics", lambda: require('discoveryLibraryMatch' in main_go and 'findDuplicateMatches' in main_go and 'IN_LIBRARY' in main_go and 'NOT_IN_LIBRARY' in main_go, "discovery candidate library-match annotation missing"))
+    checked("discovery-go-regression-test-present", lambda: require((root / "discovery_radio_test.go").is_file() and "TestDiscoveryQueriesAreDeterministicAndBounded" in (root / "discovery_radio_test.go").read_text(encoding="utf-8"), "discovery Go regression tests missing"))
 
     def node_check() -> None:
         script = extract_main_script(html)

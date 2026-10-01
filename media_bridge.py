@@ -19,7 +19,7 @@ import time
 import traceback
 from datetime import datetime, timezone
 
-VERSION = "2.0.1"
+VERSION = "2.1.0"
 CATALOG_SCHEMA = "vexmedia.music-library/v1"
 
 

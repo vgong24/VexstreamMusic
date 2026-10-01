@@ -19,7 +19,7 @@ from typing import Any
 
 from playwright.sync_api import Page, sync_playwright
 
-VERSION = "2.0.1"
+VERSION = "2.1.0"
 
 TRACKS: list[dict[str, Any]] = [
     {
@@ -121,6 +121,16 @@ window.fetch=async function(path,opts={{}}){{
   else if(p==='/api/playlists') d={{playlists:[{{id:'p1',name:'Favorites',trackIds:[]}}]}};
   else if(p==='/api/import/jobs') d={{jobs:[],active:[],ready:[],completed:[]}};
   else if(p==='/api/import/status') d=window.__mockImportStatus||{{ready:true,searchReady:true,ffmpegReady:true,importReady:true,detail:'mock'}};
+  else if(p==='/api/discovery/radio'){{
+    const body=opts.body?JSON.parse(opts.body):{{}};
+    const branch=!!body.seed;
+    d={{schemaVersion:'vexstream.discovery-candidates/v1',seed:branch?{{kind:'provider',providerId:body.seed.providerId,title:body.seed.title,channel:body.seed.channel,url:body.seed.url,duration:body.seed.duration}}:{{kind:'library',trackId:body.trackId,title:'Track 1',artist:'Artist 1',album:'Album',genre:'Test'}},basis:{{provider:'youtube',method:'SEARCH_DERIVED',queries:branch?['Branch Artist music']:['Artist 1 Test','Artist 1 Album']}},candidates:branch?[
+      {{providerId:'BRANCH12345',title:'Branch Result',channel:'Branch Artist',url:'https://www.youtube.com/watch?v=BRANCH12345',thumbnail:'',duration:202,libraryMatch:{{state:'NOT_IN_LIBRARY'}}}}
+    ]:[
+      {{providerId:'abcDEF12345',title:'Candidate New',channel:'Candidate Artist',url:'https://www.youtube.com/watch?v=abcDEF12345',thumbnail:'',duration:201,libraryMatch:{{state:'NOT_IN_LIBRARY'}}}},
+      {{providerId:'xyzXYZ67890',title:'Track 2',channel:'Artist 2',url:'https://www.youtube.com/watch?v=xyzXYZ67890',thumbnail:'',duration:11,libraryMatch:{{state:'IN_LIBRARY',trackId:'t2',title:'Track 2',artist:'Artist 2',score:120,relation:'SAME_SOURCE'}}}}
+    ],generatedAt:new Date().toISOString()}};
+  }}
   else if(p==='/api/system/preflight') d={{issues:[],liveInstances:[],scan:{{running:false}},library:{{tracks:4,sources:1}},importRuntime:{{ready:true}}}};
   else if(p==='/api/diagnostics/session') d={{listening:true,sessionId:'mock',eventCount:0,sessionStartedAt:new Date().toISOString()}};
   else if(p==='/api/diagnostics') d={{}};
@@ -241,6 +251,58 @@ def run(html_path: Path, executable: str | None) -> dict[str, Any]:
             require(paths == ["/api/import/status"], f"ready runtime should not rerun setup: {paths}")
 
         checked("youtube-download-preflights-runtime-before-import", import_start_preflight_contract)
+
+        def discovery_session_contract() -> None:
+            page.evaluate("window.__mockRequests=[]; state.queue=['t1','t2','t3']; state.queueIndex=0; audio.__state.paused=false; audio.__state.src='/media/t1'; audio.dataset.trackId='t1'")
+            page.evaluate("startDiscoveryFromTrack('t1')")
+            page.wait_for_function("discoverySession.frames.length===1")
+            require(not page.locator("#radioDiscoverPane").evaluate("e=>e.classList.contains('hidden')"), "radio pane did not open")
+            require(page.locator("#radioCandidates .radio-card").count() == 2, "metadata candidate list did not render")
+            require(page.evaluate("state.queue.join(',')") == "t1,t2,t3", "discovery metadata mutated normal queue")
+            paths=page.evaluate("window.__mockRequests.map(x=>x.path)")
+            require("/api/discovery/radio" in paths, f"radio endpoint not requested: {paths}")
+            require("/api/import/start" not in paths, "radio metadata discovery started an import")
+            text=page.locator("#radioCandidates").inner_text()
+            require("Not in library" in text and "In library" in text, f"library match badges missing: {text}")
+            require(page.locator("#radioCandidates").get_by_role("button", name="Play local").count()==1, "exact local match did not expose Play local")
+
+            page.evaluate("previewDiscoveryCandidate(0)")
+            page.wait_for_timeout(20)
+            src=page.locator("#radioPreviewFrame").get_attribute("src") or ""
+            require("youtube.com/embed/abcDEF12345" in src, f"preview did not load standard YouTube embed: {src}")
+            require(page.evaluate("audio.paused") is True, "provider preview did not pause current local playback")
+            require(page.evaluate("state.queue.join(',')") == "t1,t2,t3", "preview mutated library queue")
+
+            page.evaluate("branchDiscoveryCandidate(0)")
+            page.wait_for_function("discoverySession.frames.length===2")
+            require("Branch Result" in page.locator("#radioCandidates").inner_text(), "branch result did not render")
+            require(not page.locator("#radioBackBtn").is_disabled(), "Back did not become available after branch")
+            page.click("#radioBackBtn")
+            require("Candidate New" in page.locator("#radioCandidates").inner_text(), "Back did not restore prior discovery frame")
+
+            page.evaluate("topScreen('library')")
+            require(page.evaluate("discoverySession.frames.length") == 2, "leaving Discover destroyed temporary metadata session")
+            require((page.locator("#radioPreviewFrame").get_attribute("src") or "").endswith("about:blank"), "leaving Discover did not stop provider preview")
+            page.evaluate("topScreen('discover')")
+            require(not page.locator("#radioDiscoverPane").evaluate("e=>e.classList.contains('hidden')"), "returning to Discover did not resume radio map")
+            page.evaluate("clearDiscovery()")
+            require(page.evaluate("discoverySession.frames.length") == 0, "Clear discovery did not clear session")
+
+        checked("temporary-radio-session-branches-previews-and-preserves-normal-queue", discovery_session_contract)
+
+        def discovery_add_to_library_handoff() -> None:
+            page.evaluate("window.__mockRequests=[]")
+            page.evaluate("startDiscoveryFromTrack('t1')")
+            page.wait_for_function("discoverySession.frames.length===1")
+            page.evaluate("window.inspectYouTube=async raw=>{window.__radioInspectCapture=decodeURIComponent(raw)}")
+            page.evaluate("addDiscoveryCandidateToLibrary(0)")
+            page.wait_for_timeout(20)
+            captured=page.evaluate("window.__radioInspectCapture")
+            require(captured == "https://www.youtube.com/watch?v=abcDEF12345", f"Add to library did not hand off candidate URL: {captured}")
+            require(page.evaluate("state.queue.join(',')") != "abcDEF12345", "provider candidate entered local queue")
+            page.evaluate("clearDiscovery(); topScreen('library'); showView('songs')")
+
+        checked("radio-add-to-library-hands-off-to-existing-import-review", discovery_add_to_library_handoff)
 
         def adaptive_navigation_contract() -> None:
             page.click("#libraryNavToggle")

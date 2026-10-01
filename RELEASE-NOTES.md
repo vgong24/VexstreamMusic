@@ -1,18 +1,31 @@
-# VexStream Music 2.0.1 release notes
+# VexStream Music 2.1.0 release notes
 
-## Windows YouTube import setup no longer fails on an already-installed FFmpeg package
+## Discovery Session v0
 
-2.0.0 could surface a large `powershell.exe failed` message when WinGet reported that `Gyan.FFmpeg` was already installed and had no newer version available. The setup path also depended too heavily on the current process PATH to rediscover FFmpeg.
+2.1.0 adds an intentionally temporary discovery/radio surface without turning provider results into library tracks or queue entries.
 
-2.0.1 repairs that boundary:
+### New
 
-- Python/yt-dlp provisioning and FFmpeg provisioning are separate effects.
-- Windows FFmpeg discovery includes WinGet's nested `Gyan.FFmpeg_*` package directories, not only PATH/WinGet Links.
-- A WinGet no-upgrade result is not promoted into loss of YouTube search readiness.
-- If FFmpeg is still genuinely unavailable, setup returns a partial-ready state instead of a misleading provider failure.
-- `Download & add` checks `importReady` first and holds the download at setup rather than issuing an import request that must fail with `FFMPEG_REQUIRED`.
-- The Discover UI now explicitly says when search is ready but MP3 download still needs FFmpeg.
+- `⋯ → Discover more like this` from a local track.
+- Metadata-only, search-derived provider candidate map.
+- One visible YouTube embedded preview player at a time.
+- Candidate library-match badges using existing duplicate/source identity logic.
+- **Play local** for exact local source matches.
+- **Add to library…** handoff to the established inspect/duplicate/import flow.
+- Branch **More like this** from any provider candidate.
+- Back navigation across discovery frames.
+- Clear lifecycle and in-memory session persistence across Library/Discover tab navigation.
+- Start radio from the current local track.
 
-## Preserved behavior
+### Explicit boundaries
 
-The source-native 2.0.0 playback correction remains unchanged: Songs filtering is visual, Songs playback uses the full library, and explicit queue actions remain scoped to user intent.
+- Discovery does not alter the normal VexStream queue unless the human later chooses a local playback action.
+- Preview does not download or promote a candidate into the library.
+- Candidate generation is `SEARCH_DERIVED`, not represented as YouTube algorithmic recommendation.
+- Provider preview uses the visible YouTube player; VexStream does not suppress provider ads or controls.
+- Discovery frames are not persisted across app/page exit in v0.
+- No AI ranking is required or performed by v0.
+
+### Preserved repairs
+
+2.0.0 filtered-Songs playback semantics and 2.0.1 Windows import-runtime repair remain unchanged.

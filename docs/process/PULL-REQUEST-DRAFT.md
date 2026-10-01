@@ -1,31 +1,20 @@
-# Pull request projection — VexStream Music 2.0.1 source-native recovery
+# Pull request projection — VexStream Music 2.1.0
 
-`[VXG RealForever]`
+## Purpose
 
-## Summary
+Advance the existing source-native VexStream PR #1 from the working 2.0.1 import-runtime baseline to Discovery Session v0.
 
-Promote the exact recovered 1.1.5 buildable source lineage into the public VexStream Music repository, form 2.0.1 from source, repair the Songs-filter playback-scope defect, and add a real server/media regression gate.
+## 2.1.0 change
 
-## Source baseline
+- temporary `More like this` discovery from local tracks;
+- metadata-first, search-derived candidate frames;
+- one visible YouTube provider preview at a time;
+- library-match annotations using existing duplicate/provenance logic;
+- explicit Add-to-library handoff into the existing import review;
+- branch/back/clear lifecycle in browser memory;
+- no normal queue mutation from metadata or preview;
+- deterministic seam for later AI ranking without making AI required.
 
-```text
-VexStreamMusic-1.1.5-Source.zip
-sha256=15d54909bd9227d4e0ef67f4879503d7e7fdf80366781f8ec2723a0d375c1243
+## Gate
 
-reproduced historical Windows EXE
-sha256=e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f
-```
-
-## 2.0.1 change
-
-- search/genre filters remain Songs display lenses;
-- Songs playback resolves against the full sorted library;
-- shuffle keeps the selected row current and includes every other library track exactly once;
-- Play all and Shuffle all operate on the full library;
-- Add to queue remains single-track; bulk queue remains explicit-selection scoped;
-- full 1.1.5 product behavior remains source-derived rather than reconstructed from the stripped EXE;
-- real HTTP/media proof is added beside the deterministic Chromium fixture suite.
-
-## Preserved boundaries
-
-No VexLife federation, network exposure, friend sharing, AI music generation, YouTube publication, or unrelated interaction redesign is introduced by 2.0.1.
+Keep draft until the target Windows host confirms that provider preview, branch/back, leaving/resuming discovery, exact local-match behavior, and Add-to-library handoff work in ordinary use. Embedded provider availability and advertising remain provider-controlled.

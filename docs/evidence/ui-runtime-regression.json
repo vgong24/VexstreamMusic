@@ -1,7 +1,7 @@
 {
   "schemaVersion": "vexstream.ui-runtime-regression/v1",
-  "appVersion": "2.0.1",
-  "html": "/mnt/data/vexstream-2.0.1-src/ui/index.html",
+  "appVersion": "2.1.0",
+  "html": "/mnt/data/vexstream-2.1.0-src/ui/index.html",
   "checks": [
     {
       "name": "initial-render-has-no-browser-runtime-error",
@@ -17,6 +17,14 @@
     },
     {
       "name": "youtube-download-preflights-runtime-before-import",
+      "status": "PASS"
+    },
+    {
+      "name": "temporary-radio-session-branches-previews-and-preserves-normal-queue",
+      "status": "PASS"
+    },
+    {
+      "name": "radio-add-to-library-hands-off-to-existing-import-review",
       "status": "PASS"
     },
     {

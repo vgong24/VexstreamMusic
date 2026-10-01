@@ -32,7 +32,7 @@ import (
 //go:embed ui/index.html media_bridge.py
 var assets embed.FS
 
-const version = "2.0.1"
+const version = "2.1.0"
 
 type Config struct {
 	Sources []string `json:"sources"`
@@ -72,6 +72,36 @@ type Track struct {
 	PlaybackStart     float64  `json:"playbackStart,omitempty"`
 	PlaybackEnd       *float64 `json:"playbackEnd,omitempty"`
 	PlaybackUpdatedAt string   `json:"playbackUpdatedAt,omitempty"`
+}
+type DiscoverySeed struct {
+	Kind       string  `json:"kind,omitempty"`
+	TrackID    string  `json:"trackId,omitempty"`
+	ProviderID string  `json:"providerId,omitempty"`
+	URL        string  `json:"url,omitempty"`
+	Title      string  `json:"title,omitempty"`
+	Artist     string  `json:"artist,omitempty"`
+	Album      string  `json:"album,omitempty"`
+	Genre      string  `json:"genre,omitempty"`
+	Channel    string  `json:"channel,omitempty"`
+	Duration   float64 `json:"duration,omitempty"`
+}
+type DiscoveryLibraryMatch struct {
+	State      string `json:"state"`
+	TrackID    string `json:"trackId,omitempty"`
+	Title      string `json:"title,omitempty"`
+	Artist     string `json:"artist,omitempty"`
+	Confidence string `json:"confidence,omitempty"`
+	Relation   string `json:"relation,omitempty"`
+	Score      int    `json:"score,omitempty"`
+}
+type DiscoveryCandidate struct {
+	ProviderID   string                `json:"providerId,omitempty"`
+	Title        string                `json:"title"`
+	Channel      string                `json:"channel,omitempty"`
+	URL          string                `json:"url,omitempty"`
+	Thumbnail    string                `json:"thumbnail,omitempty"`
+	Duration     float64               `json:"duration,omitempty"`
+	LibraryMatch DiscoveryLibraryMatch `json:"libraryMatch"`
 }
 type TrackOverlay struct {
 	Title     *string `json:"title,omitempty"`
@@ -347,6 +377,7 @@ func main() {
 	mux.HandleFunc("/api/import/status", a.importStatus)
 	mux.HandleFunc("/api/import/setup", a.importSetup)
 	mux.HandleFunc("/api/import/search", a.importSearch)
+	mux.HandleFunc("/api/discovery/radio", a.discoveryRadio)
 	mux.HandleFunc("/api/import/inspect", a.importInspect)
 	mux.HandleFunc("/api/import/duplicates", a.importDuplicates)
 	mux.HandleFunc("/api/import/start", a.importStart)
@@ -2619,6 +2650,193 @@ func (a *App) importSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jsonOut(w, 200, out)
+}
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value = strings.TrimSpace(value); value != "" {
+			return value
+		}
+	}
+	return ""
+}
+func appendUniqueString(rows []string, value string) []string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return rows
+	}
+	for _, row := range rows {
+		if strings.EqualFold(strings.TrimSpace(row), value) {
+			return rows
+		}
+	}
+	return append(rows, value)
+}
+func discoveryQueries(seed DiscoverySeed) []string {
+	artist := firstNonEmpty(seed.Artist, seed.Channel)
+	title := strings.TrimSpace(seed.Title)
+	album := strings.TrimSpace(seed.Album)
+	genre := strings.TrimSpace(seed.Genre)
+	queries := []string{}
+	if artist != "" && genre != "" {
+		queries = appendUniqueString(queries, artist+" "+genre)
+	} else if artist != "" {
+		queries = appendUniqueString(queries, artist+" music")
+	}
+	if artist != "" && album != "" {
+		queries = appendUniqueString(queries, artist+" "+album)
+	} else if artist != "" && title != "" {
+		queries = appendUniqueString(queries, artist+" "+title)
+	} else if title != "" {
+		queries = appendUniqueString(queries, title)
+	}
+	if len(queries) > 2 {
+		queries = queries[:2]
+	}
+	return queries
+}
+func discoveryCandidateKey(c DiscoveryCandidate) string {
+	if id := strings.ToLower(strings.TrimSpace(c.ProviderID)); id != "" {
+		return "provider:" + id
+	}
+	if u := strings.ToLower(strings.TrimSpace(c.URL)); u != "" {
+		return "url:" + u
+	}
+	return "text:" + normalizeMusicText(c.Title) + "|" + normalizeMusicText(c.Channel)
+}
+func mapString(row map[string]any, key string) string {
+	if value, ok := row[key].(string); ok {
+		return strings.TrimSpace(value)
+	}
+	return ""
+}
+func mapFloat(row map[string]any, key string) float64 {
+	switch value := row[key].(type) {
+	case float64:
+		return value
+	case int:
+		return float64(value)
+	case json.Number:
+		v, _ := value.Float64()
+		return v
+	}
+	return 0
+}
+func discoveryCandidateFromMap(row map[string]any) DiscoveryCandidate {
+	return DiscoveryCandidate{
+		ProviderID: mapString(row, "id"),
+		Title:      mapString(row, "title"),
+		Channel:    mapString(row, "channel"),
+		URL:        mapString(row, "url"),
+		Thumbnail:  mapString(row, "thumbnail"),
+		Duration:   mapFloat(row, "duration"),
+	}
+}
+func discoverySameSeed(seed DiscoverySeed, candidate DiscoveryCandidate) bool {
+	if seed.ProviderID != "" && candidate.ProviderID != "" && strings.EqualFold(seed.ProviderID, candidate.ProviderID) {
+		return true
+	}
+	if seed.URL != "" && candidate.URL != "" && strings.EqualFold(seed.URL, candidate.URL) {
+		return true
+	}
+	return normalizeMusicText(seed.Title) != "" && normalizeMusicText(seed.Title) == normalizeMusicText(candidate.Title) && normalizeMusicText(firstNonEmpty(seed.Artist, seed.Channel)) == normalizeMusicText(candidate.Channel)
+}
+func (a *App) discoveryLibraryMatch(candidate DiscoveryCandidate) DiscoveryLibraryMatch {
+	matches := a.findDuplicateMatches(candidate.Title, "", candidate.Channel, candidate.ProviderID, candidate.URL, candidate.Duration, AudioQuality{})
+	if len(matches) == 0 {
+		return DiscoveryLibraryMatch{State: "NOT_IN_LIBRARY"}
+	}
+	m := matches[0]
+	state := "POSSIBLE_MATCH"
+	if m.Relation == "SAME_SOURCE" {
+		state = "IN_LIBRARY"
+	} else if m.Score >= 75 {
+		state = "LIKELY_MATCH"
+	}
+	return DiscoveryLibraryMatch{State: state, TrackID: m.TrackID, Title: m.Title, Artist: m.Artist, Confidence: m.Confidence, Relation: m.Relation, Score: m.Score}
+}
+func (a *App) discoveryRadio(w http.ResponseWriter, r *http.Request) {
+	var q struct {
+		TrackID string         `json:"trackId"`
+		Seed    *DiscoverySeed `json:"seed"`
+	}
+	if e := decode(r, &q); e != nil {
+		jsonOut(w, 400, map[string]string{"error": e.Error()})
+		return
+	}
+	var seed DiscoverySeed
+	if id := strings.TrimSpace(q.TrackID); id != "" {
+		a.mu.RLock()
+		for _, track := range a.tracks {
+			if track.ID == id {
+				seed = DiscoverySeed{Kind: "library", TrackID: track.ID, ProviderID: track.ProviderID, URL: track.SourceURL, Title: track.Title, Artist: firstNonEmpty(track.Artist, track.SourceArtist), Album: track.Album, Genre: track.Genre, Channel: track.Channel, Duration: track.Duration}
+				break
+			}
+		}
+		a.mu.RUnlock()
+		if seed.TrackID == "" {
+			jsonOut(w, 404, map[string]string{"error": "Discovery seed track is no longer in this library."})
+			return
+		}
+	} else if q.Seed != nil {
+		seed = *q.Seed
+		seed.Kind = "provider"
+	} else {
+		jsonOut(w, 400, map[string]string{"error": "Discovery requires a local track or provider candidate seed."})
+		return
+	}
+	if strings.TrimSpace(seed.Title) == "" {
+		jsonOut(w, 400, map[string]string{"error": "Discovery seed is missing a title."})
+		return
+	}
+	queries := discoveryQueries(seed)
+	if len(queries) == 0 {
+		jsonOut(w, 400, map[string]string{"error": "Discovery could not form a provider search from this seed."})
+		return
+	}
+	candidates := []DiscoveryCandidate{}
+	seen := map[string]bool{}
+	for _, query := range queries {
+		out, e := a.bridgeJSON("search", "search", query, "--limit", "6")
+		if e != nil {
+			if pf, ok := e.(*ProviderFailure); ok {
+				jsonOut(w, 502, map[string]any{"error": pf.Error(), "problem": pf.Problem})
+				return
+			}
+			jsonOut(w, 502, map[string]string{"error": e.Error()})
+			return
+		}
+		rows, _ := out["results"].([]any)
+		for _, value := range rows {
+			row, ok := value.(map[string]any)
+			if !ok {
+				continue
+			}
+			candidate := discoveryCandidateFromMap(row)
+			if candidate.Title == "" || discoverySameSeed(seed, candidate) {
+				continue
+			}
+			key := discoveryCandidateKey(candidate)
+			if key == "" || seen[key] {
+				continue
+			}
+			seen[key] = true
+			candidate.LibraryMatch = a.discoveryLibraryMatch(candidate)
+			candidates = append(candidates, candidate)
+			if len(candidates) >= 12 {
+				break
+			}
+		}
+		if len(candidates) >= 12 {
+			break
+		}
+	}
+	jsonOut(w, 200, map[string]any{
+		"schemaVersion": "vexstream.discovery-candidates/v1",
+		"seed":          seed,
+		"basis":         map[string]any{"provider": "youtube", "method": "SEARCH_DERIVED", "queries": queries},
+		"candidates":    candidates,
+		"generatedAt":   time.Now().UTC().Format(time.RFC3339Nano),
+	})
 }
 func titleStartsWithArtistCredit(title, artist string) bool {
 	title = strings.TrimSpace(title)

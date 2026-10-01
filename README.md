@@ -1,68 +1,75 @@
-# VexStream Music 2.0.1 — Windows import-runtime repair
+# VexStream Music 2.1.0 — Discovery Session v0
 
 `[VXG RealForever]`
 
-VexStream Music 2.0.1 continues the source-native 2.x line established from the byte-reproducible 1.1.5 source tree. It preserves the 2.0.0 playback/filter correction and repairs the Windows YouTube import bootstrap observed during target-host use.
+VexStream Music 2.1.0 is the first source-native discovery/radio capability on top of the accepted 2.0.x playback and Windows import-runtime repairs.
 
-## 2.0.1 repair
+## Discovery is a temporary map, not the library queue
 
-A Windows host can have a healthy private Python/yt-dlp runtime while FFmpeg is already installed through WinGet but not visible on the VexStream process PATH. In 2.0.0 the setup path bundled Python provisioning and `winget install Gyan.FFmpeg` into one PowerShell command. WinGet can report "No available upgrade found" for an already-installed package, which caused the whole setup request to be surfaced as a failure even though YouTube search was already usable.
-
-2.0.1 separates those states and effects:
+From a local track's `⋯` menu choose **Discover more like this**. VexStream forms a temporary, metadata-first candidate map using the existing YouTube search runtime.
 
 ```text
-Python + yt-dlp ready
-    !=
-FFmpeg ready
-    !=
-MP3 import ready
+DISCOVERY_SESSION != LIBRARY_QUEUE
+PREVIEWED != DOWNLOADED
+PROVIDER_RESULT != AI_RECOMMENDATION
+MORE_LIKE_THIS != COMMIT_TO_PLAYLIST
 ```
 
-On Windows:
+The initial candidate basis is deliberately labeled `SEARCH_DERIVED`. VexStream is not claiming access to YouTube's consumer recommendation graph.
 
-- the private Python virtual environment is created directly, without a monolithic PowerShell bootstrap;
-- pip/yt-dlp setup and WinGet/FFmpeg setup are separate commands;
-- VexStream searches both the WinGet Links directory and nested `Gyan.FFmpeg_*` package directories for `ffmpeg.exe`;
-- a WinGet no-upgrade/nonzero result does not erase already-earned YouTube search readiness;
-- `Download & add` performs an import-readiness preflight and will not call `/api/import/start` until FFmpeg is actually discoverable;
-- the UI explicitly distinguishes "YouTube search is ready" from "MP3 download is ready".
+### Candidate actions
 
-## Preserved 2.0.0 playback semantic
+- **Preview** — opens the candidate in one visible YouTube embedded player. It does not add the item to the VexStream queue or library.
+- **Play local** — shown when the provider candidate is the same source as a local track.
+- **Add to library…** — hands the provider URL into the existing inspect → duplicate review → import flow.
+- **More like this** — forms a child discovery frame from that candidate.
+- **Back** — restores the prior frame from memory without rebuilding the old candidate map.
+- **Clear discovery** — ends the temporary session.
 
-Songs search/genre filtering remains a display lens. Playback from Songs uses the full sorted library; explicit Add-to-queue and bulk Queue operations remain intent-scoped.
+Leaving Discover stops provider preview playback but preserves the in-memory candidate frames. Returning to Discover resumes the map. Unsaved discovery state naturally disappears when the VexStream page/app process ends.
 
-## Source continuity
+## Provider preview boundary
 
-The 2.x source line remains grounded in the exact recovered 1.1.5 source archive:
+The preview surface is one visible YouTube iframe at a time. VexStream does not cover the player, suppress provider controls, or try to suppress provider advertising. Candidate metadata is cheap to hold; media is only requested for the candidate the human elects to preview.
+
+## Library awareness
+
+Candidate metadata is compared with the existing VexStream duplicate/provenance logic. Each candidate projects one of:
 
 ```text
-VexStreamMusic-1.1.5-Source.zip
-sha256=15d54909bd9227d4e0ef67f4879503d7e7fdf80366781f8ec2723a0d375c1243
+IN_LIBRARY
+LIKELY_MATCH
+POSSIBLE_MATCH
+NOT_IN_LIBRARY
 ```
 
-which reproducibly builds the historical 1.1.5 Windows artifact:
+An exact source match can play the local copy. Non-local candidates remain external until the human explicitly enters the existing Add-to-library workflow.
 
-```text
-VexStreamMusic-1.1.5.exe
-sha256=e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f
-```
+## AI seam
 
-## Qualification layers
+Discovery v0 is deterministic and usable without AI. A later VexLife/AI actor can read the seed, candidate metadata, library-match state, and branch history to rank or explain the map. AI ranking must remain distinct from provider generation.
 
-```text
-A  static / source / syntax
-B  deterministic Chromium UI interaction
-C  real source-built HTTP server + real MP3 scan + exact full/range media bytes
-D  Go import-runtime unit regression
-E  platform build/artifact structure
-F  target-host Windows import acceptance
-```
+## Preserved 2.0.x behavior
 
-A–E are source-automated. F remains a distinct target-Windows confirmation because WinGet/package registration is a Windows-host effect.
+- Songs search/genre filtering remains a display lens; Songs playback uses the full sorted library.
+- Explicit row/bulk queue actions remain scoped to human intent.
+- Windows YouTube setup keeps search readiness separate from FFmpeg/import readiness and discovers nested WinGet FFmpeg installations.
+- Real `/media/<track>` full/range byte regression remains part of source qualification.
+
+## Qualification
 
 Run:
 
 ```bash
 python3 tests/run_qualification.py --root . --browser-executable /path/to/chromium
-python3 tests/build_windows.py --root . --output ../VexStreamMusic-2.0.1.exe
 ```
+
+Current source qualification includes static/source checks, deterministic Chromium interaction checks, real source-built media delivery, Go regressions (including Discovery Session helpers and Windows import runtime), and the Python bridge.
+
+Build Windows:
+
+```bash
+python3 tests/build_windows.py --root . --output ../VexStreamMusic-2.1.0.exe
+```
+
+See `docs/architecture/DISCOVERY-SESSION-V0.md` and `RELEASE-MANIFEST.json` for the explicit lifecycle and proof boundary.

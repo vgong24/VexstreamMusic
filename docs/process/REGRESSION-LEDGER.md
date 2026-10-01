@@ -334,3 +334,20 @@ Regression gates:
 - `import_runtime_test.go` proves nested WinGet package discovery and ignores unrelated packages;
 - static checks require direct/idempotent Windows setup and forbid a PowerShell bootstrap inside `setupWindowsImportTools`;
 - Chromium checks prove partial readiness attempts setup but does not advance to import start.
+
+
+## 2.1.0 — DISCOVERY_SESSION_V0
+
+```text
+status=FORMED_IN_SOURCE_NATIVE_2.1.0
+trigger=human request for radio/discovery without committing provider candidates to queue/library
+providerCandidateBasis=SEARCH_DERIVED
+normalQueueMutation=NONE_FROM_METADATA_OR_PREVIEW
+preview=ONE_VISIBLE_YOUTUBE_EMBED
+branching=STACK_WITH_BACK
+persistence=IN_MEMORY_ONLY_V0
+libraryPromotion=EXPLICIT_EXISTING_IMPORT_FLOW
+AIRequired=false
+```
+
+Regression gates cover normal queue preservation, one-preview behavior, library-match actions, branch/back state, tab-navigation retention, clear lifecycle, and Add-to-library handoff.

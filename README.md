@@ -29,7 +29,7 @@ Songs search / genre filter = display lens
 Songs playback context       = full sorted library
 ```
 
-When shuffle is enabled, the chosen track remains current and every other library track is in the shuffled future queue. Row-level **Add to queue** remains an intentional one-track action.
+When shuffle is enabled, the chosen track remains current and every other library track is in the shuffled future queue. **Play all**, **Shuffle all**, and idle player Play no longer inherit the Songs filter. Row-level **Add to queue** remains an intentional one-track action.
 
 See `docs/1.1.6-FILTERED-PLAYBACK-REGRESSION.md` and `tests/ui-queue-regression.test.mjs`.
 
@@ -47,7 +47,7 @@ Current qualified output from that exact input:
 
 ```text
 VexStreamMusic-1.1.6.exe
-sha256=1903746ebf8b5037814c5e55a1e92bdd462e2480dfdcd9f8560499a847787f52
+sha256=431148f2ef5fd3d2c76828d171955babc0a439ff7e65530a05af5a2ed375c156
 bytes=6903808
 ```
 

@@ -99,16 +99,16 @@ body{grid-template-rows:54px minmax(0,1fr) 112px}header{padding:0 10px;gap:8px}.
 
 <div id="youtubeDiscoverPane" class="hidden">
 <div class="row between" style="margin-bottom:10px">
- <div><div class="eyebrow">YouTube</div><strong>Add one source, then keep going.</strong></div>
-      <div class="row"><button id="ytNewSearchBtn">New search</button><button id="ytPasteAnotherBtn">Paste another URL</button></div>
-    </div>
-    <div id="ytRuntime" class="notice">Checking YouTube import tools…</div><div class="row" style="margin-top:8px"><button id="copyDiagnosticsBtn">Copy diagnostic packet</button><span class="small muted">For bounded AI/debug help without dumping private browser session data.</span></div>
-    <div id="ytEntry" style="margin-top:12px">
-      <div class="discover-grid">
-        <div class="card action-card"><h3>Search YouTube</h3><div class="muted">Find a source, inspect it, then decide how it should enter your library.</div><div class="yt-search" style="margin-top:10px"><input id="ytQuery" placeholder="Song, soundtrack, mix, artist…"><button class="primary" id="ytSearchBtn">Search</button></div><div id="ytResults" class="search-results" style="margin-top:10px"></div></div>
-        <div class="card action-card"><h3>Already have a link?</h3><div class="muted">Paste a YouTube URL and inspect it directly.</div><div class="yt-search" style="margin-top:10px"><input id="ytUrl" placeholder="https://www.youtube.com/watch?v=…"><button id="ytInspectUrlBtn">Inspect</button></div></div>
-      </div>
-    </div>
+<div><div class="eyebrow">YouTube</div><strong>Add one source, then keep going.</strong></div>
+<div class="row"><button id="ytNewSearchBtn">New search</button><button id="ytPasteAnotherBtn">Paste another URL</button></div>
+</div>
+<div id="ytRuntime" class="notice">Checking YouTube import tools…</div><div class="row" style="margin-top:8px"><button id="copyDiagnosticsBtn">Copy diagnostic packet</button><span class="small muted">For bounded AI/debug help without dumping private browser session data.</span></div>
+<div id="ytEntry" style="margin-top:12px">
+<div class="discover-grid">
+<div class="card action-card"><h3>Search YouTube</h3><div class="muted">Find a source, inspect it, then decide how it should enter your library.</div><div class="yt-search" style="margin-top:10px"><input id="ytQuery" placeholder="Song, soundtrack, mix, artist…"><button class="primary" id="ytSearchBtn">Search</button></div><div id="ytResults" class="search-results" style="margin-top:10px"></div></div>
+<div class="card action-card"><h3>Already have a link?</h3><div class="muted">Paste a YouTube URL and inspect it directly.</div><div class="yt-search" style="margin-top:10px"><input id="ytUrl" placeholder="https://www.youtube.com/watch?v=…"><button id="ytInspectUrlBtn">Inspect</button></div></div>
+</div>
+ </div>
     <div id="ytPlan" class="hidden"></div>
     <div id="ytActivity" class="activity-card">
       <div class="row between"><div><h3>Import activity</h3><div id="ytActivitySummary" class="small muted">No imports started this session.</div></div><button id="ytRefreshActivityBtn">Refresh</button></div>
@@ -424,7 +424,7 @@ function currentTrack(){return state.tracks.find(x=>x.id===state.queue[state.que
 function playTrack(id){const i=state.queue.indexOf(id);if(i>=0){playIndex(i);return}const t=trackById(id);if(t)setQueue([t],0,true)}
 function playLibraryTrack(id){let c=currentView==='home'?recentTracks(8):currentView==='songs'?sortTrackList(state.tracks):sortedSongTracks(),i=c.findIndex(t=>t.id===id);if(i>=0){if(currentView==='songs'&&state.shuffle)c=[c[i],...c.slice(0,i),...c.slice(i+1)],i=0;setQueue(c,i,true);return}playTrack(id)}
 function playIndex(i){if(!state.queue.length)return;state.queueIndex=(i+state.queue.length)%state.queue.length;const t=currentTrack();if(!t)return;const wantedId=t.id,b=playbackBounds(t);audio.dataset.trackId=t.id;audio.src='/media/'+t.id;try{audio.currentTime=b.start}catch{};const enforceStart=()=>{if(currentTrack()?.id!==wantedId)return;const live=playbackBounds(t,audio.duration);if(audio.currentTime<live.start-.02||audio.currentTime>live.start+.35){try{audio.currentTime=live.start}catch{}}};audio.addEventListener('loadedmetadata',enforceStart,{once:true});audio.play().then(enforceStart).catch(()=>{});saveQueue();renderPlayer();renderQueue();renderSongs();renderAlbums()}
-function togglePlayback(){if(!audio.paused){audio.pause();return}const t=currentTrack();if(!t){const context=sortedSongTracks();if(context.length)setQueue(context,0,true);return}if(audio.dataset.trackId!==t.id||!audio.currentSrc){playIndex(state.queueIndex);return}audio.play().catch(()=>{})}
+function togglePlayback(){if(!audio.paused){audio.pause();return}const t=currentTrack();if(!t){const c=currentView==='songs'?sortTrackList(state.tracks):sortedSongTracks();if(c.length)setQueue(c,0,true);return}if(audio.dataset.trackId!==t.id||!audio.currentSrc){playIndex(state.queueIndex);return}audio.play().catch(()=>{})}
 function next(){if(!state.queue.length)return;if(state.queueIndex+1<state.queue.length)playIndex(state.queueIndex+1);else if(state.repeat)playIndex(0)}
 function prev(){const t=currentTrack(),b=playbackBounds(t,audio.duration);if(audio.currentTime>b.start+4){audio.currentTime=b.start;return}if(state.queueIndex>0){playIndex(state.queueIndex-1);return}if(t)audio.currentTime=b.start}
 function toggleShuffleMode(){state.shuffle=!state.shuffle;if(state.shuffle)shuffleUpcoming();renderPlayer()}
@@ -577,8 +577,8 @@ bindClick('scanDeepBtn',()=>discover(true));
 bindClick('addFolderBtn',pickFolder);
 bindClick('rescanBtn',async()=>{await api('/api/library/rescan',{method:'POST',body:'{}'});await refreshAll()});
 bindClick('clearIgnoredBtn',async()=>{await api('/api/ignored/clear',{method:'POST',body:'{}'});await refreshAll()});
-bindClick('shuffleAllBtn',()=>setQueue(shuf(sortedSongTracks()),0,true));
-bindClick('playAllBtn',()=>setQueue(sortedSongTracks(),0,true));
+bindClick('shuffleAllBtn',()=>setQueue(shuf(sortTrackList(state.tracks)),0,true));
+bindClick('playAllBtn',()=>setQueue(sortTrackList(state.tracks),0,true));
 bindClick('clearQueueBtn',()=>{state.queue=[];state.queueIndex=-1;audio.pause();audio.removeAttribute('src');delete audio.dataset.trackId;audio.load();saveQueue();renderQueue();renderPlayer()});
 bindClick('shuffleQueueBtn',shuffleUpcoming);
 bindClick('drawerShuffleBtn',shuffleUpcoming);

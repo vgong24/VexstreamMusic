@@ -20,6 +20,12 @@ NEW_PLAY_LIBRARY = (
     "sortTrackList(state.tracks):sortedSongTracks(),i=c.findIndex(t=>t.id===id);if(i>=0){if(currentView==='songs'"
     "&&state.shuffle)c=[c[i],...c.slice(0,i),...c.slice(i+1)],i=0;setQueue(c,i,true);return}playTrack(id)}"
 )
+OLD_TOGGLE_PLAYBACK = "function togglePlayback(){if(!audio.paused){audio.pause();return}const t=currentTrack();if(!t){const context=sortedSongTracks();if(context.length)setQueue(context,0,true);return}if(audio.dataset.trackId!==t.id||!audio.currentSrc){playIndex(state.queueIndex);return}audio.play().catch(()=>{})}"
+NEW_TOGGLE_PLAYBACK = "function togglePlayback(){if(!audio.paused){audio.pause();return}const t=currentTrack();if(!t){const c=currentView==='songs'?sortTrackList(state.tracks):sortedSongTracks();if(c.length)setQueue(c,0,true);return}if(audio.dataset.trackId!==t.id||!audio.currentSrc){playIndex(state.queueIndex);return}audio.play().catch(()=>{})}"
+OLD_SHUFFLE_ALL = "bindClick('shuffleAllBtn',()=>setQueue(shuf(sortedSongTracks()),0,true));"
+NEW_SHUFFLE_ALL = "bindClick('shuffleAllBtn',()=>setQueue(shuf(sortTrackList(state.tracks)),0,true));"
+OLD_PLAY_ALL = "bindClick('playAllBtn',()=>setQueue(sortedSongTracks(),0,true));"
+NEW_PLAY_ALL = "bindClick('playAllBtn',()=>setQueue(sortTrackList(state.tracks),0,true));"
 OLD_UI_VERSION = '<span class="version">1.1.5</span>'
 NEW_UI_VERSION = '<span class="version">1.1.6</span>'
 
@@ -55,24 +61,35 @@ def patch_html(html_bytes: bytes) -> bytes:
     if sha256(html_bytes) != SOURCE_HTML_SHA256:
         raise SystemExit("embedded HTML digest does not match the qualified 1.1.5 baseline")
     html = html_bytes.decode("utf-8")
-    if html.count(OLD_PLAY_LIBRARY) != 1:
-        raise SystemExit("playLibraryTrack baseline function not found exactly once")
-    if html.count(OLD_UI_VERSION) != 1:
-        raise SystemExit("1.1.5 UI version badge not found exactly once")
-    patched = html.replace(OLD_PLAY_LIBRARY, NEW_PLAY_LIBRARY).replace(OLD_UI_VERSION, NEW_UI_VERSION)
+    replacements = [
+        (OLD_PLAY_LIBRARY, NEW_PLAY_LIBRARY, "playLibraryTrack"),
+        (OLD_TOGGLE_PLAYBACK, NEW_TOGGLE_PLAYBACK, "togglePlayback"),
+        (OLD_SHUFFLE_ALL, NEW_SHUFFLE_ALL, "Shuffle all binding"),
+        (OLD_PLAY_ALL, NEW_PLAY_ALL, "Play all binding"),
+        (OLD_UI_VERSION, NEW_UI_VERSION, "UI version badge"),
+    ]
+    patched = html
+    for old, new, label in replacements:
+        if patched.count(old) != 1:
+            raise SystemExit(f"{label} baseline not found exactly once")
+        patched = patched.replace(old, new, 1)
+
     delta = len(patched.encode("utf-8")) - len(html_bytes)
     if delta < 0:
         patched = patched.replace("</html>", (" " * -delta) + "</html>", 1)
     elif delta > 0:
         patched = trim_inert_leading_whitespace(patched, delta)
+
     out = patched.encode("utf-8")
     if len(out) != len(html_bytes):
         raise SystemExit(f"embedded HTML length changed: {len(html_bytes)} -> {len(out)}")
-    if OLD_PLAY_LIBRARY.encode() in out:
-        raise SystemExit("old playLibraryTrack logic survived patch")
-    if NEW_PLAY_LIBRARY.encode() not in out:
-        raise SystemExit("new playLibraryTrack logic missing after patch")
+    for old, new, label in replacements[:-1]:
+        if old.encode() in out:
+            raise SystemExit(f"old {label} logic survived patch")
+        if new.encode() not in out:
+            raise SystemExit(f"new {label} logic missing after patch")
     return out
+
 
 def patch_exe(source: Path, output: Path) -> tuple[str, str]:
     data = source.read_bytes()

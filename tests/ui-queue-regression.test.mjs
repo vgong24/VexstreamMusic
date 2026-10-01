@@ -33,6 +33,7 @@ function extractFunction(name) {
 const setQueueSource = extractFunction('setQueue');
 const playLibraryTrackSource = extractFunction('playLibraryTrack');
 const queueTrackFromButtonSource = extractFunction('queueTrackFromButton');
+const togglePlaybackSource = extractFunction('togglePlayback');
 
 function makePlaybackHarness({ shuffle = false, view = 'songs' } = {}) {
   const tracks = ['a', 'b', 'c', 'd'].map(id => ({ id }));
@@ -79,6 +80,32 @@ test('Home recent-track playback context remains unchanged', () => {
   context.playLibraryTrack('c');
   assert.deepEqual(Array.from(context.state.queue), ['c', 'a']);
   assert.equal(context.state.queueIndex, 0);
+});
+
+test('idle player Play in Songs also starts from the full library, not the filtered projection', () => {
+  const tracks = ['a', 'b', 'c', 'd'].map(id => ({ id }));
+  const calls = [];
+  const context = {
+    audio: { paused: true, pause() {}, dataset: {}, currentSrc: '', play: () => Promise.resolve() },
+    state: { tracks, queue: [], queueIndex: -1, shuffle: false },
+    currentView: 'songs',
+    currentTrack: () => null,
+    sortedSongTracks: () => [tracks[1], tracks[3]],
+    sortTrackList: rows => [...rows],
+    setQueue: (rows, start, autoplay) => calls.push([rows.map(t => t.id), start, autoplay]),
+    playIndex: () => { throw new Error('playIndex should not be used without a current track'); },
+  };
+  vm.createContext(context);
+  vm.runInContext(togglePlaybackSource, context);
+  context.togglePlayback();
+  assert.deepEqual(calls, [[['a', 'b', 'c', 'd'], 0, true]]);
+});
+
+test('Play all and Shuffle all are explicitly full-library actions', () => {
+  assert.match(html, /bindClick\('playAllBtn',\(\)=>setQueue\(sortTrackList\(state\.tracks\),0,true\)\);/);
+  assert.match(html, /bindClick\('shuffleAllBtn',\(\)=>setQueue\(shuf\(sortTrackList\(state\.tracks\)\),0,true\)\);/);
+  assert.doesNotMatch(html, /bindClick\('playAllBtn',\(\)=>setQueue\(sortedSongTracks\(\),0,true\)\);/);
+  assert.doesNotMatch(html, /bindClick\('shuffleAllBtn',\(\)=>setQueue\(shuf\(sortedSongTracks\(\)\),0,true\)\);/);
 });
 
 test('row Add to queue remains a one-track action even when the Songs view is filtered', () => {

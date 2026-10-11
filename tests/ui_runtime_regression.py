@@ -19,7 +19,7 @@ from typing import Any
 
 from playwright.sync_api import Page, sync_playwright
 
-VERSION = "2.2.0"
+VERSION = "3.0.0"
 
 TRACKS: list[dict[str, Any]] = [
     {

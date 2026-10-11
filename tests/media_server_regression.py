@@ -66,7 +66,7 @@ def main() -> int:
         shutil.copy2(fixture, target)
         binary = temp / "vexstream-test-server"
         build = subprocess.run(
-            ["go", "build", "-trimpath", "-o", str(binary), "main.go", "mobile_bridge.go", "procattr_unix.go"],
+            ["go", "build", "-trimpath", "-o", str(binary), "main.go", "mobile_bridge.go", "mobile_lan_bridge.go", "procattr_unix.go"],
             cwd=root, capture_output=True, text=True,
         )
         if build.returncode != 0:

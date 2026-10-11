@@ -75,14 +75,7 @@ func validateMobileDevicePublicKey(encoded string) error {
 		return err
 	}
 	publicKey, ok := parsed.(*ecdsa.PublicKey)
-	if !ok || publicKey.Curve != ecdh.P256() {
-		// Curve interface values are not identity-comparable across crypto packages. Validate the
-		// actual P-256 size below instead.
-		if !ok || publicKey.Curve.Params().Name != "P-256" {
-			return errors.New("device public key must be ECDSA P-256")
-		}
-	}
-	if publicKey.Curve.Params().Name != "P-256" {
+	if !ok || publicKey.Curve == nil || publicKey.Curve.Params().Name != "P-256" {
 		return errors.New("device public key must be ECDSA P-256")
 	}
 	return nil

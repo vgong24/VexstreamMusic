@@ -159,8 +159,10 @@ Home/Safety owner must admit/mint the real capability identities before a produc
 authorization.
 
 For Android target SDK 37, prefer the narrow system-mediated local-service selection route where it
-fits rather than asking for blanket LAN access by default. Remote/off-home streaming belongs behind
-the accepted VexHome gateway/reachability path, not port forwarding of the desktop application.
+fits rather than asking for blanket LAN access by default. Remote/off-home streaming must not widen
+or port-forward the ordinary desktop application/admin surface. A dedicated remote ingress may expose
+only the already-sanitized mobile capability while preserving the distinction between reachability and
+canonical Home/Safety authority.
 
 ## Offline invariant
 
@@ -355,3 +357,108 @@ RELAY_CIPHERTEXT != RELAY_MEDIA_OWNERSHIP
 
 The accepted Home/Safety contracts remain the evolutionary destination for reusable cross-product
 remote membership, capability leases, revocation generations and shared Home gateway semantics.
+
+## Direct-PC successor — public paired-device ingress
+
+The Home PC is the real VexStream host. A public relay is therefore not the preferred media path when
+the already-paired phone can reach that PC directly.
+
+The direct successor adds a second dedicated TLS listener:
+
+```text
+TCP 18767
+HTTPS
+POST /v1/direct/request
+```
+
+This listener is deliberately separate from both:
+
+```text
+ordinary desktop/admin listener
+LAN pairing + catalog listener on 18766
+```
+
+It does **not** expose pairing, desktop UI, filesystem paths, uploads, playlist mutation, diagnostics,
+repair, shell/process operations, arbitrary URLs, or general Vex computer control.
+
+A direct request reuses the same remote cryptographic identity already formed during local approval:
+
+```text
+Android Keystore P-256 device signing key
++ desktop stable P-256 gateway key
++ signed routing envelope
++ ephemeral ECDH
++ HKDF
++ AES-GCM inner request
+```
+
+The public ingress validates the already-enrolled device signature before decrypting the inner request,
+then independently applies:
+
+```text
+fresh issuedAt window
+bounded replay cache keyed by deviceRef + requestRef
+bounded request body
+bounded source-IP request rate
+bounded concurrent handlers
+exact Home ref
+exact paired device key
+read-only mobile allowlist
+```
+
+Only these decrypted operations remain admitted:
+
+```text
+GET /v1/catalog
+GET/HEAD /v1/media/<trackRef>
+```
+
+The response is encrypted with the same per-request ECDH-derived key before leaving the desktop
+process.
+
+### Direct route formation
+
+VexStream may advertise direct routes only while the dedicated ingress is running for at least one
+remote-enabled paired device.
+
+Current candidate route formation is:
+
+```text
+global IPv6 address, when present
+OR
+temporary UPnP TCP mapping -> local 18767, when the router returns a genuinely public IPv4 address
+```
+
+UPnP mappings use bounded leases and are renewed while VexStream is running. RFC1918, loopback,
+unspecified, multicast/reserved, and CGNAT `100.64.0.0/10` addresses are not advertised as public
+routes. Revoking the final remote-enabled device stops the ingress and removes the active mapping
+best-effort.
+
+An optional `VEXSTREAM_DIRECT_PUBLIC_URL` remains a development/explicit-route override; it is not
+required by the intended product flow.
+
+The Android consumer learns direct route candidates only through its already-pinned local relationship
+and still pins the exact desktop certificate when using those public addresses.
+
+Route preference becomes:
+
+```text
+same-LAN pinned TLS
+-> direct paired-device ingress on Home PC
+-> content-blind VexRelay fallback
+-> verified phone-local copy
+```
+
+Therefore:
+
+```text
+PUBLIC_ROUTE != AUTHORITY
+UPNP_MAPPING != PAIRING
+DIRECT_TLS_REACHABILITY != GENERAL_PC_ACCESS
+DIRECT_VEXSTREAM_CAPABILITY != CANONICAL_HOME_AUTHORIZATION
+VEXRELAY_FALLBACK != MEDIA_OWNERSHIP
+```
+
+The direct path changes reachability, not the ownership of the music, device identity, or future
+canonical Home/Safety authority.
+

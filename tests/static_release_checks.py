@@ -92,6 +92,15 @@ def main() -> int:
         and "VEXSTREAM_REMOTE_RELAY_URL" in (root / "mobile_remote_gateway.go").read_text(encoding="utf-8"),
         "remote gateway/relay source missing",
     ))
+    checked("mobile-direct-ingress-source-present", lambda: require(
+        (root / "mobile_direct_gateway.go").is_file()
+        and (root / "mobile_direct_gateway_test.go").is_file()
+        and 'mobileDirectPath              = "/v1/direct/request"' in (root / "mobile_direct_gateway.go").read_text(encoding="utf-8")
+        and "validateMobileDirectEnvelope" in (root / "mobile_direct_gateway.go").read_text(encoding="utf-8")
+        and "rememberMobileDirectRequest" in (root / "mobile_direct_gateway.go").read_text(encoding="utf-8")
+        and "NewWANIPConnection2ClientsCtx" in (root / "mobile_direct_gateway.go").read_text(encoding="utf-8"),
+        "direct paired-device ingress source missing",
+    ))
     checked("explicit-process-exit-present", lambda: require(
         '/api/system/exit' in main_go
         and 'EXIT_VEXSTREAM' in main_go

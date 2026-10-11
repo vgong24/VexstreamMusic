@@ -32,10 +32,8 @@ import (
 //go:embed ui/index.html media_bridge.py
 var assets embed.FS
 
-const (
-	version  = "2.2.0"
-	buildRef = "vexstream.mobile-bridge.same-wifi/v1"
-)
+const version = "2.2.0"
+const buildRef = "vexstream.mobile-bridge.same-wifi/v1"
 
 type Config struct {
 	Sources []string `json:"sources"`

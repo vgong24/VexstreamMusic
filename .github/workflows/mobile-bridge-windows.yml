@@ -1,0 +1,166 @@
+name: Build VexStream Mobile Bridge Windows
+
+on:
+  push:
+    branches:
+      - VXG-101126-vexstream-mobile-bridge
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-mobile-bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact bridge source
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+
+      - name: Build qualified Windows executable
+        run: |
+          mkdir -p out
+          python3 tests/build_windows.py \
+            --root . \
+            --output out/VexStreamMusic-2.2.0.exe \
+            --report out/windows-build-qualification.json
+
+      - name: Run focused mobile bridge Go regression
+        run: |
+          go test \
+            main.go \
+            mobile_bridge.go \
+            procattr_unix.go \
+            duplicate_logic_test.go \
+            import_runtime_test.go \
+            discovery_radio_test.go \
+            mobile_bridge_test.go
+
+      - name: Create one-click Android connector
+        shell: bash
+        run: |
+          cat > out/CONNECT-ANDROID.cmd <<'CMD'
+          @echo off
+          setlocal
+          title VexStream - Connect Android
+
+          echo.
+          echo VexStream Android Connector
+          echo ===========================
+          echo.
+          echo 1. Plug your Android phone into this PC with USB.
+          echo 2. Make sure USB debugging is enabled.
+          echo 3. If your phone asks whether to allow USB debugging, tap Allow.
+          echo.
+
+          set "ADB="
+          if defined ANDROID_SDK_ROOT if exist "%ANDROID_SDK_ROOT%\platform-tools\adb.exe" set "ADB=%ANDROID_SDK_ROOT%\platform-tools\adb.exe"
+          if not defined ADB if defined ANDROID_HOME if exist "%ANDROID_HOME%\platform-tools\adb.exe" set "ADB=%ANDROID_HOME%\platform-tools\adb.exe"
+          if not defined ADB if exist "%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe" set "ADB=%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe"
+          if not defined ADB for %%A in (adb.exe) do if not "%%~$PATH:A"=="" set "ADB=%%~$PATH:A"
+
+          if not defined ADB (
+            echo I could not find Android Studio's adb tool.
+            echo.
+            echo Open Android Studio once and confirm the Android SDK / Platform Tools are installed,
+            echo then run this file again.
+            echo.
+            pause
+            exit /b 1
+          )
+
+          "%ADB%" start-server >nul 2>&1
+
+          echo Looking for your phone...
+          "%ADB%" devices
+          echo.
+
+          "%ADB%" reverse tcp:18765 tcp:18765
+          if errorlevel 1 (
+            echo.
+            echo Connection was not completed.
+            echo Check the phone screen for an "Allow USB debugging" prompt,
+            echo tap Allow, then run this file again.
+            echo.
+            pause
+            exit /b 1
+          )
+
+          echo.
+          echo SUCCESS: Your phone is connected to VexStream for this test.
+          echo.
+          echo Next:
+          echo   Run the VexLife Android branch from Android Studio,
+          echo   then open Home ^> VexStream Music.
+          echo.
+          echo You do not need to enter an ID or port in the app.
+          echo.
+          pause
+          CMD
+
+          cat > out/README-FIRST.txt <<'TXT'
+          VexStream Mobile Bridge - First Test
+          ====================================
+
+          You do NOT need to configure a port or connection ID.
+
+          STEP 1 - DESKTOP
+          Close any older VexStream Music window/process, then run:
+              VexStreamMusic-2.2.0.exe
+
+          Your normal VexStream interface should open.
+
+          STEP 2 - CONNECT THE PHONE
+          Plug your Android phone into the PC by USB.
+          Double-click:
+              CONNECT-ANDROID.cmd
+
+          If the phone asks "Allow USB debugging?", tap Allow.
+          Wait until the connector says SUCCESS.
+
+          STEP 3 - ANDROID
+          In Android Studio, check out:
+              VXG-101126-vexstream-mobile-stream-offline
+
+          Run it on your phone.
+
+          In the app:
+              Home -> VexStream Music
+
+          Expected:
+              - It says "Desktop library connected"
+              - Your desktop music appears
+              - Play sends audio through the phone
+              - Download keeps a verified offline copy on the phone
+
+          OFFLINE TEST
+          After downloading one song:
+              1. Close VexStream on the PC (or unplug USB).
+              2. Open/play the downloaded song again on the phone.
+
+          It should remain available locally.
+
+          This USB connection is only the first proof.
+          Later VexStream/Home pairing will replace it so you do not need USB.
+          TXT
+
+      - name: Package simple Windows bundle
+        run: |
+          cd out
+          zip -9 VexStream-Mobile-Bridge-Windows.zip \
+            VexStreamMusic-2.2.0.exe \
+            CONNECT-ANDROID.cmd \
+            README-FIRST.txt \
+            windows-build-qualification.json
+
+      - name: Upload Windows bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: VexStream-Mobile-Bridge-Windows
+          path: out/VexStream-Mobile-Bridge-Windows.zip
+          if-no-files-found: error
+          retention-days: 14

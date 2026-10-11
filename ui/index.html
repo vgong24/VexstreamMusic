@@ -53,7 +53,7 @@ h1,h2,h3{margin:0}h2{font-size:18px}.muted{color:var(--muted)}.small{font-size:1
   <button id="libraryNavToggle" class="nav-toggle" title="Toggle library navigation" aria-label="Toggle library navigation" aria-expanded="true">☰</button>
   <button id="brandHome" class="brand brand-home" type="button" title="Go to Library home" aria-label="Go to Library home"><span>Vex</span>Stream Music</button>
   <div class="top-tabs"><button id="libraryTopTab" class="active">Library</button><button id="discoverTopTab">Discover</button></div>
-  <div class="header-spacer"></div><button id="systemBell" class="system-bell" title="System status">🔔<span id="systemBadge" class="system-badge hidden">0</span></button><span class="version">2.2.0</span>
+  <div class="header-spacer"></div><button id="phoneConnectBtn" class="system-bell" title="Connect VexLife phone" aria-label="Connect VexLife phone">📱</button><button id="systemBell" class="system-bell" title="System status">🔔<span id="systemBadge" class="system-badge hidden">0</span></button><span class="version">2.2.0</span>
 </header>
 
 <section id="libraryScreen" class="screen">
@@ -177,7 +177,7 @@ h1,h2,h3{margin:0}h2{font-size:18px}.muted{color:var(--muted)}.small{font-size:1
 
 <script>
 const $=id=>document.getElementById(id);let state={tracks:[],sources:[],candidates:[],ignored:[],trash:[],deletedHistory:[],playlists:[],queue:[],queueIndex:-1,shuffle:false,repeat:false};let inspected=null;let inspectedDuplicates=[];let lastYouTubeResults=[];let importRuntimeStatus={searchReady:false,ffmpegReady:false,importReady:false,detail:''};let importActivityTimer=null;let duplicatePreviewTimer=null;let resumeAfterDuplicatePreview=false;let systemPollTimer=null;let currentRepairPlan=[];let currentView='home';let selectionMode=false;const selectedTrackIds=new Set(),selectedTrashIds=new Set();let queueDrawerOpen=false;let queueDragIndex=-1;let lastImportCompletionKey='';let openAlbumName='';let openArtistName='';let artistAlbumsExpanded=false;let artistAlbumsShowAll=false;let artistSongQuery='';let artistAlbumFilter='';let openPlaylistId='';let playlistModalTrackIds=[];let playlistSelectionTarget='';let cropPreviewTimer=null;const audio=$('audio'),duplicatePreviewAudio=$('duplicatePreviewAudio'),cropPreviewAudio=$('cropPreviewAudio');
-let discoverySession={frames:[],frameIndex:-1,previewIndex:-1,resumeLocal:false};
+let discoverySession={frames:[],frameIndex:-1,previewIndex:-1,resumeLocal:false};let phonePairPollTimer=null;
 const songFieldDefaults=Object.freeze({added:true,artist:true,album:true,genre:false,duration:true});let songFields={...songFieldDefaults},songTitleWidth=46,navCollapsed=false,navDrawerOpen=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const fmtDur=s=>{s=Number(s||0);if(!s||!isFinite(s))return'—';const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=Math.floor(s%60);return h?`${h}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`:`${m}:${String(ss).padStart(2,'0')}`};
 async function api(path,opts={}){const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opts});const j=await r.json();if(!r.ok){const e=new Error(typeof j.error==='string'?j.error:r.statusText);e.payload=j;throw e}return j}
@@ -186,7 +186,7 @@ async function copyDiagnostics(){try{const d=await api('/api/diagnostics');if(wi
 function wireProblemActions(retryFn){const c=$('problemCopyBtn');if(c)c.onclick=async()=>{c.textContent=await copyDiagnostics()?'Copied':'Copy failed'};const r=$('problemRetryBtn');if(r&&retryFn)r.onclick=retryFn}
 function arr(v){return Array.isArray(v)?v:[]}
 function openModal(title,body,actions=''){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modalActions').innerHTML=actions;$('modalBackdrop').classList.remove('hidden')}
-function closeModal(){if(cropPreviewTimer)clearTimeout(cropPreviewTimer);cropPreviewTimer=null;cropPreviewAudio.pause();cropPreviewAudio.removeAttribute('src');cropPreviewAudio.load();$('modalBackdrop').classList.add('hidden');$('modalBody').innerHTML='';$('modalActions').innerHTML=''}
+function closeModal(){if(phonePairPollTimer)clearTimeout(phonePairPollTimer);phonePairPollTimer=null;if(cropPreviewTimer)clearTimeout(cropPreviewTimer);cropPreviewTimer=null;cropPreviewAudio.pause();cropPreviewAudio.removeAttribute('src');cropPreviewAudio.load();$('modalBackdrop').classList.add('hidden');$('modalBody').innerHTML='';$('modalActions').innerHTML=''}
 function openMessage(title,message){openModal(title,`<div class="notice">${esc(message)}</div>`,`<button class="primary" onclick="closeModal()">OK</button>`)}
 window.closeModal=closeModal;
 function issueHTML(i){return `<div class="issue ${esc(i.severity||'info')}"><div class="row between"><strong>${esc(i.title||i.code)}</strong><span class="issue-code">${esc(i.code||'')}</span></div><div style="margin-top:4px">${esc(i.message||'')}</div>${i.technical?`<details style="margin-top:7px"><summary class="small muted">Technical details</summary><pre style="white-space:pre-wrap;word-break:break-word">${esc(i.technical)}</pre></details>`:''}</div>`}
@@ -202,6 +202,37 @@ async function refreshSystemStatus(){
   catch(e){if(systemPollTimer)clearTimeout(systemPollTimer);systemPollTimer=setTimeout(refreshSystemStatus,7000)}
 }
 async function openSystemDrawer(){$('systemDrawer').classList.remove('hidden');await refreshSystemStatus()}
+function formatPairCode(code){const s=String(code||'').padStart(6,'0');return s.slice(0,3)+' '+s.slice(3)}
+async function openPhoneConnection(){
+  openModal('Connect your VexLife phone','<div id="phonePairingPanel"><div class="small muted">Checking phone connection…</div></div>','<button onclick="closeModal()">Close</button>');
+  await refreshPhonePairing();
+}
+async function refreshPhonePairing(){
+  const box=$('phonePairingPanel');if(!box)return;
+  try{
+    const d=await api('/api/mobile/pairing'),pending=arr(d.pending),paired=arr(d.paired),open=!!d.pairingWindowOpen;
+    let pairingBlock='';
+    if(open){
+      pairingBlock='<div class="notice success"><strong>Ready to pair for 5 minutes</strong><div class="small muted" style="margin-top:5px">On your phone open VexLife → VexStream Music → Find VexStream. Choose <strong>'+esc(d.displayName||'this VexStream')+'</strong>.</div><div style="font-size:30px;font-weight:800;letter-spacing:.12em;margin-top:12px">'+esc(formatPairCode(d.pairingCode))+'</div><div class="small muted">The phone should show this same code before it asks for approval.</div></div>';
+    }else{
+      pairingBlock='<div class="notice"><strong>Connect without Android debugging</strong><div class="small muted" style="margin-top:5px">This makes VexStream discoverable to VexLife on the same Wi-Fi for five minutes.</div><button class="primary" style="margin-top:10px" onclick="startPhonePairing()">Connect a phone</button></div>';
+    }
+    let pendingBlock='';
+    if(pending.length){
+      pendingBlock='<div style="margin-top:14px"><h3>Waiting for your approval</h3>'+pending.map(function(x){return '<div class="issue info"><div class="row between"><div><strong>'+esc(x.displayName||'VexLife phone')+'</strong><div class="small muted">Confirm the matching code on the phone, then allow it here.</div></div><div class="row"><button onclick="decidePhonePairing(\''+esc(x.requestRef)+'\',\'DENY\')">Deny</button><button class="primary" onclick="decidePhonePairing(\''+esc(x.requestRef)+'\',\'APPROVE\')">Allow</button></div></div></div>';}).join('')+'</div>';
+    }
+    let pairedBlock='';
+    if(paired.length){
+      pairedBlock='<div style="margin-top:14px"><h3>Remembered phones</h3>'+paired.map(function(x){return '<div class="lifecycle-row"><div><strong>'+esc(x.displayName||'VexLife phone')+'</strong><div class="small muted">Approved '+esc(x.approvedAt||'')+'</div></div><button onclick="forgetPhone(\''+esc(x.deviceRef)+'\')">Forget</button></div>';}).join('')+'</div>';
+    }
+    box.innerHTML=pairingBlock+pendingBlock+pairedBlock+'<div class="small muted" style="margin-top:14px">This nearby pairing is a local VexStream connection candidate. It does not expose imports, delete, diagnostics, repair, or other desktop controls to the phone.</div>';
+    if(phonePairPollTimer)clearTimeout(phonePairPollTimer);phonePairPollTimer=setTimeout(refreshPhonePairing,1000);
+  }catch(e){box.innerHTML='<div class="notice">'+esc(e.message)+'</div>'}
+}
+async function startPhonePairing(){try{await api('/api/mobile/pairing/start',{method:'POST',body:'{}'});await refreshPhonePairing()}catch(e){openMessage('Phone connection',e.message)}}
+async function decidePhonePairing(requestRef,decision){try{await api('/api/mobile/pairing/decision',{method:'POST',body:JSON.stringify({requestRef:requestRef,decision:decision})});await refreshPhonePairing()}catch(e){openMessage('Phone connection',e.message)}}
+async function forgetPhone(deviceRef){if(!confirm('Forget this phone? It will need to pair again before using your VexStream library.'))return;try{await api('/api/mobile/pairing/revoke',{method:'POST',body:JSON.stringify({deviceRef:deviceRef})});await refreshPhonePairing()}catch(e){openMessage('Phone connection',e.message)}}
+window.startPhonePairing=startPhonePairing;window.decidePhonePairing=decidePhonePairing;window.forgetPhone=forgetPhone;
 async function loadRepairPlan(){try{const d=await api('/api/system/repair-plan');currentRepairPlan=arr(d.actions);$('repairPlanList').innerHTML=currentRepairPlan.length?currentRepairPlan.map(a=>`<label class="repair-action"><input type="checkbox" class="repairCheck" value="${esc(a.id)}" checked><span><strong>${esc(a.title)}</strong><div class="small muted">${esc(a.description)}</div><div class="small muted"><em>${esc(a.effect)}</em></div></span></label>`).join(''):'<div class="small muted">No safe repair is currently required. Rescan library remains available for a normal background reconcile.</div>';$('runRepairBtn').classList.toggle('hidden',currentRepairPlan.length===0)}catch(e){$('repairPlanList').innerHTML=`<div class="notice">${esc(e.message)}</div>`}}
 async function runRepair(){const ids=[...document.querySelectorAll('.repairCheck:checked')].map(x=>x.value);if(!ids.length)return;const names=currentRepairPlan.filter(x=>ids.includes(x.id)).map(x=>'• '+x.title).join('\n');if(!confirm(`Run these safe repairs?\n\n${names}\n\nNo media files will be deleted.`))return;try{const d=await api('/api/system/repair',{method:'POST',body:JSON.stringify({confirm:'RUN_SAFE_REPAIRS',actions:ids})});$('repairPlanList').innerHTML=`<div class="notice success">${esc(d.message||'Repair started.')}</div>`;$('runRepairBtn').classList.add('hidden');await refreshSystemStatus();setTimeout(refreshAll,900)}catch(e){$('repairPlanList').innerHTML=`<div class="notice">${esc(e.message)}</div>`}}
 function loadQueue(){try{const q=JSON.parse(localStorage.getItem('vexstream.queue')||'[]');if(Array.isArray(q))state.queue=q}catch{}}function saveQueue(){localStorage.setItem('vexstream.queue',JSON.stringify(state.queue))}
@@ -593,6 +624,7 @@ bindClick('copyDiagnosticsBtn',async()=>{$('copyDiagnosticsBtn').textContent=awa
 bindClick('ytNewSearchBtn',()=>showYouTubeEntry({focus:'search',clearQuery:true}));
 bindClick('ytPasteAnotherBtn',()=>showYouTubeEntry({focus:'url',clearQuery:false}));
 bindClick('ytRefreshActivityBtn',refreshImportActivity);
+bindClick('phoneConnectBtn',openPhoneConnection);
 bindClick('systemBell',openSystemDrawer);
 bindClick('closeSystemDrawer',()=>$('systemDrawer').classList.add('hidden'));
 bindClick('loadRepairPlanBtn',loadRepairPlan);

@@ -266,4 +266,3 @@ func mobileMediaFingerprint(path string) (string, int64, error) {
 
 	return sha, stat.Size(), nil
 }
-

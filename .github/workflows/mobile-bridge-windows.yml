@@ -29,14 +29,14 @@ jobs:
           mkdir -p out
           python3 tests/build_windows.py \
             --root . \
-            --output out/VexStreamMusic-2.2.0.exe \
+            --output out/VexStreamMusic-3.0.0.exe \
             --report out/windows-build-qualification.json
 
       - name: Verify source and embedded UI
         run: |
           python3 tests/static_release_checks.py \
             --root . \
-            --artifact out/VexStreamMusic-2.2.0.exe \
+            --artifact out/VexStreamMusic-3.0.0.exe \
             --report out/static-release-checks.json
 
       - name: Run focused mobile bridge Go regression
@@ -64,7 +64,7 @@ jobs:
 
           STEP 1 - START VEXSTREAM ON WINDOWS
           Close any older VexStream process and run:
-              VexStreamMusic-2.2.0.exe
+              VexStreamMusic-3.0.0.exe
 
           If Windows asks about network access, allow VexStream on your PRIVATE network.
 
@@ -114,7 +114,7 @@ jobs:
         run: |
           cd out
           zip -9 VexStream-Mobile-Bridge-Windows.zip \
-            VexStreamMusic-2.2.0.exe \
+            VexStreamMusic-3.0.0.exe \
             README-FIRST.txt \
             windows-build-qualification.json \
             static-release-checks.json

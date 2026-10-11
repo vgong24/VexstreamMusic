@@ -2,7 +2,12 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
@@ -91,7 +96,12 @@ func TestMobileLANPairingRequestRequiresOpenWindowAndExposesTokenOnlyAfterApprov
 		pending: map[string]*mobilePendingPairing{},
 	}
 
-	body := []byte(`{"deviceRef":"vexlife.fixture","displayName":"Victor's phone"}`)
+	devicePublicKey := testMobileDevicePublicKey(t)
+	body := []byte(
+		`{"deviceRef":"vexlife.fixture","displayName":"Victor's phone","devicePublicKey":"` +
+			devicePublicKey +
+			`"}`,
+	)
 	closedRequest := httptest.NewRequest(http.MethodPost, "/v1/pairing/request", bytes.NewReader(body))
 	closedResponse := httptest.NewRecorder()
 	bridge.pairingRequest(closedResponse, closedRequest)
@@ -231,6 +241,20 @@ func TestMobileLANStaysAvailableForRememberedDevice(t *testing.T) {
 	if !bridge.running {
 		t.Fatal("remembered phone should keep the secure LAN bridge available")
 	}
+}
+
+
+func testMobileDevicePublicKey(t *testing.T) string {
+	t.Helper()
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	der, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return base64.RawStdEncoding.EncodeToString(der)
 }
 
 func sha256Hex(value string) string {

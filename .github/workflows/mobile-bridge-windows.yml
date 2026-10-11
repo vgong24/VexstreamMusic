@@ -1,9 +1,6 @@
 name: Build VexStream Mobile Bridge Windows
 
 on:
-  push:
-    branches:
-      - VXG-101126-vexstream-mobile-bridge
   workflow_dispatch:
 
 permissions:

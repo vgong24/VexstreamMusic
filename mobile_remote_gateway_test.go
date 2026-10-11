@@ -59,6 +59,23 @@ func TestMobileRemoteDevicePublicKeyRequiresP256ECDSA(t *testing.T) {
 	}
 }
 
+func TestMobileRemoteHKDFMatchesAndroidProtocolVector(t *testing.T) {
+	shared := make([]byte, 32)
+	for i := range shared {
+		shared[i] = byte(i + 1)
+	}
+	actual := hex.EncodeToString(
+		remoteHKDF(
+			shared,
+			"remote.fixture.001",
+		),
+	)
+	const expected = "c7b38bfac5c6643c44cec0ee47e2b2feff38a3ae80a8ea209a3f75a2547afb6c"
+	if actual != expected {
+		t.Fatalf("derived=%s expected=%s", actual, expected)
+	}
+}
+
 func TestMobileRemoteCipherRoundTrip(t *testing.T) {
 	root := t.TempDir()
 	path := filepath.Join(root, "gateway-key")

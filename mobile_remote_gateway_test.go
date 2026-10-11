@@ -33,7 +33,10 @@ func TestMobileRemoteGatewayIdentityPersists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := parsed.(*ecdh.PublicKey); !ok {
+	switch parsed.(type) {
+	case *ecdh.PublicKey, *ecdsa.PublicKey:
+		// id-ecPublicKey has no signing/agreement discriminator in SubjectPublicKeyInfo.
+	default:
 		t.Fatalf("gateway key type=%T", parsed)
 	}
 }

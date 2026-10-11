@@ -431,6 +431,8 @@ func mobileDirectUPnPRenewalLoop() {
 }
 
 func refreshMobileDirectUPnP(ctx context.Context) {
+	refreshMobileDirectBaseRoutes()
+
 	internalIP, err := mobileDirectDefaultIPv4()
 	if err != nil {
 		return
@@ -440,19 +442,29 @@ func refreshMobileDirectUPnP(ctx context.Context) {
 	existing := mobileDirectGateway.mapping
 	mobileDirectGateway.mu.Unlock()
 	if existing != nil {
-		if err := existing.client.AddPortMappingCtx(
-			ctx,
-			"",
-			existing.externalPort,
-			"TCP",
-			mobileDirectPort,
-			existing.internalClient,
-			true,
-			mobileDirectUPnPDescription,
-			mobileDirectUPnPLeaseSeconds,
-		); err == nil {
-			setMobileDirectUPnPMapping(existing)
-			return
+		externalText, externalErr := existing.client.GetExternalIPAddressCtx(ctx)
+		externalIP := net.ParseIP(strings.TrimSpace(externalText))
+		if externalErr == nil && mobileDirectPublicIPv4(externalIP) {
+			if err := existing.client.AddPortMappingCtx(
+				ctx,
+				"",
+				existing.externalPort,
+				"TCP",
+				mobileDirectPort,
+				existing.internalClient,
+				true,
+				mobileDirectUPnPDescription,
+				mobileDirectUPnPLeaseSeconds,
+			); err == nil {
+				refreshed := &mobileDirectUPnPMapping{
+					client:         existing.client,
+					externalPort:   existing.externalPort,
+					internalClient: existing.internalClient,
+					route:          fmt.Sprintf("https://%s:%d", externalIP.String(), existing.externalPort),
+				}
+				setMobileDirectUPnPMapping(refreshed)
+				return
+			}
 		}
 	}
 
@@ -491,6 +503,17 @@ func refreshMobileDirectUPnP(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func refreshMobileDirectBaseRoutes() {
+	mobileDirectGateway.mu.Lock()
+	mapping := mobileDirectGateway.mapping
+	routes := mobileDirectBaseRoutes()
+	if mapping != nil {
+		routes = append(routes, mapping.route)
+	}
+	mobileDirectGateway.routes = normalizeMobileDirectRoutes(routes)
+	mobileDirectGateway.mu.Unlock()
 }
 
 func setMobileDirectUPnPMapping(mapping *mobileDirectUPnPMapping) {

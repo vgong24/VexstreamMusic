@@ -212,6 +212,12 @@ func (s *relayState) hostRegister(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	s.cleanupLocked()
 	old := s.hosts[request.HomeRef]
+	if old != nil && s.now().Before(old.expiresAt) {
+		// Re-registration is signed by the same certificate-bound Home identity. Preserve the
+		// short-lived session token so an already-processing encrypted media chunk can finish while
+		// the device-key allowlist is refreshed.
+		sessionToken = old.token
+	}
 	if old == nil && len(s.hosts) >= maxHosts {
 		s.mu.Unlock()
 		jsonOut(w, http.StatusServiceUnavailable, map[string]string{"error": "relay host capacity unavailable"})

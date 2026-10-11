@@ -162,6 +162,41 @@ func TestMobileLANPairingStatusNeverReturnsTokenWhilePending(t *testing.T) {
 	}
 }
 
+func TestMobileLANStopsUnusedSurfaceAfterPairingWindow(t *testing.T) {
+	bridge := &mobileLANBridgeState{
+		running:            true,
+		pairingWindowUntil: time.Now().Add(-time.Second),
+		devices:            map[string]mobilePairedDevice{},
+		pending:            map[string]*mobilePendingPairing{},
+	}
+
+	bridge.stopIfUnused()
+
+	if bridge.running {
+		t.Fatal("unused LAN bridge should stop after the pairing window closes")
+	}
+}
+
+func TestMobileLANStaysAvailableForRememberedDevice(t *testing.T) {
+	bridge := &mobileLANBridgeState{
+		running:            true,
+		pairingWindowUntil: time.Now().Add(-time.Second),
+		devices: map[string]mobilePairedDevice{
+			"vexlife.fixture": {
+				DeviceRef: "vexlife.fixture",
+				TokenHash: sha256Hex("fixture-token"),
+			},
+		},
+		pending: map[string]*mobilePendingPairing{},
+	}
+
+	bridge.stopIfUnused()
+
+	if !bridge.running {
+		t.Fatal("remembered phone should keep the secure LAN bridge available")
+	}
+}
+
 func sha256Hex(value string) string {
 	sum := sha256.Sum256([]byte(value))
 	return hex.EncodeToString(sum[:])

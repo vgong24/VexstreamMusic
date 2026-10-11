@@ -113,7 +113,7 @@ jobs:
       - name: Package simple Windows bundle
         run: |
           cd out
-          zip -9 VexStream-Mobile-Bridge-Windows.zip \
+          zip -9 VexStream-3.0.0-Windows.zip \
             VexStreamMusic-3.0.0.exe \
             README-FIRST.txt \
             windows-build-qualification.json \
@@ -122,7 +122,7 @@ jobs:
       - name: Upload Windows bundle
         uses: actions/upload-artifact@v4
         with:
-          name: VexStream-Mobile-Bridge-Windows
-          path: out/VexStream-Mobile-Bridge-Windows.zip
+          name: VexStream-3.0.0-Windows
+          path: out/VexStream-3.0.0-Windows.zip
           if-no-files-found: error
           retention-days: 14

@@ -14,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 const defaultMobileDevPort = 18765
@@ -268,7 +267,3 @@ func mobileMediaFingerprint(path string) (string, int64, error) {
 	return sha, stat.Size(), nil
 }
 
-// Mobile bridge cache entries are only an optimization for catalog formation. Android verifies the
-// downloaded bytes against the projected digest and therefore fails closed if media changed while a
-// stale same-size/same-mtime cache entry somehow survived.
-var _ = time.RFC3339

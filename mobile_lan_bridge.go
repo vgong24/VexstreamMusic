@@ -215,6 +215,7 @@ func (b *mobileLANBridgeState) ensureStarted(a *App) error {
 	mux.HandleFunc("/v1/pairing/info", b.pairingInfo)
 	mux.HandleFunc("/v1/pairing/request", b.pairingRequest)
 	mux.HandleFunc("/v1/pairing/status", b.pairingRequestStatus)
+	mux.HandleFunc("/v1/pairing/remote-upgrade", b.authorized(b.pairingRemoteUpgrade(a)))
 	mux.HandleFunc("/v1/pairing/revoke-self", b.authorized(b.pairingRevokeSelf))
 	mux.HandleFunc("/v1/catalog", b.authorized(a.mobileCatalog))
 	mux.HandleFunc("/v1/media/", b.authorized(a.mobileMedia))
@@ -457,6 +458,68 @@ func (b *mobileLANBridgeState) pairingRequestStatus(w http.ResponseWriter, r *ht
 				mobileRemoteRelayURL() != ""
 	}
 	jsonOut(w, http.StatusOK, response)
+}
+
+func (b *mobileLANBridgeState) pairingRemoteUpgrade(a *App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			jsonOut(w, http.StatusMethodNotAllowed, map[string]string{"error": "POST required"})
+			return
+		}
+
+		deviceRef := b.deviceRefForRequest(r)
+		if deviceRef == "" {
+			jsonOut(w, http.StatusUnauthorized, map[string]string{"error": "paired VexLife device required"})
+			return
+		}
+
+		var request struct {
+			DevicePublicKey string `json:"devicePublicKey"`
+		}
+		if err := decode(r, &request); err != nil {
+			jsonOut(w, http.StatusBadRequest, map[string]string{"error": "invalid remote upgrade request"})
+			return
+		}
+		request.DevicePublicKey = strings.TrimSpace(request.DevicePublicKey)
+		if err := validateMobileDevicePublicKey(request.DevicePublicKey); err != nil {
+			jsonOut(w, http.StatusBadRequest, map[string]string{"error": "valid devicePublicKey is required"})
+			return
+		}
+
+		b.mu.Lock()
+		device, ok := b.devices[deviceRef]
+		if !ok {
+			b.mu.Unlock()
+			jsonOut(w, http.StatusUnauthorized, map[string]string{"error": "paired VexLife device required"})
+			return
+		}
+		if device.DevicePublicKey != "" && device.DevicePublicKey != request.DevicePublicKey {
+			b.mu.Unlock()
+			jsonOut(w, http.StatusConflict, map[string]string{"error": "device signing identity changed; re-pair explicitly"})
+			return
+		}
+		device.DevicePublicKey = request.DevicePublicKey
+		device.RemoteEnabled = true
+		b.devices[deviceRef] = device
+		if err := b.saveLocked(); err != nil {
+			b.mu.Unlock()
+			jsonOut(w, http.StatusInternalServerError, map[string]string{"error": "unable to save remote device identity"})
+			return
+		}
+		homeRef := b.remoteHomeRefLocked()
+		gatewayPublicKey := b.remoteGatewayPublicKey
+		b.mu.Unlock()
+
+		relayURL := mobileRemoteRelayURL()
+		jsonOut(w, http.StatusOK, map[string]any{
+			"remoteHomeRef":          homeRef,
+			"remoteGatewayPublicKey": gatewayPublicKey,
+			"remoteRelayBaseUrl":     relayURL,
+			"remoteAccessReady":      relayURL != "",
+		})
+		go startMobileRemoteGateway(a)
+	}
 }
 
 func (b *mobileLANBridgeState) pairingRevokeSelf(w http.ResponseWriter, r *http.Request) {

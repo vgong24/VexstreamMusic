@@ -37,12 +37,12 @@ const (
 )
 
 type mobilePairedDevice struct {
-	DeviceRef        string `json:"deviceRef"`
-	DisplayName      string `json:"displayName"`
-	TokenHash        string `json:"tokenHash"`
-	DevicePublicKey  string `json:"devicePublicKey,omitempty"`
-	RemoteEnabled    bool   `json:"remoteEnabled,omitempty"`
-	ApprovedAt       string `json:"approvedAt"`
+	DeviceRef       string `json:"deviceRef"`
+	DisplayName     string `json:"displayName"`
+	TokenHash       string `json:"tokenHash"`
+	DevicePublicKey string `json:"devicePublicKey,omitempty"`
+	RemoteEnabled   bool   `json:"remoteEnabled,omitempty"`
+	ApprovedAt      string `json:"approvedAt"`
 }
 
 type mobilePairingFile struct {
@@ -51,33 +51,33 @@ type mobilePairingFile struct {
 }
 
 type mobilePendingPairing struct {
-	RequestRef       string
-	DeviceRef        string
-	DisplayName      string
-	DevicePublicKey  string
-	RequestedAt      time.Time
-	ExpiresAt        time.Time
-	State            string
-	Token            string
+	RequestRef      string
+	DeviceRef       string
+	DisplayName     string
+	DevicePublicKey string
+	RequestedAt     time.Time
+	ExpiresAt       time.Time
+	State           string
+	Token           string
 }
 
 type mobileLANBridgeState struct {
-	mu                 sync.Mutex
-	loaded             bool
-	running            bool
-	pairingWindowUntil time.Time
-	pending            map[string]*mobilePendingPairing
-	devices            map[string]mobilePairedDevice
-	server             *http.Server
-	listener           net.Listener
-	mdns               *zeroconf.Server
-	certPath           string
-	keyPath                  string
-	remoteGatewayKeyPath     string
-	remoteGatewayPublicKey   string
-	certificateSHA256        string
-	pairingCode              string
-	displayName              string
+	mu                     sync.Mutex
+	loaded                 bool
+	running                bool
+	pairingWindowUntil     time.Time
+	pending                map[string]*mobilePendingPairing
+	devices                map[string]mobilePairedDevice
+	server                 *http.Server
+	listener               net.Listener
+	mdns                   *zeroconf.Server
+	certPath               string
+	keyPath                string
+	remoteGatewayKeyPath   string
+	remoteGatewayPublicKey string
+	certificateSHA256      string
+	pairingCode            string
+	displayName            string
 }
 
 var mobileLANBridge = &mobileLANBridgeState{
@@ -418,8 +418,8 @@ func (b *mobileLANBridgeState) pairingRequest(w http.ResponseWriter, r *http.Req
 		DisplayName:     request.DisplayName,
 		DevicePublicKey: request.DevicePublicKey,
 		RequestedAt:     now,
-		ExpiresAt:   expiresAt,
-		State:       "PENDING",
+		ExpiresAt:       expiresAt,
+		State:           "PENDING",
 	}
 	b.scheduleStopIfUnused(expiresAt)
 
@@ -632,16 +632,16 @@ func (a *App) mobilePairingStatus(w http.ResponseWriter, r *http.Request) {
 	})
 
 	jsonOut(w, http.StatusOK, map[string]any{
-		"running":              mobileLANBridge.running,
-		"displayName":          mobileLANBridge.displayName,
-		"pairingCode":          mobileLANBridge.pairingCode,
-		"pairingWindowOpen":    time.Now().Before(mobileLANBridge.pairingWindowUntil),
-		"pairingWindowUntil":   mobileLANBridge.pairingWindowUntil.UTC().Format(time.RFC3339),
-		"pending":              pending,
-		"paired":               paired,
-		"canonicalAuthority":   false,
+		"running":               mobileLANBridge.running,
+		"displayName":           mobileLANBridge.displayName,
+		"pairingCode":           mobileLANBridge.pairingCode,
+		"pairingWindowOpen":     time.Now().Before(mobileLANBridge.pairingWindowUntil),
+		"pairingWindowUntil":    mobileLANBridge.pairingWindowUntil.UTC().Format(time.RFC3339),
+		"pending":               pending,
+		"paired":                paired,
+		"canonicalAuthority":    false,
 		"remoteRelayConfigured": mobileRemoteRelayURL() != "",
-		"transportDescription": "Local pairing plus bounded remote VexStream gateway candidate; canonical Home/Safety authority is not implied.",
+		"transportDescription":  "Local pairing plus bounded remote VexStream gateway candidate; canonical Home/Safety authority is not implied.",
 	})
 }
 

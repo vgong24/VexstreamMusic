@@ -281,8 +281,7 @@ func verifyMobileDirectEnvelopeIdentity(envelope mobileRemoteRequestEnvelope) bo
 }
 
 func rememberMobileDirectRequest(deviceRef, requestRef string, now time.Time) bool {
-	key := deviceRef + "
-" + requestRef
+	key := deviceRef + "\n" + requestRef
 	mobileDirectGateway.mu.Lock()
 	defer mobileDirectGateway.mu.Unlock()
 

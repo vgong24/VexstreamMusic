@@ -21,16 +21,8 @@ jobs:
         with:
           go-version: '1.23.x'
 
-      - name: Resolve source dependencies
-        run: go mod tidy
-
-      - name: Preserve generated module checksums
-        uses: actions/upload-artifact@v4
-        with:
-          name: VexStream-Go-Module-Checksums
-          path: go.sum
-          if-no-files-found: error
-          retention-days: 1
+      - name: Resolve locked source dependencies
+        run: go mod download
 
       - name: Build qualified Windows executable
         run: |

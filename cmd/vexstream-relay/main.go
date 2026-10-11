@@ -470,6 +470,11 @@ func (s *relayState) remoteResponse(w http.ResponseWriter, r *http.Request) {
 			jsonOut(w, http.StatusOK, response)
 			return
 		}
+		if _, ok := session.outstanding[poll.RequestRef]; !ok {
+			s.mu.Unlock()
+			jsonOut(w, http.StatusGone, map[string]string{"error": "request expired"})
+			return
+		}
 		waiter := session.responseWaiters[poll.RequestRef]
 		if waiter == nil {
 			waiter = make(chan struct{})

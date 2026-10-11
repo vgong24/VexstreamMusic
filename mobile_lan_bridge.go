@@ -200,6 +200,7 @@ func (b *mobileLANBridgeState) ensureStarted(a *App) error {
 	mux.HandleFunc("/v1/pairing/info", b.pairingInfo)
 	mux.HandleFunc("/v1/pairing/request", b.pairingRequest)
 	mux.HandleFunc("/v1/pairing/status", b.pairingRequestStatus)
+	mux.HandleFunc("/v1/pairing/revoke-self", b.authorized(b.pairingRevokeSelf))
 	mux.HandleFunc("/v1/catalog", b.authorized(a.mobileCatalog))
 	mux.HandleFunc("/v1/media/", b.authorized(a.mobileMedia))
 
@@ -375,6 +376,30 @@ func (b *mobileLANBridgeState) pairingRequestStatus(w http.ResponseWriter, r *ht
 	jsonOut(w, http.StatusOK, response)
 }
 
+func (b *mobileLANBridgeState) pairingRevokeSelf(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		jsonOut(w, http.StatusMethodNotAllowed, map[string]string{"error": "POST required"})
+		return
+	}
+
+	deviceRef := b.deviceRefForRequest(r)
+	if deviceRef == "" {
+		jsonOut(w, http.StatusUnauthorized, map[string]string{"error": "paired VexLife device required"})
+		return
+	}
+
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	delete(b.devices, deviceRef)
+	if err := b.saveLocked(); err != nil {
+		jsonOut(w, http.StatusInternalServerError, map[string]string{"error": "unable to save device removal"})
+		return
+	}
+
+	jsonOut(w, http.StatusOK, map[string]any{"ok": true})
+}
+
 func (b *mobileLANBridgeState) authorized(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !b.authorizedRequest(r) {
@@ -387,25 +412,29 @@ func (b *mobileLANBridgeState) authorized(next http.HandlerFunc) http.HandlerFun
 }
 
 func (b *mobileLANBridgeState) authorizedRequest(r *http.Request) bool {
+	return b.deviceRefForRequest(r) != ""
+}
+
+func (b *mobileLANBridgeState) deviceRefForRequest(r *http.Request) string {
 	raw := strings.TrimSpace(r.Header.Get("Authorization"))
 	if !strings.HasPrefix(raw, "Bearer ") {
-		return false
+		return ""
 	}
 	token := strings.TrimSpace(strings.TrimPrefix(raw, "Bearer "))
 	if token == "" {
-		return false
+		return ""
 	}
 	sum := sha256.Sum256([]byte(token))
 	candidate := hex.EncodeToString(sum[:])
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	for _, device := range b.devices {
+	for deviceRef, device := range b.devices {
 		if len(candidate) == len(device.TokenHash) && subtle.ConstantTimeCompare([]byte(candidate), []byte(device.TokenHash)) == 1 {
-			return true
+			return deviceRef
 		}
 	}
-	return false
+	return ""
 }
 
 func (a *App) mobilePairingStatus(w http.ResponseWriter, r *http.Request) {

@@ -70,10 +70,10 @@ jobs:
 
           STEP 2 - MAKE VEXSTREAM AVAILABLE TO YOUR PHONE
           In VexStream, click the phone icon near the top-right.
-          Click:
-              Connect a phone
 
-          VexStream will show a six-digit confirmation code and remain discoverable for 5 minutes.
+          On the first connection, that one click makes VexStream discoverable for 5 minutes and
+          shows a six-digit confirmation code. If you already paired another phone, choose
+          "Connect another phone" in that panel.
 
           STEP 3 - CONNECT FROM VEXLIFE
           Make sure the phone and Windows PC are on the same Wi-Fi.

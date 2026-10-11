@@ -85,6 +85,13 @@ def main() -> int:
     checked("real-media-server-regression-present", lambda: require((root / "tests" / "media_server_regression.py").is_file() and (root / "tests" / "fixtures" / "vexstream-test-tone.mp3").is_file(), "real media server regression fixture/gate missing"))
     checked("mobile-bridge-source-present", lambda: require((root / "mobile_bridge.go").is_file() and "127.0.0.1:%d" in (root / "mobile_bridge.go").read_text(encoding="utf-8") and '/v1/catalog' in (root / "mobile_bridge.go").read_text(encoding="utf-8") and '/v1/media/' in (root / "mobile_bridge.go").read_text(encoding="utf-8"), "loopback mobile bridge source missing"))
     checked("mobile-bridge-regression-present", lambda: require((root / "mobile_bridge_test.go").is_file() and "TestMobileCatalogSanitizesDesktopPathsAndBindsMediaBytes" in (root / "mobile_bridge_test.go").read_text(encoding="utf-8") and "TestMobileMediaSupportsExactRangeReads" in (root / "mobile_bridge_test.go").read_text(encoding="utf-8"), "mobile bridge regression tests missing"))
+    checked("explicit-process-exit-present", lambda: require(
+        '/api/system/exit' in main_go
+        and 'EXIT_VEXSTREAM' in main_go
+        and 'id="exitVexStreamBtn"' in html
+        and "bindClick('exitVexStreamBtn',exitVexStream)" in html,
+        "VexStream background-process exit control is missing",
+    ))
     checked("play-source-recovery-present", lambda: require("function togglePlayback()" in html and "bindClick('playBtn',togglePlayback)" in html, "recovery-aware play toggle missing"))
     checked("loaded-track-identity-present", lambda: require("audio.dataset.trackId=t.id" in html, "loaded-track identity missing"))
     checked("render-player-bounds-in-function-scope", lambda: require("function renderPlayer(){const t=currentTrack(),b=playbackBounds" in html, "playback bounds are not function-scoped"))

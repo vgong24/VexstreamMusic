@@ -53,7 +53,7 @@ h1,h2,h3{margin:0}h2{font-size:18px}.muted{color:var(--muted)}.small{font-size:1
   <button id="libraryNavToggle" class="nav-toggle" title="Toggle library navigation" aria-label="Toggle library navigation" aria-expanded="true">☰</button>
   <button id="brandHome" class="brand brand-home" type="button" title="Go to Library home" aria-label="Go to Library home"><span>Vex</span>Stream Music</button>
   <div class="top-tabs"><button id="libraryTopTab" class="active">Library</button><button id="discoverTopTab">Discover</button></div>
-  <div class="header-spacer"></div><button id="phoneConnectBtn" class="system-bell" title="Connect VexLife phone" aria-label="Connect VexLife phone">📱</button><button id="systemBell" class="system-bell" title="System status">🔔<span id="systemBadge" class="system-badge hidden">0</span></button><span class="version">2.2.0</span>
+  <div class="header-spacer"></div><button id="phoneConnectBtn" class="system-bell" title="Connect VexLife phone" aria-label="Connect VexLife phone">📱</button><button id="systemBell" class="system-bell" title="System status">🔔<span id="systemBadge" class="system-badge hidden">0</span></button><span class="version">3.0.0</span>
 </header>
 
 <section id="libraryScreen" class="screen">
@@ -161,6 +161,10 @@ h1,h2,h3{margin:0}h2{font-size:18px}.muted{color:var(--muted)}.small{font-size:1
       <div id="lifecycleList" class="lifecycle-list"><div class="small muted">Checking…</div></div>
       <div id="retireSessionsPlan" style="margin-top:10px"></div>
       <button id="retireSelectedSessionsBtn" class="primary hidden" style="margin-top:9px">Retire selected idle sessions</button>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+        <div class="small muted">Closing the browser does not stop the VexStream background process.</div>
+        <button id="exitVexStreamBtn" style="margin-top:8px">Exit VexStream</button>
+      </div>
     </div>
     <div id="systemIssues"></div>
     <div class="card" style="margin-top:12px">
@@ -240,6 +244,17 @@ async function startPhonePairing(){try{await api('/api/mobile/pairing/start',{me
 async function decidePhonePairing(requestRef,decision){try{await api('/api/mobile/pairing/decision',{method:'POST',body:JSON.stringify({requestRef:requestRef,decision:decision})});await refreshPhonePairing()}catch(e){openMessage('Phone connection',e.message)}}
 async function forgetPhone(deviceRef){if(!confirm('Forget this phone? It will need to pair again before using your VexStream library.'))return;try{await api('/api/mobile/pairing/revoke',{method:'POST',body:JSON.stringify({deviceRef:deviceRef})});await refreshPhonePairing()}catch(e){openMessage('Phone connection',e.message)}}
 window.startPhonePairing=startPhonePairing;window.decidePhonePairing=decidePhonePairing;window.forgetPhone=forgetPhone;
+async function exitVexStream(){
+  if(!confirm('Exit VexStream completely?\n\nThis stops the background VexStream process. Your library and settings are preserved.'))return;
+  try{
+    await api('/api/system/exit',{method:'POST',body:JSON.stringify({confirm:'EXIT_VEXSTREAM'})});
+    document.body.innerHTML='<div style="font:16px system-ui;padding:32px"><h2>VexStream has exited.</h2><p>You can close this tab.</p></div>';
+    setTimeout(()=>window.close(),250);
+  }catch(e){
+    openMessage('Exit VexStream',e.message);
+  }
+}
+window.exitVexStream=exitVexStream;
 async function loadRepairPlan(){try{const d=await api('/api/system/repair-plan');currentRepairPlan=arr(d.actions);$('repairPlanList').innerHTML=currentRepairPlan.length?currentRepairPlan.map(a=>`<label class="repair-action"><input type="checkbox" class="repairCheck" value="${esc(a.id)}" checked><span><strong>${esc(a.title)}</strong><div class="small muted">${esc(a.description)}</div><div class="small muted"><em>${esc(a.effect)}</em></div></span></label>`).join(''):'<div class="small muted">No safe repair is currently required. Rescan library remains available for a normal background reconcile.</div>';$('runRepairBtn').classList.toggle('hidden',currentRepairPlan.length===0)}catch(e){$('repairPlanList').innerHTML=`<div class="notice">${esc(e.message)}</div>`}}
 async function runRepair(){const ids=[...document.querySelectorAll('.repairCheck:checked')].map(x=>x.value);if(!ids.length)return;const names=currentRepairPlan.filter(x=>ids.includes(x.id)).map(x=>'• '+x.title).join('\n');if(!confirm(`Run these safe repairs?\n\n${names}\n\nNo media files will be deleted.`))return;try{const d=await api('/api/system/repair',{method:'POST',body:JSON.stringify({confirm:'RUN_SAFE_REPAIRS',actions:ids})});$('repairPlanList').innerHTML=`<div class="notice success">${esc(d.message||'Repair started.')}</div>`;$('runRepairBtn').classList.add('hidden');await refreshSystemStatus();setTimeout(refreshAll,900)}catch(e){$('repairPlanList').innerHTML=`<div class="notice">${esc(e.message)}</div>`}}
 function loadQueue(){try{const q=JSON.parse(localStorage.getItem('vexstream.queue')||'[]');if(Array.isArray(q))state.queue=q}catch{}}function saveQueue(){localStorage.setItem('vexstream.queue',JSON.stringify(state.queue))}
@@ -642,6 +657,7 @@ bindClick('clearDiagnosticsBtn',clearSessionDiagnostics);
 bindClick('toggleDiagnosticsBtn',toggleDiagnostics);
 bindClick('reviewOldSessionsBtn',reviewOldSessions);
 bindClick('retireSelectedSessionsBtn',retireSelectedSessions);
+bindClick('exitVexStreamBtn',exitVexStream);
 bindClick('brandHome',goLibraryHome);
 bindClick('libraryTopTab',()=>topScreen('library'));
 bindClick('discoverTopTab',()=>topScreen('discover'));

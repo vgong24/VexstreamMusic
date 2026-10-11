@@ -1,4 +1,4 @@
-# Build VexStream Music 2.2.0
+# Build VexStream Music 3.0.0
 
 `[VXG RealForever]`
 
@@ -15,7 +15,7 @@ The suite covers static/source invariants, deterministic Chromium interaction be
 ```bash
 python3 tests/build_windows.py \
   --root . \
-  --output ../VexStreamMusic-2.2.0.exe \
+  --output ../VexStreamMusic-3.0.0.exe \
   --report docs/evidence/windows-build-qualification.json
 ```
 
@@ -39,7 +39,7 @@ For the current same-Wi-Fi candidate:
 
 ```text
 Windows
-  run VexStreamMusic-2.2.0.exe
+  run VexStreamMusic-3.0.0.exe
   -> click the phone icon
   -> first-time pairing window opens for 5 minutes
   -> six-digit confirmation code appears
@@ -96,5 +96,22 @@ LOCAL_VEXSTREAM_PAIRING
 
 Close an older VexStream process before launching a bridge build made from this branch. The current
 desktop single-instance shortcut identifies the product by version and an already-running non-bridge
-2.2.0 process cannot acquire the new listener retroactively.
+pre-3.0.0 process cannot acquire the new mobile listener retroactively.
 
+
+
+## Exiting the app
+
+VexStream is a local server process that opens a browser UI. Closing the browser tab/window does not
+stop that process.
+
+VexStream 3.0.0 adds an explicit in-app shutdown path:
+
+```text
+System status (bell)
+-> Live VexStream sessions
+-> Exit VexStream
+```
+
+That stops the background VexStream process cleanly and clears the current-session pointer. The next
+launch starts a fresh 3.0.0 process rather than relying on browser-window lifetime.

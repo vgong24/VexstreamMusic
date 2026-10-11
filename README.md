@@ -83,3 +83,20 @@ python3 tests/build_windows.py --root . --output ../VexStreamMusic-2.2.0.exe
 ```
 
 See `docs/architecture/EXPLORE-SESSION-V1.md` and `RELEASE-MANIFEST.json`.
+## Mobile bridge development seam
+
+This branch also carries the isolated VexStream → VexLife Android producer seam for taking the
+desktop library onto the phone. It does **not** widen the ordinary VexStream localhost UI server.
+
+Current bridge source:
+
+- `mobile_bridge.go` — loopback-only sanitized catalog + media-range producer;
+- `mobile_bridge_test.go` — path/privacy, method, digest and range regression;
+- `docs/architecture/MOBILE-BRIDGE-V1.md` — cross-repository producer/consumer contract.
+
+The matching Android consumer work is in `vgong24/VexLife-Android` on
+`VXG-101126-vexstream-mobile-stream-offline`.
+
+The initial transport is intentionally development-only loopback/ADB reverse. Pairing, real LAN/Home
+reachability, authorization, remote streaming and capability leases remain separate product
+thresholds rather than implicit consequences of this bridge existing.

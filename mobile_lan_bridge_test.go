@@ -44,7 +44,7 @@ func TestMobileLANAuthorizationAcceptsOnlyStoredTokenHash(t *testing.T) {
 	bridge := &mobileLANBridgeState{
 		devices: map[string]mobilePairedDevice{
 			"vexlife.fixture": {
-				DeviceRef:  "vexlife.fixture",
+				DeviceRef: "vexlife.fixture",
 				TokenHash: sum,
 			},
 		},

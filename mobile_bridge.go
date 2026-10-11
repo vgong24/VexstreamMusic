@@ -32,11 +32,18 @@ type mobileTrackProjection struct {
 	PlaybackEndSeconds   *float64 `json:"playbackEndSeconds,omitempty"`
 }
 
+type mobilePlaylistProjection struct {
+	PlaylistRef string   `json:"playlistRef"`
+	Name        string   `json:"name"`
+	TrackRefs   []string `json:"trackRefs"`
+}
+
 type mobileCatalogProjection struct {
-	HubRef          string                  `json:"hubRef"`
-	SourceVersion   string                  `json:"sourceVersion"`
-	CatalogRevision string                  `json:"catalogRevision"`
-	Tracks          []mobileTrackProjection `json:"tracks"`
+	HubRef          string                     `json:"hubRef"`
+	SourceVersion   string                     `json:"sourceVersion"`
+	CatalogRevision string                     `json:"catalogRevision"`
+	Tracks          []mobileTrackProjection    `json:"tracks"`
+	Playlists       []mobilePlaylistProjection `json:"playlists"`
 }
 
 type mobileMediaFingerprintCacheEntry struct {
@@ -154,7 +161,22 @@ func (a *App) mobileCatalog(w http.ResponseWriter, r *http.Request) {
 		return projected[i].TrackRef < projected[j].TrackRef
 	})
 
-	revisionBytes, err := json.Marshal(projected)
+	availableTrackRefs := make(map[string]bool, len(projected))
+	for _, track := range projected {
+		availableTrackRefs[track.TrackRef] = true
+	}
+	projectedPlaylists := mobileProjectPlaylists(
+		a.mobilePlaylistSnapshot(),
+		availableTrackRefs,
+	)
+
+	revisionBytes, err := json.Marshal(struct {
+		Tracks    []mobileTrackProjection    `json:"tracks"`
+		Playlists []mobilePlaylistProjection `json:"playlists"`
+	}{
+		Tracks:    projected,
+		Playlists: projectedPlaylists,
+	})
 	if err != nil {
 		jsonOut(w, http.StatusInternalServerError, map[string]string{"error": "catalog projection failed"})
 		return
@@ -167,6 +189,7 @@ func (a *App) mobileCatalog(w http.ResponseWriter, r *http.Request) {
 		SourceVersion:   version,
 		CatalogRevision: hex.EncodeToString(revision[:]),
 		Tracks:          projected,
+		Playlists:       projectedPlaylists,
 	})
 }
 
@@ -208,6 +231,52 @@ func (a *App) mobileMedia(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Accept-Ranges", "bytes")
 	w.Header().Set("Cache-Control", "private, no-store")
 	http.ServeContent(w, r, filepath.Base(path), stat.ModTime(), file)
+}
+
+func (a *App) mobilePlaylistSnapshot() []Playlist {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	rows := make([]Playlist, len(a.playlists))
+	for i, playlist := range a.playlists {
+		rows[i] = playlist
+		rows[i].TrackIDs = append([]string{}, playlist.TrackIDs...)
+	}
+	return rows
+}
+
+func mobileProjectPlaylists(
+	playlists []Playlist,
+	availableTrackRefs map[string]bool,
+) []mobilePlaylistProjection {
+	projected := make([]mobilePlaylistProjection, 0, len(playlists))
+	for _, playlist := range playlists {
+		name := strings.TrimSpace(playlist.Name)
+		if playlist.ID == "" || name == "" {
+			continue
+		}
+
+		refs := make([]string, 0, len(playlist.TrackIDs))
+		for _, ref := range playlist.TrackIDs {
+			if availableTrackRefs[ref] {
+				refs = append(refs, ref)
+			}
+		}
+
+		projected = append(projected, mobilePlaylistProjection{
+			PlaylistRef: playlist.ID,
+			Name:        name,
+			TrackRefs:   refs,
+		})
+	}
+
+	sort.Slice(projected, func(i, j int) bool {
+		if projected[i].Name == projected[j].Name {
+			return projected[i].PlaylistRef < projected[j].PlaylistRef
+		}
+		return strings.ToLower(projected[i].Name) < strings.ToLower(projected[j].Name)
+	})
+	return projected
 }
 
 func (a *App) mobileLibrarySnapshot() ([]Track, map[string]string) {

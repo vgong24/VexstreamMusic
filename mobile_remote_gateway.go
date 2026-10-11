@@ -30,11 +30,11 @@ import (
 )
 
 const (
-	mobileRemoteSchema           = "vexstream.remote-relay/v1"
-	mobileRemoteBodyMax          = 1024 * 1024
-	mobileRemotePollTimeout      = 35 * time.Second
+	mobileRemoteSchema              = "vexstream.remote-relay/v1"
+	mobileRemoteBodyMax             = 1024 * 1024
+	mobileRemotePollTimeout         = 35 * time.Second
 	mobileRemoteRegistrationRefresh = 55 * time.Second
-	defaultMobileRemoteRelayURL      = ""
+	defaultMobileRemoteRelayURL     = ""
 )
 
 type mobileRemoteRequestEnvelope struct {

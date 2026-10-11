@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http/httptest"
 	"path/filepath"
 	"regexp"

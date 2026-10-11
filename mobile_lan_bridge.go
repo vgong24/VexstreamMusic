@@ -393,6 +393,10 @@ func (b *mobileLANBridgeState) pairingRequest(w http.ResponseWriter, r *http.Req
 
 	for _, pending := range b.pending {
 		if pending.DeviceRef == request.DeviceRef && pending.State == "PENDING" {
+			if pending.DevicePublicKey != request.DevicePublicKey {
+				jsonOut(w, http.StatusConflict, map[string]string{"error": "device signing identity changed during pairing"})
+				return
+			}
 			jsonOut(w, http.StatusOK, map[string]any{
 				"requestRef": pending.RequestRef,
 				"state":      pending.State,

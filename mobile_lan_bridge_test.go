@@ -177,6 +177,30 @@ func TestMobileLANStopsUnusedSurfaceAfterPairingWindow(t *testing.T) {
 	}
 }
 
+func TestMobileLANStaysAvailableForInFlightPairingAfterWindowCloses(t *testing.T) {
+	bridge := &mobileLANBridgeState{
+		running:            true,
+		pairingWindowUntil: time.Now().Add(-time.Second),
+		devices:            map[string]mobilePairedDevice{},
+		pending: map[string]*mobilePendingPairing{
+			"pair.fixture": {
+				RequestRef:  "pair.fixture",
+				DeviceRef:   "vexlife.fixture",
+				DisplayName: "Fixture phone",
+				RequestedAt: time.Now().Add(-time.Minute),
+				ExpiresAt:   time.Now().Add(time.Minute),
+				State:       "PENDING",
+			},
+		},
+	}
+
+	bridge.stopIfUnused()
+
+	if !bridge.running {
+		t.Fatal("in-flight pairing should keep the bridge alive until the request expires")
+	}
+}
+
 func TestMobileLANStaysAvailableForRememberedDevice(t *testing.T) {
 	bridge := &mobileLANBridgeState{
 		running:            true,

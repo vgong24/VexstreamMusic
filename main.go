@@ -32,7 +32,10 @@ import (
 //go:embed ui/index.html media_bridge.py
 var assets embed.FS
 
-const version = "2.2.0"
+const (
+	version  = "2.2.0"
+	buildRef = "vexstream.mobile-bridge.same-wifi/v1"
+)
 
 type Config struct {
 	Sources []string `json:"sources"`
@@ -346,7 +349,7 @@ func main() {
 	if b, e := os.ReadFile(state); e == nil {
 		u := strings.TrimSpace(string(b))
 		if u != "" {
-			if v := runningVersion(u); v == version {
+			if v, ref := runningIdentity(u); v == version && ref == buildRef {
 				openBrowser(u)
 				return
 			} else if v != "" {
@@ -358,7 +361,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", serveUI)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		jsonOut(w, 200, map[string]any{"ok": true, "version": version})
+		jsonOut(w, 200, map[string]any{"ok": true, "version": version, "buildRef": buildRef})
 	})
 	mux.HandleFunc("/api/library", a.library)
 	mux.HandleFunc("/api/library/rescan", a.rescanAPI)
@@ -472,24 +475,30 @@ func jsonOut(w http.ResponseWriter, s int, v any) {
 	json.NewEncoder(w).Encode(v)
 }
 func decode(r *http.Request, v any) error { return json.NewDecoder(r.Body).Decode(v) }
-func runningVersion(url string) string {
+func runningIdentity(url string) (string, string) {
 	c := http.Client{Timeout: 700 * time.Millisecond}
 	resp, e := c.Get(strings.TrimRight(url, "/") + "/health")
 	if e != nil {
-		return ""
+		return "", ""
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return ""
+		return "", ""
 	}
 	var h struct {
-		OK      bool   `json:"ok"`
-		Version string `json:"version"`
+		OK       bool   `json:"ok"`
+		Version  string `json:"version"`
+		BuildRef string `json:"buildRef"`
 	}
 	if json.NewDecoder(resp.Body).Decode(&h) != nil || !h.OK {
-		return ""
+		return "", ""
 	}
-	return h.Version
+	return h.Version, h.BuildRef
+}
+
+func runningVersion(url string) string {
+	version, _ := runningIdentity(url)
+	return version
 }
 func copyFile(src, dst string) error {
 	b, e := os.ReadFile(src)

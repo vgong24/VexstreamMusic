@@ -34,6 +34,7 @@ jobs:
           go test \
             main.go \
             mobile_bridge.go \
+            mobile_lan_bridge.go \
             procattr_unix.go \
             duplicate_logic_test.go \
             import_runtime_test.go \

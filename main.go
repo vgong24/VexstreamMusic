@@ -437,6 +437,9 @@ func main() {
 		}
 	}()
 	a.startReconcile("startup")
+	if e := a.startMobileDevBridge(); e != nil {
+		fmt.Fprintln(os.Stderr, "VexStream mobile dev bridge unavailable:", e)
+	}
 	go func() { time.Sleep(250 * time.Millisecond); openBrowser(url) }()
 	http.Serve(ln, mux)
 }

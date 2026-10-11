@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	relaySchema          = "vexstream.remote-relay/v1"
-	hostSessionTTL       = 90 * time.Second
-	longPollDuration     = 25 * time.Second
-	envelopeMaxBytes     = 2 * 1024 * 1024
-	maxClockSkew         = 2 * time.Minute
+	relaySchema           = "vexstream.remote-relay/v1"
+	hostSessionTTL        = 90 * time.Second
+	longPollDuration      = 25 * time.Second
+	envelopeMaxBytes      = 2 * 1024 * 1024
+	maxClockSkew          = 2 * time.Minute
 	maxOutstandingPerHost = 64
 	maxHosts              = 1024
 )
@@ -79,13 +79,13 @@ type outstandingRequest struct {
 }
 
 type hostSession struct {
-	homeRef     string
-	token       string
-	expiresAt   time.Time
-	devices     map[string]*ecdsa.PublicKey
-	requests    chan remoteRequestEnvelope
-	outstanding map[string]outstandingRequest
-	responses   map[string]remoteResponseEnvelope
+	homeRef         string
+	token           string
+	expiresAt       time.Time
+	devices         map[string]*ecdsa.PublicKey
+	requests        chan remoteRequestEnvelope
+	outstanding     map[string]outstandingRequest
+	responses       map[string]remoteResponseEnvelope
 	responseWaiters map[string]chan struct{}
 }
 
@@ -138,8 +138,8 @@ func (s *relayState) health(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jsonOut(w, http.StatusOK, map[string]any{
-		"ok":     true,
-		"schema": relaySchema,
+		"ok":                  true,
+		"schema":              relaySchema,
 		"persistsMedia":       false,
 		"persistsCredentials": false,
 		"contentBlind":        true,
@@ -245,8 +245,8 @@ func (s *relayState) hostRegister(w http.ResponseWriter, r *http.Request) {
 	s.mu.Unlock()
 
 	jsonOut(w, http.StatusOK, map[string]any{
-		"schemaVersion": relaySchema,
-		"sessionToken":  sessionToken,
+		"schemaVersion":    relaySchema,
+		"sessionToken":     sessionToken,
 		"expiresInSeconds": int(hostSessionTTL.Seconds()),
 	})
 }

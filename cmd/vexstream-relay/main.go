@@ -140,8 +140,9 @@ func (s *relayState) health(w http.ResponseWriter, r *http.Request) {
 	jsonOut(w, http.StatusOK, map[string]any{
 		"ok":     true,
 		"schema": relaySchema,
-		"storesMedia": false,
-		"storesCredentials": false,
+		"persistsMedia":       false,
+		"persistsCredentials": false,
+		"contentBlind":        true,
 	})
 }
 

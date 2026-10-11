@@ -27,6 +27,7 @@ const (
 	envelopeMaxBytes     = 2 * 1024 * 1024
 	maxClockSkew         = 2 * time.Minute
 	maxOutstandingPerHost = 64
+	maxHosts              = 1024
 )
 
 type relayDevice struct {
@@ -210,7 +211,13 @@ func (s *relayState) hostRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.mu.Lock()
+	s.cleanupLocked()
 	old := s.hosts[request.HomeRef]
+	if old == nil && len(s.hosts) >= maxHosts {
+		s.mu.Unlock()
+		jsonOut(w, http.StatusServiceUnavailable, map[string]string{"error": "relay host capacity unavailable"})
+		return
+	}
 	session := &hostSession{
 		homeRef:         request.HomeRef,
 		token:           sessionToken,
@@ -230,7 +237,6 @@ func (s *relayState) hostRegister(w http.ResponseWriter, r *http.Request) {
 		session.responseWaiters = old.responseWaiters
 	}
 	s.hosts[request.HomeRef] = session
-	s.cleanupLocked()
 	s.mu.Unlock()
 
 	jsonOut(w, http.StatusOK, map[string]any{

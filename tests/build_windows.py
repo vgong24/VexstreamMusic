@@ -64,7 +64,7 @@ def main() -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
 
     steps: list[dict] = []
-    steps.append(run(["gofmt", "-d", "main.go", "mobile_bridge.go", "mobile_lan_bridge.go", "mobile_remote_crypto.go", "mobile_remote_gateway.go", "mobile_bridge_test.go", "mobile_lan_bridge_test.go", "mobile_remote_gateway_test.go", "procattr_windows.go", "procattr_unix.go"], root))
+    steps.append(run(["gofmt", "-d", "main.go", "mobile_bridge.go", "mobile_lan_bridge.go", "mobile_remote_crypto.go", "mobile_remote_gateway.go", "mobile_bridge_test.go", "mobile_lan_bridge_test.go", "mobile_remote_gateway_test.go", "cmd/vexstream-relay/main.go", "cmd/vexstream-relay/main_test.go", "procattr_windows.go", "procattr_unix.go"], root))
     require(
         steps[-1]["exitCode"] == 0 and not steps[-1]["stdout"].strip(),
         "gofmt reports a source delta:\n" + steps[-1]["stdout"],

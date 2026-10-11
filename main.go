@@ -32,7 +32,7 @@ import (
 //go:embed ui/index.html media_bridge.py
 var assets embed.FS
 
-const version = "2.2.0"
+const version = "3.0.0"
 const buildRef = "vexstream.mobile-bridge.same-wifi/v1"
 
 type Config struct {
@@ -408,6 +408,27 @@ func main() {
 	mux.HandleFunc("/api/system/repair", a.systemRepair)
 	mux.HandleFunc("/api/system/sessions/retire-plan", a.sessionRetirePlan)
 	mux.HandleFunc("/api/system/sessions/retire", a.sessionRetire)
+	mux.HandleFunc("/api/system/exit", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			jsonOut(w, http.StatusMethodNotAllowed, map[string]string{"error": "POST required"})
+			return
+		}
+
+		var request struct {
+			Confirm string `json:"confirm"`
+		}
+		if err := decode(r, &request); err != nil || request.Confirm != "EXIT_VEXSTREAM" {
+			jsonOut(w, http.StatusBadRequest, map[string]string{"error": "explicit exit confirmation required"})
+			return
+		}
+
+		jsonOut(w, http.StatusOK, map[string]any{"ok": true, "state": "EXITING"})
+		go func() {
+			time.Sleep(120 * time.Millisecond)
+			_ = ln.Close()
+		}()
+	})
 	mux.HandleFunc("/api/mobile/pairing", a.mobilePairingStatus)
 	mux.HandleFunc("/api/mobile/pairing/start", a.mobilePairingStart)
 	mux.HandleFunc("/api/mobile/pairing/decision", a.mobilePairingDecision)

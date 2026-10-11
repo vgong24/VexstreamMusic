@@ -356,6 +356,7 @@ func main() {
 			}
 		}
 	}
+	var ln net.Listener
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", serveUI)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

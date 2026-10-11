@@ -1,30 +1,60 @@
-# VexStream Music 2.2.0 release notes
+# VexStream Music 3.0.0 release notes
 
-## 🌐 Explore — multi-axis candidate diversity
+## VexLife phone connection
 
-2.2.0 refines the temporary provider exploration map after 2.1.0 target use showed excessive repetition from the same artist/channel.
+3.0.0 makes taking the VexStream library onto a VexLife Android phone a first-class local product
+capability. The source-native 2.2.0 playback/import/Explore behavior remains the preserved base.
 
-### Changed
+### New
 
-- Track action renamed to **🌐 Explore from this song**.
-- Discover sub-surface renamed from **Radio** to **🌐 Explore**.
-- Candidate branch action renamed to **🌐 Explore from here**.
-- Candidate generation now uses multiple labeled factual directions instead of two seed-heavy searches.
-- Candidate pools are interleaved round-robin.
-- A single creator/channel is capped at two candidates per frame.
-- Candidate cards expose their exploration axis: **Closer**, **Neighborhood**, **Same era**, or **Versions**.
-- Seed year is carried into exploration when local metadata provides it.
+- **Connect VexLife phone** surface in the Windows UI.
+- Same-Wi-Fi `_vexstream._tcp` discovery with a bounded five-minute first-pairing window.
+- Dedicated HTTPS mobile listener; the ordinary desktop admin/UI server stays loopback-only.
+- Persistent P-256 TLS certificate identity and six-digit human confirmation code.
+- Explicit phone request + desktop **Allow / Deny**.
+- Random per-device bearer credentials; desktop persists only the token SHA-256.
+- Remembered phones and explicit revoke/forget from either side.
+- Sanitized catalog projection with exact media SHA-256 + byte length.
+- HTTP Range media streaming for Android Media3.
+- Verified Android app-private downloads and restart-safe offline index.
+- Certificate-identity route rediscovery when the computer's LAN address changes.
+- Explicit **Exit VexStream** control that actually stops the background process.
+- Exact build identity so an older same-version process cannot impersonate the current candidate.
 
-### Preserved
+### Human path
 
-- Explore does not mutate the normal library queue.
-- Preview does not download.
-- Add to library uses the existing inspect / duplicate / import flow.
-- Back reuses prior metadata frames.
-- Unsaved exploration remains memory-only.
-- YouTube preview remains one visible embedded player; VexStream does not suppress provider ads or controls.
-- 2.0.x playback and Windows import-runtime repairs remain intact.
+```text
+Windows VexStream
+-> click phone icon
+-> compare six-digit code
 
-### Provider truth boundary
+VexLife
+-> Find VexStream
+-> Codes match · Request access
 
-Candidate generation is explicitly `SEARCH_DERIVED_MULTI_AXIS`. The result map is diversified by VexStream's deterministic projection; it is not represented as YouTube's consumer recommendation algorithm.
+Windows
+-> Allow
+
+VexLife
+-> Play / Download
+```
+
+ADB reverse remains only a developer/recovery route.
+
+### Security boundary
+
+```text
+LOCAL_VEXSTREAM_PAIRING
+!= VEXHOME_MEMBERSHIP
+!= CANONICAL_HOME_AUTHENTICATION
+!= CAPABILITY_LEASE
+!= REMOTE_ACCESS_AUTHORITY
+```
+
+3.0.0 does not claim away-from-home access authority.
+
+## Preserved 2.2.0 Explore behavior
+
+The multi-axis Explore session remains intact: search-derived factual axes, round-robin projection,
+creator cap, one visible provider preview, explicit library promotion, and no normal queue mutation
+from metadata/preview.

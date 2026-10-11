@@ -194,3 +194,52 @@ desktop VexStream running
 Only after this proof should the transport itself be promoted toward LAN/Home product realization.
 
 <!-- [VXG RealForever][VEXSTREAM][MOBILE-BRIDGE][V1] -->
+
+## Nearby pairing successor to the development transport
+
+The ADB-reverse path has now produced a lived physical-device proof and remains a recovery route.
+The next local product candidate does not widen the ordinary localhost administration server.
+
+A separate TLS listener is admitted only for the mobile projection:
+
+```text
+_vexstream._tcp
+TCP 18766
+HTTPS
+```
+
+Pairing is explicitly opened from the localhost VexStream UI for five minutes. mDNS advertises the
+full SHA-256 fingerprint of a persistent self-signed P-256 certificate. The selected Android consumer
+pins that exact certificate before it sends pairing data.
+
+Human flow:
+
+```text
+desktop: Connect a phone
+phone:   Find VexStream
+both:    compare six-digit certificate-derived confirmation code
+phone:   Request access
+desktop: Allow / Deny
+```
+
+On Allow, VexStream forms a random per-device bearer token. The desktop persists only its SHA-256
+hash; Android retains the token under Android Keystore encryption. The bearer protects only the
+sanitized catalog/media surface.
+
+Remembered route identity is the pinned desktop certificate, not the current LAN IP address. A future
+DHCP route change can therefore rediscover the same desktop and update the route without re-pairing.
+
+This remains a bounded local VexStream pairing candidate:
+
+```text
+LOCAL_VEXSTREAM_PAIRING
+!= VEXHOME_MEMBERSHIP
+!= CANONICAL_HOME_AUTHN
+!= CANONICAL_HOME_AUTHZ
+!= CAPABILITY_LEASE
+!= REMOTE_ACCESS_AUTHORITY
+```
+
+The rightful Home/Safety owner remains required before this mechanism can claim remote/off-home
+authority.
+

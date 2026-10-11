@@ -13,6 +13,18 @@ import (
 	"time"
 )
 
+func TestSameVersionOlderBuildIsNotReused(t *testing.T) {
+	if shouldReuseRunningInstance(version, "") {
+		t.Fatal("same marketing version without current build identity must not be reused")
+	}
+	if shouldReuseRunningInstance(version, "older-build") {
+		t.Fatal("different same-version build must not be reused")
+	}
+	if !shouldReuseRunningInstance(version, buildRef) {
+		t.Fatal("exact current version/build identity should be reused")
+	}
+}
+
 func TestMobileLANCertificateIdentityPersistsAcrossRestart(t *testing.T) {
 	root := t.TempDir()
 	certPath := filepath.Join(root, "server-cert.pem")

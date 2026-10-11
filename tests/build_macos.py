@@ -76,19 +76,19 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     steps: list[dict] = []
-    steps.append(run(["gofmt", "-d", "main.go", "procattr_windows.go", "procattr_unix.go"], root))
+    steps.append(run(["gofmt", "-d", "main.go", "mobile_bridge.go", "mobile_bridge_test.go", "procattr_windows.go", "procattr_unix.go"], root))
     require(steps[-1]["exitCode"] == 0 and not steps[-1]["stdout"].strip(), "gofmt reports a source delta")
 
     artifacts = []
     for arch in ("arm64", "amd64"):
         env = dict(os.environ)
         env.update({"GOOS": "darwin", "GOARCH": arch, "CGO_ENABLED": "0"})
-        vet = run(["go", "vet", "main.go", "procattr_unix.go"], root, env)
+        vet = run(["go", "vet", "main.go", "mobile_bridge.go", "procattr_unix.go"], root, env)
         steps.append({"architecture": arch, "phase": "go-vet", **vet})
         require(vet["exitCode"] == 0, f"darwin/{arch} go vet failed: {vet['stderr']}")
 
         binary = output_dir / f"VexStreamMusic-{VERSION}-macOS-{ARCH_NAME[arch]}"
-        build = run(["go", "build", "-trimpath", "-ldflags=-s -w", "-o", str(binary), "main.go", "procattr_unix.go"], root, env)
+        build = run(["go", "build", "-trimpath", "-ldflags=-s -w", "-o", str(binary), "main.go", "mobile_bridge.go", "procattr_unix.go"], root, env)
         steps.append({"architecture": arch, "phase": "go-build", **build})
         require(build["exitCode"] == 0, f"darwin/{arch} go build failed: {build['stderr']}")
         binary.chmod(binary.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)

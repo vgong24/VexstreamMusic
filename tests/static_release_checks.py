@@ -10,7 +10,7 @@ import re
 import subprocess
 import tempfile
 
-VERSION = "2.2.0"
+VERSION = "3.0.0"
 EXPECTED_EXE = f"VexStreamMusic-{VERSION}.exe"
 
 

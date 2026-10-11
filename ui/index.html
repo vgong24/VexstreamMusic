@@ -205,6 +205,12 @@ async function openSystemDrawer(){$('systemDrawer').classList.remove('hidden');a
 function formatPairCode(code){const s=String(code||'').padStart(6,'0');return s.slice(0,3)+' '+s.slice(3)}
 async function openPhoneConnection(){
   openModal('Connect your VexLife phone','<div id="phonePairingPanel"><div class="small muted">Checking phone connection…</div></div>','<button onclick="closeModal()">Close</button>');
+  try{
+    const current=await api('/api/mobile/pairing');
+    if(!current.pairingWindowOpen&&!arr(current.paired).length){
+      await api('/api/mobile/pairing/start',{method:'POST',body:'{}'});
+    }
+  }catch(e){}
   await refreshPhonePairing();
 }
 async function refreshPhonePairing(){
@@ -215,7 +221,8 @@ async function refreshPhonePairing(){
     if(open){
       pairingBlock='<div class="notice success"><strong>Ready to pair for 5 minutes</strong><div class="small muted" style="margin-top:5px">On your phone open VexLife → VexStream Music → Find VexStream. Choose <strong>'+esc(d.displayName||'this VexStream')+'</strong>.</div><div style="font-size:30px;font-weight:800;letter-spacing:.12em;margin-top:12px">'+esc(formatPairCode(d.pairingCode))+'</div><div class="small muted">The phone should show this same code before it asks for approval.</div></div>';
     }else{
-      pairingBlock='<div class="notice"><strong>Connect without Android debugging</strong><div class="small muted" style="margin-top:5px">This makes VexStream discoverable to VexLife on the same Wi-Fi for five minutes.</div><button class="primary" style="margin-top:10px" onclick="startPhonePairing()">Connect a phone</button></div>';
+      const addLabel=paired.length?'Connect another phone':'Connect a phone';
+      pairingBlock='<div class="notice"><strong>'+esc(addLabel)+'</strong><div class="small muted" style="margin-top:5px">Make this VexStream visible to VexLife on the same Wi-Fi for five minutes.</div><button class="primary" style="margin-top:10px" onclick="startPhonePairing()">'+esc(addLabel)+'</button></div>';
     }
     let pendingBlock='';
     if(pending.length){

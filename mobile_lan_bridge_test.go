@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"regexp"
 	"testing"
+	"time"
 )
 
 func TestMobileLANCertificateIdentityPersistsAcrossRestart(t *testing.T) {
@@ -66,6 +70,95 @@ func TestMobileLANAuthorizationAcceptsOnlyStoredTokenHash(t *testing.T) {
 	missing := httptest.NewRequest("GET", "https://vexstream.local/v1/catalog", nil)
 	if bridge.authorizedRequest(missing) {
 		t.Fatal("missing token must not authorize")
+	}
+}
+
+func TestMobileLANPairingRequestRequiresOpenWindowAndExposesTokenOnlyAfterApproval(t *testing.T) {
+	bridge := &mobileLANBridgeState{
+		devices: map[string]mobilePairedDevice{},
+		pending: map[string]*mobilePendingPairing{},
+	}
+
+	body := []byte(`{"deviceRef":"vexlife.fixture","displayName":"Victor's phone"}`)
+	closedRequest := httptest.NewRequest(http.MethodPost, "/v1/pairing/request", bytes.NewReader(body))
+	closedResponse := httptest.NewRecorder()
+	bridge.pairingRequest(closedResponse, closedRequest)
+	if closedResponse.Code != http.StatusForbidden {
+		t.Fatalf("closed pairing status=%d body=%s", closedResponse.Code, closedResponse.Body.String())
+	}
+
+	bridge.pairingWindowUntil = time.Now().Add(time.Minute)
+	openRequest := httptest.NewRequest(http.MethodPost, "/v1/pairing/request", bytes.NewReader(body))
+	openResponse := httptest.NewRecorder()
+	bridge.pairingRequest(openResponse, openRequest)
+	if openResponse.Code != http.StatusOK {
+		t.Fatalf("open pairing status=%d body=%s", openResponse.Code, openResponse.Body.String())
+	}
+
+	var formed struct {
+		RequestRef string `json:"requestRef"`
+		State      string `json:"state"`
+	}
+	if err := json.Unmarshal(openResponse.Body.Bytes(), &formed); err != nil {
+		t.Fatal(err)
+	}
+	if formed.RequestRef == "" || formed.State != "PENDING" {
+		t.Fatalf("pairing response=%+v", formed)
+	}
+
+	pending := bridge.pending[formed.RequestRef]
+	if pending == nil {
+		t.Fatal("pending pairing request was not retained")
+	}
+	pending.State = "APPROVED"
+	pending.Token = "approved-fixture-token"
+
+	statusRequest := httptest.NewRequest(
+		http.MethodGet,
+		"/v1/pairing/status?requestRef="+formed.RequestRef,
+		nil,
+	)
+	statusResponse := httptest.NewRecorder()
+	bridge.pairingRequestStatus(statusResponse, statusRequest)
+	if statusResponse.Code != http.StatusOK {
+		t.Fatalf("pairing status HTTP=%d body=%s", statusResponse.Code, statusResponse.Body.String())
+	}
+
+	var status map[string]any
+	if err := json.Unmarshal(statusResponse.Body.Bytes(), &status); err != nil {
+		t.Fatal(err)
+	}
+	if status["state"] != "APPROVED" || status["token"] != "approved-fixture-token" {
+		t.Fatalf("approved status=%v", status)
+	}
+}
+
+func TestMobileLANPairingStatusNeverReturnsTokenWhilePending(t *testing.T) {
+	bridge := &mobileLANBridgeState{
+		devices: map[string]mobilePairedDevice{},
+		pending: map[string]*mobilePendingPairing{
+			"pair.fixture": {
+				RequestRef:  "pair.fixture",
+				DeviceRef:   "vexlife.fixture",
+				DisplayName: "Fixture phone",
+				RequestedAt: time.Now(),
+				ExpiresAt:   time.Now().Add(time.Minute),
+				State:       "PENDING",
+				Token:       "must-not-leak",
+			},
+		},
+	}
+
+	request := httptest.NewRequest(http.MethodGet, "/v1/pairing/status?requestRef=pair.fixture", nil)
+	response := httptest.NewRecorder()
+	bridge.pairingRequestStatus(response, request)
+
+	var status map[string]any
+	if err := json.Unmarshal(response.Body.Bytes(), &status); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := status["token"]; ok {
+		t.Fatalf("pending pairing response leaked token: %v", status)
 	}
 }
 

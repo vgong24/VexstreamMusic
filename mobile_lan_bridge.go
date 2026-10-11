@@ -95,7 +95,10 @@ func initMobileLANBridge(a *App) error {
 	mobileLANBridge.mu.Unlock()
 
 	if paired {
-		return mobileLANBridge.ensureStarted(a)
+		if err := mobileLANBridge.ensureStarted(a); err != nil {
+			return err
+		}
+		startMobileRemoteGateway(a)
 	}
 	return nil
 }
@@ -446,7 +449,12 @@ func (b *mobileLANBridgeState) pairingRequestStatus(w http.ResponseWriter, r *ht
 		response["token"] = pending.Token
 		response["remoteHomeRef"] = b.remoteHomeRefLocked()
 		response["remoteGatewayPublicKey"] = b.remoteGatewayPublicKey
-		response["remoteAccessReady"] = pending.DevicePublicKey != ""
+		if relayURL := mobileRemoteRelayURL(); relayURL != "" {
+			response["remoteRelayBaseUrl"] = relayURL
+		}
+		response["remoteAccessReady"] =
+			pending.DevicePublicKey != "" &&
+				mobileRemoteRelayURL() != ""
 	}
 	jsonOut(w, http.StatusOK, response)
 }
@@ -565,7 +573,8 @@ func (a *App) mobilePairingStatus(w http.ResponseWriter, r *http.Request) {
 		"pending":              pending,
 		"paired":               paired,
 		"canonicalAuthority":   false,
-		"transportDescription": "Local VexStream pairing candidate; Home/Safety authority is not implied.",
+		"remoteRelayConfigured": mobileRemoteRelayURL() != "",
+		"transportDescription": "Local pairing plus bounded remote VexStream gateway candidate; canonical Home/Safety authority is not implied.",
 	})
 }
 
@@ -649,6 +658,7 @@ func (a *App) mobilePairingDecision(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		jsonOut(w, http.StatusOK, map[string]any{"ok": true, "state": "APPROVED"})
+		go startMobileRemoteGateway(a)
 		return
 	default:
 		jsonOut(w, http.StatusBadRequest, map[string]string{"error": "decision must be APPROVE or DENY"})

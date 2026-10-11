@@ -42,7 +42,8 @@ jobs:
             duplicate_logic_test.go \
             import_runtime_test.go \
             discovery_radio_test.go \
-            mobile_bridge_test.go
+            mobile_bridge_test.go \
+            mobile_lan_bridge_test.go
 
       - name: Create human-first pairing guide
         shell: bash

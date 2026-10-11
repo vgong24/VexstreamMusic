@@ -232,11 +232,19 @@ func (b *mobileLANBridgeState) ensureStarted(a *App) error {
 		},
 		nil,
 	)
-	if mdnsErr == nil {
+	if mdnsErr != nil {
+		_ = ln.Close()
 		b.mu.Lock()
-		b.mdns = mdns
+		b.listener = nil
+		b.server = nil
+		b.running = false
 		b.mu.Unlock()
+		return fmt.Errorf("VexStream nearby discovery unavailable: %w", mdnsErr)
 	}
+
+	b.mu.Lock()
+	b.mdns = mdns
+	b.mu.Unlock()
 
 	go func() {
 		if err := server.ServeTLS(ln, certPath, keyPath); err != nil && err != http.ErrServerClosed {

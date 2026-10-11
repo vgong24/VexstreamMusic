@@ -349,7 +349,7 @@ func main() {
 	if b, e := os.ReadFile(state); e == nil {
 		u := strings.TrimSpace(string(b))
 		if u != "" {
-			if v, ref := runningIdentity(u); v == version && ref == buildRef {
+			if v, ref := runningIdentity(u); shouldReuseRunningInstance(v, ref) {
 				openBrowser(u)
 				return
 			} else if v != "" {
@@ -475,6 +475,13 @@ func jsonOut(w http.ResponseWriter, s int, v any) {
 	json.NewEncoder(w).Encode(v)
 }
 func decode(r *http.Request, v any) error { return json.NewDecoder(r.Body).Decode(v) }
+func shouldReuseRunningInstance(
+	runningVersion string,
+	runningBuildRef string,
+) bool {
+	return runningVersion == version && runningBuildRef == buildRef
+}
+
 func runningIdentity(url string) (string, string) {
 	c := http.Client{Timeout: 700 * time.Millisecond}
 	resp, e := c.Get(strings.TrimRight(url, "/") + "/health")

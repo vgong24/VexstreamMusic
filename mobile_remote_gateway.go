@@ -33,8 +33,8 @@ const (
 	mobileRemoteSchema           = "vexstream.remote-relay/v1"
 	mobileRemoteBodyMax          = 1024 * 1024
 	mobileRemotePollTimeout      = 35 * time.Second
-	mobileRemoteHeartbeatEvery   = 30 * time.Second
-	defaultMobileRemoteRelayURL  = ""
+	mobileRemoteRegistrationRefresh = 55 * time.Second
+	defaultMobileRemoteRelayURL      = ""
 )
 
 type mobileRemoteRequestEnvelope struct {
@@ -141,14 +141,14 @@ func mobileRemoteGatewayLoop(a *App, relayURL string) {
 			continue
 		}
 		backoff = time.Second
-		lastHeartbeat := time.Now()
+		registeredAt := time.Now()
 
 		for {
-			if time.Since(lastHeartbeat) >= mobileRemoteHeartbeatEvery {
-				if err := heartbeatMobileRemoteHost(relayURL, sessionToken); err != nil {
-					break
-				}
-				lastHeartbeat = time.Now()
+			// Re-register periodically instead of keeping one immortal relay session. This refreshes
+			// the relay's public device-key allowlist after pair/revoke without granting the relay
+			// authority over the underlying VexStream bearer or media.
+			if time.Since(registeredAt) >= mobileRemoteRegistrationRefresh {
+				break
 			}
 
 			request, status, err := pollMobileRemoteRequest(relayURL, sessionToken)

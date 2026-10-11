@@ -227,7 +227,7 @@ func (b *mobileLANBridgeState) ensureStarted(a *App) error {
 			"bridge=vexstream-mobile/v1",
 			"transport=https",
 			"pairing=desktop-approval",
-			"serverRef=" + fingerprint[:16],
+			"certificateSha256=" + fingerprint,
 		},
 		nil,
 	)

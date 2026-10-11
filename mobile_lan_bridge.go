@@ -98,6 +98,7 @@ func initMobileLANBridge(a *App) error {
 		if err := mobileLANBridge.ensureStarted(a); err != nil {
 			return err
 		}
+		startMobileDirectGateway(a)
 		startMobileRemoteGateway(a)
 	}
 	return nil
@@ -454,12 +455,17 @@ func (b *mobileLANBridgeState) pairingRequestStatus(w http.ResponseWriter, r *ht
 		response["token"] = pending.Token
 		response["remoteHomeRef"] = b.remoteHomeRefLocked()
 		response["remoteGatewayPublicKey"] = b.remoteGatewayPublicKey
-		if relayURL := mobileRemoteRelayURL(); relayURL != "" {
+		directRoutes := mobileDirectGatewayRoutes()
+		if len(directRoutes) > 0 {
+			response["remoteDirectBaseUrls"] = directRoutes
+		}
+		relayURL := mobileRemoteRelayURL()
+		if relayURL != "" {
 			response["remoteRelayBaseUrl"] = relayURL
 		}
 		response["remoteAccessReady"] =
 			pending.DevicePublicKey != "" &&
-				mobileRemoteRelayURL() != ""
+				(len(directRoutes) > 0 || relayURL != "")
 	}
 	jsonOut(w, http.StatusOK, response)
 }
@@ -515,12 +521,15 @@ func (b *mobileLANBridgeState) pairingRemoteUpgrade(a *App) http.HandlerFunc {
 		gatewayPublicKey := b.remoteGatewayPublicKey
 		b.mu.Unlock()
 
+		startMobileDirectGateway(a)
+		directRoutes := mobileDirectGatewayRoutes()
 		relayURL := mobileRemoteRelayURL()
 		jsonOut(w, http.StatusOK, map[string]any{
 			"remoteHomeRef":          homeRef,
 			"remoteGatewayPublicKey": gatewayPublicKey,
+			"remoteDirectBaseUrls":   directRoutes,
 			"remoteRelayBaseUrl":     relayURL,
-			"remoteAccessReady":      relayURL != "",
+			"remoteAccessReady":      len(directRoutes) > 0 || relayURL != "",
 		})
 		go startMobileRemoteGateway(a)
 	}
@@ -549,6 +558,7 @@ func (b *mobileLANBridgeState) pairingRevokeSelf(w http.ResponseWriter, r *http.
 
 	jsonOut(w, http.StatusOK, map[string]any{"ok": true})
 	go b.stopIfUnused()
+	go stopMobileDirectGatewayIfUnused()
 }
 
 func (b *mobileLANBridgeState) authorized(next http.HandlerFunc) http.HandlerFunc {
@@ -640,8 +650,9 @@ func (a *App) mobilePairingStatus(w http.ResponseWriter, r *http.Request) {
 		"pending":               pending,
 		"paired":                paired,
 		"canonicalAuthority":    false,
-		"remoteRelayConfigured": mobileRemoteRelayURL() != "",
-		"transportDescription":  "Local pairing plus bounded remote VexStream gateway candidate; canonical Home/Safety authority is not implied.",
+		"remoteDirectRoutes":     mobileDirectGatewayRoutes(),
+		"remoteRelayConfigured":  mobileRemoteRelayURL() != "",
+		"transportDescription":   "Local pairing plus direct paired-device ingress; VexRelay remains fallback and canonical Home/Safety authority is not implied.",
 	})
 }
 
@@ -725,6 +736,7 @@ func (a *App) mobilePairingDecision(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		jsonOut(w, http.StatusOK, map[string]any{"ok": true, "state": "APPROVED"})
+		go startMobileDirectGateway(a)
 		go startMobileRemoteGateway(a)
 		return
 	default:
@@ -760,6 +772,7 @@ func (a *App) mobilePairingRevoke(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonOut(w, http.StatusOK, map[string]any{"ok": true})
 	go mobileLANBridge.stopIfUnused()
+	go stopMobileDirectGatewayIfUnused()
 }
 
 func (b *mobileLANBridgeState) hasActivePendingLocked() bool {

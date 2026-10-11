@@ -32,6 +32,13 @@ jobs:
             --output out/VexStreamMusic-2.2.0.exe \
             --report out/windows-build-qualification.json
 
+      - name: Verify source and embedded UI
+        run: |
+          python3 tests/static_release_checks.py \
+            --root . \
+            --artifact out/VexStreamMusic-2.2.0.exe \
+            --report out/static-release-checks.json
+
       - name: Run focused mobile bridge Go regression
         run: |
           go test \
@@ -109,7 +116,8 @@ jobs:
           zip -9 VexStream-Mobile-Bridge-Windows.zip \
             VexStreamMusic-2.2.0.exe \
             README-FIRST.txt \
-            windows-build-qualification.json
+            windows-build-qualification.json \
+            static-release-checks.json
 
       - name: Upload Windows bundle
         uses: actions/upload-artifact@v4

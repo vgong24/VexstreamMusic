@@ -33,7 +33,7 @@ import (
 var assets embed.FS
 
 const version = "3.0.0"
-const buildRef = "vexstream.mobile-bridge.same-wifi/v1"
+const buildRef = "vexstream.mobile-bridge.anywhere/v1"
 
 type Config struct {
 	Sources []string `json:"sources"`

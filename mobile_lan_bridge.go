@@ -255,6 +255,46 @@ func (b *mobileLANBridgeState) ensureStarted(a *App) error {
 	return nil
 }
 
+func (b *mobileLANBridgeState) scheduleStopIfUnused(
+	pairingWindowUntil time.Time,
+) {
+	delay := time.Until(pairingWindowUntil)
+	if delay < 0 {
+		delay = 0
+	}
+
+	go func() {
+		timer := time.NewTimer(delay + 100*time.Millisecond)
+		defer timer.Stop()
+		<-timer.C
+		b.stopIfUnused()
+	}()
+}
+
+func (b *mobileLANBridgeState) stopIfUnused() {
+	b.mu.Lock()
+	b.cleanupPendingLocked()
+	if !b.running || len(b.devices) > 0 || time.Now().Before(b.pairingWindowUntil) {
+		b.mu.Unlock()
+		return
+	}
+
+	server := b.server
+	mdns := b.mdns
+	b.server = nil
+	b.listener = nil
+	b.mdns = nil
+	b.running = false
+	b.mu.Unlock()
+
+	if mdns != nil {
+		mdns.Shutdown()
+	}
+	if server != nil {
+		_ = server.Close()
+	}
+}
+
 func (b *mobileLANBridgeState) lanHealth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
@@ -406,6 +446,7 @@ func (b *mobileLANBridgeState) pairingRevokeSelf(w http.ResponseWriter, r *http.
 	}
 
 	jsonOut(w, http.StatusOK, map[string]any{"ok": true})
+	go b.stopIfUnused()
 }
 
 func (b *mobileLANBridgeState) authorized(next http.HandlerFunc) http.HandlerFunc {
@@ -515,6 +556,7 @@ func (a *App) mobilePairingStart(w http.ResponseWriter, r *http.Request) {
 	until := mobileLANBridge.pairingWindowUntil
 	code := mobileLANBridge.pairingCode
 	mobileLANBridge.mu.Unlock()
+	mobileLANBridge.scheduleStopIfUnused(until)
 	jsonOut(w, http.StatusOK, map[string]any{
 		"ok":          true,
 		"pairingCode": code,
@@ -609,6 +651,7 @@ func (a *App) mobilePairingRevoke(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jsonOut(w, http.StatusOK, map[string]any{"ok": true})
+	go mobileLANBridge.stopIfUnused()
 }
 
 func (b *mobileLANBridgeState) cleanupPendingLocked() {

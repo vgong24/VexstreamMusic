@@ -650,9 +650,9 @@ func (a *App) mobilePairingStatus(w http.ResponseWriter, r *http.Request) {
 		"pending":               pending,
 		"paired":                paired,
 		"canonicalAuthority":    false,
-		"remoteDirectRoutes":     mobileDirectGatewayRoutes(),
-		"remoteRelayConfigured":  mobileRemoteRelayURL() != "",
-		"transportDescription":   "Local pairing plus direct paired-device ingress; VexRelay remains fallback and canonical Home/Safety authority is not implied.",
+		"remoteDirectRoutes":    mobileDirectGatewayRoutes(),
+		"remoteRelayConfigured": mobileRemoteRelayURL() != "",
+		"transportDescription":  "Local pairing plus direct paired-device ingress; VexRelay remains fallback and canonical Home/Safety authority is not implied.",
 	})
 }
 

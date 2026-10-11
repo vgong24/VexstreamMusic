@@ -407,6 +407,10 @@ func main() {
 	mux.HandleFunc("/api/system/repair", a.systemRepair)
 	mux.HandleFunc("/api/system/sessions/retire-plan", a.sessionRetirePlan)
 	mux.HandleFunc("/api/system/sessions/retire", a.sessionRetire)
+	mux.HandleFunc("/api/mobile/pairing", a.mobilePairingStatus)
+	mux.HandleFunc("/api/mobile/pairing/start", a.mobilePairingStart)
+	mux.HandleFunc("/api/mobile/pairing/decision", a.mobilePairingDecision)
+	mux.HandleFunc("/api/mobile/pairing/revoke", a.mobilePairingRevoke)
 	port := 0
 	if s := os.Getenv("VEXSTREAM_PORT"); s != "" {
 		if p, e := strconv.Atoi(s); e == nil {
@@ -439,6 +443,9 @@ func main() {
 	a.startReconcile("startup")
 	if e := a.startMobileDevBridge(); e != nil {
 		fmt.Fprintln(os.Stderr, "VexStream mobile dev bridge unavailable:", e)
+	}
+	if e := initMobileLANBridge(a); e != nil {
+		fmt.Fprintln(os.Stderr, "VexStream nearby mobile bridge unavailable:", e)
 	}
 	go func() { time.Sleep(250 * time.Millisecond); openBrowser(url) }()
 	http.Serve(ln, mux)

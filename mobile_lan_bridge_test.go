@@ -243,7 +243,6 @@ func TestMobileLANStaysAvailableForRememberedDevice(t *testing.T) {
 	}
 }
 
-
 func testMobileDevicePublicKey(t *testing.T) string {
 	t.Helper()
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)

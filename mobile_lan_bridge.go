@@ -32,14 +32,17 @@ const (
 	mobileLANServiceType     = "_vexstream._tcp"
 	mobilePairingWindow      = 5 * time.Minute
 	mobilePairingRequestLife = 10 * time.Minute
-	mobilePairingSchema      = "vexstream.mobile.local-pairing/v1"
+	mobilePairingSchemaV1    = "vexstream.mobile.local-pairing/v1"
+	mobilePairingSchema      = "vexstream.mobile.local-pairing/v2"
 )
 
 type mobilePairedDevice struct {
-	DeviceRef   string `json:"deviceRef"`
-	DisplayName string `json:"displayName"`
-	TokenHash   string `json:"tokenHash"`
-	ApprovedAt  string `json:"approvedAt"`
+	DeviceRef       string `json:"deviceRef"`
+	DisplayName     string `json:"displayName"`
+	TokenHash       string `json:"tokenHash"`
+	DevicePublicKey string `json:"devicePublicKey,omitempty"`
+	RemoteEnabled   bool   `json:"remoteEnabled,omitempty"`
+	ApprovedAt      string `json:"approvedAt"`
 }
 
 type mobilePairingFile struct {
@@ -48,30 +51,33 @@ type mobilePairingFile struct {
 }
 
 type mobilePendingPairing struct {
-	RequestRef  string
-	DeviceRef   string
-	DisplayName string
-	RequestedAt time.Time
-	ExpiresAt   time.Time
-	State       string
-	Token       string
+	RequestRef      string
+	DeviceRef       string
+	DisplayName     string
+	DevicePublicKey string
+	RequestedAt     time.Time
+	ExpiresAt       time.Time
+	State           string
+	Token           string
 }
 
 type mobileLANBridgeState struct {
-	mu                 sync.Mutex
-	loaded             bool
-	running            bool
-	pairingWindowUntil time.Time
-	pending            map[string]*mobilePendingPairing
-	devices            map[string]mobilePairedDevice
-	server             *http.Server
-	listener           net.Listener
-	mdns               *zeroconf.Server
-	certPath           string
-	keyPath            string
-	certificateSHA256  string
-	pairingCode        string
-	displayName        string
+	mu                     sync.Mutex
+	loaded                 bool
+	running                bool
+	pairingWindowUntil     time.Time
+	pending                map[string]*mobilePendingPairing
+	devices                map[string]mobilePairedDevice
+	server                 *http.Server
+	listener               net.Listener
+	mdns                   *zeroconf.Server
+	certPath               string
+	keyPath                string
+	remoteGatewayKeyPath   string
+	remoteGatewayPublicKey string
+	certificateSHA256      string
+	pairingCode            string
+	displayName            string
 }
 
 var mobileLANBridge = &mobileLANBridgeState{
@@ -89,7 +95,10 @@ func initMobileLANBridge(a *App) error {
 	mobileLANBridge.mu.Unlock()
 
 	if paired {
-		return mobileLANBridge.ensureStarted(a)
+		if err := mobileLANBridge.ensureStarted(a); err != nil {
+			return err
+		}
+		startMobileRemoteGateway(a)
 	}
 	return nil
 }
@@ -108,12 +117,18 @@ func (b *mobileLANBridgeState) load() error {
 
 	b.certPath = filepath.Join(root, "server-cert.pem")
 	b.keyPath = filepath.Join(root, "server-key.pem")
+	b.remoteGatewayKeyPath = filepath.Join(root, "remote-gateway-key")
 	fingerprint, code, err := ensureMobileLANCertificate(b.certPath, b.keyPath)
+	if err != nil {
+		return err
+	}
+	remoteGatewayPublicKey, err := ensureMobileRemoteGatewayKey(b.remoteGatewayKeyPath)
 	if err != nil {
 		return err
 	}
 	b.certificateSHA256 = fingerprint
 	b.pairingCode = code
+	b.remoteGatewayPublicKey = remoteGatewayPublicKey
 
 	host, _ := os.Hostname()
 	host = strings.TrimSpace(host)
@@ -132,7 +147,7 @@ func (b *mobileLANBridgeState) load() error {
 		if err := json.Unmarshal(data, &stored); err != nil {
 			return err
 		}
-		if stored.SchemaVersion != mobilePairingSchema {
+		if stored.SchemaVersion != mobilePairingSchema && stored.SchemaVersion != mobilePairingSchemaV1 {
 			return fmt.Errorf("unsupported mobile pairing schema %q", stored.SchemaVersion)
 		}
 		for _, device := range stored.Devices {
@@ -200,6 +215,7 @@ func (b *mobileLANBridgeState) ensureStarted(a *App) error {
 	mux.HandleFunc("/v1/pairing/info", b.pairingInfo)
 	mux.HandleFunc("/v1/pairing/request", b.pairingRequest)
 	mux.HandleFunc("/v1/pairing/status", b.pairingRequestStatus)
+	mux.HandleFunc("/v1/pairing/remote-upgrade", b.authorized(b.pairingRemoteUpgrade(a)))
 	mux.HandleFunc("/v1/pairing/revoke-self", b.authorized(b.pairingRevokeSelf))
 	mux.HandleFunc("/v1/catalog", b.authorized(a.mobileCatalog))
 	mux.HandleFunc("/v1/media/", b.authorized(a.mobileMedia))
@@ -347,8 +363,9 @@ func (b *mobileLANBridgeState) pairingRequest(w http.ResponseWriter, r *http.Req
 	}
 
 	var request struct {
-		DeviceRef   string `json:"deviceRef"`
-		DisplayName string `json:"displayName"`
+		DeviceRef       string `json:"deviceRef"`
+		DisplayName     string `json:"displayName"`
+		DevicePublicKey string `json:"devicePublicKey"`
 	}
 	if err := decode(r, &request); err != nil {
 		jsonOut(w, http.StatusBadRequest, map[string]string{"error": "invalid pairing request"})
@@ -356,8 +373,13 @@ func (b *mobileLANBridgeState) pairingRequest(w http.ResponseWriter, r *http.Req
 	}
 	request.DeviceRef = strings.TrimSpace(request.DeviceRef)
 	request.DisplayName = strings.TrimSpace(request.DisplayName)
+	request.DevicePublicKey = strings.TrimSpace(request.DevicePublicKey)
 	if request.DeviceRef == "" || request.DisplayName == "" || len(request.DisplayName) > 80 {
 		jsonOut(w, http.StatusBadRequest, map[string]string{"error": "deviceRef and displayName are required"})
+		return
+	}
+	if err := validateMobileDevicePublicKey(request.DevicePublicKey); err != nil {
+		jsonOut(w, http.StatusBadRequest, map[string]string{"error": "valid devicePublicKey is required"})
 		return
 	}
 
@@ -371,6 +393,10 @@ func (b *mobileLANBridgeState) pairingRequest(w http.ResponseWriter, r *http.Req
 
 	for _, pending := range b.pending {
 		if pending.DeviceRef == request.DeviceRef && pending.State == "PENDING" {
+			if pending.DevicePublicKey != request.DevicePublicKey {
+				jsonOut(w, http.StatusConflict, map[string]string{"error": "device signing identity changed during pairing"})
+				return
+			}
 			jsonOut(w, http.StatusOK, map[string]any{
 				"requestRef": pending.RequestRef,
 				"state":      pending.State,
@@ -387,12 +413,13 @@ func (b *mobileLANBridgeState) pairingRequest(w http.ResponseWriter, r *http.Req
 	now := time.Now()
 	expiresAt := now.Add(mobilePairingRequestLife)
 	b.pending[requestRef] = &mobilePendingPairing{
-		RequestRef:  requestRef,
-		DeviceRef:   request.DeviceRef,
-		DisplayName: request.DisplayName,
-		RequestedAt: now,
-		ExpiresAt:   expiresAt,
-		State:       "PENDING",
+		RequestRef:      requestRef,
+		DeviceRef:       request.DeviceRef,
+		DisplayName:     request.DisplayName,
+		DevicePublicKey: request.DevicePublicKey,
+		RequestedAt:     now,
+		ExpiresAt:       expiresAt,
+		State:           "PENDING",
 	}
 	b.scheduleStopIfUnused(expiresAt)
 
@@ -425,8 +452,78 @@ func (b *mobileLANBridgeState) pairingRequestStatus(w http.ResponseWriter, r *ht
 	}
 	if pending.State == "APPROVED" && pending.Token != "" {
 		response["token"] = pending.Token
+		response["remoteHomeRef"] = b.remoteHomeRefLocked()
+		response["remoteGatewayPublicKey"] = b.remoteGatewayPublicKey
+		if relayURL := mobileRemoteRelayURL(); relayURL != "" {
+			response["remoteRelayBaseUrl"] = relayURL
+		}
+		response["remoteAccessReady"] =
+			pending.DevicePublicKey != "" &&
+				mobileRemoteRelayURL() != ""
 	}
 	jsonOut(w, http.StatusOK, response)
+}
+
+func (b *mobileLANBridgeState) pairingRemoteUpgrade(a *App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			jsonOut(w, http.StatusMethodNotAllowed, map[string]string{"error": "POST required"})
+			return
+		}
+
+		deviceRef := b.deviceRefForRequest(r)
+		if deviceRef == "" {
+			jsonOut(w, http.StatusUnauthorized, map[string]string{"error": "paired VexLife device required"})
+			return
+		}
+
+		var request struct {
+			DevicePublicKey string `json:"devicePublicKey"`
+		}
+		if err := decode(r, &request); err != nil {
+			jsonOut(w, http.StatusBadRequest, map[string]string{"error": "invalid remote upgrade request"})
+			return
+		}
+		request.DevicePublicKey = strings.TrimSpace(request.DevicePublicKey)
+		if err := validateMobileDevicePublicKey(request.DevicePublicKey); err != nil {
+			jsonOut(w, http.StatusBadRequest, map[string]string{"error": "valid devicePublicKey is required"})
+			return
+		}
+
+		b.mu.Lock()
+		device, ok := b.devices[deviceRef]
+		if !ok {
+			b.mu.Unlock()
+			jsonOut(w, http.StatusUnauthorized, map[string]string{"error": "paired VexLife device required"})
+			return
+		}
+		if device.DevicePublicKey != "" && device.DevicePublicKey != request.DevicePublicKey {
+			b.mu.Unlock()
+			jsonOut(w, http.StatusConflict, map[string]string{"error": "device signing identity changed; re-pair explicitly"})
+			return
+		}
+		device.DevicePublicKey = request.DevicePublicKey
+		device.RemoteEnabled = true
+		b.devices[deviceRef] = device
+		if err := b.saveLocked(); err != nil {
+			b.mu.Unlock()
+			jsonOut(w, http.StatusInternalServerError, map[string]string{"error": "unable to save remote device identity"})
+			return
+		}
+		homeRef := b.remoteHomeRefLocked()
+		gatewayPublicKey := b.remoteGatewayPublicKey
+		b.mu.Unlock()
+
+		relayURL := mobileRemoteRelayURL()
+		jsonOut(w, http.StatusOK, map[string]any{
+			"remoteHomeRef":          homeRef,
+			"remoteGatewayPublicKey": gatewayPublicKey,
+			"remoteRelayBaseUrl":     relayURL,
+			"remoteAccessReady":      relayURL != "",
+		})
+		go startMobileRemoteGateway(a)
+	}
 }
 
 func (b *mobileLANBridgeState) pairingRevokeSelf(w http.ResponseWriter, r *http.Request) {
@@ -524,9 +621,10 @@ func (a *App) mobilePairingStatus(w http.ResponseWriter, r *http.Request) {
 	paired := make([]map[string]any, 0, len(mobileLANBridge.devices))
 	for _, device := range mobileLANBridge.devices {
 		paired = append(paired, map[string]any{
-			"deviceRef":   device.DeviceRef,
-			"displayName": device.DisplayName,
-			"approvedAt":  device.ApprovedAt,
+			"deviceRef":     device.DeviceRef,
+			"displayName":   device.DisplayName,
+			"remoteEnabled": device.RemoteEnabled && device.DevicePublicKey != "",
+			"approvedAt":    device.ApprovedAt,
 		})
 	}
 	sort.Slice(paired, func(i, j int) bool {
@@ -534,15 +632,16 @@ func (a *App) mobilePairingStatus(w http.ResponseWriter, r *http.Request) {
 	})
 
 	jsonOut(w, http.StatusOK, map[string]any{
-		"running":              mobileLANBridge.running,
-		"displayName":          mobileLANBridge.displayName,
-		"pairingCode":          mobileLANBridge.pairingCode,
-		"pairingWindowOpen":    time.Now().Before(mobileLANBridge.pairingWindowUntil),
-		"pairingWindowUntil":   mobileLANBridge.pairingWindowUntil.UTC().Format(time.RFC3339),
-		"pending":              pending,
-		"paired":               paired,
-		"canonicalAuthority":   false,
-		"transportDescription": "Local VexStream pairing candidate; Home/Safety authority is not implied.",
+		"running":               mobileLANBridge.running,
+		"displayName":           mobileLANBridge.displayName,
+		"pairingCode":           mobileLANBridge.pairingCode,
+		"pairingWindowOpen":     time.Now().Before(mobileLANBridge.pairingWindowUntil),
+		"pairingWindowUntil":    mobileLANBridge.pairingWindowUntil.UTC().Format(time.RFC3339),
+		"pending":               pending,
+		"paired":                paired,
+		"canonicalAuthority":    false,
+		"remoteRelayConfigured": mobileRemoteRelayURL() != "",
+		"transportDescription":  "Local pairing plus bounded remote VexStream gateway candidate; canonical Home/Safety authority is not implied.",
 	})
 }
 
@@ -609,10 +708,12 @@ func (a *App) mobilePairingDecision(w http.ResponseWriter, r *http.Request) {
 		tokenHash := sha256.Sum256([]byte(token))
 		approvedAt := time.Now().UTC().Format(time.RFC3339)
 		mobileLANBridge.devices[pending.DeviceRef] = mobilePairedDevice{
-			DeviceRef:   pending.DeviceRef,
-			DisplayName: pending.DisplayName,
-			TokenHash:   hex.EncodeToString(tokenHash[:]),
-			ApprovedAt:  approvedAt,
+			DeviceRef:       pending.DeviceRef,
+			DisplayName:     pending.DisplayName,
+			TokenHash:       hex.EncodeToString(tokenHash[:]),
+			DevicePublicKey: pending.DevicePublicKey,
+			RemoteEnabled:   pending.DevicePublicKey != "",
+			ApprovedAt:      approvedAt,
 		}
 		pending.State = "APPROVED"
 		pending.Token = token
@@ -624,6 +725,7 @@ func (a *App) mobilePairingDecision(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		jsonOut(w, http.StatusOK, map[string]any{"ok": true, "state": "APPROVED"})
+		go startMobileRemoteGateway(a)
 		return
 	default:
 		jsonOut(w, http.StatusBadRequest, map[string]string{"error": "decision must be APPROVE or DENY"})

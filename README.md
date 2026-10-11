@@ -135,3 +135,39 @@ The matching Android consumer is in `vgong24/VexLife-Android`, PR #13 /
 
 The historical 2.2.0 release manifest remains evidence for the preserved Explore base; current 3.0.0
 mobile-candidate proof is produced by the branch qualification/build workflow.
+
+
+## Anywhere streaming successor (in development)
+
+The current same-Wi-Fi phone connection remains the accepted bootstrap. The stacked remote candidate
+keeps VexStream as the only desktop application while adding an outbound gateway client internally.
+
+```text
+VexLife phone
+  LAN available -> direct pinned VexStream HTTPS
+
+  LAN unavailable
+    -> public content-blind relay
+    -> outbound VexStream Remote Gateway
+    -> existing local mobile HTTPS surface
+```
+
+No router port-forwarding is required by this design. The ordinary VexStream UI/admin server remains
+loopback-only.
+
+Remote enrollment reuses the explicit phone approval already performed locally. New pairing requests
+include the phone's Android-Keystore signing public key. Existing approved phones can upgrade that
+identity automatically while next reachable on the LAN; an already-bound signing key cannot be
+silently replaced.
+
+The relay receives public routing/device identity and encrypted envelopes. The existing VexStream
+bearer, catalog payload and media bytes are inside an additional phone-to-desktop AES-GCM layer.
+Relay session tokens are short-lived in-memory routing credentials and are not persisted.
+
+The relay implementation is source-owned at `cmd/vexstream-relay` and has a deployable container,
+but off-home reachability is **not** claimed until a real HTTPS deployment is bound through
+`VEXSTREAM_REMOTE_RELAY_URL` (or a later accepted source default) and lived cellular/other-Wi-Fi
+proof succeeds.
+
+This remote candidate is deliberately narrow: catalog read and media GET/HEAD only. It does not
+expose the desktop administration API or create general remote-PC control.

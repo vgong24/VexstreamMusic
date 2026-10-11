@@ -266,3 +266,92 @@ ANDROID_PLAYLIST_PROJECTION = READ_ONLY_BROWSE_AND_PLAY
 
 Phone-local playlist authoring and explicit sync may be added later, but this contract does not
 invent automatic two-way conflict resolution.
+
+
+## Remote/off-home successor — bounded content-blind relay
+
+The same-Wi-Fi bridge remains the preferred route when the paired desktop is directly reachable.
+The off-home successor adds reachability without exposing the ordinary VexStream UI/admin listener
+or sending the mobile bearer/media plaintext to a public relay.
+
+Source placement:
+
+```text
+mobile_lan_bridge.go
+  local approval + bearer authorization
+  existing paired-device record
+  device signing public key
+
+mobile_remote_crypto.go
+  stable desktop remote-gateway ECDH identity
+
+mobile_remote_gateway.go
+  outbound relay registration/polling
+  verifies paired phone signature again
+  decrypts the inner request
+  enforces read-only VexStream mobile path allowlist
+  forwards only to the existing local TLS mobile listener
+  encrypts the response back to the phone
+
+cmd/vexstream-relay/
+  public in-memory rendezvous/relay
+  stores no music, bearer, Home payload, or private key
+```
+
+Local pairing now carries the Android device's P-256 signing public key. The private signing key stays
+in Android Keystore. Already-paired v1 phones may upgrade while directly reachable through the
+existing bearer-authorized `/v1/pairing/remote-upgrade` endpoint; changing an already-bound signing
+key requires an explicit re-pair.
+
+The desktop keeps a stable P-256 ECDH gateway private key in the same app-private mobile-bridge state
+area as its existing TLS private key. Android receives only the public key.
+
+For a remote request:
+
+```text
+phone
+  signs routing envelope with paired device key
+  forms ephemeral P-256 ECDH key
+  derives request key with desktop gateway public key
+  AES-GCM encrypts:
+    VexStream bearer
+    method/path
+    bounded headers
+  -> relay
+
+relay
+  verifies the phone signature against the currently registered public key
+  queues only ciphertext
+  -> desktop outbound gateway
+
+desktop
+  verifies device signature independently
+  derives the same ECDH request key
+  decrypts request
+  permits only:
+    GET /v1/catalog
+    GET/HEAD /v1/media/<trackRef>
+  forwards to its existing pinned/local mobile HTTPS surface
+  AES-GCM encrypts bounded response
+  -> relay -> phone
+```
+
+Media uses bounded Range requests rather than one whole-track relay object. LAN remains first choice;
+remote relay is fallback; verified Android-local bytes remain the final offline fallback.
+
+The public relay itself still needs an actual HTTPS deployment. Source presence or a configured URL
+does not prove that deployment/currentness.
+
+This is an app-scoped remote-access candidate and deliberately does not relabel itself as accepted
+canonical VexHome/P7 authority:
+
+```text
+SIGNED_PAIRED_DEVICE != CANONICAL_HOME_MEMBERSHIP
+REMOTE_RELAY_REACHABILITY != CANONICAL_REMOTE_AUTHORIZATION
+READ_ONLY_VEXSTREAM_REMOTE_CAPABILITY != GENERAL_PC_REMOTE_CONTROL
+RELAY_ROUTING_METADATA != HOME_CUSTODY
+RELAY_CIPHERTEXT != RELAY_MEDIA_OWNERSHIP
+```
+
+The accepted Home/Safety contracts remain the evolutionary destination for reusable cross-product
+remote membership, capability leases, revocation generations and shared Home gateway semantics.

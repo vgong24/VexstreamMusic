@@ -274,7 +274,10 @@ func (b *mobileLANBridgeState) scheduleStopIfUnused(
 func (b *mobileLANBridgeState) stopIfUnused() {
 	b.mu.Lock()
 	b.cleanupPendingLocked()
-	if !b.running || len(b.devices) > 0 || time.Now().Before(b.pairingWindowUntil) {
+	if !b.running ||
+		len(b.devices) > 0 ||
+		b.hasActivePendingLocked() ||
+		time.Now().Before(b.pairingWindowUntil) {
 		b.mu.Unlock()
 		return
 	}
@@ -382,14 +385,16 @@ func (b *mobileLANBridgeState) pairingRequest(w http.ResponseWriter, r *http.Req
 		return
 	}
 	now := time.Now()
+	expiresAt := now.Add(mobilePairingRequestLife)
 	b.pending[requestRef] = &mobilePendingPairing{
 		RequestRef:  requestRef,
 		DeviceRef:   request.DeviceRef,
 		DisplayName: request.DisplayName,
 		RequestedAt: now,
-		ExpiresAt:   now.Add(mobilePairingRequestLife),
+		ExpiresAt:   expiresAt,
 		State:       "PENDING",
 	}
+	b.scheduleStopIfUnused(expiresAt)
 
 	jsonOut(w, http.StatusOK, map[string]any{
 		"requestRef": requestRef,
@@ -592,6 +597,7 @@ func (a *App) mobilePairingDecision(w http.ResponseWriter, r *http.Request) {
 	case "DENY":
 		pending.State = "DENIED"
 		jsonOut(w, http.StatusOK, map[string]any{"ok": true, "state": "DENIED"})
+		go mobileLANBridge.stopIfUnused()
 		return
 	case "APPROVE":
 		tokenBytes := make([]byte, 32)
@@ -652,6 +658,16 @@ func (a *App) mobilePairingRevoke(w http.ResponseWriter, r *http.Request) {
 	}
 	jsonOut(w, http.StatusOK, map[string]any{"ok": true})
 	go mobileLANBridge.stopIfUnused()
+}
+
+func (b *mobileLANBridgeState) hasActivePendingLocked() bool {
+	now := time.Now()
+	for _, pending := range b.pending {
+		if pending.State == "PENDING" && now.Before(pending.ExpiresAt) {
+			return true
+		}
+	}
+	return false
 }
 
 func (b *mobileLANBridgeState) cleanupPendingLocked() {

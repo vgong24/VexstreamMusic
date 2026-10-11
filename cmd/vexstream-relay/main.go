@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -667,5 +666,3 @@ func jsonOut(w http.ResponseWriter, status int, value any) {
 	}
 	_ = json.NewEncoder(w).Encode(value)
 }
-
-var _ = fmt.Sprintf

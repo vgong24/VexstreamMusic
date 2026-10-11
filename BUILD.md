@@ -30,44 +30,71 @@ python3 tests/build_all_platforms.py \
 
 Target-host preview availability, provider ads, real Windows audio-device output, and real provider responses remain host/provider observations rather than cross-build proof.
 
-## Android mobile-bridge lived proof
+## VexLife phone connection
 
-The mobile bridge on this branch is a loopback-only development surface. It is intentionally not the
-final LAN/Home transport.
+The lived ADB-reverse proof is preserved as a developer/recovery route, but it is no longer the
+normal human path.
 
-Build the Windows candidate through the ordinary source-owned route above, run it with the normal
-VexStream library, then map the Android device's loopback port to the desktop bridge:
+For the current same-Wi-Fi candidate:
+
+```text
+Windows
+  run VexStreamMusic-2.2.0.exe
+  -> click the phone icon
+  -> first-time pairing window opens for 5 minutes
+  -> six-digit confirmation code appears
+
+Android
+  Home -> VexStream Music -> Find VexStream
+  -> select the nearby VexStream computer
+  -> compare the six-digit code
+  -> Codes match · Request access
+
+Windows
+  -> Allow
+
+Android
+  -> library appears
+  -> Play streams through the phone
+  -> Download retains a verified app-private copy
+```
+
+No ADB, USB cable, port number, or connection ID is part of that normal pairing flow.
+
+If Windows asks whether VexStream may communicate on the network, allow it on the private/home
+network so mDNS discovery and the dedicated HTTPS mobile listener can work.
+
+The secure mobile LAN surface is separate from the localhost desktop administration server:
+
+```text
+ordinary VexStream UI/admin = loopback only
+mobile pairing/catalog/media = dedicated HTTPS + pinned certificate + per-device bearer
+```
+
+A pairing window that expires with no remembered or in-flight phone now removes the nearby
+advertisement and closes the LAN listener. A remembered phone keeps the secure mobile listener
+available for automatic reconnect on future VexStream launches.
+
+If the desktop receives another DHCP address, VexLife can use Find VexStream to rediscover the same
+pinned certificate identity without requiring another desktop approval.
+
+The earlier ADB route remains source-owned developer recovery only:
 
 ```text
 adb reverse tcp:18765 tcp:18765
 ```
 
-The matching Android consumer branch is:
+Neither local transport is canonical VexHome remote authority:
 
 ```text
-vgong24/VexLife-Android
-VXG-101126-vexstream-mobile-stream-offline
-```
-
-Expected first proof:
-
-```text
-desktop VexStream bridge running
--> adb reverse established
--> Android VexStream Music screen reports Desktop library connected
--> real desktop tracks appear without desktop paths/source folders
--> Play streams one track through phone Media3
--> Download stores and verifies an app-private copy
--> stop/remove desktop transport
--> downloaded track remains playable on the phone
+LOCAL_VEXSTREAM_PAIRING
+!= VEXHOME_MEMBERSHIP
+!= CANONICAL_AUTHENTICATION
+!= CAPABILITY_LEASE
+!= REMOTE_ACCESS_AUTHORITY
 ```
 
 Close an older VexStream process before launching a bridge build made from this branch. The current
 desktop single-instance shortcut identifies the product by version and an already-running non-bridge
 2.2.0 process cannot acquire the new listener retroactively.
 
-The ADB route proves product/media behavior only:
-
-```text
-ADB reverse != pairing != authentication != authorization != product Home gateway
-```

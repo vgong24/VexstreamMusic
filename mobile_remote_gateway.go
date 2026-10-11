@@ -562,9 +562,17 @@ func remoteRequestKey(
 	if err != nil {
 		return nil, err
 	}
-	publicKey, ok := parsed.(*ecdh.PublicKey)
-	if !ok {
-		return nil, errors.New("remote ephemeral key must be ECDH")
+	var publicKey *ecdh.PublicKey
+	switch key := parsed.(type) {
+	case *ecdh.PublicKey:
+		publicKey = key
+	case *ecdsa.PublicKey:
+		publicKey, err = key.ECDH()
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, errors.New("remote ephemeral key must be P-256 EC")
 	}
 	shared, err := privateKey.ECDH(publicKey)
 	if err != nil {

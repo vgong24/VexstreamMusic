@@ -88,7 +88,7 @@ export async function createPlaylist(
     "/api/playlists/create",
     {
       name:String(name??"").trim(),
-      trackIds:normalizeRefs(trackRefs)
+      trackIds:normalizeRefs(trackRefs,{allowEmpty:true})
     },
     request,
     "Create playlist"

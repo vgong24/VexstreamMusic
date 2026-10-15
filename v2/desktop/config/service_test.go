@@ -10,12 +10,20 @@ import (
 
 func TestOpenReadsExactV3ConfigShape(t *testing.T) {
 	root := t.TempDir()
+	source := filepath.Join(root, "music")
+	ignored := filepath.Join(root, "skip")
+	data, err := json.Marshal(struct {
+		Sources []string `json:"sources"`
+		Ignored []string `json:"ignored"`
+	}{
+		Sources: []string{source},
+		Ignored: []string{ignored},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	path := filepath.Join(root, "config.json")
-	if err := os.WriteFile(
-		path,
-		[]byte(`{"sources":["/music"],"ignored":["/skip"]}`),
-		0o644,
-	); err != nil {
+	if err := os.WriteFile(path, data, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	service, err := Open(path, filepath.Join(root, "backup", "config.json"))
@@ -23,8 +31,8 @@ func TestOpenReadsExactV3ConfigShape(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := service.Snapshot()
-	if !reflect.DeepEqual(got.Sources, []string{"/music"}) ||
-		!reflect.DeepEqual(got.Ignored, []string{"/skip"}) {
+	if !reflect.DeepEqual(got.Sources, []string{source}) ||
+		!reflect.DeepEqual(got.Ignored, []string{ignored}) {
 		t.Fatalf("V3 config compatibility drift: %+v", got)
 	}
 }
@@ -141,18 +149,27 @@ func TestRestoreBackupIsExplicit(t *testing.T) {
 	root := t.TempDir()
 	path := filepath.Join(root, "config.json")
 	backup := filepath.Join(root, "backup.json")
-	if err := os.WriteFile(
-		path,
-		[]byte(`{"sources":["/current"],"ignored":[]}`),
-		0o644,
-	); err != nil {
+	current := filepath.Join(root, "current")
+	restored := filepath.Join(root, "backup-source")
+	ignored := filepath.Join(root, "skip")
+	currentData, err := json.Marshal(State{
+		Sources: []string{current},
+		Ignored: []string{},
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(
-		backup,
-		[]byte(`{"sources":["/backup"],"ignored":["/skip"]}`),
-		0o644,
-	); err != nil {
+	backupData, err := json.Marshal(State{
+		Sources: []string{restored},
+		Ignored: []string{ignored},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, currentData, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(backup, backupData, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	service, err := Open(path, backup)
@@ -163,8 +180,8 @@ func TestRestoreBackupIsExplicit(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := service.Snapshot()
-	if !reflect.DeepEqual(got.Sources, []string{"/backup"}) ||
-		!reflect.DeepEqual(got.Ignored, []string{"/skip"}) {
+	if !reflect.DeepEqual(got.Sources, []string{restored}) ||
+		!reflect.DeepEqual(got.Ignored, []string{ignored}) {
 		t.Fatalf("backup restore drift: %+v", got)
 	}
 }

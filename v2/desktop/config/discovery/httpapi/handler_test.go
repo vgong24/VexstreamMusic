@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -43,11 +44,22 @@ func TestDiscoverUsesCurrentConfigOnlyAsExclusionProjection(t *testing.T) {
 			strings.NewReader(`{"deep":false}`),
 		),
 	)
-	if response.Code != http.StatusOK ||
-		!strings.Contains(response.Body.String(), candidate) ||
-		strings.Contains(response.Body.String(), included) ||
-		!strings.Contains(response.Body.String(), `"mp3Count":2`) {
-		t.Fatalf("discovery projection drift: %d %s", response.Code, response.Body.String())
+	if response.Code != http.StatusOK {
+		t.Fatalf("discovery status drift: %d %s", response.Code, response.Body.String())
+	}
+	var result struct {
+		Candidates []struct {
+			Path     string `json:"path"`
+			MP3Count int    `json:"mp3Count"`
+		} `json:"candidates"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &result); err != nil {
+		t.Fatalf("discovery response JSON drift: %v: %s", err, response.Body.String())
+	}
+	if len(result.Candidates) != 1 ||
+		result.Candidates[0].Path != candidate ||
+		result.Candidates[0].MP3Count != 2 {
+		t.Fatalf("discovery projection drift: %s", response.Body.String())
 	}
 }
 

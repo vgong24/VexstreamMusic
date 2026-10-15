@@ -127,7 +127,40 @@ Queue persistence is intentionally deferred to D4. V1 persists queue order witho
 selection model; V4 should define startup/listening restoration at the persistence boundary rather
 than make that accident a Queue semantic law.
 
-## Current edge — D3 Library first
+## D3 — Library truth + reconciliation — IN PROGRESS
+
+Current source separates:
+
+```text
+raw discovered Track truth
+-> filesystem scan/cache realization
+-> durable firstSeen identity
+-> human Overlay + PlaybackWindow state
+-> projected desktop catalog
+```
+
+A composed Library Service now owns the reconciliation question without taking over source-folder
+configuration, browser/API, playlists, import, or playback.
+
+Exact service checkpoint:
+
+```text
+3c7590441fc509f5877e7b98079d4ba2f6aa8ddc
+committed service blobs reconciled byte-for-byte
+go test ./v2/desktop/library/service = PASS
+```
+
+Durability correction earned during extraction:
+
+```text
+persist firstSeen
+-> persist rebuildable raw cache
+```
+
+so a cache-write failure cannot cause an already-observed song to silently receive a new AddedAt
+identity on retry. Failed reconciliation does not replace the in-memory raw catalog.
+
+### Current edge — real read-only Library/media boundary
 
 The next question is:
 
@@ -151,4 +184,15 @@ import/acquisition
 The next real browser catalog should consume a V4 desktop Library boundary rather than hard-coded
 fixture tracks.
 
-<!-- [VXG RealForever][VEXSTREAM][DESKTOP-V2-WORKSPACE][V4][D2-PROVED] -->
+Smallest next seam:
+
+```text
+Library Service
+-> read-only catalog HTTP adapter
+-> exact range-capable media reads
+-> V4 browser catalog
+```
+
+Source-folder mutation/admin behavior remains outside this adapter.
+
+<!-- [VXG RealForever][VEXSTREAM][DESKTOP-V2-WORKSPACE][V4][D3-LIBRARY] -->

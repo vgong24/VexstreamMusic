@@ -184,7 +184,26 @@ contract; V4 will not canonize that accident as Queue semantics.
 
 Migrate by question, not by source-file size.
 
-### Library
+### Library — CURRENT ACTIVE SLICE
+
+Current extraction now has:
+- canonical raw Track model;
+- filesystem discovery + ID3/_vexmedia provenance;
+- raw cache v2 with deliberate v1 rebuild;
+- V3-compatible firstSeen / overlay / playback-window stores;
+- human-facing projection separated from raw truth;
+- one Library Service composing load / snapshot / reconcile.
+
+Exact service checkpoint:
+
+```text
+3c7590441fc509f5877e7b98079d4ba2f6aa8ddc
+service exact committed bytes
+focused service package test = PASS
+```
+
+Next: one read-only HTTP/media adapter consumed by the V4 browser. Configuration/source mutation
+remains a separate product-composition concern.
 
 Preserve:
 - canonical desktop catalog;

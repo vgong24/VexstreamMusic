@@ -1,4 +1,4 @@
-# VexStream Music Desktop V2
+# VexStream Music Desktop V2 Architecture Workspace
 
 `[VXG RealForever]`
 
@@ -10,6 +10,14 @@
 
 V2 is a clean architectural reconstruction beside the existing desktop source. It is **not** a
 rewrite that erases V1, and it is not permission to silently change product behavior.
+
+`v2/` names the **architecture-generation workspace**, not the eventual marketing version. The
+intended user-facing successor release is **VexStream Music 4.0.0** once the refactored desktop has
+earned release acceptance.
+
+The existing VexStream Music 3.0 desktop remains the protected daily-driver baseline while this work
+continues. V2/V4 work must not require replacing or mutating that installed/running baseline before
+the new Windows candidate is independently usable.
 
 The existing repository root remains the V1 implementation and evidence quarry. V2 grows under
 `v2/` and migrates one behavior at a time.
@@ -173,6 +181,25 @@ Node 22.16.0
 ```
 
 This is not yet browser or Windows host proof.
+
+## Desktop-first completion posture
+
+Android/mobile integration is deliberately held while the desktop reconstruction is incomplete.
+
+```text
+VexStream Music 3.0
+    = protected current daily driver
+
+v2/ architecture workspace
+    -> complete local desktop product
+    -> browser + media + persistence + Windows proof
+    -> VexStream Music 4.0.0 release candidate
+    -> lived desktop acceptance
+    -> only then resume Android/mobile integration
+```
+
+No Android source change is required to prove a Desktop V4 milestone. The Android companion PR may
+preserve planning/currentness, but implementation waits for the Desktop V4 readiness gate.
 
 ## What comes next
 

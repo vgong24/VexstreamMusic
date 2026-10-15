@@ -332,6 +332,9 @@ def main() -> int:
         "started": False,
         "startBody": None,
     }
+    system_state = {
+        "exitBody": None,
+    }
     player_session_state = {
         "found": False,
         "session": {
@@ -362,6 +365,40 @@ def main() -> int:
                 status=200,
                 content_type="text/html; charset=utf-8",
                 body=html,
+            )
+            return
+
+        if parsed.path == "/health":
+            if request.method != "GET":
+                route.fulfill(status=405, body="GET required")
+                return
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "ok": True,
+                        "version": "4.0.0",
+                        "buildRef": "browser-proof.bin-deadbeef",
+                        "warnings": [],
+                    }
+                ),
+            )
+            return
+
+        if parsed.path == "/api/system/exit":
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            system_state["exitBody"] = body
+            if body != {"confirm": "EXIT_VEXSTREAM"}:
+                route.fulfill(status=400, body="confirmation required")
+                return
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps({"ok": True, "state": "EXITING"}),
             )
             return
 
@@ -603,6 +640,21 @@ def main() -> int:
                 f"page errors: {report['pageErrors']}",
             ),
         )
+        checked(
+            "browser-binds-visible-exact-desktop-identity",
+            lambda: require(
+                page.evaluate("window.vexV4.identity.version") == "4.0.0"
+                and page.evaluate("window.vexV4.identity.buildRef")
+                == "browser-proof.bin-deadbeef"
+                and "4.0.0" in page.locator("#buildIdentity").inner_text()
+                and page.locator("#buildIdentity").get_attribute(
+                    "data-build-ref"
+                )
+                == "browser-proof.bin-deadbeef",
+                "visible version/build identity drift",
+            ),
+        )
+
         checked(
             "browser-loads-read-only-library-contract",
             lambda: require(
@@ -1261,6 +1313,21 @@ def main() -> int:
             ),
         )
         restart.close()
+
+        page.locator("#exitVexStream").click()
+        page.wait_for_function(
+            "document.querySelector('#buildIdentity').textContent"
+            ".includes('has exited')"
+        )
+        checked(
+            "explicit-exit-control-sends-confirmed-process-intention",
+            lambda: require(
+                system_state["exitBody"]
+                == {"confirm": "EXIT_VEXSTREAM"}
+                and page.locator("#exitVexStream").is_disabled(),
+                f"Exit intent drift: {system_state}",
+            ),
+        )
 
         checked(
             "browser-finished-without-runtime-errors",

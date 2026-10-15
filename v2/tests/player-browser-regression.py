@@ -93,6 +93,11 @@ def assembled_html(root: Path) -> str:
     css = (web / "styles.css").read_text(encoding="utf-8")
     app = bundle_module(web / "app.js", {})
     html = html.replace(
+        "<head>",
+        '<head><base href="http://vexstream.local/">',
+        1,
+    )
+    html = html.replace(
         '<link rel="stylesheet" href="./styles.css">',
         f"<style>{css}</style>",
     )
@@ -203,6 +208,7 @@ def main() -> int:
             route.fulfill(
                 status=200,
                 headers={
+                    "Access-Control-Allow-Origin": "*",
                     "Content-Type": "application/json; charset=utf-8",
                     "X-Content-Type-Options": "nosniff",
                 },
@@ -242,7 +248,10 @@ def main() -> int:
             ),
         )
         page.route("http://vexstream.local/**", route_request)
-        page.goto("http://vexstream.local/", wait_until="load")
+        # The execution sandbox blocks HTTP top-level navigation by administrator policy.
+        # Keep the real product-relative URLs, but host this proof in an in-memory document whose
+        # <base> points at the intercepted VexStream origin.
+        page.set_content(html, wait_until="load")
         page.wait_for_function("window.vexV4?.ready===true")
 
         checked(

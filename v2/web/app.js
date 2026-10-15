@@ -557,16 +557,128 @@ function render(){
 }
 
 function renderTrackChoices(){
- trackChoices.innerHTML=catalog.map(item=>`<div class="track-card" data-track-ref="${escapeHTML(item.ref)}">
-  <strong>${escapeHTML(trackTitle(item))}</strong>
-  <small>${escapeHTML(trackArtist(item))}</small>
-  <span class="track-actions">
-    <button data-track-action="play" data-vex-action="vexstream.player.play-track">${escapeHTML(resolveText(locale,"playback.play"))}</button>
-    <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
-    <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
-    <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
-  </span>
-</div>`).join("");
+ const visible=currentLibraryView();
+ const genres=libraryGenres(catalog);
+ const preferredGenre=libraryView.genre;
+ libraryGenre.innerHTML=[
+  `<option value="all">${escapeHTML(resolveText(locale,"library.genre.all"))}</option>`,
+  ...genres.map(value=>
+   `<option value="${escapeHTML(value)}">${escapeHTML(value)}</option>`
+  )
+ ].join("");
+ libraryGenre.value=genres.some(
+  value=>value.toLocaleLowerCase()===preferredGenre.toLocaleLowerCase()
+ )?preferredGenre:"all";
+
+ librarySearch.value=libraryView.query;
+ librarySort.value=libraryView.sort;
+ for(const button of libraryModeButtons){
+  const selected=button.dataset.libraryMode===libraryView.mode;
+  button.setAttribute("aria-pressed",String(selected));
+ }
+
+ if(libraryView.mode==="songs"){
+  librarySummary.textContent=resolveText(locale,"library.summary.songs",{
+   visible:visible.length,
+   total:catalog.length
+  });
+  trackChoices.innerHTML=visible.length
+   ? visible.map(item=>`<article class="track-card" data-track-ref="${escapeHTML(item.ref)}">
+      <div class="track-card-copy">
+       <strong>${escapeHTML(trackTitle(item))}</strong>
+       <small>${escapeHTML(trackArtist(item))}</small>
+       <span class="track-meta">${escapeHTML(
+        [item.album,item.genre,item.year].filter(Boolean).join(" · ")
+       )}</span>
+      </div>
+      <span class="track-actions">
+       <button data-track-action="play" data-vex-action="vexstream.player.play-track">${escapeHTML(resolveText(locale,"playback.play"))}</button>
+       <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
+       <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
+       <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+      </span>
+     </article>`).join("")
+   : `<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
+  return;
+ }
+
+ const groupKey=libraryView.mode==="albums"?"album":"artist";
+ const groups=groupLibrary(visible,groupKey);
+ librarySummary.textContent=resolveText(
+  locale,
+  libraryView.mode==="albums"
+   ?"library.summary.albums"
+   :"library.summary.artists",
+  {count:groups.length,tracks:visible.length}
+ );
+ trackChoices.innerHTML=groups.length
+  ? groups.map(group=>`<article class="library-group-card"
+       data-library-group="${escapeHTML(group.key)}"
+       data-library-group-kind="${escapeHTML(groupKey)}">
+      <div class="library-group-copy">
+       <strong>${escapeHTML(group.name)}</strong>
+       <small>${escapeHTML(resolveText(locale,"library.group.tracks",{
+        count:group.refs.length
+       }))}</small>
+       <span class="track-meta">${escapeHTML(
+        group.tracks.slice(0,3).map(track=>trackTitle(track)).join(" · ")
+       )}</span>
+      </div>
+      <div class="track-actions">
+       <button data-library-group-action="play">${escapeHTML(resolveText(locale,"playback.play"))}</button>
+       <button data-library-group-action="append">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
+      </div>
+     </article>`).join("")
+  : `<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
+}
+
+function sourceLabel(path){
+ const parts=String(path??"").replace(/\\/g,"/").split("/").filter(Boolean);
+ return parts.at(-1)||String(path??"");
+}
+
+function renderSources(){
+ sourceSummary.textContent=sourceConfig.sources.length
+  ? resolveText(locale,"sources.summary",{
+      count:sourceConfig.sources.length
+    })
+  : resolveText(locale,"sources.summary.empty");
+
+ sourceList.innerHTML=sourceConfig.sources.length
+  ? sourceConfig.sources.map(path=>`<article class="source-row" data-source-path="${escapeHTML(path)}">
+      <div>
+       <strong>${escapeHTML(sourceLabel(path))}</strong>
+       <small>${escapeHTML(path)}</small>
+      </div>
+      <button data-source-action="remove">${escapeHTML(resolveText(locale,"sources.remove"))}</button>
+     </article>`).join("")
+  : `<div class="empty-state">${escapeHTML(resolveText(locale,"sources.none"))}</div>`;
+
+ sourceDiscovery.innerHTML=sourceDiscoveryState.candidates.length
+  ? `<div class="source-discovery-summary">${escapeHTML(resolveText(locale,"sources.discovery.summary",{
+      count:sourceDiscoveryState.candidates.length,
+      scanned:sourceDiscoveryState.scannedDirs
+     }))}</div>`+
+    sourceDiscoveryState.candidates.map(candidate=>`<article class="source-row source-candidate" data-source-candidate="${escapeHTML(candidate.path)}">
+      <div>
+       <strong>${escapeHTML(candidate.name||sourceLabel(candidate.path))}</strong>
+       <small>${escapeHTML(candidate.path)} · ${escapeHTML(resolveText(locale,"sources.mp3-count",{
+        count:candidate.mp3Count
+       }))}</small>
+      </div>
+      <div class="source-row-actions">
+       <button class="primary" data-source-candidate-action="include">${escapeHTML(resolveText(locale,"sources.include"))}</button>
+       <button data-source-candidate-action="ignore">${escapeHTML(resolveText(locale,"sources.ignore"))}</button>
+      </div>
+     </article>`).join("")
+  : "";
+
+ ignoredSources.hidden=sourceConfig.ignored.length===0;
+ clearIgnoredSourcesButton.disabled=sourceConfig.ignored.length===0;
+ ignoredSourceList.innerHTML=sourceConfig.ignored.map(path=>`<article class="source-row" data-ignored-source="${escapeHTML(path)}">
+   <div><small>${escapeHTML(path)}</small></div>
+   <button data-ignored-source-action="restore">${escapeHTML(resolveText(locale,"sources.restore"))}</button>
+  </article>`).join("");
 }
 
 function renderPlaylistChoices(){

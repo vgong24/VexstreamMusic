@@ -1,0 +1,156 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  cancelImport,
+  discardImport,
+  inspectImport,
+  loadImportJobs,
+  projectJobSnapshot,
+  recoverImportCommit,
+  retryImportCommit,
+  startImport,
+} from "../web/features/imports/client.js";
+
+function okJSON(payload) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => payload,
+  };
+}
+
+test("inspection posts one provider URL without starting acquisition", async () => {
+  let seen;
+  const result = await inspectImport(" https://example/song ", {
+    request: async (url, options) => {
+      seen = { url, options };
+      return okJSON({
+        inspection: { id: "abc", title: "Song" },
+        items: [],
+        matchCount: 0,
+        advisory: true,
+      });
+    },
+  });
+
+  assert.equal(seen.url, "/api/import/inspect");
+  assert.equal(seen.options.method, "POST");
+  assert.deepEqual(JSON.parse(seen.options.body), {
+    url: "https://example/song",
+  });
+  assert.equal(result.advisory, true);
+});
+
+test("start maps the reviewed plan without inventing selected=false defaults", async () => {
+  let body;
+  await startImport(
+    {
+      sourceTitle: " Song ",
+      destination: " /music ",
+      url: " https://example/song ",
+      mode: "both",
+      sections: [
+        { index: 1, title: "One", start: 0, end: 30 },
+        { index: 2, title: "Two", start: 30, end: 60, selected: false },
+      ],
+    },
+    {
+      request: async (_url, options) => {
+        body = JSON.parse(options.body);
+        return okJSON({ jobId: "job-a", status: "queued" });
+      },
+    },
+  );
+
+  assert.equal(body.sourceTitle, "Song");
+  assert.equal(body.destination, "/music");
+  assert.equal(body.url, "https://example/song");
+  assert.equal(body.sections[0].selected, true);
+  assert.equal(body.sections[1].selected, false);
+});
+
+test("job snapshot keeps recovery separate from normal status groups", async () => {
+  const projected = projectJobSnapshot({
+    groups: {
+      active: [{ id: "a", status: "running" }],
+      ready: [{ id: "r", status: "ready" }],
+      completed: [{ id: "d", status: "done", trackIds: ["track-a"] }],
+    },
+    recovery: { uncertain: "COMMIT_UNCERTAIN" },
+    issues: [{ code: "COMMIT_RECONCILIATION_REQUIRED" }],
+  });
+
+  assert.equal(projected.active[0].id, "a");
+  assert.equal(projected.ready[0].id, "r");
+  assert.deepEqual(projected.completed[0].trackIds, ["track-a"]);
+  assert.equal(projected.recovery.uncertain, "COMMIT_UNCERTAIN");
+  assert.equal(
+    projected.issues[0].code,
+    "COMMIT_RECONCILIATION_REQUIRED",
+  );
+
+  const loaded = await loadImportJobs({
+    request: async () =>
+      okJSON({
+        groups: { active: [], ready: [], completed: [] },
+      }),
+  });
+  assert.deepEqual(loaded.active, []);
+});
+
+test("job actions remain distinct endpoints", async () => {
+  const seen = [];
+  const request = async (url, options) => {
+    seen.push([url, JSON.parse(options.body).id]);
+    return okJSON({ ok: true });
+  };
+
+  await cancelImport("a", { request });
+  await retryImportCommit("b", { request });
+  await discardImport("c", { request });
+  await recoverImportCommit("d", { request });
+
+  assert.deepEqual(seen, [
+    ["/api/import/cancel", "a"],
+    ["/api/import/commit", "b"],
+    ["/api/import/discard", "c"],
+    ["/api/import/recover-commit", "d"],
+  ]);
+});
+
+test("failed HTTP response preserves server error when available", async () => {
+  await assert.rejects(
+    () =>
+      discardImport("job", {
+        request: async () => ({
+          ok: false,
+          status: 409,
+          json: async () => ({ error: "Import job is not discardable" }),
+        }),
+      }),
+    /not discardable/,
+  );
+});
+
+test("invalid browser inputs fail before request", async () => {
+  let calls = 0;
+  const request = async () => {
+    calls++;
+    return okJSON({});
+  };
+
+  await assert.rejects(
+    () => inspectImport(" ", { request }),
+    /requires url/,
+  );
+  await assert.rejects(
+    () => startImport({ url: "x" }, { request }),
+    /url and destination/,
+  );
+  await assert.rejects(
+    () => cancelImport(" ", { request }),
+    /job id/,
+  );
+  assert.equal(calls, 0);
+});

@@ -5,6 +5,8 @@
 // reconcile, never an instruction to auto-replay.
 package staging
 
+const ManifestSchema = "vexstream.import-stage/v1"
+
 import (
 	"fmt"
 	"os"
@@ -126,6 +128,14 @@ func inspectStage(stage string) (Record, []Issue, bool) {
 func validateManifest(stage string, job importmodel.Job, record *Record, issues *[]Issue) {
 	manifest := record.Manifest
 	if manifest == nil {
+		return
+	}
+	if manifest.SchemaVersion != ManifestSchema {
+		*issues = append(*issues, issue(
+			stage,
+			"MANIFEST_SCHEMA_UNSUPPORTED",
+			fmt.Sprintf("unsupported staging manifest schema %q", manifest.SchemaVersion),
+		))
 		return
 	}
 	if len(manifest.Outputs) == 0 {

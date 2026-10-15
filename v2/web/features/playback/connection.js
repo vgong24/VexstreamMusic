@@ -225,6 +225,8 @@ export function createHTMLMediaPlaybackConnection({
       return lastProjection ?? currentProjection();
     },
 
+    refresh: publish,
+
     activate,
 
     subscribe(listener) {

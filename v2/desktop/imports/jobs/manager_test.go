@@ -480,3 +480,105 @@ func TestStartRejectsDuplicateJobIdentity(t *testing.T) {
 func stringsContains(value, fragment string) bool {
 	return strings.Contains(value, fragment)
 }
+
+
+func TestFastWorkflowStillReturnsFirstDurableQueuedState(t *testing.T) {
+	root := t.TempDir()
+	preparer := &preparerFixture{
+		result: importprovider.PrepareResult{
+			Staged: true,
+			Outputs: []importprovider.PreparedOutput{{
+				Filename: "song.mp3",
+			}},
+		},
+	}
+	service := testWorkflow(root, preparer)
+
+	manager, err := New(service, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer manager.Close()
+	manager.newID = func() (string, error) { return "fast", nil }
+
+	first, err := manager.Start(workflow.Request{
+		Title: "Song",
+		Destination: filepath.Join(root, "music"),
+		URL: "https://example/song",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.Status != importmodel.StatusQueued {
+		t.Fatalf("Start raced past first durable state: %+v", first)
+	}
+
+	done := waitJob(t, manager, "fast", func(job importmodel.Job) bool {
+		return job.Status == importmodel.StatusDone
+	})
+	if done.Status != importmodel.StatusDone {
+		t.Fatalf("fast workflow did not finish: %+v", done)
+	}
+}
+
+func TestRetryCommitDoesNotRunWhenCommittingTransitionCannotPersist(t *testing.T) {
+	root := t.TempDir()
+	destination := filepath.Join(root, "music")
+	stage := persistStage(
+		t,
+		root,
+		importmodel.Job{
+			ID: "ready-persist-fail",
+			Title: "Song",
+			Status: importmodel.StatusReady,
+			Destination: destination,
+		},
+		&staging.Manifest{
+			Destination: destination,
+			Outputs: []staging.Output{{
+				RelativePath: "outputs/song.mp3",
+				Filename: "song.mp3",
+			}},
+		},
+		map[string][]byte{
+			"outputs/song.mp3": []byte("audio"),
+		},
+	)
+
+	commitCalls := 0
+	service := workflow.Service{
+		StagingRoot: root,
+		Commit: func(
+			_ string,
+			_ string,
+			_ string,
+		) (importcommit.Result, error) {
+			commitCalls++
+			return importcommit.Result{Added: 1}, nil
+		},
+	}
+	manager, err := New(service, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer manager.Close()
+
+	jobPath := filepath.Join(stage, "job.json")
+	if err := os.Remove(jobPath); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(jobPath, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	job, err := manager.RetryCommit("ready-persist-fail")
+	if err == nil {
+		t.Fatal("commit transition persistence failure was swallowed")
+	}
+	if job.Status != importmodel.StatusReady {
+		t.Fatalf("in-memory truth moved ahead of durable state: %+v", job)
+	}
+	if commitCalls != 0 {
+		t.Fatalf("Library commit ran before durable committing state: %d", commitCalls)
+	}
+}

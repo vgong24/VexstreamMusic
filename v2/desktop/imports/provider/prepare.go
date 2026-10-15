@@ -41,12 +41,25 @@ type PrepareResult struct {
 	Staged  bool
 }
 
+type Problem struct {
+	SchemaVersion   string
+	Provider        string
+	Stage           string
+	Code            string
+	Title           string
+	Message         string
+	Retryable       bool
+	SuggestedAction string
+	Technical       string
+	ObservedAt      string
+}
+
 type PrepareEvent struct {
 	Type     string
 	Stage    string
 	Progress int
 	Message  string
-	Problem  *youtubeprovider.Problem
+	Problem  *Problem
 }
 
 type PrepareBridge interface {
@@ -101,10 +114,20 @@ func (y YouTubePreparation) Prepare(
 			if onEvent == nil {
 				return
 			}
-			var problem *youtubeprovider.Problem
+			var problem *Problem
 			if event.Problem != nil {
-				copy := *event.Problem
-				problem = &copy
+				problem = &Problem{
+					SchemaVersion: event.Problem.SchemaVersion,
+					Provider: event.Problem.Provider,
+					Stage: event.Problem.Stage,
+					Code: event.Problem.Code,
+					Title: event.Problem.Title,
+					Message: event.Problem.Message,
+					Retryable: event.Problem.Retryable,
+					SuggestedAction: event.Problem.SuggestedAction,
+					Technical: event.Problem.Technical,
+					ObservedAt: event.Problem.ObservedAt,
+				}
 			}
 			onEvent(PrepareEvent{
 				Type: event.Type,
@@ -131,6 +154,25 @@ func (y YouTubePreparation) Prepare(
 		Outputs: outputs,
 		Staged: result.Staged,
 	}, nil
+}
+
+func ProblemFromError(err error) (Problem, bool) {
+	var failure *youtubeprovider.Failure
+	if !errors.As(err, &failure) || failure == nil {
+		return Problem{}, false
+	}
+	return Problem{
+		SchemaVersion: failure.Problem.SchemaVersion,
+		Provider: failure.Problem.Provider,
+		Stage: failure.Problem.Stage,
+		Code: failure.Problem.Code,
+		Title: failure.Problem.Title,
+		Message: failure.Problem.Message,
+		Retryable: failure.Problem.Retryable,
+		SuggestedAction: failure.Problem.SuggestedAction,
+		Technical: failure.Problem.Technical,
+		ObservedAt: failure.Problem.ObservedAt,
+	}, true
 }
 
 func cloneMap(input map[string]any) map[string]any {

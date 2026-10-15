@@ -284,6 +284,9 @@ func moveOutputs(stageDir string, journal *Journal) error {
 // claim after seeing foreign bytes would manufacture false custody.
 func ensureClaim(entry Entry) error {
 	path := claimPath(entry.DestinationPath)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create destination claim directory: %w", err)
+	}
 	expected := []byte(entry.CommitRef + "\n")
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
 	if err == nil {

@@ -26,6 +26,9 @@ type Layout struct {
 	TrashFiles       string
 	SharedRuntime    string
 
+	// Protected V3 process claim. V4 reads this to prevent simultaneous shared-store writers.
+	ProtectedCurrentURL string
+
 	// V4-only custody.
 	V4Root           string
 	CurrentURL       string
@@ -63,6 +66,7 @@ func At(base string) Layout {
 		DeletedHistory: filepath.Join(base, "deleted-history.json"),
 		TrashFiles: filepath.Join(base, "trash", "files"),
 		SharedRuntime: filepath.Join(base, "runtime"),
+		ProtectedCurrentURL: filepath.Join(base, "current-url.txt"),
 		V4Root: v4,
 		CurrentURL: filepath.Join(v4, "current-url.txt"),
 		ImportStaging: filepath.Join(v4, "staging"),

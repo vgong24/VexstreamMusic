@@ -79,6 +79,157 @@ export async function loadPlaylists({ request = globalThis.fetch } = {}) {
   return projectPlaylists(await response.json());
 }
 
+export async function createPlaylist(
+  name,
+  trackRefs=[],
+  {request=globalThis.fetch}={}
+) {
+  const payload=await playlistMutation(
+    "/api/playlists/create",
+    {
+      name:String(name??"").trim(),
+      trackIds:normalizeRefs(trackRefs)
+    },
+    request,
+    "Create playlist"
+  );
+  return projectOne(payload?.playlist);
+}
+
+export async function addTracksToPlaylist(
+  id,
+  trackRefs,
+  {request=globalThis.fetch}={}
+) {
+  const payload=await playlistMutation(
+    "/api/playlists/add",
+    {
+      id:requiredID(id),
+      trackIds:normalizeRefs(trackRefs)
+    },
+    request,
+    "Add to playlist"
+  );
+  return Object.freeze({
+    playlist:projectOne(payload?.playlist),
+    added:Number(payload?.added)||0
+  });
+}
+
+export async function reorderPlaylist(
+  id,
+  trackRefs,
+  {request=globalThis.fetch}={}
+) {
+  await playlistMutation(
+    "/api/playlists/order",
+    {
+      id:requiredID(id),
+      trackIds:normalizeRefs(trackRefs,{allowEmpty:true})
+    },
+    request,
+    "Reorder playlist"
+  );
+  return true;
+}
+
+export async function removeTracksFromPlaylist(
+  id,
+  trackRefs,
+  {request=globalThis.fetch}={}
+) {
+  const payload=await playlistMutation(
+    "/api/playlists/remove",
+    {
+      id:requiredID(id),
+      trackIds:normalizeRefs(trackRefs)
+    },
+    request,
+    "Remove from playlist"
+  );
+  return projectOne(payload?.playlist);
+}
+
+export async function renamePlaylist(
+  id,
+  name,
+  {request=globalThis.fetch}={}
+) {
+  const payload=await playlistMutation(
+    "/api/playlists/rename",
+    {
+      id:requiredID(id),
+      name:String(name??"").trim()
+    },
+    request,
+    "Rename playlist"
+  );
+  return projectOne(payload?.playlist);
+}
+
+export async function deletePlaylist(
+  id,
+  {request=globalThis.fetch}={}
+) {
+  await playlistMutation(
+    "/api/playlists/delete",
+    {
+      id:requiredID(id),
+      confirm:"DELETE_PLAYLIST_ONLY"
+    },
+    request,
+    "Delete playlist"
+  );
+  return true;
+}
+
+async function playlistMutation(path,body,request,label){
+  if(typeof request!=="function"){
+    throw new Error(label+" requires fetch-like request function");
+  }
+  const response=await request(path,{
+    method:"POST",
+    headers:{
+      Accept:"application/json",
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(body)
+  });
+  if(!response?.ok){
+    let detail="";
+    try{
+      const payload=await response.json();
+      detail=String(payload?.error??"").trim();
+    }catch{}
+    throw new Error(
+      detail||`${label} request failed: ${response?.status??"unknown"}`
+    );
+  }
+  return response.json();
+}
+
+function projectOne(value){
+  return projectPlaylists({playlists:[value]})[0];
+}
+
+function requiredID(value){
+  const id=String(value??"").trim();
+  if(!id)throw new Error("playlist id required");
+  return id;
+}
+
+function normalizeRefs(values,{allowEmpty=false}={}){
+  const refs=[];
+  for(const value of Array.isArray(values)?values:[values]){
+    const ref=String(value??"").trim();
+    if(ref)refs.push(ref);
+  }
+  if(!allowEmpty&&!refs.length){
+    throw new Error("playlist track refs required");
+  }
+  return refs;
+}
+
 function stringValue(value) {
   return typeof value === "string" ? value : "";
 }

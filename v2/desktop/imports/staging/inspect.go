@@ -5,8 +5,6 @@
 // reconcile, never an instruction to auto-replay.
 package staging
 
-const ManifestSchema = "vexstream.import-stage/v1"
-
 import (
 	"fmt"
 	"os"
@@ -16,6 +14,8 @@ import (
 	importmodel "github.com/vgong24/VexstreamMusic/v2/desktop/imports"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/persistence"
 )
+
+const ManifestSchema = "vexstream.import-stage/v1"
 
 type Output struct {
 	RelativePath string         `json:"relativePath"`

@@ -87,3 +87,20 @@ func TestPlayerSessionStaysSideBySideWithProtectedV3Stores(t *testing.T) {
 		t.Fatal("V4 listening session leaked into protected V3 root")
 	}
 }
+
+
+func TestProtectedCurrentURLRemainsV3OwnedOutsideV4Root(t *testing.T) {
+	base := filepath.Join(t.TempDir(), "VexStreamMusic")
+	got := At(base)
+
+	if got.ProtectedCurrentURL != filepath.Join(base, "current-url.txt") {
+		t.Fatalf("protected V3 claim placement drift: %q", got.ProtectedCurrentURL)
+	}
+	relative, err := filepath.Rel(got.V4Root, got.ProtectedCurrentURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if relative != filepath.Join("..", "current-url.txt") {
+		t.Fatalf("protected V3 claim was absorbed into V4 custody: %q", relative)
+	}
+}

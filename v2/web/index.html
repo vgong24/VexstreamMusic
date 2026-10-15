@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VexStream Music — Desktop V4 Practicum</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body data-vex-screen="vexstream.desktop.playback">
+<main class="shell">
+  <section class="player" aria-labelledby="screenTitle">
+    <div class="eyebrow" data-text-ref="playback.practicum.eyebrow">Desktop V4 playback practicum</div>
+    <h1 id="screenTitle" data-text-ref="playback.screen.title">VexStream Music</h1>
+    <div class="art" aria-hidden="true">♫</div>
+    <div class="track-copy">
+      <strong id="trackTitle">VexStream Test Tone</strong>
+      <span id="trackArtist">VexStream</span>
+    </div>
+    <button id="playPause" type="button" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
+    <div class="proof-row"><span>Semantic state</span><strong id="semanticState">media</strong></div>
+    <div class="proof-row"><span>Provider</span><strong id="status">Provider ready</strong></div>
+    <div id="error" role="alert"></div>
+    <audio id="audio" preload="auto"></audio>
+  </section>
+</main>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

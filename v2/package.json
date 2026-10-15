@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/playback-behavior.test.mjs tests/playback-connection.test.mjs"
+    "test": "node --test tests/playback-behavior.test.mjs tests/playback-connection.test.mjs",
+    "test:browser": "python3 tests/playback-browser-regression.py"
   }
 }

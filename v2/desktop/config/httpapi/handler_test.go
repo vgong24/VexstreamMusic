@@ -85,7 +85,7 @@ func TestRemoveTriggersRefreshWithPersistedRemainingSources(t *testing.T) {
 	config := &configFixture{state: desktopconfig.State{Sources: []string{"/music"}}}
 	var refreshed []string
 	handler := New(config, func(sources []string) error {
-		refreshed = append([]string(nil), sources...)
+		refreshed = append([]string{}, sources...)
 		return nil
 	})
 	response := httptest.NewRecorder()

@@ -284,3 +284,52 @@ func TestUnexpectedManagerFailureStaysServerFailure(t *testing.T) {
 		t.Fatalf("unexpected error mapping drift: %d", response.Code)
 	}
 }
+
+
+func TestDestinationsProjectOnlyCurrentNonBlankUniqueSources(t *testing.T) {
+	manager := &managerFixture{}
+	handler := NewWithDestinations(
+		manager,
+		func() []string {
+			return []string{
+				" /music ",
+				"",
+				"/archive",
+				"/music",
+			}
+		},
+	)
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(
+		response,
+		httptest.NewRequest(
+			http.MethodGet,
+			"/api/import/destinations",
+			nil,
+		),
+	)
+	if response.Code != http.StatusOK ||
+		!strings.Contains(response.Body.String(), `"/music"`) ||
+		!strings.Contains(response.Body.String(), `"/archive"`) {
+		t.Fatalf("destination projection drift: %d %s", response.Code, response.Body.String())
+	}
+	if strings.Count(response.Body.String(), `"/music"`) != 1 {
+		t.Fatalf("duplicate destination leaked: %s", response.Body.String())
+	}
+}
+
+func TestDestinationsWithoutConfigOwnerReturnEmptyList(t *testing.T) {
+	response := httptest.NewRecorder()
+	New(&managerFixture{}).ServeHTTP(
+		response,
+		httptest.NewRequest(
+			http.MethodGet,
+			"/api/import/destinations",
+			nil,
+		),
+	)
+	if response.Code != http.StatusOK ||
+		!strings.Contains(response.Body.String(), `"destinations":[]`) {
+		t.Fatalf("empty destinations drift: %d %s", response.Code, response.Body.String())
+	}
+}

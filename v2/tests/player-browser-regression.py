@@ -332,6 +332,19 @@ def main() -> int:
         "started": False,
         "startBody": None,
     }
+    player_session_state = {
+        "found": False,
+        "session": {
+            "schemaVersion": "vexstream.desktop-player-session/v1",
+            "items": [],
+            "currentIndex": -1,
+            "currentRef": "",
+            "shuffle": False,
+            "repeat": False,
+            "updatedAt": "",
+        },
+        "writes": [],
+    }
 
     def route_request(route: Route) -> None:
         request = route.request
@@ -403,6 +416,42 @@ def main() -> int:
                 },
                 body=json.dumps(payload),
             )
+            return
+
+        if parsed.path == "/api/player/session":
+            if request.method == "GET":
+                route.fulfill(
+                    status=200,
+                    headers={"Content-Type": "application/json; charset=utf-8"},
+                    body=json.dumps(
+                        {
+                            "found": player_session_state["found"],
+                            "session": player_session_state["session"],
+                        }
+                    ),
+                )
+                return
+            if request.method == "PUT":
+                body = json.loads(request.post_data or "{}")
+                session = {
+                    "schemaVersion": "vexstream.desktop-player-session/v1",
+                    "items": list(body.get("items") or []),
+                    "currentIndex": int(body.get("currentIndex", -1)),
+                    "currentRef": str(body.get("currentRef") or ""),
+                    "shuffle": bool(body.get("shuffle")),
+                    "repeat": bool(body.get("repeat")),
+                    "updatedAt": "2026-10-14T22:45:00Z",
+                }
+                player_session_state["found"] = True
+                player_session_state["session"] = session
+                player_session_state["writes"].append(session.copy())
+                route.fulfill(
+                    status=200,
+                    headers={"Content-Type": "application/json; charset=utf-8"},
+                    body=json.dumps({"saved": True, "session": session}),
+                )
+                return
+            route.fulfill(status=405, body="GET or PUT required")
             return
 
         if parsed.path == "/api/import/jobs":
@@ -1120,6 +1169,98 @@ def main() -> int:
                 "Import start mutated browser Library truth before commit",
             ),
         )
+
+        page.wait_for_timeout(180)
+        checked(
+            "queue-changes-persist-through-v4-server-session-boundary",
+            lambda: require(
+                len(player_session_state["writes"]) > 0
+                and player_session_state["session"]["schemaVersion"]
+                == "vexstream.desktop-player-session/v1"
+                and player_session_state["session"]["currentRef"]
+                == player_session_state["session"]["items"][
+                    player_session_state["session"]["currentIndex"]
+                ],
+                f"player session was not persisted exactly: {player_session_state}",
+            ),
+        )
+
+        saved_session = dict(player_session_state["session"])
+        saved_items = ",".join(saved_session["items"])
+        saved_current = saved_session["currentRef"]
+        expected_title = next(
+            row["title"] for row in TRACKS if row["id"] == saved_current
+        )
+
+        restart = browser.new_page(viewport={"width": 1000, "height": 840})
+        restart.on(
+            "pageerror",
+            lambda error: report["pageErrors"].append(
+                "restart: " + str(error)
+            ),
+        )
+        restart.on(
+            "console",
+            lambda message: report["console"].append(
+                {
+                    "type": message.type,
+                    "text": "restart: " + message.text,
+                }
+            ),
+        )
+        restart.route("http://vexstream.local/**", route_request)
+        restart.route(
+            "https://www.youtube.com/**",
+            lambda route: route.fulfill(
+                status=200,
+                content_type="text/html",
+                body="<html><body>preview fixture</body></html>",
+            ),
+        )
+        restart.set_content(html, wait_until="load")
+        restart.wait_for_function("window.vexV4?.ready===true")
+
+        checked(
+            "clean-restart-restores-exact-queue-context-without-autoplay",
+            lambda: require(
+                restart.evaluate(
+                    "window.vexV4.sessionRestoration.kind"
+                )
+                == "restored"
+                and restart.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == saved_items
+                and restart.evaluate(
+                    "window.vexV4.player.currentItem.ref"
+                )
+                == saved_current
+                and restart.evaluate("window.vexV4.media.paused") is True
+                and restart.evaluate(
+                    "window.vexV4.media.getAttribute('src')"
+                )
+                is None
+                and restart.locator("#trackTitle").inner_text()
+                == expected_title
+                and restart.locator("#sessionState").inner_text()
+                == "Restored",
+                "clean restart did not restore exact stopped listening context",
+            ),
+        )
+
+        checked(
+            "restored-current-stays-a-play-intention-not-provider-success",
+            lambda: require(
+                restart.locator("#playPause").get_attribute("data-text-ref")
+                == "playback.play"
+                and restart.evaluate(
+                    "window.vexV4.playback.currentProjection.state.kind"
+                )
+                == "no-media",
+                "restoration crossed into Playback realization",
+            ),
+        )
+        restart.close()
 
         checked(
             "browser-finished-without-runtime-errors",

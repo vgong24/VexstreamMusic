@@ -35,8 +35,61 @@
     </div>
 
     <section class="library" aria-labelledby="libraryTitle">
-      <h2 id="libraryTitle">Library</h2>
+      <div class="section-heading">
+        <div>
+          <h2 id="libraryTitle">Library</h2>
+          <span id="librarySummary">0 tracks</span>
+        </div>
+        <div class="library-view-toggle" role="group" aria-label="Library view">
+          <button type="button" data-library-mode="songs" aria-pressed="true">Songs</button>
+          <button type="button" data-library-mode="albums" aria-pressed="false">Albums</button>
+          <button type="button" data-library-mode="artists" aria-pressed="false">Artists</button>
+        </div>
+      </div>
+      <div class="library-toolbar">
+        <label class="library-search">
+          <span class="sr-only">Search library</span>
+          <input id="librarySearch" type="search" placeholder="Search songs, artists, albums…">
+        </label>
+        <label>
+          <span class="sr-only">Genre</span>
+          <select id="libraryGenre">
+            <option value="all">All genres</option>
+          </select>
+        </label>
+        <label>
+          <span class="sr-only">Sort library</span>
+          <select id="librarySort">
+            <option value="title">Title</option>
+            <option value="artist">Artist</option>
+            <option value="album">Album</option>
+            <option value="recent">Recently added</option>
+            <option value="duration-desc">Longest first</option>
+          </select>
+        </label>
+      </div>
       <div id="trackChoices"></div>
+    </section>
+
+    <section class="sources" aria-labelledby="sourcesTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="sourcesTitle">Music folders</h2>
+          <span id="sourceSummary">No folders included</span>
+        </div>
+        <div class="source-actions">
+          <button id="sourceAdd" type="button">Add folder…</button>
+          <button id="sourceDiscover" type="button">Find music</button>
+          <button id="sourceDiscoverDeep" type="button">Deep scan</button>
+        </div>
+      </div>
+      <div id="sourceList"></div>
+      <div id="sourceDiscovery"></div>
+      <details id="ignoredSources">
+        <summary>Ignored folders</summary>
+        <div id="ignoredSourceList"></div>
+        <button id="clearIgnoredSources" type="button">Restore all ignored folders</button>
+      </details>
     </section>
 
     <section class="playlists" aria-labelledby="playlistsTitle">

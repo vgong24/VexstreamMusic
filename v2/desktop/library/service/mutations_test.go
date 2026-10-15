@@ -178,3 +178,68 @@ func TestOverlayMutationRejectsEmptyIntentBeforePersistence(t *testing.T) {
 		t.Fatalf("overlay file created for rejected mutation: %v", err)
 	}
 }
+
+
+func TestForgetTrackStateIsIdempotentAcrossV3ReadableStores(t *testing.T) {
+	root := t.TempDir()
+	p := paths(filepath.Join(root, "state"))
+	source := filepath.Join(root, "music")
+	media := filepath.Join(source, "tone.mp3")
+	copyFixture(t, media)
+	absolute, _ := filepath.Abs(media)
+	id := filesystem.TrackID(absolute)
+
+	opened, err := Open(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := opened.Library.Reconcile([]string{source}); err != nil {
+		t.Fatal(err)
+	}
+	title := "Edited"
+	if _, err := opened.Library.UpdateOverlays(
+		[]string{id},
+		OverlayPatch{Title: &title},
+		false,
+	); err != nil {
+		t.Fatal(err)
+	}
+	end := 0.75
+	if _, _, err := opened.Library.UpdatePlaybackWindow(
+		id,
+		0.25,
+		&end,
+		false,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := opened.Library.ForgetTrackState([]string{id, id}); err != nil {
+		t.Fatal(err)
+	}
+	if err := opened.Library.ForgetTrackState([]string{id}); err != nil {
+		t.Fatalf("idempotent cleanup drift: %v", err)
+	}
+
+	firstSeen, err := filesystem.LoadFirstSeen(p.FirstSeen)
+	if err != nil {
+		t.Fatal(err)
+	}
+	overlays, err := filesystem.LoadOverlays(p.Overlays)
+	if err != nil {
+		t.Fatal(err)
+	}
+	windows, err := filesystem.LoadPlaybackWindows(p.PlaybackWindows)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if firstSeen[id] != "" || overlays[id].UpdatedAt != "" ||
+		windows[id].UpdatedAt != "" {
+		t.Fatalf(
+			"purged projection state remains: first=%+v overlay=%+v window=%+v",
+			firstSeen,
+			overlays,
+			windows,
+		)
+	}
+}

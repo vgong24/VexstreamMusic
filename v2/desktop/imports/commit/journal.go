@@ -227,15 +227,10 @@ func moveOutputs(stageDir string, journal *Journal) error {
 			return err
 		}
 
-		claim, err := acquireClaim(entry)
-		if err != nil {
-			return err
-		}
-
 		if destinationExact {
 			if sourceExact {
-				// Destination already contains the exact planned bytes. Removing the staged copy is
-				// safe because the claim/journal owns this exact promotion.
+				// Exact destination bytes are sufficient evidence. The staged duplicate can be
+				// removed even if a previous process already released/lost its claim.
 				if err := os.Remove(source); err != nil && !os.IsNotExist(err) {
 					return fmt.Errorf("remove duplicate staged output: %w", err)
 				}
@@ -244,18 +239,23 @@ func moveOutputs(stageDir string, journal *Journal) error {
 		}
 
 		if destinationExists {
-			if claim {
-				// A previous copy from this same journal may have stopped before completion. The
-				// staged source must still match before we discard the incomplete destination.
-				if !sourceExact {
-					return fmt.Errorf("claimed destination is incomplete and staged source is unavailable: %s", entry.DestinationPath)
-				}
-				if err := os.Remove(entry.DestinationPath); err != nil {
-					return fmt.Errorf("remove incomplete claimed destination: %w", err)
-				}
-			} else {
+			owned, err := existingClaimOwned(entry)
+			if err != nil {
+				return err
+			}
+			if !owned {
 				return fmt.Errorf("destination collision during import commit: %s", entry.DestinationPath)
 			}
+			// A previous copy from this same journal may have stopped before completion. The staged
+			// source must still match before we discard the incomplete destination.
+			if !sourceExact {
+				return fmt.Errorf("claimed destination is incomplete and staged source is unavailable: %s", entry.DestinationPath)
+			}
+			if err := os.Remove(entry.DestinationPath); err != nil {
+				return fmt.Errorf("remove incomplete claimed destination: %w", err)
+			}
+		} else if err := ensureClaim(entry); err != nil {
+			return err
 		}
 
 		if !sourceExists || !sourceExact {
@@ -278,11 +278,11 @@ func moveOutputs(stageDir string, journal *Journal) error {
 	return nil
 }
 
-// acquireClaim returns true when this journal owns the destination claim.
+// ensureClaim creates this journal's destination claim only while the destination is absent.
 //
-// An exact destination without a claim is still acceptable by byte identity, but a mismatching
-// destination may only be removed/retried when this journal's claim proves custody.
-func acquireClaim(entry Entry) (bool, error) {
+// Callers must inspect an already-existing destination before invoking this function; creating a
+// claim after seeing foreign bytes would manufacture false custody.
+func ensureClaim(entry Entry) error {
 	path := claimPath(entry.DestinationPath)
 	expected := []byte(entry.CommitRef + "\n")
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
@@ -290,25 +290,36 @@ func acquireClaim(entry Entry) (bool, error) {
 		if _, writeErr := file.Write(expected); writeErr != nil {
 			_ = file.Close()
 			_ = os.Remove(path)
-			return false, writeErr
+			return writeErr
 		}
 		if closeErr := file.Close(); closeErr != nil {
 			_ = os.Remove(path)
-			return false, closeErr
+			return closeErr
 		}
-		return true, nil
+		return nil
 	}
 	if !os.IsExist(err) {
-		return false, fmt.Errorf("create destination claim: %w", err)
+		return fmt.Errorf("create destination claim: %w", err)
 	}
-	data, readErr := os.ReadFile(path)
+	owned, readErr := existingClaimOwned(entry)
 	if readErr != nil {
-		return false, fmt.Errorf("read destination claim: %w", readErr)
+		return readErr
 	}
-	if strings.TrimSpace(string(data)) != entry.CommitRef {
-		return false, fmt.Errorf("destination is claimed by another import: %s", entry.DestinationPath)
+	if !owned {
+		return fmt.Errorf("destination is claimed by another import: %s", entry.DestinationPath)
 	}
-	return true, nil
+	return nil
+}
+
+func existingClaimOwned(entry Entry) (bool, error) {
+	data, err := os.ReadFile(claimPath(entry.DestinationPath))
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("read destination claim: %w", err)
+	}
+	return strings.TrimSpace(string(data)) == entry.CommitRef, nil
 }
 
 func commitCatalog(stageDir string, journal *Journal) error {

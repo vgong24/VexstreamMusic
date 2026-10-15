@@ -12,6 +12,20 @@ import {
 } from "./features/playlists/client.js";
 import { createExploreSession } from "./features/explore/session.js";
 import { createExploreComposition } from "./features/explore/composition.js";
+import {
+  cancelImport,
+  discardImport,
+  inspectImport,
+  loadImportDestinations,
+  loadImportJobs,
+  recoverImportCommit,
+  retryImportCommit,
+  startImport,
+} from "./features/imports/client.js";
+import {
+  buildImportPlan,
+  formImportReview,
+} from "./features/imports/review.js";
 import { escapeHTML } from "./foundation/html.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
@@ -36,6 +50,21 @@ const exploreCandidates=document.querySelector("#exploreCandidates");
 const explorePreview=document.querySelector("#explorePreview");
 const exploreBack=document.querySelector("#exploreBack");
 const exploreClear=document.querySelector("#exploreClear");
+const importReviewPanel=document.querySelector("#importReview");
+const importReviewClose=document.querySelector("#importReviewClose");
+const importReviewSourceTitle=document.querySelector("#importReviewSourceTitle");
+const importReviewSourceCreator=document.querySelector("#importReviewSourceCreator");
+const importDuplicateSummary=document.querySelector("#importDuplicateSummary");
+const importDestination=document.querySelector("#importDestination");
+const importMode=document.querySelector("#importMode");
+const importCollection=document.querySelector("#importCollection");
+const importArtist=document.querySelector("#importArtist");
+const importGenre=document.querySelector("#importGenre");
+const importSections=document.querySelector("#importSections");
+const importStart=document.querySelector("#importStart");
+const importReviewHint=document.querySelector("#importReviewHint");
+const importRefresh=document.querySelector("#importRefresh");
+const importJobs=document.querySelector("#importJobs");
 const title=document.querySelector("#trackTitle");
 const artist=document.querySelector("#trackArtist");
 const error=document.querySelector("#error");
@@ -45,6 +74,14 @@ let byRef=new Map();
 let refs=[];
 let playlists=Object.freeze([]);
 let resolvedPlaylists=Object.freeze([]);
+let currentImportReview=null;
+let currentImportJobs=Object.freeze({
+ active:Object.freeze([]),
+ ready:Object.freeze([]),
+ completed:Object.freeze([]),
+ recovery:Object.freeze({}),
+ issues:Object.freeze([])
+});
 
 function trackTitle(item){
  return item?.title?.trim()||resolveText(locale,"library.unknown-title");
@@ -140,9 +177,119 @@ function renderExplore(){
    <div class="explore-card-actions">
     <button data-explore-action="preview">${escapeHTML(resolveText(locale,"explore.preview"))}</button>
     <button data-explore-action="branch">${escapeHTML(resolveText(locale,"explore.branch"))}</button>
+    ${candidate.url&&match!=="IN_LIBRARY"
+      ? `<button data-explore-action="import">${escapeHTML(resolveText(locale,"import.review"))}</button>`
+      : ""}
    </div>
   </article>`;
  }).join("");
+}
+
+function renderImportReview(){
+ if(!currentImportReview){
+  importReviewPanel.hidden=true;
+  return;
+ }
+ importReviewPanel.hidden=false;
+ importReviewSourceTitle.textContent=currentImportReview.title;
+ importReviewSourceCreator.textContent=currentImportReview.creator;
+ importDuplicateSummary.textContent=currentImportReview.duplicateItemCount
+  ? resolveText(locale,"import.duplicates.present",{
+      count:currentImportReview.duplicateItemCount
+    })
+  : resolveText(locale,"import.duplicates.none");
+
+ importDestination.innerHTML=currentImportReview.destinations.length
+  ? currentImportReview.destinations.map(value=>
+      `<option value="${escapeHTML(value)}">${escapeHTML(value)}</option>`
+    ).join("")
+  : `<option value="">${escapeHTML(resolveText(locale,"import.destination.none"))}</option>`;
+
+ importMode.value=currentImportReview.defaultMode;
+ for(const option of importMode.options){
+  if(option.value==="split"||option.value==="both"){
+   option.disabled=!currentImportReview.splitAvailable;
+  }
+ }
+ importCollection.value=currentImportReview.collection;
+ importArtist.value=currentImportReview.artistOverride;
+ importGenre.value=currentImportReview.genre;
+
+ importSections.innerHTML=currentImportReview.splitAvailable
+  ? currentImportReview.sections.map(section=>`<label class="import-section" data-import-section="${section.index}">
+      <input type="checkbox" data-import-section-selected ${section.selected?"checked":""}>
+      <span>${escapeHTML(formatSeconds(section.start))}–${escapeHTML(formatSeconds(section.end))}</span>
+      <input type="text" data-import-section-title value="${escapeHTML(section.title)}">
+      <input type="text" data-import-section-artist value="${escapeHTML(section.artist)}" placeholder="${escapeHTML(resolveText(locale,"import.section.artist"))}">
+    </label>`).join("")
+  : "";
+
+ importStart.disabled=currentImportReview.destinations.length===0;
+ importReviewHint.textContent=currentImportReview.splitAvailable
+  ? resolveText(locale,"import.hint.sections")
+  : resolveText(locale,"import.hint.whole");
+}
+
+function renderImportJobs(){
+ const rows=[
+  ...currentImportJobs.active,
+  ...currentImportJobs.ready,
+  ...currentImportJobs.completed
+ ];
+ if(!rows.length){
+  importJobs.innerHTML=`<div class="muted">${escapeHTML(resolveText(locale,"import.jobs.empty"))}</div>`;
+  return;
+ }
+
+ importJobs.innerHTML=rows.map(job=>{
+  const recovery=currentImportJobs.recovery[job.id]??"";
+  const problem=job.problem?.title||job.problem?.message||"";
+  const actions=[];
+  if(["queued","running","cancelling"].includes(job.status)){
+   actions.push(`<button data-import-job-action="cancel">${escapeHTML(resolveText(locale,"import.cancel"))}</button>`);
+  }
+  if(job.status==="ready"){
+   actions.push(`<button data-import-job-action="retry">${escapeHTML(resolveText(locale,"import.retry"))}</button>`);
+   actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
+  }
+  if(job.status==="failed"){
+   actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
+  }
+  if(recovery==="COMMIT_UNCERTAIN"){
+   actions.push(`<button data-import-job-action="recover">${escapeHTML(resolveText(locale,"import.recover"))}</button>`);
+  }
+  return `<article class="import-job" data-import-job-id="${escapeHTML(job.id)}">
+    <div class="import-job-copy">
+      <strong>${escapeHTML(job.title||resolveText(locale,"import.untitled"))}</strong>
+      <span>${escapeHTML(job.stage||job.status||"")}</span>
+      <small>${escapeHTML(job.detail||problem)}</small>
+    </div>
+    <div class="import-job-progress">${Number(job.progress||0)}%</div>
+    <div class="import-job-actions">${actions.join("")}</div>
+  </article>`;
+ }).join("");
+}
+
+function formatSeconds(value){
+ const seconds=Math.max(0,Math.floor(Number(value)||0));
+ const minutes=Math.floor(seconds/60);
+ const rest=String(seconds%60).padStart(2,"0");
+ return `${minutes}:${rest}`;
+}
+
+function importSectionEdits(){
+ return [...importSections.querySelectorAll("[data-import-section]")].map(row=>({
+  index:Number(row.dataset.importSection),
+  selected:row.querySelector("[data-import-section-selected]")?.checked!==false,
+  title:row.querySelector("[data-import-section-title]")?.value??"",
+  artist:row.querySelector("[data-import-section-artist]")?.value??""
+ }));
+}
+
+async function refreshImportJobs(){
+ currentImportJobs=await loadImportJobs();
+ renderImportJobs();
+ return currentImportJobs;
 }
 
 function render(){
@@ -179,6 +326,8 @@ function render(){
     });
 
  renderExplore();
+ renderImportReview();
+ renderImportJobs();
 
  queueList.innerHTML=qp.state.kind==="empty"?"":qp.state.items.map((ref,index)=>{
   const item=byRef.get(ref);
@@ -319,6 +468,21 @@ exploreCandidates.addEventListener("click",event=>{
    explorePreview.hidden=true;
    explorePreview.removeAttribute("src");
   });
+  return;
+ }
+
+ if(action.dataset.exploreAction==="import"){
+  void guarded(async()=>{
+   const candidate=exploreSession.currentProjection.frame?.candidates?.[index];
+   if(!candidate?.url){
+    throw new Error(resolveText(locale,"import.source.unavailable"));
+   }
+   const [reviewed,destinations]=await Promise.all([
+    inspectImport(candidate.url),
+    loadImportDestinations()
+   ]);
+   currentImportReview=formImportReview(reviewed,destinations);
+  });
  }
 });
 
@@ -333,6 +497,57 @@ exploreClear.addEventListener("click",()=>void guarded(async()=>{
  explorePreview.hidden=true;
  explorePreview.removeAttribute("src");
 }));
+
+importReviewClose.addEventListener("click",()=>{
+ currentImportReview=null;
+ renderImportReview();
+});
+
+importStart.addEventListener("click",()=>void guarded(async()=>{
+ if(!currentImportReview)return;
+ const plan=buildImportPlan(currentImportReview,{
+  destination:importDestination.value,
+  mode:importMode.value,
+  collection:importCollection.value,
+  artistOverride:importArtist.value,
+  genre:importGenre.value,
+  sections:importSectionEdits()
+ });
+ const started=await startImport(plan);
+ currentImportReview=null;
+ await refreshImportJobs();
+ if(started?.jobId){
+  importReviewHint.textContent=resolveText(locale,"import.started",{
+   id:started.jobId
+  });
+ }
+}));
+
+importRefresh.addEventListener("click",()=>void guarded(()=>refreshImportJobs()));
+
+importJobs.addEventListener("click",event=>{
+ const action=event.target.closest("[data-import-job-action]");
+ const row=event.target.closest("[data-import-job-id]");
+ if(!action||!row)return;
+ const id=row.dataset.importJobId;
+ void guarded(async()=>{
+  switch(action.dataset.importJobAction){
+  case "cancel":
+   await cancelImport(id);
+   break;
+  case "retry":
+   await retryImportCommit(id);
+   break;
+  case "recover":
+   await recoverImportCommit(id);
+   break;
+  case "discard":
+   await discardImport(id);
+   break;
+  }
+  await refreshImportJobs();
+ });
+});
 
 queueList.addEventListener("click",event=>{
  const action=event.target.closest("[data-queue-action]");
@@ -365,9 +580,10 @@ exploreSession.subscribe(render);
 render();
 
 async function initialize(){
- const [nextCatalog,nextPlaylists]=await Promise.all([
+ const [nextCatalog,nextPlaylists,nextImportJobs]=await Promise.all([
   loadLibraryCatalog(),
-  loadPlaylists()
+  loadPlaylists(),
+  loadImportJobs()
  ]);
  catalog=nextCatalog;
  byRef=new Map(catalog.map(item=>[item.ref,item]));
@@ -376,6 +592,7 @@ async function initialize(){
  resolvedPlaylists=Object.freeze(
   playlists.map(playlist=>resolvePlaylistAvailability(playlist,catalog))
  );
+ currentImportJobs=nextImportJobs;
  renderTrackChoices();
  renderPlaylistChoices();
  render();
@@ -391,6 +608,8 @@ async function initialize(){
   resolvedPlaylists,
   exploreSession,
   explore,
+  get importReview(){return currentImportReview;},
+  get importJobs(){return currentImportJobs;},
   controls:Object.freeze({PlaybackControl,QueueControl})
  });
 }

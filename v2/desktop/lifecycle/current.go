@@ -17,6 +17,11 @@ type Identity struct {
 	BuildRef string `json:"buildRef"`
 }
 
+type LiveClaim struct {
+	URL      string
+	Identity Identity
+}
+
 func Probe(url string) Identity {
 	url = strings.TrimSpace(url)
 	if url == "" {
@@ -37,6 +42,25 @@ func Probe(url string) Identity {
 		return Identity{}
 	}
 	return identity
+}
+
+func CurrentLiveClaim(currentURLPath string) (LiveClaim, bool) {
+	data, err := os.ReadFile(currentURLPath)
+	if err != nil {
+		return LiveClaim{}, false
+	}
+	url := strings.TrimSpace(string(data))
+	if url == "" {
+		return LiveClaim{}, false
+	}
+	identity := Probe(url)
+	if !identity.OK {
+		return LiveClaim{}, false
+	}
+	return LiveClaim{
+		URL:      url,
+		Identity: identity,
+	}, true
 }
 
 func Reusable(

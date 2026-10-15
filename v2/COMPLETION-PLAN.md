@@ -261,6 +261,56 @@ Preserve:
 - local app data compatibility;
 - current library without migration loss.
 
+### Persistence compatibility law
+
+The October 2026 mobile-pairing regression exposed a concrete desktop consistency bug:
+
+```text
+newer desktop
+-> reads pairing store v1
+-> writes pairing store v2
+
+protected older desktop
+-> reads v1 only
+-> later encounters shared v2 state
+-> startup/mobile bridge fails
+```
+
+Therefore V4 treats durable schema evolution as a compatibility boundary, not merely an
+implementation detail.
+
+```text
+PERSISTED_STATE_UPGRADE
+!=
+PERMISSION_TO_BREAK_ROLLBACK
+```
+
+For every durable store that may be touched by more than one desktop build, one of these must be
+explicitly proved before release:
+
+1. old and new builds can both read the written representation;
+2. the new writer preserves fields it does not own while writing a backward-readable envelope;
+3. incompatible schemas use side-by-side/versioned custody so the protected previous release is not
+   forced to consume newer state;
+4. a deliberate irreversible migration exists with an explicit rollback boundary and user-visible
+   release transition.
+
+`version + buildRef` prevents stale-process impersonation; it does **not** protect shared persisted
+state by itself.
+
+The discovered pairing case is retained as the pressure example:
+
+```text
+vexstream.mobile.local-pairing/v1
+-> vexstream.mobile.local-pairing/v2
+
+FORWARD_READ_COMPATIBILITY existed
+ROLLBACK_READ_COMPATIBILITY did not
+```
+
+V4 persistence tests must include **new-write -> protected-previous-read** or an explicit
+side-by-side custody proof wherever rollback support is claimed.
+
 V1 remains runnable/quarry until V2 proves replacement.
 
 ## D5 — mobile producer contract in V2 — DEFERRED UNTIL DESKTOP READINESS

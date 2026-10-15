@@ -9,8 +9,14 @@
 <body data-vex-screen="vexstream.desktop.player-practicum">
 <main class="shell">
   <section class="player" aria-labelledby="screenTitle">
-    <div class="eyebrow" data-text-ref="player.practicum.eyebrow">Desktop V4 player practicum</div>
-    <h1 id="screenTitle" data-text-ref="playback.screen.title">VexStream Music</h1>
+    <header class="app-identity">
+      <div>
+        <div class="eyebrow" data-text-ref="player.practicum.eyebrow">Desktop V4 player practicum</div>
+        <h1 id="screenTitle" data-text-ref="playback.screen.title">VexStream Music</h1>
+        <div id="buildIdentity" class="muted" data-text-ref="system.identity.loading">Loading desktop identity…</div>
+      </div>
+      <button id="exitVexStream" type="button" data-vex-action="vexstream.system.exit">Exit VexStream</button>
+    </header>
 
     <div class="now">
       <div class="art" aria-hidden="true">♫</div>

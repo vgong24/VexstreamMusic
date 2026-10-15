@@ -77,20 +77,10 @@ func readTrack(path, source string, catalog map[string]catalogMeta) library.Trac
 
 func loadCatalog(root string) map[string]catalogMeta {
 	path := filepath.Join(root, "_vexmedia", "library.jsonl")
-	f, err := os.Open(path)
-	if err != nil {
-		return nil
-	}
-	defer f.Close()
+	rows, _ := catalog.ReadRows(path)
 
 	out := map[string]catalogMeta{}
-	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-	for scanner.Scan() {
-		var row map[string]any
-		if json.Unmarshal(scanner.Bytes(), &row) != nil {
-			continue
-		}
+	for _, row := range rows {
 		filename, _ := row["filename"].(string)
 		providerID, _ := row["providerId"].(string)
 		metadata, _ := row["metadata"].(map[string]any)

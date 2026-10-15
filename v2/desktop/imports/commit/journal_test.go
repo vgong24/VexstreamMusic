@@ -8,6 +8,7 @@ import (
 
 	"github.com/vgong24/VexstreamMusic/v2/desktop/imports/staging"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/library/catalog"
+	"github.com/vgong24/VexstreamMusic/v2/desktop/persistence"
 )
 
 func prepareFixture(t *testing.T, names ...string) (stage, destination string, manifest staging.Manifest) {
@@ -18,6 +19,7 @@ func prepareFixture(t *testing.T, names ...string) (stage, destination string, m
 	if err := os.MkdirAll(stage, 0o755); err != nil {
 		t.Fatal(err)
 	}
+	manifest.SchemaVersion = staging.ManifestSchema
 	manifest.Destination = destination
 	for index, name := range names {
 		relative := filepath.Join("out", name)
@@ -261,5 +263,51 @@ func TestPrepareRejectsTraversalBeforeJournalCreation(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(stage, JournalName)); !os.IsNotExist(err) {
 		t.Fatalf("journal created for unsafe manifest: %v", err)
+	}
+}
+
+
+func TestCommitPreparedLoadsKnownManifestAndRejectsUnknownSchema(t *testing.T) {
+	stage, destination, manifest := prepareFixture(t, "one.mp3")
+	if err := persistence.SaveJSONAtomic(
+		filepath.Join(stage, "manifest.json"),
+		manifest,
+	); err != nil {
+		t.Fatal(err)
+	}
+	result, err := CommitPrepared("job-prepared", stage, destination)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Added != 1 || len(result.TrackRefs) != 1 {
+		t.Fatalf("prepared commit drift: %+v", result)
+	}
+
+	stage2, destination2, future := prepareFixture(t, "future.mp3")
+	future.SchemaVersion = "vexstream.import-stage/v99"
+	if err := persistence.SaveJSONAtomic(
+		filepath.Join(stage2, "manifest.json"),
+		future,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CommitPrepared("job-future", stage2, destination2); err == nil ||
+		!strings.Contains(err.Error(), "unsupported staging manifest schema") {
+		t.Fatalf("future manifest was admitted: %v", err)
+	}
+}
+
+func TestCommitPreparedRequiresPersistedManifest(t *testing.T) {
+	root := t.TempDir()
+	stage := filepath.Join(root, "stage")
+	if err := os.MkdirAll(stage, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CommitPrepared(
+		"job-missing",
+		stage,
+		filepath.Join(root, "music"),
+	); err == nil || !strings.Contains(err.Error(), "manifest is missing") {
+		t.Fatalf("missing manifest was admitted: %v", err)
 	}
 }

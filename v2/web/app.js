@@ -12,6 +12,19 @@ import {
 } from "./features/player/session.js";
 import { loadLibraryCatalog } from "./features/library/client.js";
 import {
+  restorePlaybackWindow,
+  restoreTrackDisplay,
+  updatePlaybackWindow,
+  updateTrackDisplay,
+} from "./features/library/admin.js";
+import {
+  loadTrash,
+  moveTracksToTrash,
+  purgeTrashItems,
+  recoverTrashPurge,
+  restoreTrashItems,
+} from "./features/library/trash.js";
+import {
   groupLibrary,
   libraryGenres,
   projectLibraryView,
@@ -27,7 +40,13 @@ import {
   unignoreSource,
 } from "./features/sources/client.js";
 import {
+  addTracksToPlaylist,
+  createPlaylist,
+  deletePlaylist,
   loadPlaylists,
+  removeTracksFromPlaylist,
+  renamePlaylist,
+  reorderPlaylist,
   resolvePlaylistAvailability,
 } from "./features/playlists/client.js";
 import { createExploreSession } from "./features/explore/session.js";
@@ -85,7 +104,28 @@ const sourceDiscovery=document.querySelector("#sourceDiscovery");
 const ignoredSourceList=document.querySelector("#ignoredSourceList");
 const ignoredSources=document.querySelector("#ignoredSources");
 const clearIgnoredSourcesButton=document.querySelector("#clearIgnoredSources");
+const libraryEditor=document.querySelector("#libraryEditor");
+const libraryEditorClose=document.querySelector("#libraryEditorClose");
+const libraryEditorSummary=document.querySelector("#libraryEditorSummary");
+const editTitle=document.querySelector("#editTitle");
+const editArtist=document.querySelector("#editArtist");
+const editAlbum=document.querySelector("#editAlbum");
+const editGenre=document.querySelector("#editGenre");
+const editPlaybackStart=document.querySelector("#editPlaybackStart");
+const editPlaybackEnd=document.querySelector("#editPlaybackEnd");
+const saveTrackDisplay=document.querySelector("#saveTrackDisplay");
+const restoreTrackDisplayButton=document.querySelector("#restoreTrackDisplay");
+const savePlaybackWindow=document.querySelector("#savePlaybackWindow");
+const restorePlaybackWindowButton=document.querySelector("#restorePlaybackWindow");
+const newPlaylistName=document.querySelector("#newPlaylistName");
+const createPlaylistButton=document.querySelector("#createPlaylist");
 const playlistChoices=document.querySelector("#playlistChoices");
+const trashSummary=document.querySelector("#trashSummary");
+const trashRefresh=document.querySelector("#trashRefresh");
+const trashItems=document.querySelector("#trashItems");
+const deletedHistory=document.querySelector("#deletedHistory");
+const purgeRecovery=document.querySelector("#purgeRecovery");
+const recoverTrashPurgeButton=document.querySelector("#recoverTrashPurge");
 const exploreSummary=document.querySelector("#exploreSummary");
 const exploreCandidates=document.querySelector("#exploreCandidates");
 const explorePreview=document.querySelector("#explorePreview");
@@ -130,6 +170,12 @@ let sourceDiscoveryState=Object.freeze({
 });
 let playlists=Object.freeze([]);
 let resolvedPlaylists=Object.freeze([]);
+let currentEditingTrackRef="";
+let trashSnapshot=Object.freeze({
+ trash:Object.freeze([]),
+ deletedHistory:Object.freeze([]),
+ pendingPurge:null
+});
 let currentSessionRestoration=Object.freeze({
  kind:"fresh",
  queue:null,

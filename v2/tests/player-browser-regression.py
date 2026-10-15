@@ -1345,6 +1345,249 @@ def main() -> int:
             ),
         )
 
+        page.locator(
+            '[data-track-ref="media.vexstream.test-tone.1"] '
+            '[data-track-action="edit"]'
+        ).click()
+        checked(
+            "track-editor-opens-current-projected-metadata",
+            lambda: require(
+                page.locator("#libraryEditor").is_visible()
+                and page.locator("#editTitle").input_value()
+                == "VexStream Test Tone One",
+                "track editor did not bind current Library projection",
+            ),
+        )
+
+        page.locator("#editTitle").fill("Edited Test Tone One")
+        page.locator("#editGenre").fill("Edited Genre")
+        page.locator("#saveTrackDisplay").click()
+        page.wait_for_function(
+            "window.vexV4.catalog.find("
+            "x=>x.ref==='media.vexstream.test-tone.1').title"
+            "==='Edited Test Tone One'"
+        )
+        checked(
+            "display-edit-is-reversible-overlay-not-source-metadata-rewrite",
+            lambda: require(
+                page.locator(
+                    '[data-track-ref="media.vexstream.test-tone.1"] strong'
+                ).inner_text()
+                == "Edited Test Tone One"
+                and page.evaluate(
+                    "window.vexV4.catalog.find("
+                    "x=>x.ref==='media.vexstream.test-tone.1').sourceTitle"
+                )
+                == "VexStream Test Tone One",
+                "overlay/source distinction drift",
+            ),
+        )
+
+        page.locator("#editPlaybackStart").fill("0.2")
+        page.locator("#editPlaybackEnd").fill("1.0")
+        page.locator("#savePlaybackWindow").click()
+        page.wait_for_function(
+            "window.vexV4.catalog.find("
+            "x=>x.ref==='media.vexstream.test-tone.1')"
+            ".playbackStartSeconds===0.2"
+        )
+        checked(
+            "playback-window-edit-is-separate-from-display-overlay",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.catalog.find("
+                    "x=>x.ref==='media.vexstream.test-tone.1')"
+                    ".playbackEndSeconds"
+                )
+                == 1
+                and page.evaluate(
+                    "window.vexV4.catalog.find("
+                    "x=>x.ref==='media.vexstream.test-tone.1').title"
+                )
+                == "Edited Test Tone One",
+                "playback window crossed metadata ownership",
+            ),
+        )
+
+        page.locator("#restoreTrackDisplay").click()
+        page.wait_for_function(
+            "window.vexV4.catalog.find("
+            "x=>x.ref==='media.vexstream.test-tone.1').title"
+            "==='VexStream Test Tone One'"
+        )
+        page.locator("#restorePlaybackWindow").click()
+        page.wait_for_function(
+            "window.vexV4.catalog.find("
+            "x=>x.ref==='media.vexstream.test-tone.1')"
+            ".playbackStartSeconds===0"
+        )
+        checked(
+            "track-overlays-and-playback-window-restore-independently",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.catalog.find("
+                    "x=>x.ref==='media.vexstream.test-tone.1').genre"
+                )
+                == "Test"
+                and page.evaluate(
+                    "window.vexV4.catalog.find("
+                    "x=>x.ref==='media.vexstream.test-tone.1')"
+                    ".playbackEndSeconds"
+                )
+                is None,
+                "reversible Library edits did not restore",
+            ),
+        )
+        page.locator("#libraryEditorClose").click()
+
+        page.locator("#newPlaylistName").fill("Focus Mix")
+        page.locator("#createPlaylist").click()
+        page.wait_for_function(
+            "window.vexV4.playlists.some(x=>x.name==='Focus Mix')"
+        )
+        focus_id = page.evaluate(
+            "window.vexV4.playlists.find(x=>x.name==='Focus Mix').id"
+        )
+        checked(
+            "empty-playlist-can-be-formed-without-media-mutation",
+            lambda: require(
+                len(page.evaluate(
+                    "window.vexV4.playlists.find("
+                    "x=>x.name==='Focus Mix').trackRefs"
+                ))
+                == 0
+                and page.evaluate("window.vexV4.catalog.length") == 3,
+                "playlist creation mutated Library",
+            ),
+        )
+
+        first_card = page.locator(
+            '[data-track-ref="media.vexstream.test-tone.1"]'
+        )
+        first_card.locator("[data-track-playlist-target]").select_option(
+            focus_id
+        )
+        first_card.locator('[data-track-action="playlist-add"]').click()
+        page.wait_for_function(
+            "(id)=>window.vexV4.playlists.find(x=>x.id===id)"
+            ".trackRefs.includes('media.vexstream.test-tone.1')",
+            arg=focus_id,
+        )
+
+        third_card = page.locator(
+            '[data-track-ref="media.vexstream.test-tone.3"]'
+        )
+        third_card.locator("[data-track-playlist-target]").select_option(
+            focus_id
+        )
+        third_card.locator('[data-track-action="playlist-add"]').click()
+        page.wait_for_function(
+            "(id)=>window.vexV4.playlists.find(x=>x.id===id)"
+            ".trackRefs.length===2",
+            arg=focus_id,
+        )
+
+        focus_card = page.locator(
+            f'[data-playlist-id="{focus_id}"]'
+        )
+        focus_card.locator(
+            '[data-playlist-index="1"] '
+            '[data-playlist-entry-action="up"]'
+        ).click()
+        page.wait_for_function(
+            "(id)=>window.vexV4.playlists.find(x=>x.id===id)"
+            ".trackRefs[0]==='media.vexstream.test-tone.3'",
+            arg=focus_id,
+        )
+
+        focus_card = page.locator(
+            f'[data-playlist-id="{focus_id}"]'
+        )
+        focus_card.locator("[data-playlist-name]").fill("Focus Renamed")
+        focus_card.locator('[data-playlist-action="rename"]').click()
+        page.wait_for_function(
+            "(id)=>window.vexV4.playlists.find(x=>x.id===id).name"
+            "==='Focus Renamed'",
+            arg=focus_id,
+        )
+
+        focus_card = page.locator(
+            f'[data-playlist-id="{focus_id}"]'
+        )
+        focus_card.locator(
+            '[data-playlist-index="1"] '
+            '[data-playlist-entry-action="remove"]'
+        ).click()
+        page.wait_for_function(
+            "(id)=>window.vexV4.playlists.find(x=>x.id===id)"
+            ".trackRefs.length===1",
+            arg=focus_id,
+        )
+        checked(
+            "playlist-crud-keeps-durable-order-and-current-availability-separate",
+            lambda: require(
+                page.evaluate(
+                    "(id)=>window.vexV4.playlists.find(x=>x.id===id)"
+                    ".trackRefs[0]",
+                    focus_id,
+                )
+                == "media.vexstream.test-tone.3"
+                and page.evaluate("window.vexV4.catalog.length") == 3,
+                "playlist CRUD crossed into Library",
+            ),
+        )
+
+        focus_card = page.locator(
+            f'[data-playlist-id="{focus_id}"]'
+        )
+        focus_card.locator('[data-playlist-action="delete"]').click()
+        page.wait_for_function(
+            "(id)=>!window.vexV4.playlists.some(x=>x.id===id)",
+            arg=focus_id,
+        )
+
+        page.locator(
+            '[data-track-ref="media.vexstream.test-tone.2"] '
+            '[data-track-action="trash"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.catalog.length===2 "
+            "&& window.vexV4.trash.trash.length===1"
+        )
+        checked(
+            "move-to-trash-changes-custody-and-current-library-projection",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.trash.trash[0].track.id"
+                )
+                == "media.vexstream.test-tone.2"
+                and page.evaluate(
+                    "'trashPath' in window.vexV4.trash.trash[0]"
+                )
+                is False,
+                "Trash browser projection leaked custody path or lost track",
+            ),
+        )
+
+        page.locator(
+            '#trashItems [data-trash-action="restore"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.catalog.length===3 "
+            "&& window.vexV4.trash.trash.length===0"
+        )
+        checked(
+            "trash-restore-rejoins-library-without-new-track-identity",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.catalog.some("
+                    "x=>x.ref==='media.vexstream.test-tone.2')"
+                )
+                is True,
+                "restored track did not rejoin Library",
+            ),
+        )
+
         play = page.locator(
             '[data-vex-control="vexstream.playback.play-pause"]'
         )
@@ -1914,6 +2157,32 @@ def main() -> int:
             ),
         )
         restart.close()
+
+        page.locator(
+            '[data-track-ref="media.vexstream.test-tone.2"] '
+            '[data-track-action="trash"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.trash.trash.length===1"
+        )
+        page.locator(
+            '#trashItems [data-trash-action="purge"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.trash.trash.length===0 "
+            "&& window.vexV4.trash.deletedHistory.length===1"
+        )
+        checked(
+            "permanent-trash-delete-is-explicit-and-preserves-deleted-history",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.trash.deletedHistory[0].track.id"
+                )
+                == "media.vexstream.test-tone.2"
+                and page.evaluate("window.vexV4.catalog.length") == 2,
+                "permanent Trash delete drift",
+            ),
+        )
 
         page.locator(
             '[data-source-path="/music"] [data-source-action="remove"]'

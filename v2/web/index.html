@@ -38,6 +38,27 @@
       <div id="playlistChoices"></div>
     </section>
 
+    <section class="explore" aria-labelledby="exploreTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="exploreTitle">Explore</h2>
+          <span id="exploreSummary">No Explore session</span>
+        </div>
+        <div class="explore-actions">
+          <button id="exploreBack" type="button" data-vex-control="vexstream.explore.back">Back</button>
+          <button id="exploreClear" type="button" data-vex-control="vexstream.explore.clear">Clear</button>
+        </div>
+      </div>
+      <div id="exploreCandidates"></div>
+      <iframe
+        id="explorePreview"
+        title="Explore preview"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allow="autoplay"
+        hidden
+      ></iframe>
+    </section>
+
     <section class="queue" aria-labelledby="queueTitle">
       <div class="section-heading">
         <div>

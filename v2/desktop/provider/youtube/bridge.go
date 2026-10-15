@@ -96,11 +96,12 @@ type Inspection struct {
 type Runner func(context.Context, []string) ([]byte, error)
 
 type Bridge struct {
-	Python string
-	Script string
-	Env    []string
-	run    Runner
-	stream StreamRunner
+	Python        string
+	ResolvePython func() string
+	Script        string
+	Env           []string
+	run           Runner
+	stream        StreamRunner
 }
 
 func New(python, script string, env []string) *Bridge {
@@ -112,6 +113,28 @@ func New(python, script string, env []string) *Bridge {
 	bridge.run = bridge.runProcess
 	bridge.stream = bridge.runStreamingProcess
 	return bridge
+}
+
+func NewDynamic(
+	script string,
+	env []string,
+	resolvePython func() string,
+) *Bridge {
+	bridge := New("", script, env)
+	bridge.ResolvePython = resolvePython
+	return bridge
+}
+
+func (b *Bridge) pythonPath() string {
+	if b == nil {
+		return ""
+	}
+	if b.ResolvePython != nil {
+		if value := strings.TrimSpace(b.ResolvePython()); value != "" {
+			return value
+		}
+	}
+	return strings.TrimSpace(b.Python)
 }
 
 func (b *Bridge) Search(
@@ -173,14 +196,15 @@ func (b *Bridge) jsonCommand(
 	target any,
 	args ...string,
 ) error {
-	if b == nil || strings.TrimSpace(b.Python) == "" || strings.TrimSpace(b.Script) == "" {
+	python := b.pythonPath()
+	if b == nil || python == "" || strings.TrimSpace(b.Script) == "" {
 		return errors.New("YouTube bridge runtime is not configured")
 	}
 	if b.run == nil {
 		return errors.New("YouTube bridge runner is unavailable")
 	}
 
-	command := append([]string{b.Python, b.Script}, args...)
+	command := append([]string{python, b.Script}, args...)
 	output, err := b.run(ctx, command)
 	if err != nil {
 		return &Failure{

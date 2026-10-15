@@ -147,25 +147,44 @@ Current seed source:
 web/architecture/behavior.js
 web/features/playback/behavior.js
 web/features/playback/presentation.js
+web/features/playback/connection.js
 web/foundation/text.js
 web/locales/en.js
 tests/playback-behavior.test.mjs
+tests/playback-connection.test.mjs
 ```
 
-The seed deliberately does **not** yet replace V1 playback. It establishes the semantic contract and
-proof surface that the future provider Connection must satisfy.
+The seed deliberately does **not** yet replace V1 playback. It now includes a concrete
+HTMLMediaElement-like Connection that:
+
+- translates provider facts into Playback State;
+- re-resolves stable Control meaning at activation time;
+- keeps admitted intent distinct from provider acknowledgement;
+- delegates restart-position ownership to the concrete media owner;
+- refuses to make Playback silently own Queue selection.
+
+Current local semantic/provider proof:
+
+```text
+Node 22.16.0
+13 tests
+13 PASS
+0 FAIL
+```
+
+This is not yet browser or Windows host proof.
 
 ## What comes next
 
 The next implementation edge is:
 
 ```text
-V1 HTMLAudioElement facts
+real V2 browser surface
+-> real <audio> element
 -> V2 Playback Connection
--> V2 Playback State
--> V2 semantic projection
--> V2 presentation
--> browser proof against the real provider
+-> V2 presentation/TextRef
+-> browser interaction proof
+-> compare against preserved V1 playback intention
 ```
 
 Only after that slice is truthful should Queue, media availability/download, or whole-screen migration

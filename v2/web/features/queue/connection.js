@@ -60,6 +60,28 @@ export function createQueueConnection({
       return setState(replaceQueueContext(state, refs, startIndex, shuffle));
     },
 
+    restore({
+      items = [],
+      currentIndex = -1,
+      shuffle: restoredShuffle = false,
+      repeat: restoredRepeat = false,
+    } = {}) {
+      const refs = [...items];
+      return setState(
+        refs.length
+          ? QueueState.positioned({
+              items: refs,
+              currentIndex,
+              shuffle: restoredShuffle,
+              repeat: restoredRepeat,
+            })
+          : QueueState.empty({
+              shuffle: restoredShuffle,
+              repeat: restoredRepeat,
+            }),
+      );
+    },
+
     append(refs) {
       return setState(appendQueueRefs(state, refs));
     },

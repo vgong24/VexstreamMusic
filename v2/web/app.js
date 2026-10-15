@@ -12,6 +12,21 @@ import {
 } from "./features/player/session.js";
 import { loadLibraryCatalog } from "./features/library/client.js";
 import {
+  groupLibrary,
+  libraryGenres,
+  projectLibraryView,
+} from "./features/library/projection.js";
+import {
+  addSource,
+  chooseSourceFolder,
+  clearIgnoredSources,
+  discoverSources,
+  ignoreSourceCandidate,
+  loadSourceConfig,
+  removeSource,
+  unignoreSource,
+} from "./features/sources/client.js";
+import {
   loadPlaylists,
   resolvePlaylistAvailability,
 } from "./features/playlists/client.js";
@@ -56,6 +71,20 @@ const queueSummary=document.querySelector("#queueSummary");
 const queueList=document.querySelector("#queueList");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
+const librarySummary=document.querySelector("#librarySummary");
+const librarySearch=document.querySelector("#librarySearch");
+const libraryGenre=document.querySelector("#libraryGenre");
+const librarySort=document.querySelector("#librarySort");
+const libraryModeButtons=[...document.querySelectorAll("[data-library-mode]")];
+const sourceSummary=document.querySelector("#sourceSummary");
+const sourceAdd=document.querySelector("#sourceAdd");
+const sourceDiscover=document.querySelector("#sourceDiscover");
+const sourceDiscoverDeep=document.querySelector("#sourceDiscoverDeep");
+const sourceList=document.querySelector("#sourceList");
+const sourceDiscovery=document.querySelector("#sourceDiscovery");
+const ignoredSourceList=document.querySelector("#ignoredSourceList");
+const ignoredSources=document.querySelector("#ignoredSources");
+const clearIgnoredSourcesButton=document.querySelector("#clearIgnoredSources");
 const playlistChoices=document.querySelector("#playlistChoices");
 const exploreSummary=document.querySelector("#exploreSummary");
 const exploreCandidates=document.querySelector("#exploreCandidates");
@@ -85,6 +114,20 @@ let systemIdentity=null;
 let catalog=Object.freeze([]);
 let byRef=new Map();
 let refs=[];
+let libraryView=Object.freeze({
+ query:"",
+ genre:"all",
+ sort:"title",
+ mode:"songs"
+});
+let sourceConfig=Object.freeze({
+ sources:Object.freeze([]),
+ ignored:Object.freeze([])
+});
+let sourceDiscoveryState=Object.freeze({
+ candidates:Object.freeze([]),
+ scannedDirs:0
+});
 let playlists=Object.freeze([]);
 let resolvedPlaylists=Object.freeze([]);
 let currentSessionRestoration=Object.freeze({
@@ -112,6 +155,87 @@ function trackTitle(item){
 
 function trackArtist(item){
  return item?.artist?.trim()||resolveText(locale,"library.unknown-artist");
+}
+
+function currentLibraryView(){
+ return projectLibraryView(catalog,{
+  query:libraryView.query,
+  genre:libraryView.genre,
+  sort:libraryView.sort
+ });
+}
+
+function libraryPlaybackRefs(){
+ return projectLibraryView(catalog,{
+  query:"",
+  genre:"all",
+  sort:libraryView.sort
+ }).map(item=>item.ref);
+}
+
+function applyCatalog(nextCatalog){
+ catalog=nextCatalog;
+ byRef=new Map(catalog.map(item=>[item.ref,item]));
+ refs=catalog.map(item=>item.ref);
+ resolvedPlaylists=Object.freeze(
+  playlists.map(playlist=>resolvePlaylistAvailability(playlist,catalog))
+ );
+ reconcileQueueAgainstCurrentLibrary();
+}
+
+function reconcileQueueAgainstCurrentLibrary(){
+ const state=queue.currentProjection.state;
+ if(state.kind!=="positioned")return;
+ const available=new Set(refs);
+ const kept=[];
+ let currentIndex=-1;
+ state.items.forEach((ref,index)=>{
+  if(!available.has(ref))return;
+  if(index===state.currentIndex){
+   currentIndex=kept.length;
+  }
+  kept.push(ref);
+ });
+
+ if(currentIndex<0){
+  audio.pause();
+  audio.removeAttribute("src");
+  delete audio.dataset.mediaRef;
+  audio.load();
+  playback.refresh();
+  queue.restore({
+   items:[],
+   currentIndex:-1,
+   shuffle:state.shuffle,
+   repeat:state.repeat
+  });
+  currentSessionRestoration=Object.freeze({
+   kind:"held-current-unavailable",
+   queue:null,
+   droppedRefs:Object.freeze(
+    state.items.filter(ref=>!available.has(ref))
+   ),
+   currentRef:currentQueueRef(state)??""
+  });
+  return;
+ }
+
+ queue.restore({
+  items:kept,
+  currentIndex,
+  shuffle:state.shuffle,
+  repeat:state.repeat
+ });
+ player.presentCurrent();
+}
+
+async function refreshCatalog(){
+ const nextCatalog=await loadLibraryCatalog();
+ applyCatalog(nextCatalog);
+ renderTrackChoices();
+ renderPlaylistChoices();
+ render();
+ return nextCatalog;
 }
 
 function randomShuffle(values){
@@ -142,7 +266,7 @@ const player=createPlayerComposition({
  playback,
  media:audio,
  resolveMedia:ref=>byRef.get(ref),
- defaultContextRefs:()=>refs,
+ defaultContextRefs:()=>libraryPlaybackRefs(),
  onCurrentMedia:item=>{
   title.textContent=trackTitle(item);
   artist.textContent=trackArtist(item);

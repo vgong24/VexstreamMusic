@@ -25,21 +25,36 @@ type Manager interface {
 	Discard(string) (importmodel.Job, error)
 }
 
+type DestinationSnapshot func() []string
+
 type Handler struct {
-	manager Manager
+	manager      Manager
+	destinations DestinationSnapshot
 }
 
 func New(manager Manager) *Handler {
+	return NewWithDestinations(manager, nil)
+}
+
+func NewWithDestinations(
+	manager Manager,
+	destinations DestinationSnapshot,
+) *Handler {
 	if manager == nil {
 		panic("Import jobs HTTP adapter requires manager")
 	}
-	return &Handler{manager: manager}
+	return &Handler{
+		manager: manager,
+		destinations: destinations,
+	}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/api/import/jobs":
 		h.jobs(w, r)
+	case "/api/import/destinations":
+		h.destinationsList(w, r)
 	case "/api/import/start":
 		h.start(w, r)
 	case "/api/import/cancel":
@@ -53,6 +68,31 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+func (h *Handler) destinationsList(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w, http.MethodGet)
+		return
+	}
+	rows := []string{}
+	if h.destinations != nil {
+		seen := map[string]bool{}
+		for _, value := range h.destinations() {
+			value = strings.TrimSpace(value)
+			if value == "" || seen[value] {
+				continue
+			}
+			seen[value] = true
+			rows = append(rows, value)
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"destinations": rows,
+	})
 }
 
 func (h *Handler) jobs(w http.ResponseWriter, r *http.Request) {

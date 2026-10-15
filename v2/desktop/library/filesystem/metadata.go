@@ -3,12 +3,10 @@
 package filesystem
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"io"
 	"os"
 	"path/filepath"
@@ -16,6 +14,7 @@ import (
 	"unicode/utf16"
 
 	"github.com/vgong24/VexstreamMusic/v2/desktop/library"
+	"github.com/vgong24/VexstreamMusic/v2/desktop/library/catalog"
 )
 
 type catalogMeta struct {

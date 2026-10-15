@@ -401,7 +401,12 @@ def main() -> int:
                 "explicit seed-context Play missing",
             ),
         )
-        play.click()
+        first_media_path = "/media/media.vexstream.test-tone.1"
+        with page.expect_request(
+            lambda request: urlparse(request.url).path == first_media_path,
+            timeout=5000,
+        ):
+            play.click()
         page.wait_for_function(
             "window.vexV4.queue.currentProjection.state.kind==='positioned' "
             "&& window.vexV4.media.paused===false"
@@ -429,8 +434,7 @@ def main() -> int:
                     "media.vexstream.test-tone.1"
                 )
                 and any(
-                    row["path"]
-                    == "/media/media.vexstream.test-tone.1"
+                    row["path"] == first_media_path
                     for row in report["requests"]
                 ),
                 f"opaque media route not used: {report['requests']}",

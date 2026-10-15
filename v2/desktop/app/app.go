@@ -40,6 +40,8 @@ import (
 	trashhttp "github.com/vgong24/VexstreamMusic/v2/desktop/library/trash/httpapi"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/playlists"
 	playlistshttp "github.com/vgong24/VexstreamMusic/v2/desktop/playlists/httpapi"
+	playersession "github.com/vgong24/VexstreamMusic/v2/desktop/player/session"
+	playersessionhttp "github.com/vgong24/VexstreamMusic/v2/desktop/player/session/httpapi"
 	youtubeprovider "github.com/vgong24/VexstreamMusic/v2/desktop/provider/youtube"
 	runtimeenv "github.com/vgong24/VexstreamMusic/v2/desktop/provider/youtube/runtime"
 	runtimehttp "github.com/vgong24/VexstreamMusic/v2/desktop/provider/youtube/runtime/httpapi"
@@ -231,6 +233,9 @@ func Open(options Options) (*Application, error) {
 		importManager,
 		config.Sources,
 	)
+	playerSessionOwner := playersession.New(options.Layout.PlayerSession)
+	playerSessionHTTP := playersessionhttp.New(playerSessionOwner)
+
 	runtimeHTTP := runtimehttp.NewWith(
 		options.Layout.SharedRuntime,
 		func(string) runtimeenv.Status {
@@ -290,6 +295,7 @@ func Open(options Options) (*Application, error) {
 		"/api/import/status",
 		"/api/import/setup",
 	)
+	register(mux, playerSessionHTTP, "/api/player/session")
 
 	mux.HandleFunc("/api/library/rescan", func(
 		w http.ResponseWriter,

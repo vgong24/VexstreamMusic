@@ -5,6 +5,7 @@ import { QueueControl, QueueState, currentQueueRef } from "./features/queue/beha
 import { createQueueConnection } from "./features/queue/connection.js";
 import { createPlayerComposition } from "./features/player/composition.js";
 import { playerJourney } from "./features/player/journey.js";
+import { loadLibraryCatalog } from "./features/library/client.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
 
@@ -26,14 +27,17 @@ const title=document.querySelector("#trackTitle");
 const artist=document.querySelector("#trackArtist");
 const error=document.querySelector("#error");
 
-const sharedMediaURL=window.__VEXSTREAM_V4_MEDIA_URL??"/media/vexstream-test-tone.mp3";
-const catalog=Object.freeze([
- Object.freeze({ref:"media.vexstream.test-tone.1",url:sharedMediaURL,titleRef:"player.track.1.title",artistRef:"player.track.artist",playbackStartSeconds:0}),
- Object.freeze({ref:"media.vexstream.test-tone.2",url:sharedMediaURL,titleRef:"player.track.2.title",artistRef:"player.track.artist",playbackStartSeconds:0}),
- Object.freeze({ref:"media.vexstream.test-tone.3",url:sharedMediaURL,titleRef:"player.track.3.title",artistRef:"player.track.artist",playbackStartSeconds:0})
-]);
-const byRef=new Map(catalog.map(item=>[item.ref,item]));
-const refs=catalog.map(item=>item.ref);
+let catalog=Object.freeze([]);
+let byRef=new Map();
+let refs=[];
+
+function trackTitle(item){
+ return item?.title?.trim()||resolveText(locale,"library.unknown-title");
+}
+
+function trackArtist(item){
+ return item?.artist?.trim()||resolveText(locale,"library.unknown-artist");
+}
 
 function randomShuffle(values){
  const result=[...values];
@@ -62,8 +66,8 @@ const player=createPlayerComposition({
  resolveMedia:ref=>byRef.get(ref),
  defaultContextRefs:()=>refs,
  onCurrentMedia:item=>{
-  title.textContent=resolveText(locale,item.titleRef);
-  artist.textContent=resolveText(locale,item.artistRef);
+  title.textContent=trackTitle(item);
+  artist.textContent=trackArtist(item);
  }
 });
 
@@ -108,7 +112,7 @@ function render(){
   const downDisabled=isCurrent||index===qp.state.items.length-1;
   return `<li class="${currentClass}" data-queue-ref="${ref}" data-queue-index="${index}">
     <span class="queue-index">${index+1}</span>
-    <span class="queue-title"><strong>${resolveText(locale,item.titleRef)}</strong><span class="queue-state">${stateLabel}</span></span>
+    <span class="queue-title"><strong>${trackTitle(item)}</strong><span class="queue-state">${stateLabel}</span></span>
     <span class="queue-state">${isCurrent?"●":" "}</span>
     <span class="queue-actions">
       <button data-queue-action="play" ${isCurrent?"disabled":""}>Play</button>
@@ -120,15 +124,17 @@ function render(){
  }).join("");
 }
 
-trackChoices.innerHTML=catalog.map(item=>`<div class="track-card" data-track-ref="${item.ref}">
-  <strong>${resolveText(locale,item.titleRef)}</strong>
-  <small>${resolveText(locale,item.artistRef)}</small>
+function renderTrackChoices(){
+ trackChoices.innerHTML=catalog.map(item=>`<div class="track-card" data-track-ref="${item.ref}">
+  <strong>${trackTitle(item)}</strong>
+  <small>${trackArtist(item)}</small>
   <span class="track-actions">
     <button data-track-action="play" data-vex-action="vexstream.player.play-track">Play</button>
     <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">Play next</button>
     <button data-track-action="append" data-vex-action="vexstream.player.add-queue">Add to queue</button>
   </span>
 </div>`).join("");
+}
 
 async function guarded(effect){
  error.textContent="";
@@ -168,13 +174,24 @@ queue.subscribe(render);
 playback.subscribe(render);
 render();
 
-window.vexV4=Object.freeze({
- ready:true,
- journey:playerJourney,
- queue,
- playback,
- player,
- media:audio,
- catalog,
- controls:Object.freeze({PlaybackControl,QueueControl})
+async function initialize(){
+ catalog=await loadLibraryCatalog();
+ byRef=new Map(catalog.map(item=>[item.ref,item]));
+ refs=catalog.map(item=>item.ref);
+ renderTrackChoices();
+ render();
+ window.vexV4=Object.freeze({
+  ready:true,
+  journey:playerJourney,
+  queue,
+  playback,
+  player,
+  media:audio,
+  catalog,
+  controls:Object.freeze({PlaybackControl,QueueControl})
+ });
+}
+
+void initialize().catch(failure=>{
+ error.textContent=failure?.message??String(failure);
 });

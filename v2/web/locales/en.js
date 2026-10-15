@@ -19,4 +19,7 @@ export const en=Object.freeze({
  "queue.shuffle":"Shuffle",
  "queue.repeat":"Repeat",
  "queue.clear-after-current":"Clear after current"
+,
+ "library.unknown-title":"Unknown title",
+ "library.unknown-artist":"Unknown artist"
 });

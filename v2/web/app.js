@@ -281,6 +281,75 @@ async function refreshCatalog(){
  return nextCatalog;
 }
 
+async function refreshPlaylists(){
+ playlists=await loadPlaylists();
+ resolvedPlaylists=Object.freeze(
+  playlists.map(playlist=>resolvePlaylistAvailability(playlist,catalog))
+ );
+ renderPlaylistChoices();
+ renderTrackChoices();
+ return playlists;
+}
+
+async function refreshTrash(){
+ trashSnapshot=await loadTrash();
+ renderTrash();
+ return trashSnapshot;
+}
+
+function renderLibraryEditor(){
+ const item=byRef.get(currentEditingTrackRef);
+ if(!item){
+  libraryEditor.hidden=true;
+  return;
+ }
+ libraryEditor.hidden=false;
+ libraryEditorSummary.textContent=resolveText(locale,"library.editor.summary",{
+  title:trackTitle(item)
+ });
+ editTitle.value=item.title??"";
+ editArtist.value=item.artist??"";
+ editAlbum.value=item.album??"";
+ editGenre.value=item.genre??"";
+ editPlaybackStart.value=String(Number(item.playbackStartSeconds)||0);
+ editPlaybackEnd.value=item.playbackEndSeconds==null
+  ?""
+  :String(item.playbackEndSeconds);
+}
+
+function renderTrash(){
+ trashSummary.textContent=trashSnapshot.trash.length
+  ? resolveText(locale,"trash.summary",{count:trashSnapshot.trash.length})
+  : resolveText(locale,"trash.empty");
+ trashItems.innerHTML=trashSnapshot.trash.length
+  ? trashSnapshot.trash.map(item=>`<article class="trash-row" data-trash-id="${escapeHTML(item.id)}">
+      <div>
+       <strong>${escapeHTML(item.track?.title||resolveText(locale,"library.unknown-title"))}</strong>
+       <small>${escapeHTML(item.track?.artist||resolveText(locale,"library.unknown-artist"))}</small>
+      </div>
+      <div class="trash-actions">
+       <button data-trash-action="restore">${escapeHTML(resolveText(locale,"trash.restore"))}</button>
+       <button data-trash-action="purge">${escapeHTML(resolveText(locale,"trash.delete"))}</button>
+      </div>
+     </article>`).join("")
+  : "";
+
+ deletedHistory.innerHTML=trashSnapshot.deletedHistory.length
+  ? `<details class="deleted-history">
+      <summary>${escapeHTML(resolveText(locale,"trash.history",{
+       count:trashSnapshot.deletedHistory.length
+      }))}</summary>
+      <div>${trashSnapshot.deletedHistory.slice(0,20).map(item=>`
+       <div class="deleted-row">
+        <span>${escapeHTML(item.track?.title||resolveText(locale,"library.unknown-title"))}</span>
+        <small>${escapeHTML(item.deletedAt||"")}</small>
+       </div>`).join("")}</div>
+     </details>`
+  : "";
+
+ purgeRecovery.hidden=!trashSnapshot.pendingPurge;
+}
+
 function randomShuffle(values){
  const result=[...values];
  for(let i=result.length-1;i>0;i--){

@@ -39,5 +39,20 @@ export const en=Object.freeze({
  "explore.match.likely":"Likely match",
  "explore.match.possible":"Possible match",
  "explore.match.not-in-library":"Not in library",
- "explore.axis.other":"Explore"
+ "explore.axis.other":"Explore",
+ "import.review":"Review import",
+ "import.duplicates.present":"{count} possible library match(es) — review before download",
+ "import.duplicates.none":"No likely library match found",
+ "import.destination.none":"No VexStream music folder available",
+ "import.section.artist":"Artist",
+ "import.hint.sections":"Choose tracks, metadata, and destination before download. Duplicate matches are advisory.",
+ "import.hint.whole":"Review metadata and destination before download. Duplicate matches are advisory.",
+ "import.jobs.empty":"No import activity",
+ "import.cancel":"Cancel",
+ "import.retry":"Retry add",
+ "import.discard":"Discard",
+ "import.recover":"Recover commit",
+ "import.untitled":"Untitled import",
+ "import.source.unavailable":"This Explore candidate has no provider source URL.",
+ "import.started":"Import queued: {id}"
 });

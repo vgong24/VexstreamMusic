@@ -1,0 +1,97 @@
+// Package lifecycle owns V4 desktop process identity and current-server placement.
+package lifecycle
+
+import (
+	"encoding/json"
+	"errors"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+type Identity struct {
+	OK       bool   `json:"ok"`
+	Version  string `json:"version"`
+	BuildRef string `json:"buildRef"`
+}
+
+func Probe(url string) Identity {
+	url = strings.TrimSpace(url)
+	if url == "" {
+		return Identity{}
+	}
+	client := http.Client{Timeout: 700 * time.Millisecond}
+	response, err := client.Get(strings.TrimRight(url, "/") + "/health")
+	if err != nil {
+		return Identity{}
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return Identity{}
+	}
+	var identity Identity
+	if json.NewDecoder(response.Body).Decode(&identity) != nil ||
+		!identity.OK {
+		return Identity{}
+	}
+	return identity
+}
+
+func Reusable(
+	currentURLPath string,
+	version string,
+	buildRef string,
+) (string, bool) {
+	data, err := os.ReadFile(currentURLPath)
+	if err != nil {
+		return "", false
+	}
+	url := strings.TrimSpace(string(data))
+	if url == "" {
+		return "", false
+	}
+	identity := Probe(url)
+	return url,
+		identity.OK &&
+			identity.Version == version &&
+			identity.BuildRef == buildRef
+}
+
+func Claim(currentURLPath, url string) error {
+	currentURLPath = strings.TrimSpace(currentURLPath)
+	url = strings.TrimSpace(url)
+	if currentURLPath == "" || url == "" {
+		return errors.New("current URL path and URL required")
+	}
+	if err := os.MkdirAll(filepath.Dir(currentURLPath), 0o755); err != nil {
+		return err
+	}
+	tmp := currentURLPath + ".tmp"
+	if err := os.WriteFile(tmp, []byte(url+"\n"), 0o644); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, currentURLPath); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	return nil
+}
+
+func ClearIfOwned(currentURLPath, url string) error {
+	data, err := os.ReadFile(currentURLPath)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if strings.TrimSpace(string(data)) != strings.TrimSpace(url) {
+		return nil
+	}
+	if err := os.Remove(currentURLPath); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}

@@ -10,6 +10,8 @@ import {
   loadPlaylists,
   resolvePlaylistAvailability,
 } from "./features/playlists/client.js";
+import { createExploreSession } from "./features/explore/session.js";
+import { createExploreComposition } from "./features/explore/composition.js";
 import { escapeHTML } from "./foundation/html.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
@@ -29,6 +31,11 @@ const queueList=document.querySelector("#queueList");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
 const playlistChoices=document.querySelector("#playlistChoices");
+const exploreSummary=document.querySelector("#exploreSummary");
+const exploreCandidates=document.querySelector("#exploreCandidates");
+const explorePreview=document.querySelector("#explorePreview");
+const exploreBack=document.querySelector("#exploreBack");
+const exploreClear=document.querySelector("#exploreClear");
 const title=document.querySelector("#trackTitle");
 const artist=document.querySelector("#trackArtist");
 const error=document.querySelector("#error");
@@ -82,6 +89,12 @@ const player=createPlayerComposition({
  }
 });
 
+const exploreSession=createExploreSession();
+const explore=createExploreComposition({
+ session:exploreSession,
+ playback
+});
+
 function setControl(button,presentation){
  button.disabled=!presentation.enabled;
  button.dataset.textRef=presentation.textRef;
@@ -90,6 +103,46 @@ function setControl(button,presentation){
  if("selected" in presentation){
   button.setAttribute("aria-pressed",String(Boolean(presentation.selected)));
  }
+}
+
+function renderExplore(){
+ const projection=exploreSession.currentProjection;
+ exploreBack.disabled=!projection.canGoBack;
+ exploreClear.disabled=projection.kind==="empty";
+
+ if(projection.kind==="empty"){
+  exploreSummary.textContent=resolveText(locale,"explore.summary.empty");
+  exploreCandidates.innerHTML="";
+  return;
+ }
+
+ const seedTitle=String(projection.frame?.seed?.title??"").trim();
+ exploreSummary.textContent=resolveText(locale,"explore.summary.active",{
+  title:seedTitle||resolveText(locale,"library.unknown-title"),
+  count:projection.frame.candidates.length
+ });
+
+ exploreCandidates.innerHTML=projection.frame.candidates.map((candidate,index)=>{
+  const match=candidate.libraryMatch?.state||"NOT_IN_LIBRARY";
+  const matchTextRef={
+   IN_LIBRARY:"explore.match.in-library",
+   LIKELY_MATCH:"explore.match.likely",
+   POSSIBLE_MATCH:"explore.match.possible",
+   NOT_IN_LIBRARY:"explore.match.not-in-library"
+  }[match]??"explore.match.possible";
+  const axis=candidate.axisLabel||candidate.axis||resolveText(locale,"explore.axis.other");
+  return `<article class="explore-card" data-explore-index="${index}">
+   <div class="explore-copy">
+    <strong>${escapeHTML(String(candidate.title??"").trim()||resolveText(locale,"library.unknown-title"))}</strong>
+    <small>${escapeHTML(String(candidate.channel??"").trim()||resolveText(locale,"library.unknown-artist"))}</small>
+    <span class="explore-meta">${escapeHTML(String(axis))} · ${escapeHTML(resolveText(locale,matchTextRef))}</span>
+   </div>
+   <div class="explore-card-actions">
+    <button data-explore-action="preview">${escapeHTML(resolveText(locale,"explore.preview"))}</button>
+    <button data-explore-action="branch">${escapeHTML(resolveText(locale,"explore.branch"))}</button>
+   </div>
+  </article>`;
+ }).join("");
 }
 
 function render(){
@@ -125,6 +178,8 @@ function render(){
       position:qp.state.currentIndex+1
     });
 
+ renderExplore();
+
  queueList.innerHTML=qp.state.kind==="empty"?"":qp.state.items.map((ref,index)=>{
   const item=byRef.get(ref);
   const isCurrent=index===qp.state.currentIndex;
@@ -159,6 +214,7 @@ function renderTrackChoices(){
     <button data-track-action="play" data-vex-action="vexstream.player.play-track">${escapeHTML(resolveText(locale,"playback.play"))}</button>
     <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
     <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
+    <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
   </span>
 </div>`).join("");
 }
@@ -220,6 +276,14 @@ trackChoices.addEventListener("click",event=>{
  if(action.dataset.trackAction==="append"){
   player.append([ref]);
   render();
+  return;
+ }
+ if(action.dataset.trackAction==="explore"){
+  void guarded(async()=>{
+   await explore.replaceFromTrack(ref);
+   explorePreview.hidden=true;
+   explorePreview.removeAttribute("src");
+  });
  }
 });
 
@@ -233,6 +297,42 @@ playlistChoices.addEventListener("click",event=>{
   void guarded(()=>player.playContext(resolved.playableRefs,0));
  }
 });
+
+exploreCandidates.addEventListener("click",event=>{
+ const action=event.target.closest("[data-explore-action]");
+ const card=event.target.closest("[data-explore-index]");
+ if(!action||!card)return;
+ const index=Number(card.dataset.exploreIndex);
+
+ if(action.dataset.exploreAction==="preview"){
+  void guarded(async()=>{
+   const preview=await explore.preview(index);
+   explorePreview.src=preview.url;
+   explorePreview.hidden=false;
+  });
+  return;
+ }
+
+ if(action.dataset.exploreAction==="branch"){
+  void guarded(async()=>{
+   await explore.branchFromCandidate(index);
+   explorePreview.hidden=true;
+   explorePreview.removeAttribute("src");
+  });
+ }
+});
+
+exploreBack.addEventListener("click",()=>void guarded(async()=>{
+ await explore.back();
+ explorePreview.hidden=true;
+ explorePreview.removeAttribute("src");
+}));
+
+exploreClear.addEventListener("click",()=>void guarded(async()=>{
+ await explore.clear();
+ explorePreview.hidden=true;
+ explorePreview.removeAttribute("src");
+}));
 
 queueList.addEventListener("click",event=>{
  const action=event.target.closest("[data-queue-action]");
@@ -261,6 +361,7 @@ queueList.addEventListener("click",event=>{
 
 queue.subscribe(render);
 playback.subscribe(render);
+exploreSession.subscribe(render);
 render();
 
 async function initialize(){
@@ -288,6 +389,8 @@ async function initialize(){
   catalog,
   playlists,
   resolvedPlaylists,
+  exploreSession,
+  explore,
   controls:Object.freeze({PlaybackControl,QueueControl})
  });
 }

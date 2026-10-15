@@ -5,6 +5,11 @@ import { QueueControl, QueueState, currentQueueRef } from "./features/queue/beha
 import { createQueueConnection } from "./features/queue/connection.js";
 import { createPlayerComposition } from "./features/player/composition.js";
 import { playerJourney } from "./features/player/journey.js";
+import {
+  loadPlayerSession,
+  reconcilePlayerSession,
+  savePlayerSession,
+} from "./features/player/session.js";
 import { loadLibraryCatalog } from "./features/library/client.js";
 import {
   loadPlaylists,
@@ -40,6 +45,7 @@ const repeat=document.querySelector("#repeat");
 const status=document.querySelector("#status");
 const semanticState=document.querySelector("#semanticState");
 const queueState=document.querySelector("#queueState");
+const sessionState=document.querySelector("#sessionState");
 const queueSummary=document.querySelector("#queueSummary");
 const queueList=document.querySelector("#queueList");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
@@ -74,6 +80,16 @@ let byRef=new Map();
 let refs=[];
 let playlists=Object.freeze([]);
 let resolvedPlaylists=Object.freeze([]);
+let currentSessionRestoration=Object.freeze({
+ kind:"fresh",
+ queue:null,
+ droppedRefs:Object.freeze([]),
+ currentRef:""
+});
+let playerSessionPersistenceEnabled=false;
+let playerSessionSaveTimer=null;
+let pendingPlayerSessionState=null;
+let playerSessionSaveChain=Promise.resolve();
 let currentImportReview=null;
 let currentImportJobs=Object.freeze({
  active:Object.freeze([]),
@@ -131,6 +147,59 @@ const explore=createExploreComposition({
  session:exploreSession,
  playback
 });
+
+function sessionStatusText(restoration=currentSessionRestoration){
+ switch(restoration?.kind){
+ case "restored":
+  return restoration.droppedRefs?.length
+   ? resolveText(locale,"session.status.restored-trimmed",{
+       count:restoration.droppedRefs.length
+     })
+   : resolveText(locale,"session.status.restored");
+ case "empty":
+  return resolveText(locale,"session.status.empty");
+ case "held-current-unavailable":
+  return resolveText(locale,"session.status.held-current");
+ case "held-schema":
+  return resolveText(locale,"session.status.held-schema");
+ case "persistence-held":
+  return resolveText(locale,"session.status.save-held");
+ default:
+  return resolveText(locale,"session.status.fresh");
+ }
+}
+
+function renderSessionState(){
+ if(!sessionState)return;
+ sessionState.dataset.sessionKind=currentSessionRestoration?.kind??"fresh";
+ sessionState.textContent=sessionStatusText();
+}
+
+function schedulePlayerSessionSave(state){
+ if(!playerSessionPersistenceEnabled)return;
+ pendingPlayerSessionState=state;
+ if(playerSessionSaveTimer){
+  clearTimeout(playerSessionSaveTimer);
+ }
+ playerSessionSaveTimer=setTimeout(()=>{
+  playerSessionSaveTimer=null;
+  const snapshot=pendingPlayerSessionState;
+  pendingPlayerSessionState=null;
+  playerSessionSaveChain=playerSessionSaveChain
+   .then(()=>savePlayerSession(snapshot))
+   .catch(failure=>{
+    playerSessionPersistenceEnabled=false;
+    currentSessionRestoration=Object.freeze({
+     kind:"persistence-held",
+     queue:null,
+     droppedRefs:Object.freeze([]),
+     currentRef:"",
+     detail:failure?.message??String(failure)
+    });
+    render();
+   });
+ },60);
+}
 
 function setControl(button,presentation){
  button.disabled=!presentation.enabled;
@@ -308,6 +377,7 @@ function render(){
 
  semanticState.textContent=playback.currentProjection.state.kind;
  queueState.textContent=qp.state.kind;
+ renderSessionState();
  status.textContent=playback.currentProjection.state.requestPending
   ? resolveText(locale,"playback.status.pending")
   : resolveText(locale,"playback.status.ready");
@@ -574,16 +644,23 @@ queueList.addEventListener("click",event=>{
  }
 });
 
-queue.subscribe(render);
+queue.subscribe(projection=>{
+ render();
+ schedulePlayerSessionSave(projection.state);
+});
 playback.subscribe(render);
 exploreSession.subscribe(render);
 render();
 
 async function initialize(){
- const [nextCatalog,nextPlaylists,nextImportJobs]=await Promise.all([
+ const playerSessionLoad=loadPlayerSession().catch(failure=>Object.freeze({
+  failure
+ }));
+ const [nextCatalog,nextPlaylists,nextImportJobs,loadedPlayerSession]=await Promise.all([
   loadLibraryCatalog(),
   loadPlaylists(),
-  loadImportJobs()
+  loadImportJobs(),
+  playerSessionLoad
  ]);
  catalog=nextCatalog;
  byRef=new Map(catalog.map(item=>[item.ref,item]));
@@ -593,6 +670,27 @@ async function initialize(){
   playlists.map(playlist=>resolvePlaylistAvailability(playlist,catalog))
  );
  currentImportJobs=nextImportJobs;
+
+ if(loadedPlayerSession?.failure){
+  currentSessionRestoration=Object.freeze({
+   kind:"held-schema",
+   queue:null,
+   droppedRefs:Object.freeze([]),
+   currentRef:"",
+   detail:loadedPlayerSession.failure?.message??String(loadedPlayerSession.failure)
+  });
+ }else{
+  currentSessionRestoration=reconcilePlayerSession(
+   loadedPlayerSession,
+   refs
+  );
+  if(currentSessionRestoration.queue){
+   queue.restore(currentSessionRestoration.queue);
+   player.presentCurrent();
+  }
+  playerSessionPersistenceEnabled=true;
+ }
+
  renderTrackChoices();
  renderPlaylistChoices();
  render();
@@ -610,6 +708,7 @@ async function initialize(){
   explore,
   get importReview(){return currentImportReview;},
   get importJobs(){return currentImportJobs;},
+  get sessionRestoration(){return currentSessionRestoration;},
   controls:Object.freeze({PlaybackControl,QueueControl})
  });
 }

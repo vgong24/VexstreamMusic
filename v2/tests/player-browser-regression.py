@@ -138,7 +138,7 @@ EXPLORE_FRAMES = {
         ],
         "generatedAt": "2026-10-14T00:00:01Z",
     },
-} 
+}
 
 IMPORT_REVIEW = {
     "inspection": {

@@ -100,6 +100,7 @@ type Bridge struct {
 	Script string
 	Env    []string
 	run    Runner
+	stream StreamRunner
 }
 
 func New(python, script string, env []string) *Bridge {
@@ -109,6 +110,7 @@ func New(python, script string, env []string) *Bridge {
 		Env:    append([]string(nil), env...),
 	}
 	bridge.run = bridge.runProcess
+	bridge.stream = bridge.runStreamingProcess
 	return bridge
 }
 

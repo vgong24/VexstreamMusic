@@ -3,22 +3,49 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VexStream Music — Desktop V4 Practicum</title>
+<title>VexStream Music — Desktop V4 Player Practicum</title>
 <link rel="stylesheet" href="./styles.css">
 </head>
-<body data-vex-screen="vexstream.desktop.playback">
+<body data-vex-screen="vexstream.desktop.player-practicum">
 <main class="shell">
   <section class="player" aria-labelledby="screenTitle">
-    <div class="eyebrow" data-text-ref="playback.practicum.eyebrow">Desktop V4 playback practicum</div>
+    <div class="eyebrow" data-text-ref="player.practicum.eyebrow">Desktop V4 player practicum</div>
     <h1 id="screenTitle" data-text-ref="playback.screen.title">VexStream Music</h1>
-    <div class="art" aria-hidden="true">♫</div>
-    <div class="track-copy">
-      <strong id="trackTitle">VexStream Test Tone</strong>
-      <span id="trackArtist">VexStream</span>
+
+    <div class="now">
+      <div class="art" aria-hidden="true">♫</div>
+      <div class="track-copy">
+        <strong id="trackTitle">Nothing playing</strong>
+        <span id="trackArtist">Choose Play or a track</span>
+      </div>
     </div>
-    <button id="playPause" type="button" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
-    <div class="proof-row"><span>Semantic state</span><strong id="semanticState">media</strong></div>
-    <div class="proof-row"><span>Provider</span><strong id="status">Provider ready</strong></div>
+
+    <div class="transport" aria-label="Playback and queue controls">
+      <button id="previous" type="button" data-vex-control="vexstream.queue.previous" data-text-ref="queue.previous">Previous</button>
+      <button id="playPause" type="button" class="primary" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
+      <button id="next" type="button" data-vex-control="vexstream.queue.next" data-text-ref="queue.next">Next</button>
+      <button id="shuffle" type="button" data-vex-control="vexstream.queue.shuffle" data-text-ref="queue.shuffle" aria-pressed="false">Shuffle</button>
+      <button id="repeat" type="button" data-vex-control="vexstream.queue.repeat" data-text-ref="queue.repeat" aria-pressed="false">Repeat</button>
+    </div>
+
+    <section class="library" aria-labelledby="libraryTitle">
+      <h2 id="libraryTitle">Practicum library</h2>
+      <div id="trackChoices"></div>
+    </section>
+
+    <section class="queue" aria-labelledby="queueTitle">
+      <div class="section-heading">
+        <h2 id="queueTitle">Queue</h2>
+        <span id="queueSummary">Empty</span>
+      </div>
+      <ol id="queueList"></ol>
+    </section>
+
+    <div class="proof-grid">
+      <div class="proof-row"><span>Playback</span><strong id="semanticState">no-media</strong></div>
+      <div class="proof-row"><span>Queue</span><strong id="queueState">empty</strong></div>
+      <div class="proof-row"><span>Provider</span><strong id="status">Provider ready</strong></div>
+    </div>
     <div id="error" role="alert"></div>
     <audio id="audio" preload="auto"></audio>
   </section>

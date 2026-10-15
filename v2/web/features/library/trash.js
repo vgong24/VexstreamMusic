@@ -28,7 +28,7 @@ export async function loadTrash(
   });
 }
 
-export function moveTracksToTrash(ids,{request=globalThis.fetch}={}){
+export async function moveTracksToTrash(ids,{request=globalThis.fetch}={}){
   return mutate(
     "/api/library/trash",
     {
@@ -40,7 +40,7 @@ export function moveTracksToTrash(ids,{request=globalThis.fetch}={}){
   );
 }
 
-export function restoreTrashItems(ids,{request=globalThis.fetch}={}){
+export async function restoreTrashItems(ids,{request=globalThis.fetch}={}){
   return mutate(
     "/api/library/trash/restore",
     {ids:refs(ids)},
@@ -49,7 +49,7 @@ export function restoreTrashItems(ids,{request=globalThis.fetch}={}){
   );
 }
 
-export function purgeTrashItems(
+export async function purgeTrashItems(
   ids,
   {
     preserveMetadata=true,

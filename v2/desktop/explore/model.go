@@ -4,7 +4,7 @@
 // preview playback, import/acquisition, or AI recommendation semantics.
 package explore
 
-import "strings"
+import (\n\t"strings"\n\n\t"github.com/vgong24/VexstreamMusic/v2/desktop/musictext"\n)
 
 type Seed struct {
 	Kind       string  `json:"kind,omitempty"`
@@ -111,7 +111,7 @@ func SelectCandidates(pools [][]Candidate, limit, creatorCap int) []Candidate {
 				if key == "" || seen[key] {
 					continue
 				}
-				creator := normalizeMusicText(candidate.Channel)
+				creator := musictext.Normalize(candidate.Channel)
 				if creator != "" && creatorCounts[creator] >= creatorCap {
 					continue
 				}
@@ -147,10 +147,10 @@ func SameSeed(seed Seed, candidate Candidate) bool {
 		strings.EqualFold(seed.URL, candidate.URL) {
 		return true
 	}
-	return normalizeMusicText(seed.Title) != "" &&
-		normalizeMusicText(seed.Title) == normalizeMusicText(candidate.Title) &&
-		normalizeMusicText(firstNonEmpty(seed.Artist, seed.Channel)) ==
-			normalizeMusicText(candidate.Channel)
+	return musictext.Normalize(seed.Title) != "" &&
+		musictext.Normalize(seed.Title) == musictext.Normalize(candidate.Title) &&
+		musictext.Normalize(firstNonEmpty(seed.Artist, seed.Channel)) ==
+			musictext.Normalize(candidate.Channel)
 }
 
 func appendQuery(rows []Query, axis, label, query string) []Query {
@@ -173,15 +173,15 @@ func candidateKey(candidate Candidate) string {
 	if value := strings.ToLower(strings.TrimSpace(candidate.URL)); value != "" {
 		return "url:" + value
 	}
-	title := normalizeMusicText(candidate.Title)
-	channel := normalizeMusicText(candidate.Channel)
+	title := musictext.Normalize(candidate.Title)
+	channel := musictext.Normalize(candidate.Channel)
 	if title == "" && channel == "" {
 		return ""
 	}
 	return "text:" + title + "|" + channel
 }
 
-func normalizeMusicText(value string) string {
+func musictext.Normalize(value string) string {
 	value = strings.ToLower(value)
 	for _, noise := range []string{
 		"official video",

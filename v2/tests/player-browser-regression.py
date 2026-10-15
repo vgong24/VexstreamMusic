@@ -59,6 +59,74 @@ PLAYLISTS = [
     }
 ]
 
+EXPLORE_FRAMES = {
+    "track": {
+        "schemaVersion": "vexstream.discovery-candidates/v2",
+        "seed": {
+            "kind": "library",
+            "trackId": "media.vexstream.test-tone.1",
+            "title": "VexStream Test Tone One",
+            "artist": "VexStream QA",
+        },
+        "basis": {
+            "provider": "test-provider",
+            "method": "SEARCH_DERIVED_MULTI_AXIS",
+            "queries": [],
+            "creatorCap": 2,
+            "selection": "ROUND_ROBIN",
+        },
+        "candidates": [
+            {
+                "providerId": "candidate.one",
+                "title": "Candidate One",
+                "channel": "Creator One",
+                "axis": "CLOSER",
+                "axisLabel": "Closer",
+                "libraryMatch": {"state": "NOT_IN_LIBRARY"},
+            },
+            {
+                "providerId": "candidate.two",
+                "title": "Candidate Two",
+                "channel": "Creator Two",
+                "axis": "VERSIONS",
+                "axisLabel": "Versions",
+                "libraryMatch": {
+                    "state": "IN_LIBRARY",
+                    "trackId": "media.vexstream.test-tone.2",
+                },
+            },
+        ],
+        "generatedAt": "2026-10-14T00:00:00Z",
+    },
+    "branch": {
+        "schemaVersion": "vexstream.discovery-candidates/v2",
+        "seed": {
+            "kind": "provider",
+            "providerId": "candidate.one",
+            "title": "Candidate One",
+            "channel": "Creator One",
+        },
+        "basis": {
+            "provider": "test-provider",
+            "method": "SEARCH_DERIVED_MULTI_AXIS",
+            "queries": [],
+            "creatorCap": 2,
+            "selection": "ROUND_ROBIN",
+        },
+        "candidates": [
+            {
+                "providerId": "candidate.branch",
+                "title": "Branch Candidate",
+                "channel": "Branch Creator",
+                "axis": "NEIGHBORHOOD",
+                "axisLabel": "Neighborhood",
+                "libraryMatch": {"state": "NOT_IN_LIBRARY"},
+            },
+        ],
+        "generatedAt": "2026-10-14T00:00:01Z",
+    },
+}
+
 
 def require(condition: bool, message: str) -> None:
     if not condition:
@@ -245,6 +313,29 @@ def main() -> int:
             )
             return
 
+        if parsed.path == "/api/discovery/radio":
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            if body.get("trackId") == "media.vexstream.test-tone.1":
+                payload = EXPLORE_FRAMES["track"]
+            elif (body.get("seed") or {}).get("providerId") == "candidate.one":
+                payload = EXPLORE_FRAMES["branch"]
+            else:
+                route.fulfill(status=400, body="unexpected Explore seed")
+                return
+            route.fulfill(
+                status=200,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Content-Type": "application/json; charset=utf-8",
+                    "X-Content-Type-Options": "nosniff",
+                },
+                body=json.dumps(payload),
+            )
+            return
+
         if parsed.path.startswith("/media/"):
             media_response(route, fixture)
             return
@@ -277,6 +368,14 @@ def main() -> int:
             ),
         )
         page.route("http://vexstream.local/**", route_request)
+        page.route(
+            "https://www.youtube.com/**",
+            lambda route: route.fulfill(
+                status=200,
+                content_type="text/html",
+                body="<html><body>preview fixture</body></html>",
+            ),
+        )
         # The execution sandbox blocks HTTP top-level navigation by administrator policy.
         # Keep the real product-relative URLs, but host this proof in an in-memory document whose
         # <base> points at the intercepted VexStream origin.
@@ -681,6 +780,104 @@ def main() -> int:
                 )
                 and page.evaluate("window.vexV4.media.paused") is False,
                 "Playlist -> Library availability -> Queue composition drift",
+            ),
+        )
+
+        page.locator(
+            '[data-track-ref="media.vexstream.test-tone.1"] '
+            '[data-track-action="explore"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.exploreSession.currentProjection.kind==='active'"
+        )
+        checked(
+            "explore-from-library-track-forms-temporary-session",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.exploreSession.currentProjection.frame.candidates.length"
+                )
+                == 2
+                and any(
+                    row["method"] == "POST"
+                    and row["path"] == "/api/discovery/radio"
+                    for row in report["requests"]
+                ),
+                "Explore session did not form from Library track",
+            ),
+        )
+        checked(
+            "explore-renders-current-library-relationship-without-mutating-library",
+            lambda: require(
+                "Candidate Two" in page.locator("#exploreCandidates").inner_text()
+                and "In library" in page.locator("#exploreCandidates").inner_text()
+                and page.evaluate("window.vexV4.catalog.length") == 3,
+                "Explore candidate relationship projection drift",
+            ),
+        )
+
+        page.locator(
+            '[data-explore-index="0"] [data-explore-action="preview"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.exploreSession.currentProjection.previewIndex===0 "
+            "&& window.vexV4.media.paused===true"
+        )
+        checked(
+            "explore-preview-pauses-local-music-through-playback-boundary",
+            lambda: require(
+                page.evaluate("window.vexV4.media.paused") is True
+                and page.locator("#explorePreview").is_visible()
+                and "candidate.one"
+                in page.locator("#explorePreview").get_attribute("src"),
+                "Explore preview did not pause local Playback",
+            ),
+        )
+
+        page.locator(
+            '[data-explore-index="0"] [data-explore-action="branch"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.exploreSession.currentProjection.frameIndex===1"
+        )
+        checked(
+            "explore-branch-replaces-forward-history-without-resuming-local-music",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.exploreSession.currentProjection.frame.seed.title"
+                )
+                == "Candidate One"
+                and page.evaluate("window.vexV4.media.paused") is True,
+                "Explore branch/current Playback separation drift",
+            ),
+        )
+
+        page.locator("#exploreBack").click()
+        page.wait_for_function(
+            "window.vexV4.exploreSession.currentProjection.frameIndex===0"
+        )
+        checked(
+            "explore-back-keeps-preview-resume-held",
+            lambda: require(
+                page.evaluate("window.vexV4.media.paused") is True
+                and page.evaluate(
+                    "window.vexV4.exploreSession.currentProjection.frame.seed.title"
+                )
+                == "VexStream Test Tone One",
+                "Explore Back resumed or lost prior frame",
+            ),
+        )
+
+        page.locator("#exploreClear").click()
+        page.wait_for_function(
+            "window.vexV4.exploreSession.currentProjection.kind==='empty' "
+            "&& window.vexV4.media.paused===false"
+        )
+        checked(
+            "explore-clear-resumes-previous-local-playback-through-current-control",
+            lambda: require(
+                page.evaluate("window.vexV4.media.paused") is False
+                and page.locator("#explorePreview").is_hidden(),
+                "Explore Clear did not restore local Playback",
             ),
         )
 

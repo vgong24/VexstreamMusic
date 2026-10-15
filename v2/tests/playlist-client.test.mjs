@@ -2,8 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  addTracksToPlaylist,
+  createPlaylist,
+  deletePlaylist,
   loadPlaylists,
   projectPlaylists,
+  removeTracksFromPlaylist,
+  renamePlaylist,
+  reorderPlaylist,
   resolvePlaylistAvailability,
 } from "../web/features/playlists/client.js";
 
@@ -85,4 +91,102 @@ test("failed playlist HTTP response remains a load failure", async () => {
     () => loadPlaylists({ request: async () => ({ ok: false, status: 503 }) }),
     /503/,
   );
+});
+
+
+test("Playlist mutations preserve durable ordered refs and explicit delete",async()=>{
+ const seen=[];
+ const request=async(url,options)=>{
+  const body=JSON.parse(options.body);
+  seen.push([url,body]);
+  if(url==="/api/playlists/create"){
+   return {
+    ok:true,status:200,
+    json:async()=>({
+     ok:true,
+     playlist:{
+      id:"p",
+      name:body.name,
+      trackIds:body.trackIds,
+      createdAt:"now",
+      updatedAt:"now"
+     }
+    })
+   };
+  }
+  if(url==="/api/playlists/add"){
+   return {
+    ok:true,status:200,
+    json:async()=>({
+     ok:true,
+     added:body.trackIds.length,
+     playlist:{
+      id:"p",
+      name:"Mix",
+      trackIds:["a",...body.trackIds],
+      createdAt:"now",
+      updatedAt:"later"
+     }
+    })
+   };
+  }
+  if(url==="/api/playlists/remove"||url==="/api/playlists/rename"){
+   return {
+    ok:true,status:200,
+    json:async()=>({
+     ok:true,
+     playlist:{
+      id:"p",
+      name:body.name??"Mix",
+      trackIds:url.endsWith("/remove")?["a"]:["a","b"],
+      createdAt:"now",
+      updatedAt:"later"
+     }
+    })
+   };
+  }
+  return {ok:true,status:200,json:async()=>({ok:true})};
+ };
+
+ const created=await createPlaylist(" Mix ",["a","b"],{request});
+ assert.equal(created.name,"Mix");
+ assert.deepEqual(created.trackRefs,["a","b"]);
+
+ const added=await addTracksToPlaylist("p",["b","c"],{request});
+ assert.equal(added.added,2);
+ assert.deepEqual(added.playlist.trackRefs,["a","b","c"]);
+
+ await reorderPlaylist("p",["c","a","b"],{request});
+ const removed=await removeTracksFromPlaylist("p",["b"],{request});
+ assert.deepEqual(removed.trackRefs,["a"]);
+ const renamed=await renamePlaylist("p","Road",{request});
+ assert.equal(renamed.name,"Road");
+ await deletePlaylist("p",{request});
+
+ assert.deepEqual(seen.map(row=>row[0]),[
+  "/api/playlists/create",
+  "/api/playlists/add",
+  "/api/playlists/order",
+  "/api/playlists/remove",
+  "/api/playlists/rename",
+  "/api/playlists/delete"
+ ]);
+ assert.deepEqual(seen.at(-1)[1],{
+  id:"p",
+  confirm:"DELETE_PLAYLIST_ONLY"
+ });
+});
+
+test("Playlist mutation inputs fail closed before request",async()=>{
+ let calls=0;
+ const request=async()=>{calls++;return {ok:true,json:async()=>({})}};
+ await assert.rejects(
+  ()=>addTracksToPlaylist("",["a"],{request}),
+  /playlist id/
+ );
+ await assert.rejects(
+  ()=>addTracksToPlaylist("p",[],{request}),
+  /track refs/
+ );
+ assert.equal(calls,0);
 });

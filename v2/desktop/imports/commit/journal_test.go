@@ -131,7 +131,7 @@ func TestResumeRecoversCrashAfterOneOutputMovedBeforeJournalProgress(t *testing.
 	if err := os.MkdirAll(filepath.Dir(first.DestinationPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := acquireClaim(first); err != nil {
+	if err := ensureClaim(first); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Rename(source, first.DestinationPath); err != nil {
@@ -162,7 +162,7 @@ func TestClaimedIncompleteDestinationCanBeRebuiltFromExactStage(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(entry.DestinationPath), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := acquireClaim(entry); err != nil {
+	if err := ensureClaim(entry); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(entry.DestinationPath, []byte("partial"), 0o644); err != nil {

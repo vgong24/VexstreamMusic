@@ -47,6 +47,12 @@ func run() error {
 		return lifecycle.OpenBrowser(url)
 	}
 
+	if claim, ok := lifecycle.CurrentLiveClaim(
+		layout.ProtectedCurrentURL,
+	); ok {
+		return protectedDesktopConflict(claim)
+	}
+
 	home, _ := os.UserHomeDir()
 	application, err := app.Open(app.Options{
 		Version: version,
@@ -81,6 +87,39 @@ func run() error {
 		Handler: application.Handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
+	protectedConflict := make(chan error, 1)
+	monitorDone := make(chan struct{})
+	defer close(monitorDone)
+
+	go func() {
+		ticker := time.NewTicker(500 * time.Millisecond)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-monitorDone:
+				return
+			case <-ticker.C:
+				claim, ok := lifecycle.CurrentLiveClaim(
+					layout.ProtectedCurrentURL,
+				)
+				if !ok {
+					continue
+				}
+				err := protectedDesktopConflict(claim)
+				select {
+				case protectedConflict <- err:
+				default:
+				}
+				shutdown, cancel := context.WithTimeout(
+					context.Background(),
+					3*time.Second,
+				)
+				_ = server.Shutdown(shutdown)
+				cancel()
+				return
+			}
+		}
+	}()
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
 		os.Interrupt,
@@ -114,9 +153,30 @@ func run() error {
 
 	err = server.Serve(listener)
 	if errors.Is(err, http.ErrServerClosed) {
-		return nil
+		select {
+		case conflict := <-protectedConflict:
+			return conflict
+		default:
+			return nil
+		}
 	}
 	return err
+}
+
+func protectedDesktopConflict(
+	claim lifecycle.LiveClaim,
+) error {
+	version := strings.TrimSpace(claim.Identity.Version)
+	if version == "" {
+		version = "another protected build"
+	}
+	return fmt.Errorf(
+		"VexStream %s is already running at %s. "+
+			"Exit the protected desktop before starting VexStream 4.0 so "+
+			"both versions never write shared Library state at the same time",
+		version,
+		claim.URL,
+	)
 }
 
 func effectiveBuildRef() (string, error) {

@@ -46,6 +46,19 @@ complete local desktop reconstruction
 -> ONLY THEN resume Android/mobile integration
 ```
 
+Current lived correction:
+
+```text
+A029 exact Windows qualification = PASS
+A030 lived Desktop Readiness     = FAIL
+reason                           = V4 product shell changed beyond the admitted refactor intention
+```
+
+Therefore Windows qualification is preserved as valid engineering evidence, but Desktop Readiness is
+NOT satisfied. The recovery edge is product-shell parity: preserve the recognizable V3 human
+experience while reconnecting it to the already-extracted V4 owners. See
+`LIVED-PRODUCT-ORACLE.md`.
+
 Android PR #84 is therefore a held companion/currentness surface until the Desktop Readiness Gate
 below is satisfied. No Android product mutation is required to advance the desktop.
 

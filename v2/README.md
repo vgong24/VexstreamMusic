@@ -14,11 +14,13 @@
 ## Entry route
 
 1. this file;
-2. `architecture/README.md`;
-3. `COMPLETION-PLAN.md`;
-4. `quarry/V1-INTENTION-MAP.md` when translating existing behavior;
-5. the exact feature family being changed;
-6. its proof.
+2. `LIVED-PRODUCT-ORACLE.md`;
+3. `architecture/README.md`;
+4. `COMPLETION-PLAN.md`;
+5. `quarry/V1-INTENTION-MAP.md` when translating existing behavior;
+6. the exact V3 screen/human question being preserved;
+7. the exact V4 feature family being changed;
+8. its proof.
 
 ## Stable architecture law
 
@@ -51,6 +53,19 @@ v2/
 ```
 
 Android PR #84 remains HOLD.
+
+## Lived-product correction
+
+The first exact Windows-qualified candidate passed engineering qualification but failed Victor's
+lived Desktop Readiness because its browser composition had become a different product shell.
+
+```text
+V3 lived product = product oracle
+V4 owners/services = refactor substrate
+V4 practicum UI = proof scaffold, not replacement authority
+```
+
+Enter `LIVED-PRODUCT-ORACLE.md` before changing browser/product composition.
 
 ## D1 — Playback browser boundary — PROVED
 

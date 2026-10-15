@@ -282,3 +282,81 @@ A healthy family answers:
 If those answers require reconstructing a hidden switchboard, the migration is not finished.
 
 <!-- [VXG RealForever][VEXSTREAM][DESKTOP-V2][ARCHITECTURE] -->
+
+
+## 11. Accepted Android PR #82 refinements
+
+VexLife-Android PR #82 is now merged on `main` at:
+
+```text
+merge = 4a6ade2e1c1018604ad95f50105d2534bef52df5
+```
+
+Desktop V4 treats that merged source as accepted architectural quarry, not as a Kotlin dependency.
+
+Adopted refinements:
+
+```text
+Control + CURRENT State
+-> Act
+
+CURRENT State + Act
+-> Effect + admitted State
+
+CURRENT State + Controls
+-> Projection
+
+Projection
+-> optional feature-local DisplayState / presentation
+-> UI
+```
+
+Desktop implications:
+
+- Control meaning is semantic-first; Boolean enabled/disabled is derived convenience.
+- Same State kind + same Act may select different Effects when predicates are mutually exclusive.
+- Cross-family reactions do not bypass the target family. Higher composition/convergence carries an
+  intention/control back through the target owner's current truth boundary.
+- Connection remains the reality boundary. Provider currentness, async revision gates, concurrency
+  and lifetime stay with the concrete owner.
+- Feature-local Experience membranes are earned only when multiple real UI surfaces repeatedly
+  assemble the same read/write plumbing. One desktop player view does not yet earn a generic or
+  feature-local Experience wrapper.
+- Runtime request payload architecture remains deliberately held. Explore/provider search and other
+  payload-rich operations stay feature-local until repeated consumers prove a reusable grammar.
+
+Permanent law:
+
+```text
+NO_CROSS_FAMILY_EFFECT_BYPASS
+```
+
+## 12. Desktop qualification route
+
+Desktop V4 does not depend on GitHub Actions for ongoing proof.
+
+```text
+source / coordination
+    GitHub
+
+exact-head execution proof
+    VexRelay task/v2
+    -> current VexLocalBridge Windows carrier
+    -> canonical RETURN
+```
+
+Current Relay binding for new formation:
+
+```text
+contractRef = source.vexrelay.current-contract/v1
+runtime = v0.2.0-RC1
+taskSchema = vex.relay.task/v2
+recipe = ExactHeadSourceOwnerProof
+hostProfile = windows-victor
+adapter = adapter.vexlocalbridge.native-vexrelay-task-archive/v1
+```
+
+GitHub Actions may remain historical evidence from earlier checkpoints, but future V4 acceptance must
+not require Actions minutes when the actual gate can be satisfied by accepted host/Relay proof.
+
+<!-- [VXG RealForever][VEXSTREAM][DESKTOP-V4][PR82-ADOPTION][VEXRELAY-PROOF] -->

@@ -29,6 +29,13 @@ export function projectLibraryCatalog(payload) {
         album: stringValue(raw.album),
         genre: stringValue(raw.genre),
         year: stringValue(raw.year),
+        providerId: stringValue(raw.providerId),
+        sourceURL: stringValue(raw.sourceUrl),
+        channel: stringValue(raw.channel),
+        tags: Object.freeze(stringArray(raw.tags)),
+        categories: Object.freeze(stringArray(raw.categories)),
+        description: stringValue(raw.description),
+        addedAt: stringValue(raw.addedAt),
         durationSeconds: finiteNonNegative(raw.duration),
         playbackStartSeconds: start,
         playbackEndSeconds: end != null && end > start ? end : null,
@@ -54,6 +61,14 @@ export async function loadLibraryCatalog({ request = globalThis.fetch } = {}) {
     throw new Error(`library catalog request failed: ${response?.status ?? "unknown"}`);
   }
   return projectLibraryCatalog(await response.json());
+}
+
+function stringArray(value) {
+  return Array.isArray(value)
+    ? value
+        .map(item => String(item ?? "").trim())
+        .filter(Boolean)
+    : [];
 }
 
 function stringValue(value) {

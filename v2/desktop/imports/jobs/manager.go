@@ -18,7 +18,6 @@ import (
 
 	importmodel "github.com/vgong24/VexstreamMusic/v2/desktop/imports"
 	importcommit "github.com/vgong24/VexstreamMusic/v2/desktop/imports/commit"
-	importprovider "github.com/vgong24/VexstreamMusic/v2/desktop/imports/provider"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/imports/staging"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/imports/workflow"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/persistence"
@@ -409,4 +408,3 @@ func randomID() (string, error) {
 	return hex.EncodeToString(raw[:]), nil
 }
 
-var _ = importprovider.ErrPrepareCancelled

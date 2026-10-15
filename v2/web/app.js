@@ -20,6 +20,7 @@ const semanticState=document.querySelector("#semanticState");
 const queueState=document.querySelector("#queueState");
 const queueSummary=document.querySelector("#queueSummary");
 const queueList=document.querySelector("#queueList");
+const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
 const title=document.querySelector("#trackTitle");
 const artist=document.querySelector("#trackArtist");
@@ -81,6 +82,7 @@ function render(){
  setControl(next,qp.controls.next);
  setControl(shuffle,qp.controls.shuffle);
  setControl(repeat,qp.controls.repeat);
+ setControl(clearAfterCurrent,qp.controls.clearAfterCurrent);
 
  const hasCurrent=Boolean(currentQueueRef(qp.state));
  previous.disabled=!hasCurrent;
@@ -99,13 +101,34 @@ function render(){
  queueSummary.textContent=qp.state.kind==="empty"?"Empty":`${qp.state.items.length} items · ${qp.state.currentIndex+1} current`;
  queueList.innerHTML=qp.state.kind==="empty"?"":qp.state.items.map((ref,index)=>{
   const item=byRef.get(ref);
-  const currentClass=index===qp.state.currentIndex?"current":"";
-  const stateLabel=index<qp.state.currentIndex?"Played":index===qp.state.currentIndex?"Current":"Up next";
-  return `<li class="${currentClass}" data-queue-ref="${ref}"><span class="queue-index">${index+1}</span><strong>${resolveText(locale,item.titleRef)}</strong><span class="queue-state">${stateLabel}</span></li>`;
+  const isCurrent=index===qp.state.currentIndex;
+  const currentClass=isCurrent?"current":"";
+  const stateLabel=index<qp.state.currentIndex?"Played":isCurrent?"Current":"Up next";
+  const upDisabled=isCurrent||index===0;
+  const downDisabled=isCurrent||index===qp.state.items.length-1;
+  return `<li class="${currentClass}" data-queue-ref="${ref}" data-queue-index="${index}">
+    <span class="queue-index">${index+1}</span>
+    <span class="queue-title"><strong>${resolveText(locale,item.titleRef)}</strong><span class="queue-state">${stateLabel}</span></span>
+    <span class="queue-state">${isCurrent?"●":" "}</span>
+    <span class="queue-actions">
+      <button data-queue-action="play" ${isCurrent?"disabled":""}>Play</button>
+      <button data-queue-action="up" ${upDisabled?"disabled":""}>↑</button>
+      <button data-queue-action="down" ${downDisabled?"disabled":""}>↓</button>
+      <button data-queue-action="remove" ${isCurrent?"disabled":""}>Remove</button>
+    </span>
+  </li>`;
  }).join("");
 }
 
-trackChoices.innerHTML=catalog.map(item=>`<button class="track-choice" data-track-ref="${item.ref}"><strong>${resolveText(locale,item.titleRef)}</strong><small>${resolveText(locale,item.artistRef)}</small></button>`).join("");
+trackChoices.innerHTML=catalog.map(item=>`<div class="track-card" data-track-ref="${item.ref}">
+  <strong>${resolveText(locale,item.titleRef)}</strong>
+  <small>${resolveText(locale,item.artistRef)}</small>
+  <span class="track-actions">
+    <button data-track-action="play" data-vex-action="vexstream.player.play-track">Play</button>
+    <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">Play next</button>
+    <button data-track-action="append" data-vex-action="vexstream.player.add-queue">Add to queue</button>
+  </span>
+</div>`).join("");
 
 async function guarded(effect){
  error.textContent="";
@@ -118,10 +141,27 @@ next.addEventListener("click",()=>void guarded(()=>player.next()));
 previous.addEventListener("click",()=>void guarded(()=>player.previous()));
 shuffle.addEventListener("click",()=>{player.toggleShuffle();render();});
 repeat.addEventListener("click",()=>{player.toggleRepeat();render();});
+clearAfterCurrent.addEventListener("click",()=>{player.clearAfterCurrent();render();});
+
 trackChoices.addEventListener("click",event=>{
- const button=event.target.closest("[data-track-ref]");
- if(!button)return;
- void guarded(()=>player.playTrack(button.dataset.trackRef,refs));
+ const action=event.target.closest("[data-track-action]");
+ const card=event.target.closest("[data-track-ref]");
+ if(!action||!card)return;
+ const ref=card.dataset.trackRef;
+ if(action.dataset.trackAction==="play"){void guarded(()=>player.playTrack(ref,refs));return;}
+ if(action.dataset.trackAction==="play-next"){void guarded(()=>player.playNext([ref]));return;}
+ if(action.dataset.trackAction==="append"){player.append([ref]);render();}
+});
+
+queueList.addEventListener("click",event=>{
+ const action=event.target.closest("[data-queue-action]");
+ const row=event.target.closest("[data-queue-index]");
+ if(!action||!row)return;
+ const index=Number(row.dataset.queueIndex);
+ if(action.dataset.queueAction==="play"){void guarded(()=>player.playQueueIndex(index));return;}
+ if(action.dataset.queueAction==="up"){player.moveQueue(index,index-1);render();return;}
+ if(action.dataset.queueAction==="down"){player.moveQueue(index,index+2);render();return;}
+ if(action.dataset.queueAction==="remove"){player.removeQueue(index);render();}
 });
 
 queue.subscribe(render);

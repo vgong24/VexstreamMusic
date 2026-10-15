@@ -38,7 +38,18 @@ export function createPlayerComposition({
 
   function playPausePresentation() {
     const playbackControl = playback.currentProjection.control;
-    if (currentRef()) return playbackControl;
+    if (currentRef()) {
+      if (playback.currentProjection.state.kind === "no-media") {
+        return Object.freeze({
+          ...playbackControl,
+          enabled: true,
+          textRef: "playback.play",
+          iconRef: "play",
+          compositionRef: "player.load-current",
+        });
+      }
+      return playbackControl;
+    }
 
     const context = defaultContextRefs();
     if (context.length) {
@@ -89,6 +100,11 @@ export function createPlayerComposition({
       return Object.freeze({ compositionRef: "player.seed-default-context" });
     }
 
+    if (playback.currentProjection.state.kind === "no-media") {
+      await loadCurrent({ autoplay: true });
+      return Object.freeze({ compositionRef: "player.load-current" });
+    }
+
     return playback.activate(PlaybackControl.PlayPause);
   }
 
@@ -101,6 +117,11 @@ export function createPlayerComposition({
     const refs = [...contextRefs];
     const index = refs.indexOf(ref);
     return playContext(index >= 0 ? refs : [ref], index >= 0 ? index : 0);
+  }
+
+  async function playQueueIndex(index) {
+    queue.select(index);
+    return loadCurrent({ autoplay: true });
   }
 
   async function next() {
@@ -157,13 +178,21 @@ export function createPlayerComposition({
     activatePlayPause,
     playContext,
     playTrack,
+    playQueueIndex,
     next,
     previous,
     toggleShuffle,
     toggleRepeat,
     clearAfterCurrent,
     append: refs => queue.append(refs),
-    playNext: refs => queue.playNext(refs),
+    async playNext(refs) {
+      const wasEmpty = !currentRef();
+      queue.playNext(refs);
+      if (wasEmpty && currentRef()) {
+        await loadCurrent({ autoplay: true });
+      }
+      return queue.currentProjection;
+    },
     moveQueue: (from, to) => queue.move(from, to),
     removeQueue: index => queue.remove(index),
     close() {

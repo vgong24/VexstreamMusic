@@ -31,78 +31,68 @@ def bundle_module(path: Path,cache: dict[Path,str])->str:
     url=as_data_url("text/javascript;charset=utf-8",source.encode("utf-8"));cache[path]=url;return url
 
 def assembled_html(root: Path)->str:
-    web=root/"v2"/"web"
-    html=(web/"index.html").read_text(encoding="utf-8")
-    css=(web/"styles.css").read_text(encoding="utf-8")
+    web=root/"v2"/"web";html=(web/"index.html").read_text(encoding="utf-8");css=(web/"styles.css").read_text(encoding="utf-8")
     fixture=(root/"tests"/"fixtures"/"vexstream-test-tone.mp3").read_bytes()
-    media=as_data_url("audio/mpeg",fixture)
-    app=bundle_module(web/"app.js",{})
+    media=as_data_url("audio/mpeg",fixture);app=bundle_module(web/"app.js",{})
     html=html.replace('<link rel="stylesheet" href="./styles.css">',f"<style>{css}</style>")
     inject=f'<script>window.__VEXSTREAM_V4_MEDIA_URL={json.dumps(media)};window.__VEXSTREAM_V4_SHUFFLE=(values)=>[...values].reverse()</script>'
     html=html.replace('<script type="module" src="./app.js"></script>',inject+f'<script type="module">import {json.dumps(app)};</script>')
     return html
 
 def main()->int:
-    parser=argparse.ArgumentParser()
-    parser.add_argument("--root",type=Path,default=Path(__file__).resolve().parents[2])
-    parser.add_argument("--browser-executable")
-    args=parser.parse_args()
-    root=args.root.resolve()
+    parser=argparse.ArgumentParser();parser.add_argument("--root",type=Path,default=Path(__file__).resolve().parents[2]);parser.add_argument("--browser-executable");args=parser.parse_args();root=args.root.resolve()
     require((root/"tests"/"fixtures"/"vexstream-test-tone.mp3").is_file(),"media fixture missing")
     report={"schemaVersion":"vexstream.v4.player-browser-regression/v1","checks":[],"pageErrors":[],"console":[]}
     def checked(name,fn):fn();report["checks"].append({"name":name,"status":"PASS"})
     with sync_playwright() as p:
-        launch={"headless":True,"args":["--no-sandbox","--autoplay-policy=no-user-gesture-required"]}
-        executable=browser_executable(args.browser_executable)
+        launch={"headless":True,"args":["--no-sandbox","--autoplay-policy=no-user-gesture-required"]};executable=browser_executable(args.browser_executable)
         if executable:launch["executable_path"]=executable
-        browser=p.chromium.launch(**launch)
-        page=browser.new_page(viewport={"width":1000,"height":840})
-        page.on("pageerror",lambda e:report["pageErrors"].append(str(e)))
-        page.on("console",lambda m:report["console"].append({"type":m.type,"text":m.text}))
-        page.set_content(assembled_html(root),wait_until="load")
-        page.wait_for_function("window.vexV4?.ready===true")
+        browser=p.chromium.launch(**launch);page=browser.new_page(viewport={"width":1000,"height":840})
+        page.on("pageerror",lambda e:report["pageErrors"].append(str(e)));page.on("console",lambda m:report["console"].append({"type":m.type,"text":m.text}))
+        page.set_content(assembled_html(root),wait_until="load");page.wait_for_function("window.vexV4?.ready===true")
         checked("real-browser-loads-v4-player-surface",lambda:require(not report["pageErrors"],f"page errors: {report['pageErrors']}"))
         checked("stable-player-and-control-identities",lambda:require(page.locator('[data-vex-screen="vexstream.desktop.player-practicum"]').count()==1 and page.locator('[data-vex-control="vexstream.queue.next"]').count()==1,"semantic identity missing"))
         journey=page.evaluate("window.vexV4.journey")
         checked("feature-owned-player-journey-is-addressable",lambda:require(journey["ref"]=="journey.vexstream.desktop.player.queue-basics" and len(journey["steps"])==6,"journey drift"))
-
-        play=page.locator('[data-vex-control="vexstream.playback.play-pause"]')
-        nxt=page.locator('[data-vex-control="vexstream.queue.next"]')
-        prev=page.locator('[data-vex-control="vexstream.queue.previous"]')
-        shuf=page.locator('[data-vex-control="vexstream.queue.shuffle"]')
-        rep=page.locator('[data-vex-control="vexstream.queue.repeat"]')
-
+        play=page.locator('[data-vex-control="vexstream.playback.play-pause"]');nxt=page.locator('[data-vex-control="vexstream.queue.next"]');prev=page.locator('[data-vex-control="vexstream.queue.previous"]');shuf=page.locator('[data-vex-control="vexstream.queue.shuffle"]');rep=page.locator('[data-vex-control="vexstream.queue.repeat"]')
         checked("top-level-play-is-enabled-before-queue-exists",lambda:require(play.is_enabled() and play.get_attribute("data-text-ref")=="playback.play","explicit seed-context Play missing"))
-        play.click()
-        page.wait_for_function("window.vexV4.queue.currentProjection.state.kind==='positioned' && window.vexV4.media.paused===false")
+        play.click();page.wait_for_function("window.vexV4.queue.currentProjection.state.kind==='positioned' && window.vexV4.media.paused===false")
         checked("play-seeds-three-track-context-and-starts-first",lambda:require(page.evaluate("window.vexV4.queue.currentProjection.state.items.length") == 3 and page.evaluate("window.vexV4.player.currentItem.ref")=="media.vexstream.test-tone.1" and play.get_attribute("data-text-ref")=="playback.pause","Play composition drift"))
-
-        nxt.click()
-        page.wait_for_function("window.vexV4.player.currentItem.ref==='media.vexstream.test-tone.2'")
+        nxt.click();page.wait_for_function("window.vexV4.player.currentItem.ref==='media.vexstream.test-tone.2'")
         checked("next-advances-queue-and-keeps-playback-active",lambda:require(page.evaluate("window.vexV4.media.paused") is False and play.get_attribute("data-text-ref")=="playback.pause","Next composition drift"))
-
         page.evaluate("window.vexV4.media.currentTime=0")
-        prev.click()
-        page.wait_for_function("window.vexV4.player.currentItem.ref==='media.vexstream.test-tone.1'")
+        prev.click();page.wait_for_function("window.vexV4.player.currentItem.ref==='media.vexstream.test-tone.1'")
         checked("previous-near-start-moves-to-prior-queue-item",lambda:require(page.evaluate("window.vexV4.player.currentItem.ref")=="media.vexstream.test-tone.1","Previous composition drift"))
-
         shuf.click()
         checked("shuffle-selects-and-preserves-current-item",lambda:require(shuf.get_attribute("aria-pressed")=="true" and page.evaluate("window.vexV4.queue.currentProjection.state.items.join(',')")=="media.vexstream.test-tone.1,media.vexstream.test-tone.3,media.vexstream.test-tone.2","shuffle upcoming law drift"))
-
         rep.click()
         checked("repeat-is-queue-truth-not-playback-truth",lambda:require(rep.get_attribute("aria-pressed")=="true" and page.evaluate("window.vexV4.queue.currentProjection.state.repeat") is True and page.evaluate("window.vexV4.playback.currentProjection.state.repeat") is None,"repeat ownership drift"))
-
-        page.locator('[data-track-ref="media.vexstream.test-tone.3"]').click()
-        page.wait_for_function("window.vexV4.player.currentItem.ref==='media.vexstream.test-tone.3'")
-        nxt.click()
-        page.wait_for_function("window.vexV4.player.currentItem.ref==='media.vexstream.test-tone.1'")
+        page.locator('[data-track-ref="media.vexstream.test-tone.3"] [data-track-action="play"]').click();page.wait_for_function("window.vexV4.player.currentItem.ref==='media.vexstream.test-tone.3'")
+        # Selecting track 3 with shuffle already enabled preserves track 3 as current and has no upcoming items.
+        nxt.click();page.wait_for_function("window.vexV4.player.currentItem.ref==='media.vexstream.test-tone.1'")
         checked("repeat-wraps-next-from-end-to-first",lambda:require(page.evaluate("window.vexV4.player.currentItem.ref")=="media.vexstream.test-tone.1","repeat wrap drift"))
+
+        page.locator('[data-track-ref="media.vexstream.test-tone.3"] [data-track-action="play-next"]').click()
+        page.wait_for_function("window.vexV4.queue.currentProjection.state.items.length===4")
+        checked("play-next-inserts-directly-after-current",lambda:require(page.evaluate("window.vexV4.queue.currentProjection.state.items.join(',')")=="media.vexstream.test-tone.1,media.vexstream.test-tone.3,media.vexstream.test-tone.2,media.vexstream.test-tone.3","play-next payload drift"))
+
+        page.locator('[data-track-ref="media.vexstream.test-tone.2"] [data-track-action="append"]').click()
+        page.wait_for_function("window.vexV4.queue.currentProjection.state.items.length===5")
+        checked("add-to-queue-appends-without-changing-current",lambda:require(page.evaluate("window.vexV4.player.currentItem.ref")=="media.vexstream.test-tone.1" and page.evaluate("window.vexV4.queue.currentProjection.state.items.at(-1)")=="media.vexstream.test-tone.2","append payload drift"))
+
+        page.locator('#queueList li[data-queue-index="4"] [data-queue-action="up"]').click()
+        checked("reorder-preserves-current-item-identity",lambda:require(page.evaluate("window.vexV4.player.currentItem.ref")=="media.vexstream.test-tone.1" and page.evaluate("window.vexV4.queue.currentProjection.state.items.join(',')")=="media.vexstream.test-tone.1,media.vexstream.test-tone.3,media.vexstream.test-tone.2,media.vexstream.test-tone.2,media.vexstream.test-tone.3","reorder/current preservation drift"))
+
+        page.locator('#queueList li[data-queue-index="1"] [data-queue-action="play"]').click()
+        page.wait_for_function("window.vexV4.player.currentItem.ref==='media.vexstream.test-tone.3'")
+        checked("play-queue-item-selects-then-realizes-playback",lambda:require(page.evaluate("window.vexV4.media.paused") is False,"queue play-now did not realize playback"))
+
+        page.locator('[data-vex-control="vexstream.queue.clear-after-current"]').click()
+        checked("clear-after-current-preserves-history-and-current",lambda:require(page.evaluate("window.vexV4.queue.currentProjection.state.items.join(',')")=="media.vexstream.test-tone.1,media.vexstream.test-tone.3" and page.evaluate("window.vexV4.player.currentItem.ref")=="media.vexstream.test-tone.3","clear-after-current drift"))
+
         checked("queue-render-marks-one-current-item",lambda:require(page.locator("#queueList li.current").count()==1,"queue current projection drift"))
+        checked("current-queue-item-cannot-be-removed-or-reordered",lambda:require(page.locator("#queueList li.current [data-queue-action='remove']").is_disabled() and page.locator("#queueList li.current [data-queue-action='up']").is_disabled(),"current item mutation guard drift"))
         checked("browser-finished-without-runtime-errors",lambda:require(not report["pageErrors"] and not [x for x in report["console"] if x["type"]=="error"],f"errors: {report}"))
         browser.close()
-
-    report["status"]="PASS"
-    print(json.dumps(report,indent=2))
-    return 0
-
+    report["status"]="PASS";print(json.dumps(report,indent=2));return 0
 if __name__=="__main__":raise SystemExit(main())

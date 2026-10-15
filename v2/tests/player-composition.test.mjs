@@ -107,3 +107,32 @@ test("Play Track composes context selection with Playback instead of hiding it i
   assert.equal(h.media.dataset.mediaRef,"b");
   assert.equal(h.media.paused,false);
 });
+
+test("Add to queue on an empty Queue selects without auto-playing; Play then loads current media", async()=>{
+  const h=harness();
+  h.player.append(["b","c"]);
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"b");
+  assert.equal(h.media.playCalls,0);
+  assert.equal(h.player.playPausePresentation.compositionRef,"player.load-current");
+  await h.player.activatePlayPause();
+  assert.equal(h.media.dataset.mediaRef,"b");
+  assert.equal(h.media.playCalls,1);
+});
+
+test("Play next on an empty Queue preserves V1 behavior by starting the inserted context", async()=>{
+  const h=harness();
+  await h.player.playNext(["c","b"]);
+  assert.deepEqual(h.queue.currentProjection.state.items,["c","b"]);
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"c");
+  assert.equal(h.media.dataset.mediaRef,"c");
+  assert.equal(h.media.playCalls,1);
+});
+
+test("Play queue index is higher composition: Queue selection then Playback realization", async()=>{
+  const h=harness();
+  await h.player.activatePlayPause();
+  await h.player.playQueueIndex(2);
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"c");
+  assert.equal(h.media.dataset.mediaRef,"c");
+  assert.equal(h.media.paused,false);
+});

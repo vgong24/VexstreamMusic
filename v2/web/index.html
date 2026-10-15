@@ -35,8 +35,11 @@
 
     <section class="queue" aria-labelledby="queueTitle">
       <div class="section-heading">
-        <h2 id="queueTitle">Queue</h2>
-        <span id="queueSummary">Empty</span>
+        <div>
+          <h2 id="queueTitle">Queue</h2>
+          <span id="queueSummary">Empty</span>
+        </div>
+        <button id="clearAfterCurrent" type="button" data-vex-control="vexstream.queue.clear-after-current" data-text-ref="queue.clear-after-current">Clear after current</button>
       </div>
       <ol id="queueList"></ol>
     </section>

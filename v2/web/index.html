@@ -59,6 +59,71 @@
       ></iframe>
     </section>
 
+    <section class="import-review" id="importReview" aria-labelledby="importReviewTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <h2 id="importReviewTitle">Add to library</h2>
+          <span id="importReviewSummary">Review provider media before download</span>
+        </div>
+        <button id="importReviewClose" type="button">Close</button>
+      </div>
+
+      <div class="import-review-grid">
+        <div>
+          <strong id="importReviewSourceTitle">Source</strong>
+          <div id="importReviewSourceCreator" class="muted"></div>
+          <div id="importDuplicateSummary" class="import-note"></div>
+        </div>
+
+        <label>
+          <span>Save to</span>
+          <select id="importDestination"></select>
+        </label>
+
+        <label>
+          <span>Track layout</span>
+          <select id="importMode">
+            <option value="split">Save as individual tracks</option>
+            <option value="whole">Keep as one track</option>
+            <option value="both">Save both</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Collection / album label</span>
+          <input id="importCollection" type="text">
+        </label>
+
+        <label>
+          <span>Artist override</span>
+          <input id="importArtist" type="text" placeholder="Unknown — set if you know it">
+        </label>
+
+        <label>
+          <span>Genre / library label</span>
+          <input id="importGenre" type="text">
+        </label>
+      </div>
+
+      <div id="importSections"></div>
+
+      <div class="import-actions">
+        <button id="importStart" type="button" class="primary">Download &amp; add</button>
+        <span id="importReviewHint">Temporary staging protects the library until commit completes.</span>
+      </div>
+    </section>
+
+    <section class="imports" aria-labelledby="importsTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="importsTitle">Imports</h2>
+          <span>Current preparation, review, and recovery state</span>
+        </div>
+        <button id="importRefresh" type="button">Refresh</button>
+      </div>
+      <div id="importJobs"></div>
+    </section>
+
     <section class="queue" aria-labelledby="queueTitle">
       <div class="section-heading">
         <div>

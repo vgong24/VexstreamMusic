@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/playback-behavior.test.mjs tests/playback-connection.test.mjs tests/queue-behavior.test.mjs tests/player-composition.test.mjs tests/library-client.test.mjs tests/playlist-client.test.mjs tests/html-foundation.test.mjs tests/explore-session.test.mjs",
+    "test": "node --test tests/playback-behavior.test.mjs tests/playback-connection.test.mjs tests/queue-behavior.test.mjs tests/player-composition.test.mjs tests/library-client.test.mjs tests/playlist-client.test.mjs tests/html-foundation.test.mjs tests/explore-session.test.mjs tests/explore-client.test.mjs tests/explore-composition.test.mjs",
     "test:browser": "python3 tests/player-browser-regression.py"
   }
 }

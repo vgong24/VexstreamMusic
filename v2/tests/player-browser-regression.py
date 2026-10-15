@@ -21,6 +21,9 @@ TRACKS = [
         "genre": "Test",
         "year": "2026",
         "duration": 1.25,
+        "addedAt": "2026-10-12T00:00:00Z",
+        "tags": ["qa", "tone-one"],
+        "channel": "VexStream QA Channel",
         "playbackStart": 0,
     },
     {
@@ -30,17 +33,23 @@ TRACKS = [
         "album": "V4 Practicum",
         "genre": "Test",
         "year": "2026",
-        "duration": 1.25,
+        "duration": 2.5,
+        "addedAt": "2026-10-14T00:00:00Z",
+        "tags": ["qa", "tone-two"],
+        "channel": "VexStream QA Channel",
         "playbackStart": 0,
     },
     {
         "id": "media.vexstream.test-tone.3",
         "title": "VexStream Test Tone Three",
-        "artist": "VexStream QA",
-        "album": "V4 Practicum",
-        "genre": "Test",
-        "year": "2026",
-        "duration": 1.25,
+        "artist": "Other Artist",
+        "album": "Other Album",
+        "genre": "Ambient",
+        "year": "2025",
+        "duration": 3.75,
+        "addedAt": "2026-10-13T00:00:00Z",
+        "tags": ["ambient", "tone-three"],
+        "channel": "Other Channel",
         "playbackStart": 0,
     },
 ]
@@ -328,6 +337,15 @@ def main() -> int:
         fn()
         report["checks"].append({"name": name, "status": "PASS"})
 
+    source_state = {
+        "sources": ["/music"],
+        "ignored": [],
+        "chosen": "/picked",
+        "candidates": [
+            {"name": "Candidate Music", "path": "/candidate", "mp3Count": 7},
+            {"name": "Ignore Me", "path": "/ignore-me", "mp3Count": 2},
+        ],
+    }
     import_job_state = {
         "started": False,
         "startBody": None,
@@ -413,7 +431,145 @@ def main() -> int:
                     "Content-Type": "application/json; charset=utf-8",
                     "X-Content-Type-Options": "nosniff",
                 },
-                body=json.dumps({"tracks": TRACKS}),
+                body=json.dumps(
+                    {
+                        "tracks": TRACKS
+                        if "/music" in source_state["sources"]
+                        else []
+                    }
+                ),
+            )
+            return
+
+        if parsed.path == "/api/source/config":
+            if request.method != "GET":
+                route.fulfill(status=405, body="GET required")
+                return
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "sources": source_state["sources"],
+                        "ignored": source_state["ignored"],
+                    }
+                ),
+            )
+            return
+
+        if parsed.path == "/api/source/choose":
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps({"path": source_state["chosen"]}),
+            )
+            return
+
+        if parsed.path in {
+            "/api/source/add",
+            "/api/source/remove",
+            "/api/candidate/ignore",
+            "/api/candidate/unignore",
+        }:
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            path = str(body.get("path") or "")
+            if not path:
+                route.fulfill(status=400, body="path required")
+                return
+            if parsed.path == "/api/source/add":
+                if path not in source_state["sources"]:
+                    source_state["sources"].append(path)
+                source_state["ignored"] = [
+                    value
+                    for value in source_state["ignored"]
+                    if value != path
+                ]
+            elif parsed.path == "/api/source/remove":
+                source_state["sources"] = [
+                    value
+                    for value in source_state["sources"]
+                    if value != path
+                ]
+            elif parsed.path == "/api/candidate/ignore":
+                if path not in source_state["ignored"]:
+                    source_state["ignored"].append(path)
+            else:
+                source_state["ignored"] = [
+                    value
+                    for value in source_state["ignored"]
+                    if value != path
+                ]
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "ok": True,
+                        "config": {
+                            "sources": source_state["sources"],
+                            "ignored": source_state["ignored"],
+                        },
+                        "libraryRefresh": (
+                            "CURRENT"
+                            if parsed.path
+                            in {"/api/source/add", "/api/source/remove"}
+                            else ""
+                        ),
+                    }
+                ),
+            )
+            return
+
+        if parsed.path == "/api/ignored/clear":
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            if body != {"confirm": "CLEAR_IGNORED_FOLDERS"}:
+                route.fulfill(status=400, body="confirmation required")
+                return
+            source_state["ignored"] = []
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "ok": True,
+                        "config": {
+                            "sources": source_state["sources"],
+                            "ignored": [],
+                        },
+                    }
+                ),
+            )
+            return
+
+        if parsed.path == "/api/discover":
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            candidates = [
+                candidate
+                for candidate in source_state["candidates"]
+                if candidate["path"] not in source_state["sources"]
+                and candidate["path"] not in source_state["ignored"]
+            ]
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "candidates": candidates,
+                        "scannedDirs": 42 if body.get("deep") else 12,
+                    }
+                ),
             )
             return
 

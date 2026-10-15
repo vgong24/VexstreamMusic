@@ -233,6 +233,7 @@ async function refreshCatalog(){
  const nextCatalog=await loadLibraryCatalog();
  applyCatalog(nextCatalog);
  renderTrackChoices();
+ renderSources();
  renderPlaylistChoices();
  render();
  return nextCatalog;
@@ -715,6 +716,26 @@ async function guarded(effect){
  render();
 }
 
+async function applySourceMutation(mutation,{refreshLibrary=false}={}){
+ sourceConfig=mutation.config;
+ if(mutation.warning){
+  error.textContent=mutation.warning;
+ }
+ if(refreshLibrary){
+  await refreshCatalog();
+ }
+ renderSources();
+}
+
+function removeDiscoveryCandidate(path){
+ sourceDiscoveryState=Object.freeze({
+  ...sourceDiscoveryState,
+  candidates:Object.freeze(
+   sourceDiscoveryState.candidates.filter(candidate=>candidate.path!==path)
+  )
+ });
+}
+
 exitVexStreamButton.addEventListener("click",()=>void guarded(async()=>{
  exitVexStreamButton.disabled=true;
  exitVexStreamButton.textContent=resolveText(locale,"system.exit.exiting");
@@ -730,13 +751,67 @@ shuffle.addEventListener("click",()=>{player.toggleShuffle();render();});
 repeat.addEventListener("click",()=>{player.toggleRepeat();render();});
 clearAfterCurrent.addEventListener("click",()=>{player.clearAfterCurrent();render();});
 
+librarySearch.addEventListener("input",()=>{
+ libraryView=Object.freeze({
+  ...libraryView,
+  query:librarySearch.value
+ });
+ renderTrackChoices();
+});
+
+libraryGenre.addEventListener("change",()=>{
+ libraryView=Object.freeze({
+  ...libraryView,
+  genre:libraryGenre.value
+ });
+ renderTrackChoices();
+});
+
+librarySort.addEventListener("change",()=>{
+ libraryView=Object.freeze({
+  ...libraryView,
+  sort:librarySort.value
+ });
+ renderTrackChoices();
+});
+
+for(const button of libraryModeButtons){
+ button.addEventListener("click",()=>{
+  libraryView=Object.freeze({
+   ...libraryView,
+   mode:button.dataset.libraryMode
+  });
+  renderTrackChoices();
+ });
+}
+
 trackChoices.addEventListener("click",event=>{
+ const groupAction=event.target.closest("[data-library-group-action]");
+ const groupCard=event.target.closest("[data-library-group]");
+ if(groupAction&&groupCard){
+  const groups=groupLibrary(
+   currentLibraryView(),
+   groupCard.dataset.libraryGroupKind
+  );
+  const group=groups.find(value=>value.key===groupCard.dataset.libraryGroup);
+  if(!group)return;
+  if(groupAction.dataset.libraryGroupAction==="play"){
+   void guarded(()=>player.playContext(group.refs,0));
+   return;
+  }
+  if(groupAction.dataset.libraryGroupAction==="append"){
+   player.append(group.refs);
+   render();
+   return;
+  }
+ }
+
  const action=event.target.closest("[data-track-action]");
  const card=event.target.closest("[data-track-ref]");
  if(!action||!card)return;
  const ref=card.dataset.trackRef;
  if(action.dataset.trackAction==="play"){
-  void guarded(()=>player.playTrack(ref,refs));
+  void guarded(()=>player.playTrack(ref,libraryPlaybackRefs()));
   return;
  }
  if(action.dataset.trackAction==="play-next"){
@@ -756,6 +831,76 @@ trackChoices.addEventListener("click",event=>{
   });
  }
 });
+
+sourceAdd.addEventListener("click",()=>void guarded(async()=>{
+ const path=await chooseSourceFolder();
+ const mutation=await addSource(path);
+ await applySourceMutation(mutation,{refreshLibrary:true});
+}));
+
+sourceDiscover.addEventListener("click",()=>void guarded(async()=>{
+ sourceDiscoveryState=await discoverSources({deep:false});
+ renderSources();
+}));
+
+sourceDiscoverDeep.addEventListener("click",()=>void guarded(async()=>{
+ sourceDiscoveryState=await discoverSources({deep:true});
+ renderSources();
+}));
+
+sourceList.addEventListener("click",event=>{
+ const action=event.target.closest("[data-source-action]");
+ const row=event.target.closest("[data-source-path]");
+ if(!action||!row)return;
+ if(action.dataset.sourceAction==="remove"){
+  void guarded(async()=>{
+   const mutation=await removeSource(row.dataset.sourcePath);
+   await applySourceMutation(mutation,{refreshLibrary:true});
+  });
+ }
+});
+
+sourceDiscovery.addEventListener("click",event=>{
+ const action=event.target.closest("[data-source-candidate-action]");
+ const row=event.target.closest("[data-source-candidate]");
+ if(!action||!row)return;
+ const path=row.dataset.sourceCandidate;
+
+ if(action.dataset.sourceCandidateAction==="include"){
+  void guarded(async()=>{
+   const mutation=await addSource(path);
+   removeDiscoveryCandidate(path);
+   await applySourceMutation(mutation,{refreshLibrary:true});
+  });
+  return;
+ }
+
+ if(action.dataset.sourceCandidateAction==="ignore"){
+  void guarded(async()=>{
+   const mutation=await ignoreSourceCandidate(path);
+   sourceConfig=mutation.config;
+   removeDiscoveryCandidate(path);
+   renderSources();
+  });
+ }
+});
+
+ignoredSourceList.addEventListener("click",event=>{
+ const action=event.target.closest("[data-ignored-source-action]");
+ const row=event.target.closest("[data-ignored-source]");
+ if(!action||!row)return;
+ void guarded(async()=>{
+  const mutation=await unignoreSource(row.dataset.ignoredSource);
+  sourceConfig=mutation.config;
+  renderSources();
+ });
+});
+
+clearIgnoredSourcesButton.addEventListener("click",()=>void guarded(async()=>{
+ const mutation=await clearIgnoredSources();
+ sourceConfig=mutation.config;
+ renderSources();
+}));
 
 playlistChoices.addEventListener("click",event=>{
  const action=event.target.closest("[data-playlist-action]");
@@ -907,12 +1052,13 @@ async function initialize(){
  const playerSessionLoad=loadPlayerSession().catch(failure=>Object.freeze({
   failure
  }));
- const [nextCatalog,nextPlaylists,nextImportJobs,loadedPlayerSession,nextIdentity]=await Promise.all([
+ const [nextCatalog,nextPlaylists,nextImportJobs,loadedPlayerSession,nextIdentity,nextSourceConfig]=await Promise.all([
   loadLibraryCatalog(),
   loadPlaylists(),
   loadImportJobs(),
   playerSessionLoad,
-  loadSystemIdentity()
+  loadSystemIdentity(),
+  loadSourceConfig()
  ]);
  systemIdentity=nextIdentity;
  buildIdentity.textContent=resolveText(locale,"system.identity.ready",{
@@ -923,13 +1069,9 @@ async function initialize(){
  buildIdentity.dataset.buildRef=systemIdentity.buildRef;
  exitVexStreamButton.textContent=resolveText(locale,"system.exit");
 
- catalog=nextCatalog;
- byRef=new Map(catalog.map(item=>[item.ref,item]));
- refs=catalog.map(item=>item.ref);
  playlists=nextPlaylists;
- resolvedPlaylists=Object.freeze(
-  playlists.map(playlist=>resolvePlaylistAvailability(playlist,catalog))
- );
+ sourceConfig=nextSourceConfig;
+ applyCatalog(nextCatalog);
  currentImportJobs=nextImportJobs;
 
  if(loadedPlayerSession?.failure){
@@ -963,7 +1105,9 @@ async function initialize(){
   playback,
   player,
   media:audio,
-  catalog,
+  get catalog(){return catalog;},
+  get libraryView(){return libraryView;},
+  get sourceConfig(){return sourceConfig;},
   playlists,
   resolvedPlaylists,
   exploreSession,

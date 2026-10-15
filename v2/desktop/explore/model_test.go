@@ -7,11 +7,11 @@ import (
 
 func TestQueriesPreserveV3MultiAxisFormation(t *testing.T) {
 	got := Queries(Seed{
-		Title: "Song",
+		Title:  "Song",
 		Artist: "Artist",
-		Album: "Album",
-		Genre: "Dream Pop",
-		Year: "2006",
+		Album:  "Album",
+		Genre:  "Dream Pop",
+		Year:   "2006",
 	})
 	want := []Query{
 		{Axis: "CLOSER", Label: "Closer", Query: "Artist Album"},

@@ -44,22 +44,22 @@ type response struct {
 }
 
 type inspectionResponse struct {
-	ProviderID    string                   `json:"id,omitempty"`
-	URL           string                   `json:"url,omitempty"`
-	Title         string                   `json:"title,omitempty"`
-	Channel       string                   `json:"channel,omitempty"`
-	Duration      float64                  `json:"duration,omitempty"`
-	Thumbnail     string                   `json:"thumbnail,omitempty"`
-	Description   string                   `json:"description,omitempty"`
-	Tags          []string                 `json:"tags,omitempty"`
-	Categories    []string                 `json:"categories,omitempty"`
-	Artist        string                   `json:"artist,omitempty"`
-	Album         string                   `json:"album,omitempty"`
-	Genre         string                   `json:"genre,omitempty"`
-	UploadDate    string                   `json:"uploadDate,omitempty"`
-	Sections      []sectionResponse        `json:"sections,omitempty"`
-	HasSections   bool                     `json:"hasSections,omitempty"`
-	SourceQuality duplicates.AudioQuality  `json:"sourceQuality,omitempty"`
+	ProviderID    string                  `json:"id,omitempty"`
+	URL           string                  `json:"url,omitempty"`
+	Title         string                  `json:"title,omitempty"`
+	Channel       string                  `json:"channel,omitempty"`
+	Duration      float64                 `json:"duration,omitempty"`
+	Thumbnail     string                  `json:"thumbnail,omitempty"`
+	Description   string                  `json:"description,omitempty"`
+	Tags          []string                `json:"tags,omitempty"`
+	Categories    []string                `json:"categories,omitempty"`
+	Artist        string                  `json:"artist,omitempty"`
+	Album         string                  `json:"album,omitempty"`
+	Genre         string                  `json:"genre,omitempty"`
+	UploadDate    string                  `json:"uploadDate,omitempty"`
+	Sections      []sectionResponse       `json:"sections,omitempty"`
+	HasSections   bool                    `json:"hasSections,omitempty"`
+	SourceQuality duplicates.AudioQuality `json:"sourceQuality,omitempty"`
 }
 
 type sectionResponse struct {
@@ -121,30 +121,30 @@ func projectInspection(value importprovider.Inspection) inspectionResponse {
 	sections := make([]sectionResponse, 0, len(value.Sections))
 	for _, section := range value.Sections {
 		sections = append(sections, sectionResponse{
-			Index: section.Index,
-			Start: section.Start,
-			End: section.End,
-			Title: section.Title,
-			Artist: section.Artist,
+			Index:    section.Index,
+			Start:    section.Start,
+			End:      section.End,
+			Title:    section.Title,
+			Artist:   section.Artist,
 			Selected: section.Selected,
 		})
 	}
 	return inspectionResponse{
-		ProviderID: value.ProviderID,
-		URL: value.URL,
-		Title: value.Title,
-		Channel: value.Channel,
-		Duration: value.Duration,
-		Thumbnail: value.Thumbnail,
-		Description: value.Description,
-		Tags: append([]string(nil), value.Tags...),
-		Categories: append([]string(nil), value.Categories...),
-		Artist: value.Artist,
-		Album: value.Album,
-		Genre: value.Genre,
-		UploadDate: value.UploadDate,
-		Sections: sections,
-		HasSections: value.HasSections,
+		ProviderID:    value.ProviderID,
+		URL:           value.URL,
+		Title:         value.Title,
+		Channel:       value.Channel,
+		Duration:      value.Duration,
+		Thumbnail:     value.Thumbnail,
+		Description:   value.Description,
+		Tags:          append([]string(nil), value.Tags...),
+		Categories:    append([]string(nil), value.Categories...),
+		Artist:        value.Artist,
+		Album:         value.Album,
+		Genre:         value.Genre,
+		UploadDate:    value.UploadDate,
+		Sections:      sections,
+		HasSections:   value.HasSections,
 		SourceQuality: value.SourceQuality,
 	}
 }

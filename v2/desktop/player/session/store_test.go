@@ -85,9 +85,9 @@ func TestFutureSchemaIsHeldAndCannotBeOverwrittenByOlderV4(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "player-session.json")
 	if err := persistence.SaveJSONAtomic(path, map[string]any{
 		"schemaVersion": "vexstream.desktop-player-session/v99",
-		"items": []string{"future"},
-		"currentIndex": 0,
-		"currentRef": "future",
+		"items":         []string{"future"},
+		"currentIndex":  0,
+		"currentRef":    "future",
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -98,9 +98,9 @@ func TestFutureSchemaIsHeldAndCannotBeOverwrittenByOlderV4(t *testing.T) {
 		t.Fatalf("future schema load drift: found=%v err=%v", found, err)
 	}
 	if _, err := store.Save(Snapshot{
-		Items: []string{"old"},
+		Items:        []string{"old"},
 		CurrentIndex: 0,
-		CurrentRef: "old",
+		CurrentRef:   "old",
 	}); !errors.Is(err, ErrUnsupportedSchema) {
 		t.Fatalf("future schema was overwritten: %v", err)
 	}

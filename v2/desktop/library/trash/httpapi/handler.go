@@ -26,9 +26,9 @@ type SnapshotFunc func() library.Projection
 type Refresh func() error
 
 type Handler struct {
-	trash    Trash
-	library  SnapshotFunc
-	refresh  Refresh
+	trash   Trash
+	library SnapshotFunc
+	refresh Refresh
 }
 
 func New(
@@ -40,7 +40,7 @@ func New(
 		panic("trash http adapter requires Trash and Library snapshot")
 	}
 	return &Handler{
-		trash: trashService,
+		trash:   trashService,
 		library: librarySnapshot,
 		refresh: refresh,
 	}
@@ -114,7 +114,7 @@ func (h *Handler) trashRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.writeCustodyResult(w, map[string]any{
-		"ok": true,
+		"ok":    true,
 		"moved": len(moved),
 	})
 }
@@ -130,7 +130,7 @@ func (h *Handler) restore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.writeCustodyResult(w, map[string]any{
-		"ok": true,
+		"ok":       true,
 		"restored": len(restored),
 	})
 }
@@ -167,8 +167,8 @@ func (h *Handler) purge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"ok": true,
-		"deleted": count,
+		"ok":                true,
+		"deleted":           count,
 		"preservedMetadata": request.PreserveMetadata,
 	})
 }
@@ -201,7 +201,7 @@ func (h *Handler) recoverPurge(
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"ok": true,
+		"ok":        true,
 		"recovered": count,
 	})
 }

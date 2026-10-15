@@ -44,7 +44,7 @@ func NewWithDestinations(
 		panic("Import jobs HTTP adapter requires manager")
 	}
 	return &Handler{
-		manager: manager,
+		manager:      manager,
 		destinations: destinations,
 	}
 }
@@ -144,26 +144,26 @@ func (h *Handler) start(w http.ResponseWriter, r *http.Request) {
 			selected = *section.Selected
 		}
 		sections = append(sections, importprovider.PrepareSection{
-			Index: section.Index,
+			Index:       section.Index,
 			SourceTitle: section.SourceTitle,
-			Title: section.Title,
-			Artist: section.Artist,
-			Start: section.Start,
-			End: section.End,
-			Selected: selected,
+			Title:       section.Title,
+			Artist:      section.Artist,
+			Start:       section.Start,
+			End:         section.End,
+			Selected:    selected,
 		})
 	}
 
 	job, err := h.manager.Start(workflow.Request{
-		Title: strings.TrimSpace(input.Title),
-		Destination: strings.TrimSpace(input.Destination),
-		URL: strings.TrimSpace(input.URL),
-		Mode: strings.TrimSpace(input.Mode),
-		WholeTitle: strings.TrimSpace(input.WholeTitle),
+		Title:          strings.TrimSpace(input.Title),
+		Destination:    strings.TrimSpace(input.Destination),
+		URL:            strings.TrimSpace(input.URL),
+		Mode:           strings.TrimSpace(input.Mode),
+		WholeTitle:     strings.TrimSpace(input.WholeTitle),
 		ArtistOverride: strings.TrimSpace(input.ArtistOverride),
-		Collection: strings.TrimSpace(input.Collection),
-		Genre: strings.TrimSpace(input.Genre),
-		Sections: sections,
+		Collection:     strings.TrimSpace(input.Collection),
+		Genre:          strings.TrimSpace(input.Genre),
+		Sections:       sections,
 	})
 	if err != nil {
 		status := http.StatusBadRequest
@@ -175,7 +175,7 @@ func (h *Handler) start(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"jobId": job.ID,
+		"jobId":  job.ID,
 		"status": job.Status,
 	})
 }
@@ -194,7 +194,7 @@ func (h *Handler) cancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"ok": true,
+		"ok":     true,
 		"status": "cancelling",
 	})
 }

@@ -88,29 +88,29 @@ func (y YouTubePreparation) Prepare(
 	sections := make([]youtubeprovider.PrepareSection, 0, len(plan.Sections))
 	for _, section := range plan.Sections {
 		sections = append(sections, youtubeprovider.PrepareSection{
-			Index: section.Index,
+			Index:       section.Index,
 			SourceTitle: section.SourceTitle,
-			Title: section.Title,
-			Artist: section.Artist,
-			Start: section.Start,
-			End: section.End,
-			Selected: section.Selected,
+			Title:       section.Title,
+			Artist:      section.Artist,
+			Start:       section.Start,
+			End:         section.End,
+			Selected:    section.Selected,
 		})
 	}
 
 	result, err := y.Bridge.Prepare(
 		ctx,
 		youtubeprovider.PreparePlan{
-			URL: plan.URL,
-			Destination: plan.Destination,
+			URL:              plan.URL,
+			Destination:      plan.Destination,
 			StagingDirectory: plan.StagingDirectory,
-			CancelPath: plan.CancelPath,
-			Mode: plan.Mode,
-			WholeTitle: plan.WholeTitle,
-			ArtistOverride: plan.ArtistOverride,
-			Collection: plan.Collection,
-			Genre: plan.Genre,
-			Sections: sections,
+			CancelPath:       plan.CancelPath,
+			Mode:             plan.Mode,
+			WholeTitle:       plan.WholeTitle,
+			ArtistOverride:   plan.ArtistOverride,
+			Collection:       plan.Collection,
+			Genre:            plan.Genre,
+			Sections:         sections,
 		},
 		func(event youtubeprovider.PrepareEvent) {
 			if onEvent == nil {
@@ -119,24 +119,24 @@ func (y YouTubePreparation) Prepare(
 			var problem *Problem
 			if event.Problem != nil {
 				problem = &Problem{
-					SchemaVersion: event.Problem.SchemaVersion,
-					Provider: event.Problem.Provider,
-					Stage: event.Problem.Stage,
-					Code: event.Problem.Code,
-					Title: event.Problem.Title,
-					Message: event.Problem.Message,
-					Retryable: event.Problem.Retryable,
+					SchemaVersion:   event.Problem.SchemaVersion,
+					Provider:        event.Problem.Provider,
+					Stage:           event.Problem.Stage,
+					Code:            event.Problem.Code,
+					Title:           event.Problem.Title,
+					Message:         event.Problem.Message,
+					Retryable:       event.Problem.Retryable,
 					SuggestedAction: event.Problem.SuggestedAction,
-					Technical: event.Problem.Technical,
-					ObservedAt: event.Problem.ObservedAt,
+					Technical:       event.Problem.Technical,
+					ObservedAt:      event.Problem.ObservedAt,
 				}
 			}
 			onEvent(PrepareEvent{
-				Type: event.Type,
-				Stage: event.Stage,
+				Type:     event.Type,
+				Stage:    event.Stage,
 				Progress: event.Progress,
-				Message: event.Message,
-				Problem: problem,
+				Message:  event.Message,
+				Problem:  problem,
 			})
 		},
 	)
@@ -151,13 +151,13 @@ func (y YouTubePreparation) Prepare(
 	for _, output := range result.Outputs {
 		outputs = append(outputs, PreparedOutput{
 			RelativePath: output.RelativePath,
-			Filename: output.Filename,
+			Filename:     output.Filename,
 			CatalogEntry: cloneMap(output.CatalogEntry),
 		})
 	}
 	return PrepareResult{
 		Outputs: outputs,
-		Staged: result.Staged,
+		Staged:  result.Staged,
 	}, nil
 }
 
@@ -167,16 +167,16 @@ func ProblemFromError(err error) (Problem, bool) {
 		return Problem{}, false
 	}
 	return Problem{
-		SchemaVersion: failure.Problem.SchemaVersion,
-		Provider: failure.Problem.Provider,
-		Stage: failure.Problem.Stage,
-		Code: failure.Problem.Code,
-		Title: failure.Problem.Title,
-		Message: failure.Problem.Message,
-		Retryable: failure.Problem.Retryable,
+		SchemaVersion:   failure.Problem.SchemaVersion,
+		Provider:        failure.Problem.Provider,
+		Stage:           failure.Problem.Stage,
+		Code:            failure.Problem.Code,
+		Title:           failure.Problem.Title,
+		Message:         failure.Problem.Message,
+		Retryable:       failure.Problem.Retryable,
 		SuggestedAction: failure.Problem.SuggestedAction,
-		Technical: failure.Problem.Technical,
-		ObservedAt: failure.Problem.ObservedAt,
+		Technical:       failure.Problem.Technical,
+		ObservedAt:      failure.Problem.ObservedAt,
 	}, true
 }
 

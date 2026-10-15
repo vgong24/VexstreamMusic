@@ -22,7 +22,7 @@ func TestStatusDoesNotTreatSearchReadyAsImportReady(t *testing.T) {
 				SearchReady: true,
 				FFmpegReady: false,
 				ImportReady: false,
-				Python: "/python",
+				Python:      "/python",
 			}
 		},
 		func(context.Context, string) (string, error) {

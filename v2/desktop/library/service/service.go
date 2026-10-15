@@ -32,10 +32,10 @@ type Library struct {
 	mu          sync.RWMutex
 	reconcileMu sync.Mutex
 	paths       Paths
-	entries   map[string]library.CacheEntry
-	firstSeen map[string]string
-	overlays  map[string]library.Overlay
-	windows   map[string]library.PlaybackWindow
+	entries     map[string]library.CacheEntry
+	firstSeen   map[string]string
+	overlays    map[string]library.Overlay
+	windows     map[string]library.PlaybackWindow
 }
 
 func Open(paths Paths) (OpenResult, error) {
@@ -226,8 +226,8 @@ func (l *Library) UpdatePlaybackWindow(
 		clonedEnd = &value
 	}
 	window := library.PlaybackWindow{
-		Start: start,
-		End: clonedEnd,
+		Start:     start,
+		End:       clonedEnd,
 		UpdatedAt: time.Now().UTC().Format(time.RFC3339Nano),
 	}
 	next[trackRef] = window

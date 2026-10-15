@@ -52,17 +52,17 @@ func TestPrepareWritesTypedPlanStreamsProgressAndReturnsStagedOutputs(t *testing
 	got, err := bridge.Prepare(
 		context.Background(),
 		PreparePlan{
-			URL: " https://example/song ",
-			Destination: "/music",
+			URL:              " https://example/song ",
+			Destination:      "/music",
 			StagingDirectory: stage,
-			Mode: "both",
+			Mode:             "both",
 			Sections: []PrepareSection{{
-				Index: 1,
+				Index:       1,
 				SourceTitle: "Part 1",
-				Title: "Part 1",
-				Start: 0,
-				End: 30,
-				Selected: true,
+				Title:       "Part 1",
+				Start:       0,
+				End:         30,
+				Selected:    true,
 			}},
 		},
 		func(event PrepareEvent) {
@@ -109,8 +109,8 @@ func TestPrepareCancellationWinsOverProcessExitFailure(t *testing.T) {
 	_, err := bridge.Prepare(
 		context.Background(),
 		PreparePlan{
-			URL: "https://example/song",
-			Destination: "/music",
+			URL:              "https://example/song",
+			Destination:      "/music",
 			StagingDirectory: t.TempDir(),
 		},
 		nil,
@@ -135,8 +135,8 @@ func TestPreparePreservesStructuredProviderProblem(t *testing.T) {
 	_, err := bridge.Prepare(
 		context.Background(),
 		PreparePlan{
-			URL: "https://example/song",
-			Destination: "/music",
+			URL:              "https://example/song",
+			Destination:      "/music",
 			StagingDirectory: t.TempDir(),
 		},
 		nil,
@@ -164,8 +164,8 @@ func TestPrepareProcessFailureUsesStderrFallbackProblem(t *testing.T) {
 	_, err := bridge.Prepare(
 		context.Background(),
 		PreparePlan{
-			URL: "https://example/song",
-			Destination: "/music",
+			URL:              "https://example/song",
+			Destination:      "/music",
 			StagingDirectory: t.TempDir(),
 		},
 		nil,

@@ -18,8 +18,8 @@ import (
 	v4app "github.com/vgong24/VexstreamMusic/v2"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/appdata"
 	desktopconfig "github.com/vgong24/VexstreamMusic/v2/desktop/config"
-	confighttp "github.com/vgong24/VexstreamMusic/v2/desktop/config/httpapi"
 	discoveryhttp "github.com/vgong24/VexstreamMusic/v2/desktop/config/discovery/httpapi"
+	confighttp "github.com/vgong24/VexstreamMusic/v2/desktop/config/httpapi"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/config/picker"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/explore"
 	explorehttp "github.com/vgong24/VexstreamMusic/v2/desktop/explore/httpapi"
@@ -38,10 +38,10 @@ import (
 	libraryservice "github.com/vgong24/VexstreamMusic/v2/desktop/library/service"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/library/trash"
 	trashhttp "github.com/vgong24/VexstreamMusic/v2/desktop/library/trash/httpapi"
-	"github.com/vgong24/VexstreamMusic/v2/desktop/playlists"
-	playlistshttp "github.com/vgong24/VexstreamMusic/v2/desktop/playlists/httpapi"
 	playersession "github.com/vgong24/VexstreamMusic/v2/desktop/player/session"
 	playersessionhttp "github.com/vgong24/VexstreamMusic/v2/desktop/player/session/httpapi"
+	"github.com/vgong24/VexstreamMusic/v2/desktop/playlists"
+	playlistshttp "github.com/vgong24/VexstreamMusic/v2/desktop/playlists/httpapi"
 	youtubeprovider "github.com/vgong24/VexstreamMusic/v2/desktop/provider/youtube"
 	runtimeenv "github.com/vgong24/VexstreamMusic/v2/desktop/provider/youtube/runtime"
 	runtimehttp "github.com/vgong24/VexstreamMusic/v2/desktop/provider/youtube/runtime/httpapi"
@@ -89,9 +89,9 @@ func Open(options Options) (*Application, error) {
 	}
 
 	openedLibrary, err := libraryservice.Open(libraryservice.Paths{
-		Cache: options.Layout.LibraryCache,
-		FirstSeen: options.Layout.FirstSeen,
-		Overlays: options.Layout.Overlays,
+		Cache:           options.Layout.LibraryCache,
+		FirstSeen:       options.Layout.FirstSeen,
+		Overlays:        options.Layout.Overlays,
 		PlaybackWindows: options.Layout.PlaybackWindows,
 	})
 	if err != nil {
@@ -100,10 +100,10 @@ func Open(options Options) (*Application, error) {
 	libraryOwner := openedLibrary.Library
 
 	application := &Application{
-		version: options.Version,
+		version:  options.Version,
 		buildRef: options.BuildRef,
-		layout: options.Layout,
-		exit: make(chan struct{}),
+		layout:   options.Layout,
+		exit:     make(chan struct{}),
 		warnings: []string{},
 	}
 
@@ -123,10 +123,10 @@ func Open(options Options) (*Application, error) {
 
 	trashOwner, err := trash.Open(
 		trash.Paths{
-			TrashState: options.Layout.TrashState,
+			TrashState:     options.Layout.TrashState,
 			DeletedHistory: options.Layout.DeletedHistory,
-			FilesRoot: options.Layout.TrashFiles,
-			PurgeJournal: options.Layout.TrashPurgeJournal,
+			FilesRoot:      options.Layout.TrashFiles,
+			PurgeJournal:   options.Layout.TrashPurgeJournal,
 		},
 		trash.LibraryCleaner{State: libraryOwner},
 	)
@@ -171,21 +171,21 @@ func Open(options Options) (*Application, error) {
 	exploreMatcher := librarymatch.New(trackSnapshot)
 	exploreSeedResolver := librarymatch.NewSeedResolver(librarySnapshot)
 	exploreService := explore.Service{
-		Provider: exploreprovider.YouTube{Searcher: providerBridge},
-		Matcher: exploreMatcher,
+		Provider:    exploreprovider.YouTube{Searcher: providerBridge},
+		Matcher:     exploreMatcher,
 		ProviderRef: "youtube",
 	}
 
 	importInspector := importprovider.YouTube{Inspector: providerBridge}
 	importReviewService := importreview.Service{
 		Inspector: importInspector,
-		Library: trackSnapshot,
+		Library:   trackSnapshot,
 	}
 	importPreparer := importprovider.YouTubePreparation{Bridge: providerBridge}
 	importWorkflow := workflow.Service{
-		StagingRoot: options.Layout.ImportStaging,
-		Preparer: importPreparer,
-		Commit: importcommit.CommitPrepared,
+		StagingRoot:        options.Layout.ImportStaging,
+		Preparer:           importPreparer,
+		Commit:             importcommit.CommitPrepared,
 		DestinationAllowed: config.IsSource,
 		AfterCommit: func(importcommit.Result) error {
 			return refreshLibrary()
@@ -316,7 +316,7 @@ func Open(options Options) (*Application, error) {
 			return
 		}
 		jsonOut(w, http.StatusOK, map[string]any{
-			"ok": true,
+			"ok":     true,
 			"tracks": len(projection.Tracks),
 		})
 	})
@@ -369,8 +369,8 @@ func (a *Application) health(
 		return
 	}
 	jsonOut(w, http.StatusOK, map[string]any{
-		"ok": true,
-		"version": a.version,
+		"ok":       true,
+		"version":  a.version,
 		"buildRef": a.buildRef,
 		"warnings": a.StartupWarnings(),
 	})
@@ -400,7 +400,7 @@ func (a *Application) exitHandler(
 		return
 	}
 	jsonOut(w, http.StatusOK, map[string]any{
-		"ok": true,
+		"ok":    true,
 		"state": "EXITING",
 	})
 	go a.exitOnce.Do(func() {

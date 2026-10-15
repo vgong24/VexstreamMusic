@@ -11,12 +11,12 @@ import (
 )
 
 type storeFixture struct {
-	load      playersession.Snapshot
-	found     bool
-	loadErr   error
-	save      playersession.Snapshot
-	saveErr   error
-	saved     playersession.Snapshot
+	load    playersession.Snapshot
+	found   bool
+	loadErr error
+	save    playersession.Snapshot
+	saveErr error
+	saved   playersession.Snapshot
 }
 
 func (s *storeFixture) Load() (playersession.Snapshot, bool, error) {
@@ -107,7 +107,7 @@ func TestPutRejectsUnknownFieldsBeforeStore(t *testing.T) {
 
 func TestFutureSchemaHoldMapsToConflictAndDoesNotPretendMissing(t *testing.T) {
 	store := &storeFixture{
-		found: true,
+		found:   true,
 		loadErr: playersession.ErrUnsupportedSchema,
 	}
 	response := httptest.NewRecorder()

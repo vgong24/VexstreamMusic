@@ -57,8 +57,8 @@ func (m *mutatorFixture) UpdatePlaybackWindow(
 		return library.PlaybackWindow{}, false, nil
 	}
 	return library.PlaybackWindow{
-		Start: start,
-		End: end,
+		Start:     start,
+		End:       end,
 		UpdatedAt: "now",
 	}, true, nil
 }
@@ -66,8 +66,8 @@ func (m *mutatorFixture) UpdatePlaybackWindow(
 func snapshotTrack(duration float64) library.Projection {
 	return library.Projection{
 		Tracks: []library.Track{{
-			ID: "track-a",
-			Title: "Song",
+			ID:       "track-a",
+			Title:    "Song",
 			Duration: duration,
 		}},
 		Paths: map[string]string{

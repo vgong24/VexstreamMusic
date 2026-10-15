@@ -38,15 +38,15 @@ func serviceFixture(t *testing.T, preparer Preparer) Service {
 	tick := 0
 	return Service{
 		StagingRoot: t.TempDir(),
-		Preparer: preparer,
+		Preparer:    preparer,
 		Commit: func(
 			_ string,
 			_ string,
 			_ string,
 		) (importcommit.Result, error) {
 			return importcommit.Result{
-				Added: 1,
-				TrackRefs: []string{"track-a"},
+				Added:        1,
+				TrackRefs:    []string{"track-a"},
 				Destinations: []string{"/music/Song.mp3"},
 			}, nil
 		},
@@ -69,7 +69,7 @@ func TestRunPersistsLifecycleAndCommitsPreparedOutput(t *testing.T) {
 			Staged: true,
 			Outputs: []importprovider.PreparedOutput{{
 				RelativePath: "outputs/Song.mp3",
-				Filename: "Song.mp3",
+				Filename:     "Song.mp3",
 			}},
 		},
 		events: []importprovider.PrepareEvent{
@@ -83,10 +83,10 @@ func TestRunPersistsLifecycleAndCommitsPreparedOutput(t *testing.T) {
 	outcome, err := service.Run(
 		context.Background(),
 		Request{
-			Title: "Song",
+			Title:       "Song",
 			Destination: "/music",
-			URL: "https://example/song",
-			Mode: "whole",
+			URL:         "https://example/song",
+			Mode:        "whole",
 		},
 		func(job importmodel.Job) {
 			seen = append(seen, job.Status)
@@ -126,7 +126,7 @@ func TestRunPersistsLifecycleAndCommitsPreparedOutput(t *testing.T) {
 func TestCommitFailureLeavesReadyStagingForRetryOrDiscard(t *testing.T) {
 	preparer := &preparerFixture{
 		result: importprovider.PrepareResult{
-			Staged: true,
+			Staged:  true,
 			Outputs: []importprovider.PreparedOutput{{Filename: "Song.mp3"}},
 		},
 	}
@@ -145,9 +145,9 @@ func TestCommitFailureLeavesReadyStagingForRetryOrDiscard(t *testing.T) {
 	outcome, err := service.Run(
 		context.Background(),
 		Request{
-			Title: "Song",
+			Title:       "Song",
 			Destination: "/music",
-			URL: "https://example/song",
+			URL:         "https://example/song",
 		},
 		nil,
 	)
@@ -167,17 +167,17 @@ func TestCommitFailureLeavesReadyStagingForRetryOrDiscard(t *testing.T) {
 func TestProviderFailureLeavesFailedStagingAndProblemEvidence(t *testing.T) {
 	problem := importprovider.Problem{
 		SchemaVersion: "vexstream.provider-problem/v1",
-		Provider: "youtube",
-		Stage: "import.download",
-		Code: "RATE_LIMIT",
-		Title: "Provider busy",
-		Message: "Retry later",
-		Retryable: true,
+		Provider:      "youtube",
+		Stage:         "import.download",
+		Code:          "RATE_LIMIT",
+		Title:         "Provider busy",
+		Message:       "Retry later",
+		Retryable:     true,
 	}
 	preparer := &preparerFixture{
 		err: errors.New("provider failed"),
 		events: []importprovider.PrepareEvent{{
-			Type: "error",
+			Type:    "error",
 			Problem: &problem,
 		}},
 	}
@@ -186,9 +186,9 @@ func TestProviderFailureLeavesFailedStagingAndProblemEvidence(t *testing.T) {
 	outcome, err := service.Run(
 		context.Background(),
 		Request{
-			Title: "Song",
+			Title:       "Song",
 			Destination: "/music",
-			URL: "https://example/song",
+			URL:         "https://example/song",
 		},
 		nil,
 	)
@@ -213,9 +213,9 @@ func TestCancellationRemovesStagingAndReturnsCancelledJob(t *testing.T) {
 	outcome, err := service.Run(
 		context.Background(),
 		Request{
-			Title: "Song",
+			Title:       "Song",
 			Destination: "/music",
-			URL: "https://example/song",
+			URL:         "https://example/song",
 		},
 		nil,
 	)
@@ -237,9 +237,9 @@ func TestDestinationIsAdmittedBeforeStagingOrProviderWork(t *testing.T) {
 	_, err := service.Run(
 		context.Background(),
 		Request{
-			Title: "Song",
+			Title:       "Song",
 			Destination: "/outside",
-			URL: "https://example/song",
+			URL:         "https://example/song",
 		},
 		nil,
 	)

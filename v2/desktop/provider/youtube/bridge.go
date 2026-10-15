@@ -253,15 +253,15 @@ func parseProblem(output []byte, stage string) Problem {
 	}
 
 	return Problem{
-		SchemaVersion: "vexstream.provider-problem/v1",
-		Provider:      "youtube",
-		Stage:         stage,
-		Code:          "YOUTUBE_PROVIDER_ERROR",
-		Title:         "YouTube could not complete this request.",
-		Message:       "The provider/runtime returned an unexpected error.",
-		Retryable:     true,
+		SchemaVersion:   "vexstream.provider-problem/v1",
+		Provider:        "youtube",
+		Stage:           stage,
+		Code:            "YOUTUBE_PROVIDER_ERROR",
+		Title:           "YouTube could not complete this request.",
+		Message:         "The provider/runtime returned an unexpected error.",
+		Retryable:       true,
 		SuggestedAction: "Retry once. If it repeats, inspect the provider diagnostic.",
-		Technical:     strings.TrimSpace(string(output)),
+		Technical:       strings.TrimSpace(string(output)),
 	}
 }
 

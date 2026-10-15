@@ -102,10 +102,10 @@ func TestClassificationPreservesV3GroupsAndSortOrder(t *testing.T) {
 
 func TestClassificationReturnsIndependentCopies(t *testing.T) {
 	input := []Job{{
-		ID: "ready",
-		Status: StatusReady,
+		ID:        "ready",
+		Status:    StatusReady,
 		TrackRefs: []string{"a"},
-		Problem: map[string]any{"code": "X"},
+		Problem:   map[string]any{"code": "X"},
 	}}
 	got := Classify(input)
 	got.Ready[0].TrackRefs[0] = "mutated"

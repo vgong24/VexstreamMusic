@@ -179,7 +179,6 @@ func TestOverlayMutationRejectsEmptyIntentBeforePersistence(t *testing.T) {
 	}
 }
 
-
 func TestForgetTrackStateIsIdempotentAcrossV3ReadableStores(t *testing.T) {
 	root := t.TempDir()
 	p := paths(filepath.Join(root, "state"))

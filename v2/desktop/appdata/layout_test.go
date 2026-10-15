@@ -10,14 +10,14 @@ func TestLayoutKeepsV3ReadableStoresSharedAndV4RecoverySideBySide(t *testing.T) 
 	got := At(base)
 
 	shared := map[string]string{
-		"config": got.Config,
-		"cache": got.LibraryCache,
+		"config":    got.Config,
+		"cache":     got.LibraryCache,
 		"firstSeen": got.FirstSeen,
-		"overlays": got.Overlays,
-		"windows": got.PlaybackWindows,
+		"overlays":  got.Overlays,
+		"windows":   got.PlaybackWindows,
 		"playlists": got.Playlists,
-		"trash": got.TrashState,
-		"history": got.DeletedHistory,
+		"trash":     got.TrashState,
+		"history":   got.DeletedHistory,
 	}
 	for name, path := range shared {
 		if filepath.Dir(path) != base && name != "config" {
@@ -42,11 +42,11 @@ func TestLayoutKeepsV3ReadableStoresSharedAndV4RecoverySideBySide(t *testing.T) 
 	}
 
 	for name, path := range map[string]string{
-		"currentURL": got.CurrentURL,
-		"staging": got.ImportStaging,
+		"currentURL":    got.CurrentURL,
+		"staging":       got.ImportStaging,
 		"playerSession": got.PlayerSession,
-		"purgeJournal": got.TrashPurgeJournal,
-		"bridge": got.ProviderBridge,
+		"purgeJournal":  got.TrashPurgeJournal,
+		"bridge":        got.ProviderBridge,
 	} {
 		relative, err := filepath.Rel(got.V4Root, path)
 		if err != nil ||
@@ -69,7 +69,6 @@ func TestSharedProviderRuntimeStaysOutsideV4SpecificRoot(t *testing.T) {
 	}
 }
 
-
 func TestPlayerSessionStaysSideBySideWithProtectedV3Stores(t *testing.T) {
 	base := filepath.Join(t.TempDir(), "VexStreamMusic")
 	got := At(base)
@@ -87,7 +86,6 @@ func TestPlayerSessionStaysSideBySideWithProtectedV3Stores(t *testing.T) {
 		t.Fatal("V4 listening session leaked into protected V3 root")
 	}
 }
-
 
 func TestProtectedCurrentURLRemainsV3OwnedOutsideV4Root(t *testing.T) {
 	base := filepath.Join(t.TempDir(), "VexStreamMusic")

@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	importprovider "github.com/vgong24/VexstreamMusic/v2/desktop/imports/provider"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/imports/duplicates"
+	importprovider "github.com/vgong24/VexstreamMusic/v2/desktop/imports/provider"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/library"
 )
 

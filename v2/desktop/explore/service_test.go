@@ -34,10 +34,10 @@ func (m *matcherFixture) Match(candidate Candidate) LibraryMatch {
 	m.seen = append(m.seen, candidate.ProviderID)
 	if candidate.ProviderID == "local" {
 		return LibraryMatch{
-			State: "IN_LIBRARY",
+			State:    "IN_LIBRARY",
 			TrackRef: "track-local",
 			Relation: "SAME_SOURCE",
-			Score: 100,
+			Score:    100,
 		}
 	}
 	return LibraryMatch{State: "NOT_IN_LIBRARY"}
@@ -59,19 +59,19 @@ func TestExploreBuildsV3ShapedFrameAndBalancedCandidates(t *testing.T) {
 		},
 	}}
 	service := Service{
-		Provider: provider,
+		Provider:    provider,
 		ProviderRef: "youtube",
-		Limit: 6,
-		CreatorCap: 2,
+		Limit:       6,
+		CreatorCap:  2,
 		Now: func() time.Time {
 			return time.Date(2026, 10, 14, 1, 2, 3, 4, time.UTC)
 		},
 	}
 	frame, err := service.Explore(context.Background(), Seed{
 		ProviderID: "seed",
-		Title: "Song",
-		Artist: "Artist",
-		Year: "2006",
+		Title:      "Song",
+		Artist:     "Artist",
+		Year:       "2006",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -100,7 +100,7 @@ func TestExploreBuildsV3ShapedFrameAndBalancedCandidates(t *testing.T) {
 
 func TestExploreAnnotatesCandidatesThroughInjectedLibraryMatcher(t *testing.T) {
 	provider := &providerFixture{rows: map[string][]Candidate{
-		"Song": {{ProviderID: "local", Title: "Other Song", Channel: "Other"}},
+		"Song":                  {{ProviderID: "local", Title: "Other Song", Channel: "Other"}},
 		"Song cover remix live": {},
 	}}
 	matcher := &matcherFixture{}
@@ -148,7 +148,7 @@ func TestExploreRequiresTitleAndProvider(t *testing.T) {
 
 func TestExploreCarriesAxisQueryAndDefaultLibraryState(t *testing.T) {
 	provider := &providerFixture{rows: map[string][]Candidate{
-		"Song": {{ProviderID: "one", Title: "Other"}},
+		"Song":                  {{ProviderID: "one", Title: "Other"}},
 		"Song cover remix live": {},
 	}}
 	frame, err := (Service{Provider: provider}).Explore(

@@ -85,8 +85,8 @@ type Service struct {
 	DestinationAllowed DestinationAllowed
 	AfterCommit        AfterCommit
 	Slots              chan struct{}
-	Now               func() time.Time
-	NewID             func() (string, error)
+	Now                func() time.Time
+	NewID              func() (string, error)
 }
 
 func (s Service) Run(
@@ -343,9 +343,9 @@ func (s Service) Run(
 		job.CompletedAt = now().UTC().Format(time.RFC3339Nano)
 	}); err != nil {
 		return Outcome{
-			Job: cloneJob(job),
+			Job:      cloneJob(job),
 			StageDir: stage,
-			Commit: &committed,
+			Commit:   &committed,
 		}, err
 	}
 
@@ -372,16 +372,16 @@ func notify(callback UpdateFunc, job importmodel.Job) {
 
 func problemMap(problem importprovider.Problem) map[string]any {
 	return map[string]any{
-		"schemaVersion": problem.SchemaVersion,
-		"provider": problem.Provider,
-		"stage": problem.Stage,
-		"code": problem.Code,
-		"title": problem.Title,
-		"message": problem.Message,
-		"retryable": problem.Retryable,
+		"schemaVersion":   problem.SchemaVersion,
+		"provider":        problem.Provider,
+		"stage":           problem.Stage,
+		"code":            problem.Code,
+		"title":           problem.Title,
+		"message":         problem.Message,
+		"retryable":       problem.Retryable,
 		"suggestedAction": problem.SuggestedAction,
-		"technical": problem.Technical,
-		"observedAt": problem.ObservedAt,
+		"technical":       problem.Technical,
+		"observedAt":      problem.ObservedAt,
 	}
 }
 

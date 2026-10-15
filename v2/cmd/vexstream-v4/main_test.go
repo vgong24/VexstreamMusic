@@ -27,13 +27,12 @@ func TestEffectiveBuildRefIncludesExactBinaryIdentity(t *testing.T) {
 	}
 }
 
-
 func TestProtectedDesktopConflictExplainsSingleWriterRequirement(t *testing.T) {
 	err := protectedDesktopConflict(lifecycle.LiveClaim{
 		URL: "http://127.0.0.1:1234/",
 		Identity: lifecycle.Identity{
-			OK: true,
-			Version: "3.0.0",
+			OK:       true,
+			Version:  "3.0.0",
 			BuildRef: "v3-build",
 		},
 	})

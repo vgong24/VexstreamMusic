@@ -26,10 +26,10 @@ func (c *cleanerFixture) CleanPurged(items []Item) error {
 
 func testPaths(root string) Paths {
 	return Paths{
-		TrashState: filepath.Join(root, "trash.json"),
+		TrashState:     filepath.Join(root, "trash.json"),
 		DeletedHistory: filepath.Join(root, "deleted-history.json"),
-		FilesRoot: filepath.Join(root, "trash", "files"),
-		PurgeJournal: filepath.Join(root, "trash-purge-journal.json"),
+		FilesRoot:      filepath.Join(root, "trash", "files"),
+		PurgeJournal:   filepath.Join(root, "trash-purge-journal.json"),
 	}
 }
 
@@ -55,11 +55,11 @@ func writeTrack(t *testing.T, root, name string) (library.Track, string) {
 		t.Fatal(err)
 	}
 	return library.Track{
-		ID: "track-" + name,
-		Path: path,
+		ID:       "track-" + name,
+		Path:     path,
 		Filename: name,
-		Title: name,
-		Source: filepath.Dir(path),
+		Title:    name,
+		Source:   filepath.Dir(path),
 	}, path
 }
 
@@ -97,11 +97,11 @@ func TestMovePersistsV3TrashShapeAndRemovesOriginalBytes(t *testing.T) {
 		t.Fatal(err)
 	}
 	var v3 []struct {
-		ID string `json:"id"`
-		Track library.Track `json:"track"`
-		OriginalPath string `json:"originalPath"`
-		TrashPath string `json:"trashPath"`
-		TrashedAt string `json:"trashedAt"`
+		ID           string        `json:"id"`
+		Track        library.Track `json:"track"`
+		OriginalPath string        `json:"originalPath"`
+		TrashPath    string        `json:"trashPath"`
+		TrashedAt    string        `json:"trashedAt"`
 	}
 	if err := json.Unmarshal(data, &v3); err != nil ||
 		len(v3) != 1 ||
@@ -280,11 +280,11 @@ func TestOpenRecoversPendingJournalWithoutInventingCompletion(t *testing.T) {
 	root := t.TempDir()
 	paths := testPaths(root)
 	item := Item{
-		ID: "trash-a",
-		Track: library.Track{ID: "track-a", Filename: "song.mp3", Source: filepath.Join(root, "music")},
+		ID:           "trash-a",
+		Track:        library.Track{ID: "track-a", Filename: "song.mp3", Source: filepath.Join(root, "music")},
 		OriginalPath: filepath.Join(root, "music", "song.mp3"),
-		TrashPath: filepath.Join(paths.FilesRoot, "trash-a.mp3"),
-		TrashedAt: "earlier",
+		TrashPath:    filepath.Join(paths.FilesRoot, "trash-a.mp3"),
+		TrashedAt:    "earlier",
 	}
 	if err := os.MkdirAll(filepath.Dir(item.TrashPath), 0o755); err != nil {
 		t.Fatal(err)
@@ -297,9 +297,9 @@ func TestOpenRecoversPendingJournalWithoutInventingCompletion(t *testing.T) {
 	}
 	journal := PurgeJournal{
 		SchemaVersion: PurgeJournalSchema,
-		PurgeRef: "purge-a",
-		State: PurgeStatePlanned,
-		Entries: []PurgeEntry{{Item: item}},
+		PurgeRef:      "purge-a",
+		State:         PurgeStatePlanned,
+		Entries:       []PurgeEntry{{Item: item}},
 	}
 	if err := persistence.SaveJSONAtomic(paths.PurgeJournal, journal); err != nil {
 		t.Fatal(err)

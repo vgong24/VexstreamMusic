@@ -11,7 +11,7 @@ import (
 
 type stateCleanerFixture struct {
 	refs []string
-	err error
+	err  error
 }
 
 func (s *stateCleanerFixture) ForgetTrackState(refs []string) error {
@@ -34,8 +34,8 @@ func TestLibraryCleanerRemovesTrackStateAndSourceCatalogRows(t *testing.T) {
 
 	err := cleaner.CleanPurged([]Item{{
 		Track: library.Track{
-			ID: "track-a",
-			Source: source,
+			ID:       "track-a",
+			Source:   source,
 			Filename: "gone.mp3",
 		},
 	}})
@@ -60,8 +60,8 @@ func TestLibraryCleanerDoesNotCreateMissingCatalog(t *testing.T) {
 
 	if err := cleaner.CleanPurged([]Item{{
 		Track: library.Track{
-			ID: "track-a",
-			Source: source,
+			ID:       "track-a",
+			Source:   source,
 			Filename: "gone.mp3",
 		},
 	}}); err != nil {

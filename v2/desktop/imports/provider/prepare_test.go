@@ -23,8 +23,8 @@ func (f *prepareFixture) Prepare(
 	f.plan = plan
 	if onEvent != nil {
 		onEvent(youtubeprovider.PrepareEvent{
-			Type: "progress",
-			Stage: "Downloading source once",
+			Type:     "progress",
+			Stage:    "Downloading source once",
 			Progress: 10,
 		})
 	}
@@ -37,7 +37,7 @@ func TestYouTubePreparationMapsImportPlanEventsAndOutputs(t *testing.T) {
 			Staged: true,
 			Outputs: []youtubeprovider.PreparedOutput{{
 				RelativePath: "outputs/Song.mp3",
-				Filename: "Song.mp3",
+				Filename:     "Song.mp3",
 				CatalogEntry: map[string]any{"providerId": "abc"},
 			}},
 		},
@@ -48,15 +48,15 @@ func TestYouTubePreparationMapsImportPlanEventsAndOutputs(t *testing.T) {
 	got, err := adapter.Prepare(
 		context.Background(),
 		PreparePlan{
-			URL: "https://example/song",
-			Destination: "/music",
+			URL:              "https://example/song",
+			Destination:      "/music",
 			StagingDirectory: "/stage",
-			Mode: "both",
+			Mode:             "both",
 			Sections: []PrepareSection{{
-				Index: 1,
-				Title: "Part 1",
-				Start: 0,
-				End: 30,
+				Index:    1,
+				Title:    "Part 1",
+				Start:    0,
+				End:      30,
 				Selected: true,
 			}},
 		},
@@ -80,8 +80,8 @@ func TestYouTubePreparationMapsImportPlanEventsAndOutputs(t *testing.T) {
 	if !reflect.DeepEqual(
 		events,
 		[]PrepareEvent{{
-			Type: "progress",
-			Stage: "Downloading source once",
+			Type:     "progress",
+			Stage:    "Downloading source once",
 			Progress: 10,
 		}},
 	) {

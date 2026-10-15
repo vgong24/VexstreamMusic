@@ -34,8 +34,8 @@ func Resolve(sharedRuntime string) Status {
 		SearchReady: python != "",
 		FFmpegReady: ffmpeg != "",
 		ImportReady: python != "" && ffmpeg != "",
-		Python: python,
-		FFmpeg: ffmpeg,
+		Python:      python,
+		FFmpeg:      ffmpeg,
 	}
 	switch {
 	case status.ImportReady:

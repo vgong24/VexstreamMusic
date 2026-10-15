@@ -37,10 +37,10 @@ func TestReadRowsPreservesValidRowsAroundMalformedLines(t *testing.T) {
 func TestWriteRowsAtomicRoundTripsAndDoesNotHTMLEscapeProviderMetadata(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "_vexmedia", "library.jsonl")
 	rows := []map[string]any{{
-		"filename": "song.mp3",
-		"provider": "youtube",
+		"filename":   "song.mp3",
+		"provider":   "youtube",
 		"providerId": "id",
-		"metadata": map[string]any{"description": "A < B & C > D"},
+		"metadata":   map[string]any{"description": "A < B & C > D"},
 	}}
 	if err := WriteRowsAtomic(path, rows); err != nil {
 		t.Fatal(err)

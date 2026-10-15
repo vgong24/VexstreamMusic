@@ -100,10 +100,10 @@ func (h *Handler) overlay(w http.ResponseWriter, r *http.Request) {
 	updated, err := h.mutator.UpdateOverlays(
 		targets,
 		libraryservice.OverlayPatch{
-			Title: request.Title,
+			Title:  request.Title,
 			Artist: request.Artist,
-			Album: request.Album,
-			Genre: request.Genre,
+			Album:  request.Album,
+			Genre:  request.Genre,
 		},
 		request.Restore,
 	)
@@ -112,7 +112,7 @@ func (h *Handler) overlay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jsonOut(w, http.StatusOK, map[string]any{
-		"ok": true,
+		"ok":      true,
 		"updated": updated,
 	})
 }
@@ -170,7 +170,7 @@ func (h *Handler) playbackWindow(
 			return
 		}
 		jsonOut(w, http.StatusOK, map[string]any{
-			"ok": true,
+			"ok":       true,
 			"restored": true,
 		})
 		return
@@ -224,7 +224,7 @@ func (h *Handler) playbackWindow(
 		projected = window
 	}
 	jsonOut(w, http.StatusOK, map[string]any{
-		"ok": true,
+		"ok":     true,
 		"window": projected,
 	})
 }

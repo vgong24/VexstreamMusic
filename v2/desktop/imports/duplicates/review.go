@@ -250,7 +250,7 @@ func EstimateLocalQuality(track library.Track) AudioQuality {
 func CompareQuality(source, local AudioQuality) QualityComparison {
 	if source.BitrateKbps <= 0 || local.BitrateKbps <= 0 {
 		return QualityComparison{
-			State: "INSUFFICIENT_DATA",
+			State:   "INSUFFICIENT_DATA",
 			Summary: "Not enough format data to compare audio quality before download.",
 		}
 	}
@@ -259,7 +259,7 @@ func CompareQuality(source, local AudioQuality) QualityComparison {
 		sourceFamily == "unknown" || localFamily == "unknown" ||
 		sourceFamily != localFamily {
 		return QualityComparison{
-			State: "NOT_DIRECTLY_COMPARABLE",
+			State:   "NOT_DIRECTLY_COMPARABLE",
 			Summary: "Different codecs or containers; bitrate alone cannot prove which copy sounds better.",
 		}
 	}
@@ -267,17 +267,17 @@ func CompareQuality(source, local AudioQuality) QualityComparison {
 	switch {
 	case ratio >= 0.88 && ratio <= 1.12:
 		return QualityComparison{
-			State: "SIMILAR_INDICATORS",
+			State:   "SIMILAR_INDICATORS",
 			Summary: "The available codec/bitrate indicators are in a similar range.",
 		}
 	case ratio > 1.12:
 		return QualityComparison{
-			State: "SOURCE_HIGHER_BITRATE_SAME_CODEC",
+			State:   "SOURCE_HIGHER_BITRATE_SAME_CODEC",
 			Summary: "The source reports a higher bitrate in the same codec family; listening is still the final quality check.",
 		}
 	default:
 		return QualityComparison{
-			State: "LOCAL_HIGHER_BITRATE_SAME_CODEC",
+			State:   "LOCAL_HIGHER_BITRATE_SAME_CODEC",
 			Summary: "Your existing local copy has the higher bitrate in the same codec family; listening is still the final quality check.",
 		}
 	}

@@ -22,15 +22,15 @@ import (
 )
 
 const (
-	PurgeJournalSchema = "vexstream.trash-purge/v1"
-	PurgeStatePlanned = "PLANNED"
-	PurgeStateFilesDeleted = "FILES_DELETED"
+	PurgeJournalSchema      = "vexstream.trash-purge/v1"
+	PurgeStatePlanned       = "PLANNED"
+	PurgeStateFilesDeleted  = "FILES_DELETED"
 	PurgeStateStoresUpdated = "STORES_UPDATED"
 )
 
 var (
-	ErrNotFound = errors.New("trash item not found")
-	ErrRestoreCollision = errors.New("trash restore original path is occupied")
+	ErrNotFound              = errors.New("trash item not found")
+	ErrRestoreCollision      = errors.New("trash restore original path is occupied")
 	ErrPurgeRecoveryRequired = errors.New("pending trash purge recovery required")
 )
 
@@ -66,8 +66,8 @@ type Cleaner interface {
 }
 
 type PurgeEntry struct {
-	Item      Item               `json:"item"`
-	History   *DeletedHistoryItem `json:"history,omitempty"`
+	Item    Item                `json:"item"`
+	History *DeletedHistoryItem `json:"history,omitempty"`
 }
 
 type PurgeJournal struct {
@@ -80,7 +80,7 @@ type PurgeJournal struct {
 type Snapshot struct {
 	Trash          []Item               `json:"trash"`
 	DeletedHistory []DeletedHistoryItem `json:"deletedHistory"`
-	PendingPurge   *PurgeJournal         `json:"pendingPurge,omitempty"`
+	PendingPurge   *PurgeJournal        `json:"pendingPurge,omitempty"`
 }
 
 type Service struct {
@@ -125,13 +125,13 @@ func Open(paths Paths, cleaner Cleaner) (*Service, error) {
 	}
 
 	return &Service{
-		paths: paths,
-		trash: cloneItems(items),
+		paths:   paths,
+		trash:   cloneItems(items),
 		history: cloneHistory(history),
 		pending: pending,
 		cleaner: cleaner,
-		now: time.Now,
-		newID: randomID,
+		now:     time.Now,
+		newID:   randomID,
 	}, nil
 }
 
@@ -139,7 +139,7 @@ func (s *Service) Snapshot() Snapshot {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	out := Snapshot{
-		Trash: cloneItems(s.trash),
+		Trash:          cloneItems(s.trash),
 		DeletedHistory: cloneHistory(s.history),
 	}
 	if s.pending != nil {
@@ -180,11 +180,11 @@ func (s *Service) Move(inputs []MoveInput) ([]Item, error) {
 			ext = ".mp3"
 		}
 		item := Item{
-			ID: id,
-			Track: cloneTrack(input.Track),
+			ID:           id,
+			Track:        cloneTrack(input.Track),
 			OriginalPath: filepath.Clean(input.Path),
-			TrashPath: filepath.Join(s.paths.FilesRoot, id+ext),
-			TrashedAt: now,
+			TrashPath:    filepath.Join(s.paths.FilesRoot, id+ext),
+			TrashedAt:    now,
 		}
 		if err := moveFileSafely(item.OriginalPath, item.TrashPath); err != nil {
 			rollbackMoves(moved)
@@ -262,9 +262,9 @@ func (s *Service) Purge(
 	now := s.now().UTC().Format(time.RFC3339Nano)
 	journal := PurgeJournal{
 		SchemaVersion: PurgeJournalSchema,
-		PurgeRef: purgeRef,
-		State: PurgeStatePlanned,
-		Entries: make([]PurgeEntry, 0, len(chosen)),
+		PurgeRef:      purgeRef,
+		State:         PurgeStatePlanned,
+		Entries:       make([]PurgeEntry, 0, len(chosen)),
 	}
 	for _, item := range chosen {
 		entry := PurgeEntry{Item: cloneItem(item)}
@@ -274,10 +274,10 @@ func (s *Service) Purge(
 				return 0, err
 			}
 			entry.History = &DeletedHistoryItem{
-				ID: historyID,
-				Track: cloneTrack(item.Track),
+				ID:           historyID,
+				Track:        cloneTrack(item.Track),
 				OriginalPath: item.OriginalPath,
-				DeletedAt: now,
+				DeletedAt:    now,
 			}
 		}
 		journal.Entries = append(journal.Entries, entry)
@@ -395,7 +395,7 @@ func normalizeMoveInputs(inputs []MoveInput) []MoveInput {
 		seen[input.Track.ID] = true
 		out = append(out, MoveInput{
 			Track: cloneTrack(input.Track),
-			Path: filepath.Clean(input.Path),
+			Path:  filepath.Clean(input.Path),
 		})
 	}
 	return out

@@ -10,17 +10,17 @@ func TestSeedResolverProjectsCurrentLibraryMeaningWithoutPathCustody(t *testing.
 	resolver := NewSeedResolver(func() library.Projection {
 		return library.Projection{
 			Tracks: []library.Track{{
-				ID: "track-a",
-				Path: "/private/music/song.mp3",
-				Title: "Song",
-				Artist: "Artist",
-				Album: "Album",
-				Genre: "Dream Pop",
-				Year: "2006",
+				ID:         "track-a",
+				Path:       "/private/music/song.mp3",
+				Title:      "Song",
+				Artist:     "Artist",
+				Album:      "Album",
+				Genre:      "Dream Pop",
+				Year:       "2006",
 				ProviderID: "provider-a",
-				SourceURL: "https://example/song",
-				Channel: "Uploader",
-				Duration: 180,
+				SourceURL:  "https://example/song",
+				Channel:    "Uploader",
+				Duration:   180,
 			}},
 			Paths: map[string]string{
 				"track-a": "/private/music/song.mp3",
@@ -49,9 +49,9 @@ func TestSeedResolverUsesSourceArtistOnlyWhenCurrentArtistIsBlank(t *testing.T) 
 	resolver := NewSeedResolver(func() library.Projection {
 		return library.Projection{
 			Tracks: []library.Track{{
-				ID: "track-a",
-				Title: "Song",
-				Artist: "",
+				ID:           "track-a",
+				Title:        "Song",
+				Artist:       "",
 				SourceArtist: "Source Artist",
 			}},
 		}

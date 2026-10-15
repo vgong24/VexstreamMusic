@@ -2,9 +2,9 @@ package app
 
 import (
 	"encoding/json"
-	"os"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -15,10 +15,10 @@ import (
 func TestOpenFormsLocalDesktopCompositionWithoutMobileIngress(t *testing.T) {
 	root := t.TempDir()
 	application, err := Open(Options{
-		Version: "4.0.0",
+		Version:  "4.0.0",
 		BuildRef: "test-build",
-		Layout: appdata.At(filepath.Join(root, "VexStreamMusic")),
-		Home: root,
+		Layout:   appdata.At(filepath.Join(root, "VexStreamMusic")),
+		Home:     root,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -84,10 +84,10 @@ func TestOpenFormsLocalDesktopCompositionWithoutMobileIngress(t *testing.T) {
 func TestEmbeddedBrowserLoadsFromSameLoopbackHandler(t *testing.T) {
 	root := t.TempDir()
 	application, err := Open(Options{
-		Version: "4.0.0",
+		Version:  "4.0.0",
 		BuildRef: "test-build",
-		Layout: appdata.At(filepath.Join(root, "VexStreamMusic")),
-		Home: root,
+		Layout:   appdata.At(filepath.Join(root, "VexStreamMusic")),
+		Home:     root,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -105,10 +105,10 @@ func TestEmbeddedBrowserLoadsFromSameLoopbackHandler(t *testing.T) {
 func TestExitRequiresExplicitConfirmationThenSignalsShutdown(t *testing.T) {
 	root := t.TempDir()
 	application, err := Open(Options{
-		Version: "4.0.0",
+		Version:  "4.0.0",
 		BuildRef: "test-build",
-		Layout: appdata.At(filepath.Join(root, "VexStreamMusic")),
-		Home: root,
+		Layout:   appdata.At(filepath.Join(root, "VexStreamMusic")),
+		Home:     root,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -147,15 +147,14 @@ func TestExitRequiresExplicitConfirmationThenSignalsShutdown(t *testing.T) {
 	}
 }
 
-
 func TestPlayerSessionUsesV4OnlyLayoutThroughComposition(t *testing.T) {
 	root := t.TempDir()
 	layout := appdata.At(filepath.Join(root, "VexStreamMusic"))
 	application, err := Open(Options{
-		Version: "4.0.0",
+		Version:  "4.0.0",
 		BuildRef: "test-build",
-		Layout: layout,
-		Home: root,
+		Layout:   layout,
+		Home:     root,
 	})
 	if err != nil {
 		t.Fatal(err)

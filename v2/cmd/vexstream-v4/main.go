@@ -55,10 +55,10 @@ func run() error {
 
 	home, _ := os.UserHomeDir()
 	application, err := app.Open(app.Options{
-		Version: version,
+		Version:  version,
 		BuildRef: ref,
-		Layout: layout,
-		Home: home,
+		Layout:   layout,
+		Home:     home,
 	})
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func run() error {
 	}
 
 	server := &http.Server{
-		Handler: application.Handler(),
+		Handler:           application.Handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	protectedConflict := make(chan error, 1)

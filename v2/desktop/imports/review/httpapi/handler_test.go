@@ -34,35 +34,35 @@ func TestInspectReturnsProviderMetadataAndAdvisoryMatchesWithoutMutation(t *test
 		result: review.Result{
 			Inspection: importprovider.Inspection{
 				ProviderID: "abc",
-				URL: "https://example/song",
-				Title: "Song",
-				Artist: "Artist",
-				Channel: "Uploader",
-				Duration: 180,
+				URL:        "https://example/song",
+				Title:      "Song",
+				Artist:     "Artist",
+				Channel:    "Uploader",
+				Duration:   180,
 				Sections: []importprovider.Section{{
-					Index: 1,
-					Start: 0,
-					End: 30,
-					Title: "Part 1",
+					Index:    1,
+					Start:    0,
+					End:      30,
+					Title:    "Part 1",
 					Selected: true,
 				}},
 				HasSections: true,
 				SourceQuality: duplicates.AudioQuality{
-					Codec: "opus",
+					Codec:       "opus",
 					BitrateKbps: 160,
 				},
 			},
 			Items: []duplicates.Item{{
-				Kind: "whole",
+				Kind:  "whole",
 				Title: "Song",
 				Matches: []duplicates.Match{{
 					TrackRef: "track-a",
-					Score: 100,
+					Score:    100,
 					Relation: "SAME_SOURCE",
 				}},
 			}},
 			MatchCount: 1,
-			Advisory: true,
+			Advisory:   true,
 		},
 	}
 	handler := New(reviewer)
@@ -140,12 +140,12 @@ func TestProviderFailurePreservesStructuredProblem(t *testing.T) {
 		err: &youtubeprovider.Failure{
 			Problem: youtubeprovider.Problem{
 				SchemaVersion: "vexstream.provider-problem/v1",
-				Provider: "youtube",
-				Stage: "inspect",
-				Code: "RATE_LIMIT",
-				Title: "Provider busy",
-				Message: "Retry later",
-				Retryable: true,
+				Provider:      "youtube",
+				Stage:         "inspect",
+				Code:          "RATE_LIMIT",
+				Title:         "Provider busy",
+				Message:       "Retry later",
+				Retryable:     true,
 			},
 		},
 	}

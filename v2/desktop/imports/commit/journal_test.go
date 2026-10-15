@@ -33,11 +33,11 @@ func prepareFixture(t *testing.T, names ...string) (stage, destination string, m
 		}
 		manifest.Outputs = append(manifest.Outputs, staging.Output{
 			RelativePath: filepath.ToSlash(relative),
-			Filename: name,
+			Filename:     name,
 			CatalogEntry: map[string]any{
-				"provider": "youtube",
+				"provider":   "youtube",
 				"providerId": strings.TrimSuffix(name, filepath.Ext(name)),
-				"metadata": map[string]any{"title": name},
+				"metadata":   map[string]any{"title": name},
 			},
 		})
 	}
@@ -256,7 +256,7 @@ func TestPrepareRejectsTraversalBeforeJournalCreation(t *testing.T) {
 	}
 	manifest := staging.Manifest{
 		Destination: destination,
-		Outputs: []staging.Output{{RelativePath: "../escape.mp3"}},
+		Outputs:     []staging.Output{{RelativePath: "../escape.mp3"}},
 	}
 	if _, err := Prepare("job-8", stage, destination, manifest); err == nil {
 		t.Fatal("traversal manifest was accepted")
@@ -265,7 +265,6 @@ func TestPrepareRejectsTraversalBeforeJournalCreation(t *testing.T) {
 		t.Fatalf("journal created for unsafe manifest: %v", err)
 	}
 }
-
 
 func TestCommitPreparedLoadsKnownManifestAndRejectsUnknownSchema(t *testing.T) {
 	stage, destination, manifest := prepareFixture(t, "one.mp3")

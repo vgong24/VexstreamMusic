@@ -37,8 +37,8 @@ func NewWith(
 	}
 	return &Handler{
 		sharedRuntime: strings.TrimSpace(sharedRuntime),
-		resolve: resolve,
-		setup: setup,
+		resolve:       resolve,
+		setup:         setup,
 	}
 }
 
@@ -75,7 +75,7 @@ func (h *Handler) runSetup(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"message": message,
-		"status": h.resolve(h.sharedRuntime),
+		"status":  h.resolve(h.sharedRuntime),
 	})
 }
 

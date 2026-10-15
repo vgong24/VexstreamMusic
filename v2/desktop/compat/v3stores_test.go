@@ -109,7 +109,7 @@ type noopTrashCleaner struct{}
 
 func (noopTrashCleaner) CleanPurged([]trash.Item) error { return nil }
 
-func str(value string) *string { return &value }
+func str(value string) *string   { return &value }
 func num(value float64) *float64 { return &value }
 
 func assertV3RoundTrip[T any](
@@ -149,33 +149,33 @@ func assertV3RoundTrip[T any](
 func representativeTrack(path, source string) library.Track {
 	end := 42.5
 	return library.Track{
-		ID: "track-a",
-		Path: path,
-		Filename: filepath.Base(path),
-		Title: "Song",
-		Artist: "Artist",
-		Album: "Album",
-		Genre: "Genre",
-		Year: "2026",
-		Duration: 123.5,
-		Source: source,
-		ProviderID: "provider-a",
-		SourceURL: "https://example/song",
-		Channel: "Uploader",
-		ArtistBasis: "metadata.artist",
-		Tags: []string{"one", "two"},
-		Categories: []string{"Music"},
-		Description: "Description",
-		ThumbnailURL: "https://example/thumb",
-		IndexedAt: "2026-10-14T01:00:00Z",
-		AddedAt: "2026-10-14T01:00:01Z",
-		SourceTitle: "Source Song",
-		SourceArtist: "Source Artist",
-		SourceAlbum: "Source Album",
-		SourceGenre: "Source Genre",
-		OverlayUpdatedAt: "2026-10-14T01:00:02Z",
-		PlaybackStart: 1.25,
-		PlaybackEnd: &end,
+		ID:                "track-a",
+		Path:              path,
+		Filename:          filepath.Base(path),
+		Title:             "Song",
+		Artist:            "Artist",
+		Album:             "Album",
+		Genre:             "Genre",
+		Year:              "2026",
+		Duration:          123.5,
+		Source:            source,
+		ProviderID:        "provider-a",
+		SourceURL:         "https://example/song",
+		Channel:           "Uploader",
+		ArtistBasis:       "metadata.artist",
+		Tags:              []string{"one", "two"},
+		Categories:        []string{"Music"},
+		Description:       "Description",
+		ThumbnailURL:      "https://example/thumb",
+		IndexedAt:         "2026-10-14T01:00:00Z",
+		AddedAt:           "2026-10-14T01:00:01Z",
+		SourceTitle:       "Source Song",
+		SourceArtist:      "Source Artist",
+		SourceAlbum:       "Source Album",
+		SourceGenre:       "Source Genre",
+		OverlayUpdatedAt:  "2026-10-14T01:00:02Z",
+		PlaybackStart:     1.25,
+		PlaybackEnd:       &end,
 		PlaybackUpdatedAt: "2026-10-14T01:00:03Z",
 	}
 }
@@ -226,10 +226,10 @@ func TestV4SharedLibraryStateRoundTripsThroughProtectedV3Shapes(t *testing.T) {
 		overlayPath,
 		map[string]library.Overlay{
 			"track-a": {
-				Title: str("Edited"),
-				Artist: str("Edited Artist"),
-				Album: str("Edited Album"),
-				Genre: str("Edited Genre"),
+				Title:     str("Edited"),
+				Artist:    str("Edited Artist"),
+				Album:     str("Edited Album"),
+				Genre:     str("Edited Genre"),
 				UpdatedAt: "2026-10-14T02:00:00Z",
 			},
 		},
@@ -244,8 +244,8 @@ func TestV4SharedLibraryStateRoundTripsThroughProtectedV3Shapes(t *testing.T) {
 		windowPath,
 		map[string]library.PlaybackWindow{
 			"track-a": {
-				Start: 3.5,
-				End: num(9.25),
+				Start:     3.5,
+				End:       num(9.25),
 				UpdatedAt: "2026-10-14T03:00:00Z",
 			},
 		},
@@ -266,11 +266,11 @@ func TestV4SharedLibraryCacheRemainsExactV3V2Shape(t *testing.T) {
 		cachePath,
 		map[string]library.CacheEntry{
 			filesystem.CacheKey(path): {
-				Path: path,
-				Size: 1234,
-				ModTime: 55,
+				Path:         path,
+				Size:         1234,
+				ModTime:      55,
 				CatalogStamp: 66,
-				Track: track,
+				Track:        track,
 			},
 		},
 	); err != nil {
@@ -320,10 +320,10 @@ func TestV4SharedTrashAndDeletedHistoryRemainExactV3ArrayShapes(t *testing.T) {
 	}
 
 	paths := trash.Paths{
-		TrashState: filepath.Join(root, "trash.json"),
+		TrashState:     filepath.Join(root, "trash.json"),
 		DeletedHistory: filepath.Join(root, "deleted-history.json"),
-		FilesRoot: filepath.Join(root, "trash", "files"),
-		PurgeJournal: filepath.Join(root, "v4", "trash-purge-journal.json"),
+		FilesRoot:      filepath.Join(root, "trash", "files"),
+		PurgeJournal:   filepath.Join(root, "v4", "trash-purge-journal.json"),
 	}
 	service, err := trash.Open(paths, noopTrashCleaner{})
 	if err != nil {
@@ -331,7 +331,7 @@ func TestV4SharedTrashAndDeletedHistoryRemainExactV3ArrayShapes(t *testing.T) {
 	}
 	moved, err := service.Move([]trash.MoveInput{{
 		Track: representativeTrack(media, source),
-		Path: media,
+		Path:  media,
 	}})
 	if err != nil {
 		t.Fatal(err)

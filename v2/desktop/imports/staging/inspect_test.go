@@ -66,7 +66,7 @@ func TestReadyJobWithCompleteManifestIsPreparedForHumanRetryOrDiscard(t *testing
 		importmodel.Job{ID: "ready", Status: importmodel.StatusReady, Destination: filepath.Join(root, "music")},
 		&Manifest{
 			Destination: filepath.Join(root, "music"),
-			Outputs: []Output{{RelativePath: "out/one.mp3", Filename: "one.mp3"}},
+			Outputs:     []Output{{RelativePath: "out/one.mp3", Filename: "one.mp3"}},
 		},
 		map[string][]byte{"out/one.mp3": []byte("audio")},
 	)
@@ -92,7 +92,7 @@ func TestCommittingJobIsNeverPromotedToReadyEvenWithCompleteManifest(t *testing.
 		importmodel.Job{ID: "c", Status: importmodel.StatusCommitting, Destination: filepath.Join(root, "music")},
 		&Manifest{
 			Destination: filepath.Join(root, "music"),
-			Outputs: []Output{{RelativePath: "one.mp3"}},
+			Outputs:     []Output{{RelativePath: "one.mp3"}},
 		},
 		map[string][]byte{"one.mp3": []byte("audio")},
 	)
@@ -217,7 +217,6 @@ func TestTerminalStagingResidueIsVisibleForLaterCleanupPolicy(t *testing.T) {
 	}
 }
 
-
 func TestUnknownManifestSchemaIsHeldInsteadOfTreatedAsPrepared(t *testing.T) {
 	root := t.TempDir()
 	stage := stageJob(
@@ -225,14 +224,14 @@ func TestUnknownManifestSchemaIsHeldInsteadOfTreatedAsPrepared(t *testing.T) {
 		root,
 		"future-schema",
 		importmodel.Job{
-			ID: "future",
-			Status: importmodel.StatusReady,
+			ID:          "future",
+			Status:      importmodel.StatusReady,
 			Destination: filepath.Join(root, "music"),
 		},
 		&Manifest{
 			SchemaVersion: "vexstream.import-stage/v99",
-			Destination: filepath.Join(root, "music"),
-			Outputs: []Output{{RelativePath: "out/one.mp3"}},
+			Destination:   filepath.Join(root, "music"),
+			Outputs:       []Output{{RelativePath: "out/one.mp3"}},
 		},
 		map[string][]byte{"out/one.mp3": []byte("audio")},
 	)

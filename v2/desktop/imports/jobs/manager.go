@@ -32,7 +32,7 @@ var (
 )
 
 type Snapshot struct {
-	Groups   importmodel.Groups                         `json:"groups"`
+	Groups   importmodel.Groups                        `json:"groups"`
 	Recovery map[string]importmodel.RestartDisposition `json:"recovery,omitempty"`
 	Issues   []staging.Issue                           `json:"issues,omitempty"`
 }
@@ -68,15 +68,15 @@ func New(
 	rootCtx, closeManager := context.WithCancel(context.Background())
 	manager := &Manager{
 		workflow: service,
-		jobs: map[string]importmodel.Job{},
-		stages: map[string]string{},
+		jobs:     map[string]importmodel.Job{},
+		stages:   map[string]string{},
 		recovery: map[string]importmodel.RestartDisposition{},
-		issues: []staging.Issue{},
-		cancels: map[string]context.CancelFunc{},
-		rootCtx: rootCtx,
-		close: closeManager,
-		now: time.Now,
-		newID: randomID,
+		issues:   []staging.Issue{},
+		cancels:  map[string]context.CancelFunc{},
+		rootCtx:  rootCtx,
+		close:    closeManager,
+		now:      time.Now,
+		newID:    randomID,
 	}
 
 	inspection, err := staging.Inspect(service.StagingRoot)
@@ -211,9 +211,9 @@ func (m *Manager) Start(request workflow.Request) (importmodel.Job, error) {
 func (m *Manager) Snapshot() Snapshot {
 	if m == nil {
 		return Snapshot{
-			Groups: importmodel.Classify(nil),
+			Groups:   importmodel.Classify(nil),
 			Recovery: map[string]importmodel.RestartDisposition{},
-			Issues: []staging.Issue{},
+			Issues:   []staging.Issue{},
 		}
 	}
 
@@ -230,9 +230,9 @@ func (m *Manager) Snapshot() Snapshot {
 	m.mu.RUnlock()
 
 	return Snapshot{
-		Groups: importmodel.Classify(rows),
+		Groups:   importmodel.Classify(rows),
 		Recovery: recovery,
-		Issues: issues,
+		Issues:   issues,
 	}
 }
 
@@ -439,4 +439,3 @@ func randomID() (string, error) {
 	}
 	return hex.EncodeToString(raw[:]), nil
 }
-

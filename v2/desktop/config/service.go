@@ -3,7 +3,7 @@
 // The on-disk JSON shape deliberately remains V3-compatible while V3 is the protected rollback
 // product:
 //
-//   {"sources":[...],"ignored":[...]}
+//	{"sources":[...],"ignored":[...]}
 //
 // PERSISTED_STATE_UPGRADE != PERMISSION_TO_BREAK_ROLLBACK.
 // New product-only fields belong in another store rather than widening this shared file.
@@ -216,7 +216,7 @@ func normalizePaths(values []string) []string {
 	for _, value := range values {
 		value = cleanPath(value)
 		if value == "" || containsPath(out, value) {
-		continue
+			continue
 		}
 		out = append(out, value)
 	}

@@ -55,14 +55,14 @@ func (f *preparerFixture) callCount() int {
 func testWorkflow(root string, preparer importproviderPreparer) workflow.Service {
 	return workflow.Service{
 		StagingRoot: root,
-		Preparer: preparer,
+		Preparer:    preparer,
 		Commit: func(
 			_ string,
 			_ string,
 			_ string,
 		) (importcommit.Result, error) {
 			return importcommit.Result{
-				Added: 1,
+				Added:     1,
 				TrackRefs: []string{"track-a"},
 			}, nil
 		},
@@ -164,10 +164,10 @@ func TestNewMakesInterruptedPreparationVisibleAsFailedInsteadOfGhostRunning(t *t
 		t,
 		root,
 		importmodel.Job{
-			ID: "interrupted",
-			Title: "Song",
-			Status: importmodel.StatusRunning,
-			Stage: "Downloading",
+			ID:          "interrupted",
+			Title:       "Song",
+			Status:      importmodel.StatusRunning,
+			Stage:       "Downloading",
 			Destination: filepath.Join(root, "music"),
 		},
 		nil,
@@ -206,16 +206,16 @@ func TestNewRestoresReadyStagingWithoutReplayingProviderOrCommit(t *testing.T) {
 		t,
 		root,
 		importmodel.Job{
-			ID: "ready",
-			Title: "Song",
-			Status: importmodel.StatusReady,
+			ID:          "ready",
+			Title:       "Song",
+			Status:      importmodel.StatusReady,
 			Destination: destination,
 		},
 		&staging.Manifest{
 			Destination: destination,
 			Outputs: []staging.Output{{
 				RelativePath: "outputs/song.mp3",
-				Filename: "song.mp3",
+				Filename:     "song.mp3",
 			}},
 		},
 		map[string][]byte{
@@ -242,12 +242,12 @@ func TestRecoverCommitRequiresExistingJournalAndNeverAutoReplaysUnjournaledCommi
 	destination := filepath.Join(root, "music")
 	manifest := staging.Manifest{
 		SchemaVersion: staging.ManifestSchema,
-		Destination: destination,
+		Destination:   destination,
 		Outputs: []staging.Output{{
 			RelativePath: "outputs/song.mp3",
-			Filename: "song.mp3",
+			Filename:     "song.mp3",
 			CatalogEntry: map[string]any{
-				"provider": "youtube",
+				"provider":   "youtube",
 				"providerId": "song",
 			},
 		}},
@@ -256,9 +256,9 @@ func TestRecoverCommitRequiresExistingJournalAndNeverAutoReplaysUnjournaledCommi
 		t,
 		root,
 		importmodel.Job{
-			ID: "commit-uncertain",
-			Title: "Song",
-			Status: importmodel.StatusCommitting,
+			ID:          "commit-uncertain",
+			Title:       "Song",
+			Status:      importmodel.StatusCommitting,
 			Destination: destination,
 		},
 		&manifest,
@@ -332,9 +332,9 @@ func TestQueuedCancellationCanStopBeforeProviderExecution(t *testing.T) {
 	manager.newID = func() (string, error) { return "queued", nil }
 
 	queued, err := manager.Start(workflow.Request{
-		Title: "Song",
+		Title:       "Song",
 		Destination: filepath.Join(root, "music"),
-		URL: "https://example/song",
+		URL:         "https://example/song",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -364,16 +364,16 @@ func TestRetryCommitReturnsToReadyWhenLibraryCommitRemainsHeld(t *testing.T) {
 		t,
 		root,
 		importmodel.Job{
-			ID: "ready",
-			Title: "Song",
-			Status: importmodel.StatusReady,
+			ID:          "ready",
+			Title:       "Song",
+			Status:      importmodel.StatusReady,
 			Destination: destination,
 		},
 		&staging.Manifest{
 			Destination: destination,
 			Outputs: []staging.Output{{
 				RelativePath: "outputs/song.mp3",
-				Filename: "song.mp3",
+				Filename:     "song.mp3",
 			}},
 		},
 		map[string][]byte{
@@ -416,8 +416,8 @@ func TestDiscardRemovesOnlyDiscardableStaging(t *testing.T) {
 		t,
 		root,
 		importmodel.Job{
-			ID: "failed",
-			Title: "Song",
+			ID:     "failed",
+			Title:  "Song",
 			Status: importmodel.StatusFailed,
 		},
 		nil,
@@ -461,10 +461,10 @@ func TestStartRejectsDuplicateJobIdentity(t *testing.T) {
 	defer manager.Close()
 
 	request := workflow.Request{
-		ID: "same",
-		Title: "Song",
+		ID:          "same",
+		Title:       "Song",
 		Destination: filepath.Join(root, "music"),
-		URL: "https://example/song",
+		URL:         "https://example/song",
 	}
 	if _, err := manager.Start(request); err != nil {
 		t.Fatal(err)
@@ -480,7 +480,6 @@ func TestStartRejectsDuplicateJobIdentity(t *testing.T) {
 func stringsContains(value, fragment string) bool {
 	return strings.Contains(value, fragment)
 }
-
 
 func TestFastWorkflowStillReturnsFirstDurableQueuedState(t *testing.T) {
 	root := t.TempDir()
@@ -502,9 +501,9 @@ func TestFastWorkflowStillReturnsFirstDurableQueuedState(t *testing.T) {
 	manager.newID = func() (string, error) { return "fast", nil }
 
 	first, err := manager.Start(workflow.Request{
-		Title: "Song",
+		Title:       "Song",
 		Destination: filepath.Join(root, "music"),
-		URL: "https://example/song",
+		URL:         "https://example/song",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -528,16 +527,16 @@ func TestRetryCommitDoesNotRunWhenCommittingTransitionCannotPersist(t *testing.T
 		t,
 		root,
 		importmodel.Job{
-			ID: "ready-persist-fail",
-			Title: "Song",
-			Status: importmodel.StatusReady,
+			ID:          "ready-persist-fail",
+			Title:       "Song",
+			Status:      importmodel.StatusReady,
 			Destination: destination,
 		},
 		&staging.Manifest{
 			Destination: destination,
 			Outputs: []staging.Output{{
 				RelativePath: "outputs/song.mp3",
-				Filename: "song.mp3",
+				Filename:     "song.mp3",
 			}},
 		},
 		map[string][]byte{

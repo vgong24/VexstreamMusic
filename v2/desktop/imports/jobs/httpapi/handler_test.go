@@ -19,19 +19,19 @@ type managerFixture struct {
 	startReq workflow.Request
 
 	cancelErr error
-	cancelID string
+	cancelID  string
 
 	retryJob importmodel.Job
 	retryErr error
-	retryID string
+	retryID  string
 
 	recoverJob importmodel.Job
 	recoverErr error
-	recoverID string
+	recoverID  string
 
 	discardJob importmodel.Job
 	discardErr error
-	discardID string
+	discardID  string
 }
 
 func (m *managerFixture) Snapshot() jobs.Snapshot { return m.snapshot }
@@ -74,7 +74,7 @@ func TestJobsReturnsCurrentGroupedSnapshot(t *testing.T) {
 		snapshot: jobs.Snapshot{
 			Groups: importmodel.Groups{
 				Ready: []importmodel.Job{{
-					ID: "ready",
+					ID:     "ready",
 					Status: importmodel.StatusReady,
 				}},
 			},
@@ -99,7 +99,7 @@ func TestJobsReturnsCurrentGroupedSnapshot(t *testing.T) {
 func TestStartMapsTypedPlanAndDefaultsSectionSelection(t *testing.T) {
 	manager := &managerFixture{
 		startJob: importmodel.Job{
-			ID: "job-a",
+			ID:     "job-a",
 			Status: importmodel.StatusQueued,
 		},
 	}
@@ -158,7 +158,7 @@ func TestStartRejectsUnknownFieldsBeforeManager(t *testing.T) {
 func TestCancelAndRecoveryRemainDifferentActions(t *testing.T) {
 	manager := &managerFixture{
 		recoverJob: importmodel.Job{
-			ID: "uncertain",
+			ID:     "uncertain",
 			Status: importmodel.StatusDone,
 		},
 	}
@@ -202,7 +202,7 @@ func TestManagerErrorsMapToStableHTTPMeaning(t *testing.T) {
 	cases := []struct {
 		name string
 		path string
-		err error
+		err  error
 		want int
 	}{
 		{"missing", "/api/import/cancel", jobs.ErrNotFound, http.StatusNotFound},
@@ -284,7 +284,6 @@ func TestUnexpectedManagerFailureStaysServerFailure(t *testing.T) {
 		t.Fatalf("unexpected error mapping drift: %d", response.Code)
 	}
 }
-
 
 func TestDestinationsProjectOnlyCurrentNonBlankUniqueSources(t *testing.T) {
 	manager := &managerFixture{}

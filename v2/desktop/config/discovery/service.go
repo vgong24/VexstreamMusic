@@ -111,8 +111,8 @@ func Scan(
 			continue
 		}
 		candidates = append(candidates, Candidate{
-			Name: filepath.Base(path),
-			Path: filepath.Clean(path),
+			Name:     filepath.Base(path),
+			Path:     filepath.Clean(path),
 			MP3Count: count,
 		})
 	}
@@ -124,7 +124,7 @@ func Scan(
 		return candidates[i].MP3Count > candidates[j].MP3Count
 	})
 	return Result{
-		Candidates: candidates,
+		Candidates:  candidates,
 		ScannedDirs: scanned,
 	}
 }

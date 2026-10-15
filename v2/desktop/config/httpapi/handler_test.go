@@ -12,10 +12,10 @@ import (
 )
 
 type configFixture struct {
-	state desktopconfig.State
-	addErr error
+	state     desktopconfig.State
+	addErr    error
 	removeErr error
-	restored bool
+	restored  bool
 }
 
 func (f *configFixture) Snapshot() desktopconfig.State {
@@ -188,7 +188,6 @@ func TestSnapshotAndWrongMethodsStayBounded(t *testing.T) {
 		t.Fatalf("source add method drift: %d %q", wrong.Code, wrong.Header().Get("Allow"))
 	}
 }
-
 
 func TestNativePickerIsSeparateFromConfigMutation(t *testing.T) {
 	config := &configFixture{}

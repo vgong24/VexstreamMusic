@@ -37,23 +37,23 @@ func TestYouTubeMapsProviderInspectionIntoImportMeaning(t *testing.T) {
 			Genre:      " Dream Pop ",
 			Sections: []youtubeprovider.Section{
 				{
-					Index: 1,
-					Start: 0,
-					End: 30,
-					Title: " Part 1 ",
+					Index:    1,
+					Start:    0,
+					End:      30,
+					Title:    " Part 1 ",
 					Selected: true,
 				},
 				{
-					Index: 2,
-					Start: 30,
-					End: 60,
-					Title: " Part 2 ",
+					Index:    2,
+					Start:    30,
+					End:      60,
+					Title:    " Part 2 ",
 					Selected: false,
 				},
 			},
 			HasSections: true,
 			SourceQuality: youtubeprovider.AudioQuality{
-				Codec: "opus",
+				Codec:       "opus",
 				BitrateKbps: 160,
 			},
 		},
@@ -80,11 +80,11 @@ func TestYouTubeMapsProviderInspectionIntoImportMeaning(t *testing.T) {
 func TestDuplicateReviewRequestUsesSelectedSectionsAndKeepsCreatorDistinctFromArtist(t *testing.T) {
 	inspection := Inspection{
 		ProviderID: "abc",
-		URL: "https://example",
-		Title: "Song",
-		Artist: "",
-		Channel: "Uploader",
-		Duration: 120,
+		URL:        "https://example",
+		Title:      "Song",
+		Artist:     "",
+		Channel:    "Uploader",
+		Duration:   120,
 		SourceQuality: duplicates.AudioQuality{
 			Codec: "opus",
 		},
@@ -106,7 +106,7 @@ func TestDuplicateReviewRequestUsesSelectedSectionsAndKeepsCreatorDistinctFromAr
 				Index: 1,
 				Title: "Part 1",
 				Start: 0,
-				End: 30,
+				End:   30,
 			},
 		) {
 		t.Fatalf("duplicate review mapping drift: %+v", got)

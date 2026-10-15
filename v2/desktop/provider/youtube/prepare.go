@@ -149,8 +149,8 @@ func (b *Bridge) Prepare(
 			}
 			_ = json.Unmarshal(line, &row)
 			emit(PrepareEvent{
-				Type: "progress",
-				Stage: strings.TrimSpace(row.Stage),
+				Type:     "progress",
+				Stage:    strings.TrimSpace(row.Stage),
 				Progress: int(row.Progress),
 			})
 			return
@@ -161,7 +161,7 @@ func (b *Bridge) Prepare(
 			_ = json.Unmarshal(line, &row)
 			cancelled = true
 			emit(PrepareEvent{
-				Type: "cancelled",
+				Type:    "cancelled",
 				Message: strings.TrimSpace(row.Message),
 			})
 			return
@@ -191,7 +191,7 @@ func (b *Bridge) Prepare(
 		if json.Unmarshal(line, &row) == nil && row.OK {
 			final = PrepareResult{
 				Outputs: clonePreparedOutputs(row.Outputs),
-				Staged: row.Staged,
+				Staged:  row.Staged,
 			}
 			finalSeen = true
 		}
@@ -252,7 +252,7 @@ func (b *Bridge) runStreamingProcess(
 	}
 
 	var (
-		wg       sync.WaitGroup
+		wg        sync.WaitGroup
 		stderrErr error
 	)
 	wg.Add(1)

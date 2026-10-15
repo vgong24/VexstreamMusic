@@ -45,9 +45,9 @@ func NewWithPicker(
 		panic("source config http adapter requires config")
 	}
 	return &Handler{
-		config: config,
+		config:  config,
 		refresh: refresh,
-		picker: picker,
+		picker:  picker,
 	}
 }
 
@@ -220,7 +220,7 @@ func (h *Handler) writeMutation(
 	reconcile bool,
 ) {
 	response := map[string]any{
-		"ok":    true,
+		"ok":     true,
 		"config": state,
 	}
 	if reconcile && h.refresh != nil {

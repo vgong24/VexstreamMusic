@@ -12,45 +12,53 @@ import (
 )
 
 type trashFixture struct {
-	snapshot trash.Snapshot
-	moved    []trash.MoveInput
-	moveErr  error
+	snapshot   trash.Snapshot
+	moved      []trash.MoveInput
+	moveErr    error
 	restoreIDs []string
 	restoreErr error
-	purgeIDs []string
-	preserve bool
-	purgeErr error
+	purgeIDs   []string
+	preserve   bool
+	purgeErr   error
 	recoverErr error
 }
 
 func (f *trashFixture) Snapshot() trash.Snapshot { return f.snapshot }
 func (f *trashFixture) Move(input []trash.MoveInput) ([]trash.Item, error) {
 	f.moved = append([]trash.MoveInput(nil), input...)
-	if f.moveErr != nil { return nil, f.moveErr }
+	if f.moveErr != nil {
+		return nil, f.moveErr
+	}
 	return []trash.Item{{ID: "trash-a"}}, nil
 }
 func (f *trashFixture) Restore(ids []string) ([]trash.Item, error) {
 	f.restoreIDs = append([]string(nil), ids...)
-	if f.restoreErr != nil { return nil, f.restoreErr }
+	if f.restoreErr != nil {
+		return nil, f.restoreErr
+	}
 	return []trash.Item{{ID: "trash-a"}}, nil
 }
 func (f *trashFixture) Purge(ids []string, preserve bool) (int, error) {
 	f.purgeIDs = append([]string(nil), ids...)
 	f.preserve = preserve
-	if f.purgeErr != nil { return 0, f.purgeErr }
+	if f.purgeErr != nil {
+		return 0, f.purgeErr
+	}
 	return len(ids), nil
 }
 func (f *trashFixture) RecoverPurge() (int, error) {
-	if f.recoverErr != nil { return 0, f.recoverErr }
+	if f.recoverErr != nil {
+		return 0, f.recoverErr
+	}
 	return 1, nil
 }
 
 func libraryFixture() library.Projection {
 	return library.Projection{
 		Tracks: []library.Track{{
-			ID: "track-a",
-			Title: "Song",
-			Source: "/music",
+			ID:       "track-a",
+			Title:    "Song",
+			Source:   "/music",
 			Filename: "song.mp3",
 		}},
 		Paths: map[string]string{"track-a": "/music/song.mp3"},
@@ -183,9 +191,9 @@ func TestPendingPurgeRecoveryHasSeparateExplicitRoute(t *testing.T) {
 }
 
 func TestStableTrashErrorsMapToLocalHTTPMeaning(t *testing.T) {
-	cases := []struct{
+	cases := []struct {
 		name string
-		err error
+		err  error
 		want int
 	}{
 		{"not-found", trash.ErrNotFound, http.StatusNotFound},
@@ -217,9 +225,9 @@ func TestTrashSnapshotPreservesPendingPurgeEvidence(t *testing.T) {
 			Trash: []trash.Item{{ID: "trash-a"}},
 			PendingPurge: &trash.PurgeJournal{
 				SchemaVersion: trash.PurgeJournalSchema,
-				PurgeRef: "purge-a",
-				State: trash.PurgeStateStoresUpdated,
-				Entries: []trash.PurgeEntry{{Item: trash.Item{ID: "trash-a"}}},
+				PurgeRef:      "purge-a",
+				State:         trash.PurgeStateStoresUpdated,
+				Entries:       []trash.PurgeEntry{{Item: trash.Item{ID: "trash-a"}}},
 			},
 		},
 	}

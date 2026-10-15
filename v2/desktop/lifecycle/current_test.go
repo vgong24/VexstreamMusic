@@ -19,8 +19,8 @@ func TestReusableRequiresExactVersionAndBuildRef(t *testing.T) {
 			return
 		}
 		_ = json.NewEncoder(w).Encode(Identity{
-			OK: true,
-			Version: "4.0.0",
+			OK:       true,
+			Version:  "4.0.0",
 			BuildRef: "build-a",
 		})
 	}))
@@ -33,9 +33,9 @@ func TestReusableRequiresExactVersionAndBuildRef(t *testing.T) {
 	if url, ok := Reusable(path, "4.0.0", "build-a"); !ok || url != server.URL {
 		t.Fatalf("exact process identity not reused: url=%q ok=%v", url, ok)
 	}
-	for _, tc := range []struct{
+	for _, tc := range []struct {
 		version string
-		build string
+		build   string
 	}{
 		{"3.0.0", "build-a"},
 		{"4.0.0", "build-b"},
@@ -65,7 +65,6 @@ func TestClaimAndClearNeverDeleteAnotherProcessClaim(t *testing.T) {
 	}
 }
 
-
 func TestCurrentLiveClaimDistinguishesLiveProtectedDesktopFromStaleFile(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(
 		w http.ResponseWriter,
@@ -76,8 +75,8 @@ func TestCurrentLiveClaimDistinguishesLiveProtectedDesktopFromStaleFile(t *testi
 			return
 		}
 		_ = json.NewEncoder(w).Encode(Identity{
-			OK: true,
-			Version: "3.0.0",
+			OK:       true,
+			Version:  "3.0.0",
 			BuildRef: "vexstream.mobile-bridge/v2",
 		})
 	}))

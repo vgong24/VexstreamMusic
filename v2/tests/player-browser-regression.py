@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import copy
 import json
 import os
 import re
@@ -353,6 +354,46 @@ def main() -> int:
     system_state = {
         "exitBody": None,
     }
+    library_admin_state = {
+        "overlays": {},
+        "windows": {},
+    }
+    trash_state = {
+        "trashedRefs": set(),
+        "trash": [],
+        "deletedHistory": [],
+        "pendingPurge": None,
+    }
+    playlist_state = {
+        "rows": copy.deepcopy(PLAYLISTS),
+        "next": 1,
+    }
+
+    def projected_tracks():
+        if "/music" not in source_state["sources"]:
+            return []
+        rows = []
+        for source in TRACKS:
+            if source["id"] in trash_state["trashedRefs"]:
+                continue
+            row = copy.deepcopy(source)
+            row["sourceTitle"] = source.get("title", "")
+            row["sourceArtist"] = source.get("artist", "")
+            row["sourceAlbum"] = source.get("album", "")
+            row["sourceGenre"] = source.get("genre", "")
+            overlay = library_admin_state["overlays"].get(source["id"])
+            if overlay:
+                row.update(overlay)
+                row["overlayUpdatedAt"] = "2026-10-14T23:00:00Z"
+            window = library_admin_state["windows"].get(source["id"])
+            if window:
+                row["playbackStart"] = window.get("start", 0)
+                if window.get("end") is not None:
+                    row["playbackEnd"] = window["end"]
+                row["playbackUpdatedAt"] = "2026-10-14T23:00:01Z"
+            rows.append(row)
+        return rows
+
     player_session_state = {
         "found": False,
         "session": {
@@ -433,9 +474,7 @@ def main() -> int:
                 },
                 body=json.dumps(
                     {
-                        "tracks": TRACKS
-                        if "/music" in source_state["sources"]
-                        else []
+                        "tracks": projected_tracks()
                     }
                 ),
             )
@@ -584,7 +623,253 @@ def main() -> int:
                     "Content-Type": "application/json; charset=utf-8",
                     "X-Content-Type-Options": "nosniff",
                 },
-                body=json.dumps({"playlists": PLAYLISTS}),
+                body=json.dumps({"playlists": playlist_state["rows"]}),
+            )
+            return
+
+        if parsed.path.startswith("/api/playlists/"):
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            action = parsed.path.rsplit("/", 1)[-1]
+            rows = playlist_state["rows"]
+
+            if action == "create":
+                name = str(body.get("name") or "").strip()
+                if not name:
+                    route.fulfill(status=400, body="name required")
+                    return
+                row = {
+                    "id": f"playlist-new-{playlist_state['next']}",
+                    "name": name,
+                    "trackIds": list(dict.fromkeys(body.get("trackIds") or [])),
+                    "createdAt": "2026-10-14T23:00:10Z",
+                    "updatedAt": "2026-10-14T23:00:10Z",
+                }
+                playlist_state["next"] += 1
+                rows.append(row)
+                payload = {"ok": True, "playlist": row}
+            else:
+                playlist_id = str(body.get("id") or "")
+                row = next(
+                    (value for value in rows if value["id"] == playlist_id),
+                    None,
+                )
+                if row is None:
+                    route.fulfill(status=404, body="playlist not found")
+                    return
+                if action == "add":
+                    before = len(row["trackIds"])
+                    for ref in body.get("trackIds") or []:
+                        if ref not in row["trackIds"]:
+                            row["trackIds"].append(ref)
+                    payload = {
+                        "ok": True,
+                        "added": len(row["trackIds"]) - before,
+                        "playlist": row,
+                    }
+                elif action == "order":
+                    wanted = list(dict.fromkeys(body.get("trackIds") or []))
+                    if set(wanted) != set(row["trackIds"]):
+                        route.fulfill(status=409, body="order mismatch")
+                        return
+                    row["trackIds"] = wanted
+                    payload = {"ok": True}
+                elif action == "remove":
+                    remove = set(body.get("trackIds") or [])
+                    row["trackIds"] = [
+                        ref for ref in row["trackIds"] if ref not in remove
+                    ]
+                    payload = {"ok": True, "playlist": row}
+                elif action == "rename":
+                    row["name"] = str(body.get("name") or "").strip()
+                    payload = {"ok": True, "playlist": row}
+                elif action == "delete":
+                    if body.get("confirm") != "DELETE_PLAYLIST_ONLY":
+                        route.fulfill(status=400, body="confirmation required")
+                        return
+                    playlist_state["rows"] = [
+                        value for value in rows if value["id"] != playlist_id
+                    ]
+                    payload = {"ok": True}
+                else:
+                    route.fulfill(status=404, body="not found")
+                    return
+                if action != "delete":
+                    row["updatedAt"] = "2026-10-14T23:00:11Z"
+
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(payload),
+            )
+            return
+
+        if parsed.path == "/api/library/overlay":
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            ids = list(body.get("ids") or [])
+            if body.get("id"):
+                ids.append(body["id"])
+            for ref in ids:
+                if body.get("restore"):
+                    library_admin_state["overlays"].pop(ref, None)
+                    continue
+                patch = {}
+                for key in ("title", "artist", "album", "genre"):
+                    if key in body:
+                        patch[key] = body[key]
+                library_admin_state["overlays"][ref] = patch
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps({"ok": True, "updated": len(ids)}),
+            )
+            return
+
+        if parsed.path == "/api/library/playback-window":
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            ref = str(body.get("id") or "")
+            if body.get("restore"):
+                library_admin_state["windows"].pop(ref, None)
+                payload = {"ok": True, "restored": True}
+            else:
+                library_admin_state["windows"][ref] = {
+                    "start": float(body.get("start") or 0),
+                    "end": body.get("end"),
+                }
+                payload = {
+                    "ok": True,
+                    "window": library_admin_state["windows"][ref],
+                }
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(payload),
+            )
+            return
+
+        if parsed.path == "/api/library/trash":
+            if request.method == "GET":
+                route.fulfill(
+                    status=200,
+                    headers={"Content-Type": "application/json; charset=utf-8"},
+                    body=json.dumps(
+                        {
+                            "trash": trash_state["trash"],
+                            "deletedHistory": trash_state["deletedHistory"],
+                            "pendingPurge": trash_state["pendingPurge"],
+                        }
+                    ),
+                )
+                return
+            if request.method != "POST":
+                route.fulfill(status=405, body="GET or POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            if body.get("confirm") != "MOVE_TO_VEXSTREAM_TRASH":
+                route.fulfill(status=400, body="confirmation required")
+                return
+            current = {row["id"]: row for row in projected_tracks()}
+            moved = 0
+            for ref in body.get("ids") or []:
+                if ref not in current:
+                    continue
+                trash_id = "trash-" + ref
+                trash_state["trashedRefs"].add(ref)
+                trash_state["trash"].append(
+                    {
+                        "id": trash_id,
+                        "track": current[ref],
+                        "originalPath": "/music/" + ref + ".mp3",
+                        "trashPath": "/trash/" + ref + ".mp3",
+                        "trashedAt": "2026-10-14T23:00:20Z",
+                    }
+                )
+                moved += 1
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "ok": True,
+                        "moved": moved,
+                        "libraryRefresh": "CURRENT",
+                    }
+                ),
+            )
+            return
+
+        if parsed.path == "/api/library/trash/restore":
+            body = json.loads(request.post_data or "{}")
+            wanted = set(body.get("ids") or [])
+            restored = [
+                item for item in trash_state["trash"] if item["id"] in wanted
+            ]
+            trash_state["trash"] = [
+                item for item in trash_state["trash"] if item["id"] not in wanted
+            ]
+            for item in restored:
+                trash_state["trashedRefs"].discard(item["track"]["id"])
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "ok": True,
+                        "restored": len(restored),
+                        "libraryRefresh": "CURRENT",
+                    }
+                ),
+            )
+            return
+
+        if parsed.path == "/api/library/trash/purge":
+            body = json.loads(request.post_data or "{}")
+            if body.get("confirm") != "PERMANENTLY_DELETE_TRASH":
+                route.fulfill(status=400, body="confirmation required")
+                return
+            wanted = set(body.get("ids") or [])
+            deleted = [
+                item for item in trash_state["trash"] if item["id"] in wanted
+            ]
+            trash_state["trash"] = [
+                item for item in trash_state["trash"] if item["id"] not in wanted
+            ]
+            for item in deleted:
+                trash_state["deletedHistory"].append(
+                    {
+                        "id": "deleted-" + item["track"]["id"],
+                        "track": item["track"],
+                        "originalPath": item["originalPath"],
+                        "deletedAt": "2026-10-14T23:00:21Z",
+                    }
+                )
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "ok": True,
+                        "deleted": len(deleted),
+                        "preservedMetadata": bool(body.get("preserveMetadata")),
+                    }
+                ),
+            )
+            return
+
+        if parsed.path == "/api/library/trash/purge/recover":
+            trash_state["pendingPurge"] = None
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps({"ok": True, "recovered": 0}),
             )
             return
 

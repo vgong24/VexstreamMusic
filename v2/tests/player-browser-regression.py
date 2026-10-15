@@ -834,6 +834,166 @@ def main() -> int:
             ),
         )
         checked(
+            "source-config-loads-separately-from-library-catalog",
+            lambda: require(
+                page.evaluate("window.vexV4.sourceConfig.sources.join(',')")
+                == "/music"
+                and page.locator('[data-source-path="/music"]').count() == 1,
+                "source configuration did not render independently",
+            ),
+        )
+
+        page.locator("#librarySearch").fill("Three")
+        checked(
+            "library-search-is-a-view-projection-not-catalog-mutation",
+            lambda: require(
+                page.locator("#trackChoices [data-track-ref]").count() == 1
+                and page.locator(
+                    '[data-track-ref="media.vexstream.test-tone.3"]'
+                ).count()
+                == 1
+                and page.evaluate("window.vexV4.catalog.length") == 3,
+                "search rewrote Library truth",
+            ),
+        )
+        page.locator("#librarySearch").fill("")
+
+        page.locator("#libraryGenre").select_option(label="Ambient")
+        checked(
+            "genre-filter-is-local-view-state",
+            lambda: require(
+                page.locator("#trackChoices [data-track-ref]").count() == 1
+                and page.locator(
+                    '[data-track-ref="media.vexstream.test-tone.3"]'
+                ).count()
+                == 1
+                and page.evaluate("window.vexV4.catalog.length") == 3,
+                "genre filter rewrote catalog",
+            ),
+        )
+        page.locator("#libraryGenre").select_option("all")
+
+        page.locator("#librarySort").select_option("recent")
+        checked(
+            "library-sort-changes-render-order-without-changing-catalog-order",
+            lambda: require(
+                page.locator("#trackChoices [data-track-ref]").first.get_attribute(
+                    "data-track-ref"
+                )
+                == "media.vexstream.test-tone.2"
+                and page.evaluate(
+                    "window.vexV4.catalog.map(x=>x.ref).join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.2,"
+                    "media.vexstream.test-tone.3"
+                ),
+                "sort mutated catalog or rendered wrong order",
+            ),
+        )
+
+        page.locator('[data-library-mode="albums"]').click()
+        checked(
+            "album-browse-is-derived-from-current-library-view",
+            lambda: require(
+                page.locator("#trackChoices [data-library-group]").count() == 2,
+                "album grouping drift",
+            ),
+        )
+        page.locator('[data-library-mode="artists"]').click()
+        checked(
+            "artist-browse-is-derived-without-new-library-owner",
+            lambda: require(
+                page.locator("#trackChoices [data-library-group]").count() == 2,
+                "artist grouping drift",
+            ),
+        )
+        page.locator('[data-library-mode="songs"]').click()
+        page.locator("#librarySort").select_option("title")
+
+        page.locator("#sourceDiscover").click()
+        page.wait_for_function(
+            "document.querySelectorAll('[data-source-candidate]').length===2"
+        )
+        checked(
+            "folder-discovery-remains-temporary-until-include",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.sourceConfig.sources.join(',')"
+                )
+                == "/music"
+                and page.locator(
+                    '[data-source-candidate="/candidate"]'
+                ).count()
+                == 1,
+                "discovery mutated source configuration",
+            ),
+        )
+
+        page.locator(
+            '[data-source-candidate="/ignore-me"] '
+            '[data-source-candidate-action="ignore"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.sourceConfig.ignored.includes('/ignore-me')"
+        )
+        checked(
+            "ignoring-discovered-folder-is-explicit-config-action",
+            lambda: require(
+                page.locator(
+                    '[data-source-candidate="/ignore-me"]'
+                ).count()
+                == 0
+                and page.evaluate(
+                    "window.vexV4.sourceConfig.ignored.includes('/ignore-me')"
+                )
+                is True,
+                "ignore action drift",
+            ),
+        )
+
+        page.locator(
+            '[data-source-candidate="/candidate"] '
+            '[data-source-candidate-action="include"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.sourceConfig.sources.includes('/candidate')"
+        )
+        checked(
+            "including-discovered-folder-is-separate-admission",
+            lambda: require(
+                page.locator('[data-source-path="/candidate"]').count() == 1
+                and page.evaluate("window.vexV4.catalog.length") == 3,
+                "Include did not currentize config/library independently",
+            ),
+        )
+
+        before_picker_requests = len(report["requests"])
+        page.locator("#sourceAdd").click()
+        page.wait_for_function(
+            "window.vexV4.sourceConfig.sources.includes('/picked')"
+        )
+        picker_requests = report["requests"][before_picker_requests:]
+        checked(
+            "native-folder-pick-is-followed-by-explicit-source-admission",
+            lambda: require(
+                any(
+                    row["path"] == "/api/source/choose"
+                    and row["method"] == "POST"
+                    for row in picker_requests
+                )
+                and any(
+                    row["path"] == "/api/source/add"
+                    and row["method"] == "POST"
+                    for row in picker_requests
+                )
+                and page.locator('[data-source-path="/picked"]').count() == 1,
+                f"picker/admission sequence drift: {picker_requests}",
+            ),
+        )
+
+        checked(
             "browser-loads-durable-playlist-contract",
             lambda: require(
                 any(
@@ -1469,6 +1629,33 @@ def main() -> int:
             ),
         )
         restart.close()
+
+        page.locator(
+            '[data-source-path="/music"] [data-source-action="remove"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.catalog.length===0 "
+            "&& window.vexV4.queue.currentProjection.state.kind==='empty'"
+        )
+        checked(
+            "removing-current-library-source-clears-stale-queue-and-media",
+            lambda: require(
+                "/music" not in source_state["sources"]
+                and page.evaluate("window.vexV4.catalog.length") == 0
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.kind"
+                )
+                == "empty"
+                and page.evaluate("window.vexV4.media.paused") is True
+                and page.evaluate(
+                    "window.vexV4.media.getAttribute('src')"
+                )
+                is None
+                and page.locator("#sessionState").inner_text()
+                == "Held · previous current unavailable",
+                "source removal left stale playback truth",
+            ),
+        )
 
         page.locator("#exitVexStream").click()
         page.wait_for_function(

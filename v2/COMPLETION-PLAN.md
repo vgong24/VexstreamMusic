@@ -129,7 +129,7 @@ feature-owned Journey + TextRef projection = PASS
 
 This establishes the browser substrate for later desktop Journeys/ScreenCrawler. It does not yet prove the complete V4 desktop product.
 
-## D2 — Playback + Queue parity
+## D2 — Playback + Queue parity — PROVED CORE
 
 Migrate the actual desktop listening core without feature expansion.
 
@@ -158,6 +158,27 @@ Play track / Play album / Play artist / Play playlist
 ```
 
 Preserve V1 behavior while removing hidden ownership crossover.
+
+Exact checkpoint:
+
+```text
+d2468c415c5d037ee1463421c26b0b6caf2a59a1
+focused Queue + Player tests = 22 / 22 PASS
+Chromium checks             = 18 / 18 PASS
+pageErrors                  = 0
+consoleErrors               = 0
+```
+
+Covered behavior includes top-level Play context seeding, Play Track, Play Queue Item, Next,
+Previous/restart threshold, shuffle-upcoming, repeat wrap, Play next, Add to queue, reorder, remove
+guards and Clear after current.
+
+One browser-discovered currentness correction is now explicit: when higher Player composition changes
+the selected media source, the Playback Connection refreshes provider truth before resolving an
+immediate Play request.
+
+Queue persistence remains D4 work. V1 persists order without a coherent current-selection/session
+contract; V4 will not canonize that accident as Queue semantics.
 
 ## D3 — Library / playlists / Explore / import semantic extraction
 

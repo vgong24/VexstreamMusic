@@ -78,6 +78,7 @@ EXPLORE_FRAMES = {
         "candidates": [
             {
                 "providerId": "candidate.one",
+                "url": "https://www.youtube.com/watch?v=candidate.one",
                 "title": "Candidate One",
                 "channel": "Creator One",
                 "axis": "CLOSER",
@@ -86,6 +87,7 @@ EXPLORE_FRAMES = {
             },
             {
                 "providerId": "candidate.two",
+                "url": "https://www.youtube.com/watch?v=candidate.two",
                 "title": "Candidate Two",
                 "channel": "Creator Two",
                 "axis": "VERSIONS",
@@ -116,6 +118,7 @@ EXPLORE_FRAMES = {
         "candidates": [
             {
                 "providerId": "candidate.branch",
+                "url": "https://www.youtube.com/watch?v=candidate.branch",
                 "title": "Branch Candidate",
                 "channel": "Branch Creator",
                 "axis": "NEIGHBORHOOD",
@@ -125,6 +128,67 @@ EXPLORE_FRAMES = {
         ],
         "generatedAt": "2026-10-14T00:00:01Z",
     },
+} 
+
+IMPORT_REVIEW = {
+    "inspection": {
+        "id": "candidate.one",
+        "url": "https://www.youtube.com/watch?v=candidate.one",
+        "title": "Candidate One",
+        "channel": "Creator One",
+        "duration": 120,
+        "artist": "",
+        "album": "Candidate Collection",
+        "genre": "Test",
+        "hasSections": True,
+        "sections": [
+            {
+                "index": 1,
+                "start": 0,
+                "end": 60,
+                "title": "Candidate Part One",
+                "artist": "",
+                "selected": True,
+            },
+            {
+                "index": 2,
+                "start": 60,
+                "end": 120,
+                "title": "Candidate Part Two",
+                "artist": "",
+                "selected": True,
+            },
+        ],
+        "sourceQuality": {
+            "codec": "opus",
+            "bitrateKbps": 160,
+        },
+    },
+    "items": [
+        {
+            "kind": "whole",
+            "title": "Candidate One",
+            "duration": 120,
+            "matches": [
+                {
+                    "trackId": "media.vexstream.test-tone.2",
+                    "title": "VexStream Test Tone Two",
+                    "artist": "VexStream QA",
+                    "score": 78,
+                    "confidence": "likely",
+                    "relation": "SAME_SONG_POSSIBLE",
+                    "reasons": ["similar title"],
+                    "localQuality": {},
+                    "qualityComparison": {
+                        "state": "INSUFFICIENT_DATA",
+                        "summary": "Not enough format data.",
+                    },
+                }
+            ],
+        }
+    ],
+    "matchCount": 1,
+    "advisory": True,
 }
 
 
@@ -264,6 +328,11 @@ def main() -> int:
         fn()
         report["checks"].append({"name": name, "status": "PASS"})
 
+    import_job_state = {
+        "started": False,
+        "startBody": None,
+    }
+
     def route_request(route: Route) -> None:
         request = route.request
         parsed = urlparse(request.url)
@@ -333,6 +402,102 @@ def main() -> int:
                     "X-Content-Type-Options": "nosniff",
                 },
                 body=json.dumps(payload),
+            )
+            return
+
+        if parsed.path == "/api/import/jobs":
+            if request.method != "GET":
+                route.fulfill(status=405, body="GET required")
+                return
+            active = []
+            if import_job_state["started"]:
+                active = [
+                    {
+                        "id": "job-import-1",
+                        "title": "Candidate One",
+                        "status": "queued",
+                        "stage": "Waiting for preparation",
+                        "progress": 0,
+                        "detail": "Queued in reversible staging.",
+                    }
+                ]
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "groups": {
+                            "active": active,
+                            "ready": [],
+                            "completed": [],
+                        },
+                        "recovery": {},
+                        "issues": [],
+                    }
+                ),
+            )
+            return
+
+        if parsed.path == "/api/import/destinations":
+            if request.method != "GET":
+                route.fulfill(status=405, body="GET required")
+                return
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps({"destinations": ["/music"]}),
+            )
+            return
+
+        if parsed.path == "/api/import/inspect":
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            if body != {
+                "url": "https://www.youtube.com/watch?v=candidate.one"
+            }:
+                route.fulfill(status=400, body="unexpected Import inspection")
+                return
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(IMPORT_REVIEW),
+            )
+            return
+
+        if parsed.path == "/api/import/start":
+            if request.method != "POST":
+                route.fulfill(status=405, body="POST required")
+                return
+            body = json.loads(request.post_data or "{}")
+            if (
+                body.get("url")
+                != "https://www.youtube.com/watch?v=candidate.one"
+                or body.get("destination") != "/music"
+                or body.get("mode") != "split"
+                or len(body.get("sections") or []) != 2
+                or not all(
+                    section.get("selected") is True
+                    for section in body.get("sections") or []
+                )
+            ):
+                route.fulfill(
+                    status=400,
+                    body="unexpected reviewed Import plan",
+                )
+                return
+            import_job_state["started"] = True
+            import_job_state["startBody"] = body
+            route.fulfill(
+                status=200,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                body=json.dumps(
+                    {
+                        "jobId": "job-import-1",
+                        "status": "queued",
+                    }
+                ),
             )
             return
 
@@ -815,6 +980,51 @@ def main() -> int:
             ),
         )
 
+        import_starts_before_review = sum(
+            1
+            for row in report["requests"]
+            if row["method"] == "POST"
+            and row["path"] == "/api/import/start"
+        )
+        page.locator(
+            '[data-explore-index="0"] [data-explore-action="import"]'
+        ).click()
+        page.wait_for_function("window.vexV4.importReview!==null")
+        checked(
+            "explore-import-review-is-read-only-until-human-start",
+            lambda: require(
+                page.locator("#importReview").is_visible()
+                and "Candidate One"
+                in page.locator("#importReviewSourceTitle").inner_text()
+                and "1 possible library match"
+                in page.locator("#importDuplicateSummary").inner_text()
+                and page.locator("#importDestination").input_value()
+                == "/music"
+                and page.locator("#importMode").input_value()
+                == "split"
+                and sum(
+                    1
+                    for row in report["requests"]
+                    if row["method"] == "POST"
+                    and row["path"] == "/api/import/start"
+                )
+                == import_starts_before_review,
+                "Import review accidentally admitted acquisition",
+            ),
+        )
+        checked(
+            "import-review-preserves-two-provider-sections-for-human-editing",
+            lambda: require(
+                page.locator("[data-import-section]").count() == 2
+                and page.locator(
+                    '[data-import-section="1"] '
+                    '[data-import-section-title]'
+                ).input_value()
+                == "Candidate Part One",
+                "Import review section projection drift",
+            ),
+        )
+
         page.locator(
             '[data-explore-index="0"] [data-explore-action="preview"]'
         ).click()
@@ -878,6 +1088,36 @@ def main() -> int:
                 page.evaluate("window.vexV4.media.paused") is False
                 and page.locator("#explorePreview").is_hidden(),
                 "Explore Clear did not restore local Playback",
+            ),
+        )
+
+        page.locator("#importStart").click()
+        page.wait_for_function(
+            "window.vexV4.importReview===null "
+            "&& window.vexV4.importJobs.active.length===1"
+        )
+        checked(
+            "reviewed-import-start-is-the-only-acquisition-admission",
+            lambda: require(
+                import_job_state["started"] is True
+                and import_job_state["startBody"]["destination"] == "/music"
+                and import_job_state["startBody"]["mode"] == "split"
+                and page.evaluate(
+                    "window.vexV4.importJobs.active[0].id"
+                )
+                == "job-import-1"
+                and page.locator(
+                    '[data-import-job-id="job-import-1"]'
+                ).count()
+                == 1,
+                "reviewed Import did not become durable job activity",
+            ),
+        )
+        checked(
+            "import-start-does-not-rewrite-current-library-projection",
+            lambda: require(
+                page.evaluate("window.vexV4.catalog.length") == 3,
+                "Import start mutated browser Library truth before commit",
             ),
         )
 

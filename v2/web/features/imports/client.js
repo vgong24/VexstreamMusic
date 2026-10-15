@@ -22,6 +22,27 @@ export async function inspectImport(
   );
 }
 
+export async function loadImportDestinations(
+  { request = globalThis.fetch } = {},
+) {
+  const payload = await requestJSON(
+    "/api/import/destinations",
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    },
+    request,
+    "Import destinations",
+  );
+  return Object.freeze(
+    Array.isArray(payload?.destinations)
+      ? payload.destinations
+          .map(value => String(value ?? "").trim())
+          .filter(Boolean)
+      : [],
+  );
+}
+
 export async function loadImportJobs(
   { request = globalThis.fetch } = {},
 ) {

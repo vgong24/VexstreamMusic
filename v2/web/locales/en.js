@@ -27,5 +27,17 @@ export const en=Object.freeze({
  "library.unknown-artist":"Unknown artist",
  "playlist.play":"Play playlist",
  "playlist.availability":"{available} available · {missing} unavailable",
- "playlist.missing-track":"Unavailable track"
+ "playlist.missing-track":"Unavailable track",
+ "explore.open":"Explore",
+ "explore.preview":"Preview",
+ "explore.branch":"Explore from here",
+ "explore.back":"Back",
+ "explore.clear":"Clear",
+ "explore.summary.empty":"No Explore session",
+ "explore.summary.active":"{title} · {count} candidates",
+ "explore.match.in-library":"In library",
+ "explore.match.likely":"Likely match",
+ "explore.match.possible":"Possible match",
+ "explore.match.not-in-library":"Not in library",
+ "explore.axis.other":"Explore"
 });

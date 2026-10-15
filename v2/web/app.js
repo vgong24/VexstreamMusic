@@ -166,11 +166,7 @@ function currentLibraryView(){
 }
 
 function libraryPlaybackRefs(){
- return projectLibraryView(catalog,{
-  query:"",
-  genre:"all",
-  sort:libraryView.sort
- }).map(item=>item.ref);
+ return [...refs];
 }
 
 function applyCatalog(nextCatalog){

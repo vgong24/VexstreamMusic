@@ -86,7 +86,8 @@ func (h *Handler) catalog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) media(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet && r.Method != http.MethodHeaD")
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		w.Header().Set("Allow", "GET, HEAD")
 		http.Error(w, "GET or HEAD required", http.StatusMethodNotAllowed)
 		return
 	}
@@ -127,7 +128,7 @@ func projectTrack(track library.Track) catalogTrack {
 		ID: track.ID, Title: track.Title, Artist: track.Artist, Album: track.Album,
 		Genre: track.Genre, Year: track.Year, Duration: track.Duration,
 		ProviderID: track.ProviderID, SourceURL: track.SourceURL, Channel: track.Channel,
-		Tags: append([]string(nil), track.Tags...), Categories: append([]string(nil), track.Categories....),
+		Tags: append([]string(nil), track.Tags...), Categories: append([]string(nil), track.Categories...),
 		Description: track.Description, ThumbnailURL: track.ThumbnailURL, AddedAt: track.AddedAt,
 		SourceTitle: track.SourceTitle, SourceArtist: track.SourceArtist, SourceAlbum: track.SourceAlbum,
 		SourceGenre: track.SourceGenre, OverlayUpdatedAt: track.OverlayUpdatedAt,

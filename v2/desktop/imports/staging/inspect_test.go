@@ -20,6 +20,9 @@ func stageJob(t *testing.T, root, name string, job importmodel.Job, manifest *Ma
 		t.Fatal(err)
 	}
 	if manifest != nil {
+		if manifest.SchemaVersion == "" {
+			manifest.SchemaVersion = ManifestSchema
+		}
 		if err := persistence.SaveJSONAtomic(filepath.Join(stage, "manifest.json"), manifest); err != nil {
 			t.Fatal(err)
 		}
@@ -211,5 +214,42 @@ func TestTerminalStagingResidueIsVisibleForLaterCleanupPolicy(t *testing.T) {
 	}
 	if !strings.Contains(strings.Join(issueCodes(got), ","), "TERMINAL_STAGE_REMAINS") {
 		t.Fatalf("terminal residue issue missing: %+v", got.Issues)
+	}
+}
+
+
+func TestUnknownManifestSchemaIsHeldInsteadOfTreatedAsPrepared(t *testing.T) {
+	root := t.TempDir()
+	stage := stageJob(
+		t,
+		root,
+		"future-schema",
+		importmodel.Job{
+			ID: "future",
+			Status: importmodel.StatusReady,
+			Destination: filepath.Join(root, "music"),
+		},
+		&Manifest{
+			SchemaVersion: "vexstream.import-stage/v99",
+			Destination: filepath.Join(root, "music"),
+			Outputs: []Output{{RelativePath: "out/one.mp3"}},
+		},
+		map[string][]byte{"out/one.mp3": []byte("audio")},
+	)
+	got, err := Inspect(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Records) != 1 || got.Records[0].StageDir != stage {
+		t.Fatalf("future-schema record lost: %+v", got)
+	}
+	if got.Records[0].Prepared {
+		t.Fatal("unknown manifest schema was treated as prepared")
+	}
+	if !strings.Contains(
+		strings.Join(issueCodes(got), ","),
+		"MANIFEST_SCHEMA_UNSUPPORTED",
+	) {
+		t.Fatalf("schema hold not surfaced: %+v", got.Issues)
 	}
 }

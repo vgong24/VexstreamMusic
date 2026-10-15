@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"os"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -50,6 +51,7 @@ func TestOpenFormsLocalDesktopCompositionWithoutMobileIngress(t *testing.T) {
 		"/api/import/jobs",
 		"/api/import/destinations",
 		"/api/import/status",
+		"/api/player/session",
 	} {
 		response, err := http.Get(server.URL + path)
 		if err != nil {
@@ -142,5 +144,46 @@ func TestExitRequiresExplicitConfirmationThenSignalsShutdown(t *testing.T) {
 	case <-application.ExitRequested():
 	default:
 		t.Fatal("confirmed Exit did not signal shutdown")
+	}
+}
+
+
+func TestPlayerSessionUsesV4OnlyLayoutThroughComposition(t *testing.T) {
+	root := t.TempDir()
+	layout := appdata.At(filepath.Join(root, "VexStreamMusic"))
+	application, err := Open(Options{
+		Version: "4.0.0",
+		BuildRef: "test-build",
+		Layout: layout,
+		Home: root,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer application.Close()
+
+	save := httptest.NewRecorder()
+	application.Handler().ServeHTTP(
+		save,
+		httptest.NewRequest(
+			http.MethodPut,
+			"/api/player/session",
+			strings.NewReader(`{
+			  "items":["track-a"],
+			  "currentIndex":0,
+			  "currentRef":"track-a",
+			  "shuffle":true,
+			  "repeat":false
+			}`),
+		),
+	)
+	if save.Code != http.StatusOK {
+		t.Fatalf("session save failed: %d %s", save.Code, save.Body.String())
+	}
+	if _, err := os.Stat(layout.PlayerSession); err != nil {
+		t.Fatalf("V4 session was not stored at V4 path: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(layout.Base, "player-session.json")); !os.IsNotExist(err) {
+		t.Fatalf("player session leaked into protected V3 root: %v", err)
 	}
 }

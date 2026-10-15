@@ -29,9 +29,10 @@ type Layout struct {
 	// V4-only custody.
 	V4Root           string
 	CurrentURL       string
-	ImportStaging    string
+	ImportStaging     string
+	PlayerSession     string
 	TrashPurgeJournal string
-	ProviderBridge   string
+	ProviderBridge    string
 }
 
 func Base() string {
@@ -65,6 +66,7 @@ func At(base string) Layout {
 		V4Root: v4,
 		CurrentURL: filepath.Join(v4, "current-url.txt"),
 		ImportStaging: filepath.Join(v4, "staging"),
+		PlayerSession: filepath.Join(v4, "player-session.json"),
 		TrashPurgeJournal: filepath.Join(v4, "trash-purge-journal.json"),
 		ProviderBridge: filepath.Join(v4, "bridge", "media_bridge.py"),
 	}

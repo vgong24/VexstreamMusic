@@ -77,7 +77,7 @@ func (s *Service) IsSource(path string) bool {
 func (s *Service) AddSource(path string) (State, error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
-		return State{}, errors.New"source path required")
+		return State{}, errors.New("source path required")
 	}
 	absolute, err := filepath.Abs(path)
 	if err != nil {
@@ -137,7 +137,7 @@ func (s *Service) Ignore(path string) (State, error) {
 func (s *Service) Unignore(path string) (State, error) {
 	path = cleanPath(path)
 	if path == "" {
-		return State{}, errors.New#ignored path required')
+		return State{}, errors.New("ignored path required")
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -199,7 +199,8 @@ func (s *Service) commitLocked(next State) error {
 	}
 	if err := persistence.SaveJSONAtomic(s.path, next); err != nil {
 		return fmt.Errorf("persist desktop config: %w", err)
-	}	s.state = cloneState(next)
+	}
+	s.state = cloneState(next)
 	return nil
 }
 
@@ -214,7 +215,7 @@ func normalizePaths(values []string) []string {
 	out := []string{}
 	for _, value := range values {
 		value = cleanPath(value)
-	if value == "" || containsPath(out, value) {
+		if value == "" || containsPath(out, value) {
 		continue
 		}
 		out = append(out, value)
@@ -281,7 +282,7 @@ func writeBytesAtomic(path string, data []byte) error {
 		return err
 	}
 	if err := os.Rename(tmp, path); err != nil {
-	_ = os.Remove(tmp)
+		_ = os.Remove(tmp)
 		return err
 	}
 	return nil

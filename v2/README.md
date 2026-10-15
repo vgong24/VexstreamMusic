@@ -171,7 +171,7 @@ HTMLMediaElement-like Connection that:
 - delegates restart-position ownership to the concrete media owner;
 - refuses to make Playback silently own Queue selection.
 
-Current local semantic/provider proof:
+Current semantic/provider proof:
 
 ```text
 Node 22.16.0
@@ -180,7 +180,20 @@ Node 22.16.0
 0 FAIL
 ```
 
-This is not yet browser or Windows host proof.
+First exact committed browser slice:
+
+```text
+code checkpoint = 2f347403d13a18fac5c3e632a8b895f30a27ed26
+Chromium 144
+8 browser checks PASS
+0 page errors
+0 console errors
+real HTMLMediaElement Play -> Pause = PASS
+feature-owned Journey execution = PASS
+TextRef projection = PASS
+```
+
+This is real browser proof, not yet whole-desktop or Windows-host proof.
 
 ## Desktop-first completion posture
 
@@ -203,18 +216,16 @@ preserve planning/currentness, but implementation waits for the Desktop V4 readi
 
 ## What comes next
 
-The next implementation edge is:
+The first real browser Playback slice is now truthful. The next implementation edge is:
 
 ```text
-real V2 browser surface
--> real <audio> element
--> V2 Playback Connection
--> V2 presentation/TextRef
--> browser interaction proof
--> compare against preserved V1 playback intention
+D2 Playback + Queue parity
+-> make Queue independently perceivable
+-> preserve V1 ordered/current/shuffle/repeat behavior
+-> make Play Track / Play Album / Play Artist / Play Playlist explicit composition
+-> keep Playback provider truth separate
 ```
 
-Only after that slice is truthful should Queue, media availability/download, or whole-screen migration
-be pulled into V2.
+No Android integration is active while the desktop V4 completion gate remains open.
 
 <!-- [VXG RealForever][VEXSTREAM][DESKTOP-V2][FOUNDATION] -->

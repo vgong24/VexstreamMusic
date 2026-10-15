@@ -365,8 +365,9 @@ func (m *Manager) commit(
 
 	result, err := m.workflow.Commit(id, stage, job.Destination)
 	if err != nil {
-		m.mu.Lock()
-		current := m.jobs[id]
+		m.mu.RLock()
+		current := cloneJob(m.jobs[id])
+		m.mu.RUnlock()
 		if recovery {
 			current.Status = importmodel.StatusCommitting
 			current.Stage = "Recovery held"
@@ -376,14 +377,22 @@ func (m *Manager) commit(
 			current.Stage = "Needs attention"
 			current.Detail = "Library commit is still held. " + err.Error()
 		}
+		if persistErr := persistJob(stage, current); persistErr != nil {
+			return cloneJob(job), fmt.Errorf(
+				"persist held import state after commit failure: %w (commit: %v)",
+				persistErr,
+				err,
+			)
+		}
+		m.mu.Lock()
 		m.jobs[id] = cloneJob(current)
 		m.mu.Unlock()
-		_ = persistJob(stage, current)
 		return cloneJob(current), err
 	}
 
-	m.mu.Lock()
-	current := m.jobs[id]
+	m.mu.RLock()
+	current := cloneJob(m.jobs[id])
+	m.mu.RUnlock()
 	current.Status = importmodel.StatusDone
 	current.Stage = "Added to library"
 	current.Progress = 100
@@ -391,12 +400,16 @@ func (m *Manager) commit(
 	current.TrackRefs = append([]string(nil), result.TrackRefs...)
 	current.Detail = fmt.Sprintf("%d file(s) added to the Library.", result.Added)
 	current.CompletedAt = m.now().UTC().Format(time.RFC3339Nano)
+	if err := persistJob(stage, current); err != nil {
+		return cloneJob(job), fmt.Errorf(
+			"persist committed import state: %w",
+			err,
+		)
+	}
+	m.mu.Lock()
 	m.jobs[id] = cloneJob(current)
 	delete(m.recovery, id)
 	m.mu.Unlock()
-	if err := persistJob(stage, current); err != nil {
-		return cloneJob(current), err
-	}
 	if err := os.RemoveAll(stage); err != nil {
 		return cloneJob(current), err
 	}

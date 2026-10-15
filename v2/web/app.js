@@ -31,6 +31,10 @@ import {
   buildImportPlan,
   formImportReview,
 } from "./features/imports/review.js";
+import {
+  exitVexStream,
+  loadSystemIdentity,
+} from "./features/system/client.js";
 import { escapeHTML } from "./foundation/html.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
@@ -42,6 +46,8 @@ const previous=document.querySelector("#previous");
 const next=document.querySelector("#next");
 const shuffle=document.querySelector("#shuffle");
 const repeat=document.querySelector("#repeat");
+const buildIdentity=document.querySelector("#buildIdentity");
+const exitVexStreamButton=document.querySelector("#exitVexStream");
 const status=document.querySelector("#status");
 const semanticState=document.querySelector("#semanticState");
 const queueState=document.querySelector("#queueState");
@@ -75,6 +81,7 @@ const title=document.querySelector("#trackTitle");
 const artist=document.querySelector("#trackArtist");
 const error=document.querySelector("#error");
 
+let systemIdentity=null;
 let catalog=Object.freeze([]);
 let byRef=new Map();
 let refs=[];
@@ -472,6 +479,14 @@ async function guarded(effect){
  render();
 }
 
+exitVexStreamButton.addEventListener("click",()=>void guarded(async()=>{
+ exitVexStreamButton.disabled=true;
+ exitVexStreamButton.textContent=resolveText(locale,"system.exit.exiting");
+ await exitVexStream();
+ buildIdentity.textContent=resolveText(locale,"system.exit.complete");
+ status.textContent=resolveText(locale,"system.exit.complete");
+}));
+
 playPause.addEventListener("click",()=>void guarded(()=>player.activatePlayPause()));
 next.addEventListener("click",()=>void guarded(()=>player.next()));
 previous.addEventListener("click",()=>void guarded(()=>player.previous()));
@@ -656,12 +671,22 @@ async function initialize(){
  const playerSessionLoad=loadPlayerSession().catch(failure=>Object.freeze({
   failure
  }));
- const [nextCatalog,nextPlaylists,nextImportJobs,loadedPlayerSession]=await Promise.all([
+ const [nextCatalog,nextPlaylists,nextImportJobs,loadedPlayerSession,nextIdentity]=await Promise.all([
   loadLibraryCatalog(),
   loadPlaylists(),
   loadImportJobs(),
-  playerSessionLoad
+  playerSessionLoad,
+  loadSystemIdentity()
  ]);
+ systemIdentity=nextIdentity;
+ buildIdentity.textContent=resolveText(locale,"system.identity.ready",{
+  version:systemIdentity.version,
+  build:systemIdentity.buildRef
+ });
+ buildIdentity.title=systemIdentity.buildRef;
+ buildIdentity.dataset.buildRef=systemIdentity.buildRef;
+ exitVexStreamButton.textContent=resolveText(locale,"system.exit");
+
  catalog=nextCatalog;
  byRef=new Map(catalog.map(item=>[item.ref,item]));
  refs=catalog.map(item=>item.ref);
@@ -696,6 +721,7 @@ async function initialize(){
  render();
  window.vexV4=Object.freeze({
   ready:true,
+  get identity(){return systemIdentity;},
   journey:playerJourney,
   queue,
   playback,

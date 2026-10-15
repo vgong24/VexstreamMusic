@@ -16,6 +16,39 @@ Android PR #84 is stacked on VexArchitecture PR #82. Desktop does not depend on 
 implementation details; the two repositories share semantic intentions and one producer/consumer
 contract.
 
+
+## Desktop-first release law
+
+Victor is actively using VexStream Music 3.0 as the daily desktop player. Protect that working
+product while V4 is formed.
+
+```text
+v2/
+    = architecture-generation workspace
+
+VexStream Music 3.0
+    = protected current daily driver
+
+VexStream Music 4.0.0
+    = intended user-facing successor after the refactored desktop is independently accepted
+```
+
+The directory name is not the marketing version. Keep `v2/` as the temporary architecture workspace
+unless a later source-placement reason earns a rename; ship the completed application as 4.0.0.
+
+Ordering is strict:
+
+```text
+complete local desktop reconstruction
+-> browser/media/persistence proof
+-> qualified Windows 4.0.0 candidate
+-> lived desktop acceptance
+-> ONLY THEN resume Android/mobile integration
+```
+
+Android PR #84 is therefore a held companion/currentness surface until the Desktop Readiness Gate
+below is satisfied. No Android product mutation is required to advance the desktop.
+
 ## End state
 
 Desktop V2 is complete when VexStream is still recognizably the product already built, but its source
@@ -176,7 +209,7 @@ Preserve:
 
 V1 remains runnable/quarry until V2 proves replacement.
 
-## D5 — mobile producer contract in V2
+## D5 — mobile producer contract in V2 — DEFERRED UNTIL DESKTOP READINESS
 
 Desktop owns the producer contract.
 
@@ -216,7 +249,7 @@ MEDIA_STREAM != MEDIA_COPY
 
 Android PR #84 consumes this contract.
 
-## D6 — connection / authorization / route separation
+## D6 — connection / authorization / route separation — DEFERRED UNTIL DESKTOP READINESS
 
 Same-Wi-Fi pairing already has useful V1 behavior and should be migrated without becoming the final
 network architecture.
@@ -256,6 +289,8 @@ No widening of the ordinary admin listener is acceptable.
 
 ## D7 — localization / design language / Journey / ScreenCrawler
 
+This remains part of the desktop reconstruction and should be completed before Android resumes.
+
 As V2 screens migrate:
 
 - authored human text uses stable TextRef identity;
@@ -269,7 +304,7 @@ ScreenCrawler is evidence acquisition, not the product oracle.
 
 Do not introduce a framework before the first real migrated screen needs it.
 
-## D8 — proof and packaging
+## D8 — Desktop 4.0 proof, packaging, and readiness gate
 
 Proof ladder:
 
@@ -284,14 +319,33 @@ semantic/unit
 -> lived user acceptance
 ```
 
-Release packaging should deliberately produce a visibly fresh application identity.
+Release packaging deliberately produces a visibly fresh application identity:
 
-Choose the final marketing version at release time; do not repeatedly bump it during architecture work.
+```text
+marketing version = 4.0.0
+fresh buildRef
+fresh Windows executable/package
+```
 
-The release candidate must have a new buildRef and final version so an old session cannot impersonate
-the new V2 executable.
+Do not repeatedly bump the marketing version during architecture work. Keep V3 available while V4
+is formed and qualified.
 
-## Cross-repository join gates
+The V4 candidate must prove the complete local desktop experience before cross-repository work
+resumes: library, playback/queue, browse/search, playlists, Explore/import, persistence/session
+behavior, explicit Exit, and clean relaunch without stale V3/V4 process confusion.
+
+When exact Windows-host proof is required, the current accepted VexRelay/VexLocalBridge route may
+be used to bind the exact source head and return build/runtime evidence. Relay carries/proves the
+effect; it does not own VexStream semantics.
+
+**Desktop Readiness Gate:** after exact-head Windows qualification, Victor runs the qualified V4
+candidate as an ordinary music player while V3 remains available. Android implementation remains
+held until that lived desktop acceptance succeeds.
+
+## Cross-repository join gates — begin only after Desktop Readiness
+
+These gates are intentionally downstream of D8. They do not block the desktop from becoming a
+complete local V4 product first.
 
 ### J1 — local producer/consumer parity
 
@@ -358,9 +412,9 @@ Desktop PR is complete when:
 4. feature neighborhoods are navigable by human question;
 5. producer/mobile boundaries are read-only and capability-bounded;
 6. localization/Journey/browser proof are source-owned and understandable;
-7. Windows process/build/package proof is green;
-8. J1-J3 pass with Android PR #84;
-9. J4 passes when its private-route dependency is actually available;
-10. the final executable has a fresh version + buildRef and can replace the old session cleanly.
+7. Windows 4.0.0 process/build/package proof is green;
+8. the lived Desktop Readiness Gate passes while V3 remains available;
+9. the final executable has a fresh version + buildRef and cannot be confused with V3;
+10. only after desktop acceptance do J1-J3 resume with Android PR #84; J4 remains dependent on a real private route.
 
 <!-- [VXG RealForever][VEXSTREAM][DESKTOP-V2][COMPLETION] -->

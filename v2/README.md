@@ -196,3 +196,94 @@ Library Service
 Source-folder mutation/admin behavior remains outside this adapter.
 
 <!-- [VXG RealForever][VEXSTREAM][DESKTOP-V2-WORKSPACE][V4][D3-LIBRARY] -->
+
+
+## Current checkpoint — D4 persistence and executable qualification
+
+The architecture workspace has crossed the earlier D3 extraction boundary.
+
+Current local product source now includes:
+
+```text
+V4 executable entry
+-> exact version + binary buildRef identity
+-> V4-only current-session claim
+-> local app composition
+   -> Config / source discovery
+   -> Library + exact range media
+   -> reversible overlays / playback windows
+   -> Playlists
+   -> Trash + journaled purge recovery
+   -> Explore session + provider search
+   -> provider runtime setup/repair
+   -> Import inspect / duplicate review / staged preparation
+   -> crash-recoverable Import commit + retry/discard/recovery
+   -> Player session persistence
+   -> embedded browser
+   -> explicit Exit
+```
+
+The latest Chromium journey checkpoint before D4-only Go changes is:
+
+```text
+4cbd4b782d9ee3b83172745b65adc1e79fdc3b57
+Library view/admin + Playlist CRUD + Trash lifecycle
++ Playback/Queue + Explore/Import + player-session + source-management walk
+```
+
+### Protected V3 compatibility
+
+The pairing-store rollback incident established a release law:
+
+```text
+PERSISTED_STATE_UPGRADE
+!=
+PERMISSION_TO_BREAK_ROLLBACK
+```
+
+V4-only schemas now live under the V4 app-data root when they are not intentionally V3-readable.
+
+Shared V3/V4 stores have one aggregate executable rollback contract:
+
+```text
+V4 owner writes shared state
+-> protected V3-shaped reader consumes it
+-> V3-shaped writer re-serializes it
+-> semantic JSON must be lossless
+```
+
+Covered shared stores:
+
+- config;
+- firstSeen;
+- overlays;
+- playback windows;
+- Library cache v2;
+- Playlists;
+- Trash;
+- deleted history.
+
+V4 also refuses writable startup while the protected V3 process claim is live and monitors that
+claim while running. V3 remains available as a fallback, but V3 and V4 are not admitted as
+simultaneous writers of shared Library state.
+
+### Next proof edge
+
+The current D4 Go changes have not yet been accepted merely because they are committed.
+
+Next proof:
+
+```text
+exact current V4 head
+-> VexRelay source-owner qualification
+-> temporary task-local Go 1.23 toolchain when host Go is absent
+-> gofmt
+-> go test ./v2/...
+-> Windows GOOS/amd64 vet/build structure
+-> current Node semantic/model suite
+-> canonical RETURN
+```
+
+GitHub Actions is not the proof dependency.
+
+<!-- [VXG RealForever][VEXSTREAM][DESKTOP-V4][D4-ACTIVE][V3-ROLLBACK-COMPAT] -->

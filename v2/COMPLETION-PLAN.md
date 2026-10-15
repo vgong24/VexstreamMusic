@@ -89,7 +89,7 @@ Playback has a browser-provider Connection and pure provider/semantic tests.
 
 This is architecture proof only; it does not yet replace V1 playback.
 
-## D1 — real browser shell + proof harness
+## D1 — real browser shell + proof harness — PROVED
 
 Create the smallest real V2 browser surface that can prove the first migrated family.
 
@@ -114,6 +114,20 @@ known media
 ```
 
 Then prove stale-render re-resolution in a real browser.
+
+Checkpoint:
+
+```text
+code = 2f347403d13a18fac5c3e632a8b895f30a27ed26
+Chromium 144
+8 / 8 browser checks PASS
+pageErrors = 0
+consoleErrors = 0
+real HTMLMediaElement Play -> Pause = PASS
+feature-owned Journey + TextRef projection = PASS
+```
+
+This establishes the browser substrate for later desktop Journeys/ScreenCrawler. It does not yet prove the complete V4 desktop product.
 
 ## D2 — Playback + Queue parity
 

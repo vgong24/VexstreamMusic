@@ -175,6 +175,13 @@ export function createPlayerComposition({
     get playPausePresentation() {
       return playPausePresentation();
     },
+    presentCurrent() {
+      const item=currentItem();
+      if(item){
+        onCurrentMedia(item,queue.currentProjection);
+      }
+      return item;
+    },
     activatePlayPause,
     playContext,
     playTrack,

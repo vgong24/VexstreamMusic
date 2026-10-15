@@ -70,8 +70,9 @@ func (b *Bridge) Prepare(
 	plan PreparePlan,
 	onEvent func(PrepareEvent),
 ) (PrepareResult, error) {
+	python := b.pythonPath()
 	if b == nil ||
-		strings.TrimSpace(b.Python) == "" ||
+		python == "" ||
 		strings.TrimSpace(b.Script) == "" {
 		return PrepareResult{}, errors.New("YouTube bridge runtime is not configured")
 	}
@@ -196,7 +197,7 @@ func (b *Bridge) Prepare(
 		}
 	}
 
-	command := []string{b.Python, b.Script, "import", planPath}
+	command := []string{python, b.Script, "import", planPath}
 	runErr := b.stream(
 		ctx,
 		command,

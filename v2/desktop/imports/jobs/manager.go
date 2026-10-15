@@ -98,7 +98,14 @@ func New(
 			if job.CompletedAt == "" {
 				job.CompletedAt = manager.now().UTC().Format(time.RFC3339Nano)
 			}
-			_ = persistJob(record.StageDir, job)
+			if err := persistJob(record.StageDir, job); err != nil {
+				closeManager()
+				return nil, fmt.Errorf(
+					"persist interrupted import recovery %q: %w",
+					job.ID,
+					err,
+				)
+			}
 		}
 		manager.jobs[job.ID] = job
 	}
@@ -181,6 +188,11 @@ func (m *Manager) Start(request workflow.Request) (importmodel.Job, error) {
 	case job := <-first:
 		return job, nil
 	case result := <-finished:
+		select {
+		case job := <-first:
+			return job, nil
+		default:
+		}
 		m.mu.Lock()
 		delete(m.cancels, id)
 		if result.outcome.Job.ID == "" {
@@ -252,16 +264,21 @@ func (m *Manager) Cancel(id string) error {
 
 func (m *Manager) Discard(id string) (importmodel.Job, error) {
 	id = strings.TrimSpace(id)
-	m.mu.Lock()
+	m.mu.RLock()
 	job, ok := m.jobs[id]
 	stage := m.stages[id]
+	m.mu.RUnlock()
 	if !ok {
-		m.mu.Unlock()
 		return importmodel.Job{}, ErrNotFound
 	}
 	if !importmodel.CanDiscard(job.Status) {
-		m.mu.Unlock()
 		return cloneJob(job), ErrNotDiscardable
+	}
+
+	if stage != "" {
+		if err := os.RemoveAll(stage); err != nil {
+			return cloneJob(job), fmt.Errorf("discard import staging: %w", err)
+		}
 	}
 
 	job.Status = importmodel.StatusDiscarded
@@ -271,13 +288,12 @@ func (m *Manager) Discard(id string) (importmodel.Job, error) {
 	if job.CompletedAt == "" {
 		job.CompletedAt = m.now().UTC().Format(time.RFC3339Nano)
 	}
+
+	m.mu.Lock()
 	m.jobs[id] = cloneJob(job)
 	delete(m.recovery, id)
+	delete(m.stages, id)
 	m.mu.Unlock()
-
-	if stage != "" {
-		_ = os.RemoveAll(stage)
-	}
 	return cloneJob(job), nil
 }
 
@@ -324,25 +340,28 @@ func (m *Manager) commit(
 	stage string,
 	recovery bool,
 ) (importmodel.Job, error) {
-	m.mu.Lock()
+	m.mu.RLock()
 	job, ok := m.jobs[id]
+	m.mu.RUnlock()
 	if !ok {
-		m.mu.Unlock()
 		return importmodel.Job{}, ErrNotFound
 	}
-	job.Status = importmodel.StatusCommitting
-	job.Stage = "Adding to library"
-	job.Progress = 100
+	next := cloneJob(job)
+	next.Status = importmodel.StatusCommitting
+	next.Stage = "Adding to library"
+	next.Progress = 100
 	if recovery {
-		job.Detail = "Resuming the existing crash-recovery commit journal."
+		next.Detail = "Resuming the existing crash-recovery commit journal."
 	} else {
-		job.Detail = "Retrying Library commit from prepared staging."
+		next.Detail = "Retrying Library commit from prepared staging."
 	}
-	m.jobs[id] = cloneJob(job)
-	m.mu.Unlock()
-	if err := persistJob(stage, job); err != nil {
+	if err := persistJob(stage, next); err != nil {
 		return cloneJob(job), err
 	}
+	m.mu.Lock()
+	m.jobs[id] = cloneJob(next)
+	m.mu.Unlock()
+	job = next
 
 	result, err := m.workflow.Commit(id, stage, job.Destination)
 	if err != nil {

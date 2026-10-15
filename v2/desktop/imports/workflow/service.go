@@ -37,6 +37,7 @@ type CommitFunc func(
 ) (importcommit.Result, error)
 
 type DestinationAllowed func(string) bool
+type AfterCommit func(importcommit.Result) error
 
 type Request struct {
 	ID             string
@@ -82,6 +83,7 @@ type Service struct {
 	Preparer           Preparer
 	Commit             CommitFunc
 	DestinationAllowed DestinationAllowed
+	AfterCommit        AfterCommit
 	Slots              chan struct{}
 	Now               func() time.Time
 	NewID             func() (string, error)
@@ -322,11 +324,20 @@ func (s Service) Run(
 			&CommitHeldError{Err: commitErr}
 	}
 
+	refreshWarning := ""
+	if s.AfterCommit != nil {
+		if err := s.AfterCommit(committed); err != nil {
+			refreshWarning = err.Error()
+		}
+	}
 	if err := update(func(job *importmodel.Job) {
 		job.Status = importmodel.StatusDone
 		job.Stage = "Added to library"
 		job.Progress = 100
 		job.Detail = fmt.Sprintf("%d file(s) added to the Library.", committed.Added)
+		if refreshWarning != "" {
+			job.Detail += " Library refresh is pending: " + refreshWarning
+		}
 		job.OutputCount = committed.Added
 		job.TrackRefs = append([]string(nil), committed.TrackRefs...)
 		job.CompletedAt = now().UTC().Format(time.RFC3339Nano)

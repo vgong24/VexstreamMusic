@@ -43,7 +43,7 @@ func paths(root string) Paths {
 	}
 }
 
-func str(value string) *string       { return &value }
+func str(value string) *string      { return &value }
 func number(value float64) *float64 { return &value }
 
 func TestOpenFailsClosedOnCorruptHumanProjectionState(t *testing.T) {

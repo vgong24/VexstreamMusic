@@ -44,6 +44,7 @@ func TestLayoutKeepsV3ReadableStoresSharedAndV4RecoverySideBySide(t *testing.T) 
 	for name, path := range map[string]string{
 		"currentURL": got.CurrentURL,
 		"staging": got.ImportStaging,
+		"playerSession": got.PlayerSession,
 		"purgeJournal": got.TrashPurgeJournal,
 		"bridge": got.ProviderBridge,
 	} {
@@ -65,5 +66,24 @@ func TestSharedProviderRuntimeStaysOutsideV4SpecificRoot(t *testing.T) {
 	}
 	if got.SharedRuntime == filepath.Join(got.V4Root, "runtime") {
 		t.Fatal("V4 unnecessarily duplicated established provider runtime")
+	}
+}
+
+
+func TestPlayerSessionStaysSideBySideWithProtectedV3Stores(t *testing.T) {
+	base := filepath.Join(t.TempDir(), "VexStreamMusic")
+	got := At(base)
+
+	if got.PlayerSession != filepath.Join(
+		base,
+		"v4",
+		"player-session.json",
+	) {
+		t.Fatalf("player session placement drift: %q", got.PlayerSession)
+	}
+
+	if got.PlayerSession == filepath.Join(base, "queue.json") ||
+		got.PlayerSession == filepath.Join(base, "player-session.json") {
+		t.Fatal("V4 listening session leaked into protected V3 root")
 	}
 }

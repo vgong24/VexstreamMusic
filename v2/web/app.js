@@ -708,6 +708,14 @@ function renderTrackChoices(){
        <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
        <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
        <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+       <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
+       <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
+       ${playlists.length
+        ? `<select data-track-playlist-target>${playlists.map(playlist=>
+             `<option value="${escapeHTML(playlist.id)}">${escapeHTML(playlist.name)}</option>`
+            ).join("")}</select>
+           <button data-track-action="playlist-add">${escapeHTML(resolveText(locale,"playlist.add-track"))}</button>`
+        : ""}
       </span>
      </article>`).join("")
    : `<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
@@ -794,27 +802,42 @@ function renderSources(){
 }
 
 function renderPlaylistChoices(){
- playlistChoices.innerHTML=resolvedPlaylists.map(resolved=>{
-  const playlist=resolved.playlist;
-  const availability=resolveText(locale,"playlist.availability",{
-   available:resolved.playableRefs.length,
-   missing:resolved.missingRefs.length
-  });
-  const entries=resolved.entries.map(entry=>{
-   const label=entry.available
-    ? trackTitle(entry.track)
-    : resolveText(locale,"playlist.missing-track");
-   return `<li data-playlist-track-ref="${escapeHTML(entry.ref)}" data-available="${String(entry.available)}">${escapeHTML(label)}</li>`;
-  }).join("");
-  return `<article class="playlist-card" data-playlist-id="${escapeHTML(playlist.id)}">
-   <div class="playlist-heading">
-    <strong>${escapeHTML(playlist.name)}</strong>
-    <small>${escapeHTML(availability)}</small>
-   </div>
-   <button data-playlist-action="play" ${resolved.playableRefs.length?"":"disabled"}>${escapeHTML(resolveText(locale,"playlist.play"))}</button>
-   <ol class="playlist-entries">${entries}</ol>
-  </article>`;
- }).join("");
+ playlistChoices.innerHTML=resolvedPlaylists.length
+  ? resolvedPlaylists.map(resolved=>{
+   const playlist=resolved.playlist;
+   const availability=resolveText(locale,"playlist.availability",{
+    available:resolved.playableRefs.length,
+    missing:resolved.missingRefs.length
+   });
+   const entries=resolved.entries.map((entry,index)=>{
+    const label=entry.available
+     ? trackTitle(entry.track)
+     : resolveText(locale,"playlist.missing-track");
+    return `<li data-playlist-track-ref="${escapeHTML(entry.ref)}"
+        data-playlist-index="${index}"
+        data-available="${String(entry.available)}">
+      <span>${escapeHTML(label)}</span>
+      <span class="playlist-entry-actions">
+       <button data-playlist-entry-action="up" ${index===0?"disabled":""}>↑</button>
+       <button data-playlist-entry-action="down" ${index===resolved.entries.length-1?"disabled":""}>↓</button>
+       <button data-playlist-entry-action="remove">${escapeHTML(resolveText(locale,"playlist.remove-track"))}</button>
+      </span>
+     </li>`;
+   }).join("");
+   return `<article class="playlist-card" data-playlist-id="${escapeHTML(playlist.id)}">
+    <div class="playlist-heading">
+     <input data-playlist-name value="${escapeHTML(playlist.name)}" aria-label="${escapeHTML(resolveText(locale,"playlist.name"))}">
+     <small>${escapeHTML(availability)}</small>
+    </div>
+    <div class="playlist-card-actions">
+     <button data-playlist-action="play" ${resolved.playableRefs.length?"":"disabled"}>${escapeHTML(resolveText(locale,"playlist.play"))}</button>
+     <button data-playlist-action="rename">${escapeHTML(resolveText(locale,"playlist.rename"))}</button>
+     <button data-playlist-action="delete">${escapeHTML(resolveText(locale,"playlist.delete"))}</button>
+    </div>
+    <ol class="playlist-entries">${entries}</ol>
+   </article>`;
+  }).join("")
+  : `<div class="empty-state">${escapeHTML(resolveText(locale,"playlist.empty"))}</div>`;
 }
 
 async function guarded(effect){

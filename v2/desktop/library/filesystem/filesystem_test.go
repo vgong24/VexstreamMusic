@@ -54,8 +54,7 @@ func writeCatalogRow(t *testing.T, root, filename, indexedAt string) {
 		},
 	}
 	data, _ := json.Marshal(row)
-	if err := os.WriteFile(path, append(data, '
-'), 0o644); err != nil {
+	if err := os.WriteFile(path, append(data, '\n'), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }

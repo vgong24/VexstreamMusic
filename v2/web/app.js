@@ -277,6 +277,8 @@ async function refreshCatalog(){
  renderTrackChoices();
  renderSources();
  renderPlaylistChoices();
+ renderLibraryEditor();
+ renderTrash();
  render();
  return nextCatalog;
 }
@@ -963,8 +965,80 @@ trackChoices.addEventListener("click",event=>{
    explorePreview.hidden=true;
    explorePreview.removeAttribute("src");
   });
+  return;
+ }
+ if(action.dataset.trackAction==="edit"){
+  currentEditingTrackRef=ref;
+  renderLibraryEditor();
+  return;
+ }
+ if(action.dataset.trackAction==="trash"){
+  void guarded(async()=>{
+   await moveTracksToTrash([ref]);
+   if(currentEditingTrackRef===ref){
+    currentEditingTrackRef="";
+   }
+   await Promise.all([
+    refreshCatalog(),
+    refreshTrash()
+   ]);
+   renderLibraryEditor();
+  });
+  return;
+ }
+ if(action.dataset.trackAction==="playlist-add"){
+  const target=card.querySelector("[data-track-playlist-target]")?.value??"";
+  if(!target)return;
+  void guarded(async()=>{
+   await addTracksToPlaylist(target,[ref]);
+   await refreshPlaylists();
+  });
  }
 });
+
+libraryEditorClose.addEventListener("click",()=>{
+ currentEditingTrackRef="";
+ renderLibraryEditor();
+});
+
+saveTrackDisplay.addEventListener("click",()=>void guarded(async()=>{
+ if(!currentEditingTrackRef)return;
+ await updateTrackDisplay(currentEditingTrackRef,{
+  title:editTitle.value,
+  artist:editArtist.value,
+  album:editAlbum.value,
+  genre:editGenre.value
+ });
+ await refreshCatalog();
+ renderLibraryEditor();
+}));
+
+restoreTrackDisplayButton.addEventListener("click",()=>void guarded(async()=>{
+ if(!currentEditingTrackRef)return;
+ await restoreTrackDisplay(currentEditingTrackRef);
+ await refreshCatalog();
+ renderLibraryEditor();
+}));
+
+savePlaybackWindow.addEventListener("click",()=>void guarded(async()=>{
+ if(!currentEditingTrackRef)return;
+ const end=editPlaybackEnd.value.trim()===""
+  ?null
+  :Number(editPlaybackEnd.value);
+ await updatePlaybackWindow(currentEditingTrackRef,{
+  start:Number(editPlaybackStart.value||0),
+  end
+ });
+ await refreshCatalog();
+ renderLibraryEditor();
+}));
+
+restorePlaybackWindowButton.addEventListener("click",()=>void guarded(async()=>{
+ if(!currentEditingTrackRef)return;
+ await restorePlaybackWindow(currentEditingTrackRef);
+ await refreshCatalog();
+ renderLibraryEditor();
+}));
 
 sourceAdd.addEventListener("click",()=>void guarded(async()=>{
  const path=await chooseSourceFolder();
@@ -1036,15 +1110,70 @@ clearIgnoredSourcesButton.addEventListener("click",()=>void guarded(async()=>{
  renderSources();
 }));
 
+createPlaylistButton.addEventListener("click",()=>void guarded(async()=>{
+ const name=newPlaylistName.value.trim();
+ if(!name)return;
+ await createPlaylist(name,[]);
+ newPlaylistName.value="";
+ await refreshPlaylists();
+}));
+
 playlistChoices.addEventListener("click",event=>{
- const action=event.target.closest("[data-playlist-action]");
  const card=event.target.closest("[data-playlist-id]");
- if(!action||!card)return;
- const resolved=resolvedPlaylists.find(value=>value.playlist.id===card.dataset.playlistId);
- if(!resolved||!resolved.playableRefs.length)return;
- if(action.dataset.playlistAction==="play"){
-  void guarded(()=>player.playContext(resolved.playableRefs,0));
+ if(!card)return;
+ const id=card.dataset.playlistId;
+ const resolved=resolvedPlaylists.find(value=>value.playlist.id===id);
+ if(!resolved)return;
+
+ const action=event.target.closest("[data-playlist-action]");
+ if(action){
+  if(action.dataset.playlistAction==="play"){
+   if(resolved.playableRefs.length){
+    void guarded(()=>player.playContext(resolved.playableRefs,0));
+   }
+   return;
+  }
+  if(action.dataset.playlistAction==="rename"){
+   const name=card.querySelector("[data-playlist-name]")?.value??"";
+   void guarded(async()=>{
+    await renamePlaylist(id,name);
+    await refreshPlaylists();
+   });
+   return;
+  }
+  if(action.dataset.playlistAction==="delete"){
+   void guarded(async()=>{
+    await deletePlaylist(id);
+    await refreshPlaylists();
+   });
+   return;
+  }
  }
+
+ const entryAction=event.target.closest("[data-playlist-entry-action]");
+ const entry=event.target.closest("[data-playlist-index]");
+ if(!entryAction||!entry)return;
+ const index=Number(entry.dataset.playlistIndex);
+ const refs=[...resolved.playlist.trackRefs];
+
+ if(entryAction.dataset.playlistEntryAction==="remove"){
+  const ref=refs[index];
+  void guarded(async()=>{
+   await removeTracksFromPlaylist(id,[ref]);
+   await refreshPlaylists();
+  });
+  return;
+ }
+
+ const target=entryAction.dataset.playlistEntryAction==="up"
+  ?index-1
+  :index+1;
+ if(target<0||target>=refs.length)return;
+ [refs[index],refs[target]]=[refs[target],refs[index]];
+ void guarded(async()=>{
+  await reorderPlaylist(id,refs);
+  await refreshPlaylists();
+ });
 });
 
 exploreCandidates.addEventListener("click",event=>{
@@ -1149,6 +1278,38 @@ importJobs.addEventListener("click",event=>{
  });
 });
 
+trashRefresh.addEventListener("click",()=>void guarded(()=>refreshTrash()));
+
+trashItems.addEventListener("click",event=>{
+ const action=event.target.closest("[data-trash-action]");
+ const row=event.target.closest("[data-trash-id]");
+ if(!action||!row)return;
+ const id=row.dataset.trashId;
+
+ if(action.dataset.trashAction==="restore"){
+  void guarded(async()=>{
+   await restoreTrashItems([id]);
+   await Promise.all([
+    refreshTrash(),
+    refreshCatalog()
+   ]);
+  });
+  return;
+ }
+
+ if(action.dataset.trashAction==="purge"){
+  void guarded(async()=>{
+   await purgeTrashItems([id],{preserveMetadata:true});
+   await refreshTrash();
+  });
+ }
+});
+
+recoverTrashPurgeButton.addEventListener("click",()=>void guarded(async()=>{
+ await recoverTrashPurge();
+ await refreshTrash();
+}));
+
 queueList.addEventListener("click",event=>{
  const action=event.target.closest("[data-queue-action]");
  const row=event.target.closest("[data-queue-index]");
@@ -1186,13 +1347,14 @@ async function initialize(){
  const playerSessionLoad=loadPlayerSession().catch(failure=>Object.freeze({
   failure
  }));
- const [nextCatalog,nextPlaylists,nextImportJobs,loadedPlayerSession,nextIdentity,nextSourceConfig]=await Promise.all([
+ const [nextCatalog,nextPlaylists,nextImportJobs,loadedPlayerSession,nextIdentity,nextSourceConfig,nextTrash]=await Promise.all([
   loadLibraryCatalog(),
   loadPlaylists(),
   loadImportJobs(),
   playerSessionLoad,
   loadSystemIdentity(),
-  loadSourceConfig()
+  loadSourceConfig(),
+  loadTrash()
  ]);
  systemIdentity=nextIdentity;
  buildIdentity.textContent=resolveText(locale,"system.identity.ready",{
@@ -1205,6 +1367,7 @@ async function initialize(){
 
  playlists=nextPlaylists;
  sourceConfig=nextSourceConfig;
+ trashSnapshot=nextTrash;
  applyCatalog(nextCatalog);
  currentImportJobs=nextImportJobs;
 
@@ -1243,8 +1406,10 @@ async function initialize(){
   get catalog(){return catalog;},
   get libraryView(){return libraryView;},
   get sourceConfig(){return sourceConfig;},
-  playlists,
-  resolvedPlaylists,
+  get playlists(){return playlists;},
+  get resolvedPlaylists(){return resolvedPlaylists;},
+  get trash(){return trashSnapshot;},
+  get editingTrackRef(){return currentEditingTrackRef;},
   exploreSession,
   explore,
   get importReview(){return currentImportReview;},

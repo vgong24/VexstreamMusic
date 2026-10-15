@@ -242,6 +242,45 @@ func (l *Library) UpdatePlaybackWindow(
 	return cloneWindow(window), true, nil
 }
 
+func (l *Library) ForgetTrackState(trackRefs []string) error {
+	refs := normalizeRefs(trackRefs)
+	if len(refs) == 0 {
+		return nil
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	firstSeen := cloneStrings(l.firstSeen)
+	overlays := cloneOverlays(l.overlays)
+	windows := cloneWindows(l.windows)
+	for _, ref := range refs {
+		delete(firstSeen, ref)
+		delete(overlays, ref)
+		delete(windows, ref)
+	}
+
+	// These stores are independently V3-readable and this cleanup is idempotent. Adopt each
+	// successfully persisted state immediately; an interrupted purge journal can safely retry the
+	// remaining stores without manufacturing completion.
+	if err := filesystem.SaveOverlays(l.paths.Overlays, overlays); err != nil {
+		return fmt.Errorf("persist overlay cleanup: %w", err)
+	}
+	l.overlays = overlays
+	if err := filesystem.SavePlaybackWindows(
+		l.paths.PlaybackWindows,
+		windows,
+	); err != nil {
+		return fmt.Errorf("persist playback-window cleanup: %w", err)
+	}
+	l.windows = windows
+	if err := filesystem.SaveFirstSeen(l.paths.FirstSeen, firstSeen); err != nil {
+		return fmt.Errorf("persist first-seen cleanup: %w", err)
+	}
+	l.firstSeen = firstSeen
+	return nil
+}
+
 func normalizeRefs(values []string) []string {
 	seen := map[string]bool{}
 	out := make([]string, 0, len(values))

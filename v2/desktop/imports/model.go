@@ -57,6 +57,7 @@ type Job struct {
 	Detail      string         `json:"detail,omitempty"`
 	StartedAt   string         `json:"startedAt,omitempty"`
 	CompletedAt string         `json:"completedAt,omitempty"`
+	Destination string         `json:"destination,omitempty"`
 	OutputCount int            `json:"outputCount,omitempty"`
 	TrackRefs   []string       `json:"trackIds,omitempty"`
 	Problem     map[string]any `json:"problem,omitempty"`

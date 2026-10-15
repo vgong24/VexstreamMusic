@@ -190,3 +190,4 @@ func TestSharedConfigRejectsUnknownNewFieldBeforeBackupPropagation(t *testing.T)
 	if _, err := service.AddSource(source); err == nil {
 		t.Fatal("unknown shared config field was silently overwritten")
 	}
+}

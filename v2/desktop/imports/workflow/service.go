@@ -39,6 +39,7 @@ type CommitFunc func(
 type DestinationAllowed func(string) bool
 
 type Request struct {
+	ID             string
 	Title          string
 	Destination    string
 	URL            string
@@ -77,10 +78,11 @@ func (e *CommitHeldError) Unwrap() error {
 }
 
 type Service struct {
-	StagingRoot       string
-	Preparer          Preparer
-	Commit            CommitFunc
+	StagingRoot        string
+	Preparer           Preparer
+	Commit             CommitFunc
 	DestinationAllowed DestinationAllowed
+	Slots              chan struct{}
 	Now               func() time.Time
 	NewID             func() (string, error)
 }
@@ -122,11 +124,15 @@ func (s Service) Run(
 	if newID == nil {
 		newID = randomID
 	}
-	id, err := newID()
-	if err != nil {
-		return Outcome{}, fmt.Errorf("form import job id: %w", err)
+	id := strings.TrimSpace(request.ID)
+	if id == "" {
+		var err error
+		id, err = newID()
+		if err != nil {
+			return Outcome{}, fmt.Errorf("form import job id: %w", err)
+		}
+		id = strings.TrimSpace(id)
 	}
-	id = strings.TrimSpace(id)
 	if id == "" {
 		return Outcome{}, errors.New("Import job id is empty")
 	}
@@ -169,6 +175,24 @@ func (s Service) Run(
 		}
 		notify(onUpdate, job)
 		return nil
+	}
+
+	if s.Slots != nil {
+		select {
+		case s.Slots <- struct{}{}:
+			defer func() { <-s.Slots }()
+		case <-ctx.Done():
+			_ = update(func(job *importmodel.Job) {
+				job.Status = importmodel.StatusCancelled
+				job.Stage = "Cancelled"
+				job.Progress = 100
+				job.Detail = "Import was cancelled before provider preparation started."
+				job.CompletedAt = now().UTC().Format(time.RFC3339Nano)
+			})
+			outcome := Outcome{Job: cloneJob(job), StageDir: stage}
+			_ = os.RemoveAll(stage)
+			return outcome, importprovider.ErrPrepareCancelled
+		}
 	}
 
 	if err := update(func(job *importmodel.Job) {

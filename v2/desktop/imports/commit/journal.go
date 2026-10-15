@@ -73,6 +73,12 @@ func Prepare(jobID, stageDir, destination string, manifest staging.Manifest) (Jo
 	if stageDir == "." || destination == "." {
 		return Journal{}, errors.New("commit journal requires stage and destination")
 	}
+	if manifest.SchemaVersion != staging.ManifestSchema {
+		return Journal{}, fmt.Errorf(
+			"unsupported staging manifest schema: %q",
+			manifest.SchemaVersion,
+		)
+	}
 	if manifest.Destination != "" && !samePath(manifest.Destination, destination) {
 		return Journal{}, errors.New("staging manifest destination does not match import job")
 	}
@@ -143,6 +149,28 @@ func Prepare(jobID, stageDir, destination string, manifest staging.Manifest) (Jo
 		return Journal{}, err
 	}
 	return cloneJournal(journal), nil
+}
+
+func CommitPrepared(
+	jobID string,
+	stageDir string,
+	destination string,
+) (Result, error) {
+	var manifest staging.Manifest
+	found, err := persistence.LoadJSON(
+		filepath.Join(stageDir, "manifest.json"),
+		&manifest,
+	)
+	if err != nil {
+		return Result{}, fmt.Errorf("load staging manifest: %w", err)
+	}
+	if !found {
+		return Result{}, errors.New("staging manifest is missing")
+	}
+	if _, err := Prepare(jobID, stageDir, destination, manifest); err != nil {
+		return Result{}, err
+	}
+	return Resume(stageDir)
 }
 
 func Load(stageDir string) (Journal, bool, error) {

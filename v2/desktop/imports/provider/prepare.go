@@ -7,6 +7,8 @@ import (
 	youtubeprovider "github.com/vgong24/VexstreamMusic/v2/desktop/provider/youtube"
 )
 
+var ErrPrepareCancelled = errors.New("Import preparation cancelled")
+
 type PrepareSection struct {
 	Index       int
 	SourceTitle string
@@ -139,6 +141,9 @@ func (y YouTubePreparation) Prepare(
 		},
 	)
 	if err != nil {
+		if errors.Is(err, youtubeprovider.ErrPrepareCancelled) {
+			return PrepareResult{}, ErrPrepareCancelled
+		}
 		return PrepareResult{}, err
 	}
 

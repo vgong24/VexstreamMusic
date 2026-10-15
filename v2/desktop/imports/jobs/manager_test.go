@@ -446,6 +446,54 @@ func TestDiscardRemovesOnlyDiscardableStaging(t *testing.T) {
 	}
 }
 
+func TestCloseWaitsForQueuedJobCleanup(t *testing.T) {
+	root := t.TempDir()
+	preparer := &preparerFixture{}
+	service := testWorkflow(root, preparer)
+	slots := make(chan struct{}, 1)
+	slots <- struct{}{}
+	service.Slots = slots
+
+	manager, err := New(service, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	manager.newID = func() (string, error) { return "closing", nil }
+
+	job, err := manager.Start(workflow.Request{
+		Title:       "Song",
+		Destination: filepath.Join(root, "music"),
+		URL:         "https://example/song",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if job.Status != importmodel.StatusQueued {
+		t.Fatalf("first visible state drift: %+v", job)
+	}
+
+	stage := filepath.Join(root, "closing")
+	if _, err := os.Stat(filepath.Join(stage, "job.json")); err != nil {
+		t.Fatalf("queued staging missing before close: %v", err)
+	}
+
+	manager.Close()
+
+	if _, err := os.Stat(stage); !os.IsNotExist(err) {
+		t.Fatalf("Close returned before queued staging cleanup completed: %v", err)
+	}
+	if preparer.callCount() != 0 {
+		t.Fatalf("provider executed while queued shutdown was pending: %d", preparer.callCount())
+	}
+	if _, err := manager.Start(workflow.Request{
+		Title:       "After close",
+		Destination: filepath.Join(root, "music"),
+		URL:         "https://example/after-close",
+	}); err == nil || !stringsContains(err.Error(), "closed") {
+		t.Fatalf("Start after Close was not rejected: %v", err)
+	}
+}
+
 func TestStartRejectsDuplicateJobIdentity(t *testing.T) {
 	root := t.TempDir()
 	preparer := &preparerFixture{}

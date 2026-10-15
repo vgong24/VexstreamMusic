@@ -47,6 +47,8 @@ type Manager struct {
 	cancels  map[string]context.CancelFunc
 	rootCtx  context.Context
 	close    context.CancelFunc
+	wg       sync.WaitGroup
+	closed   bool
 	now      func() time.Time
 	newID    func() (string, error)
 }
@@ -117,7 +119,19 @@ func (m *Manager) Close() {
 	if m == nil || m.close == nil {
 		return
 	}
-	m.close()
+
+	m.mu.Lock()
+	if m.closed {
+		m.mu.Unlock()
+		m.wg.Wait()
+		return
+	}
+	m.closed = true
+	closeManager := m.close
+	m.mu.Unlock()
+
+	closeManager()
+	m.wg.Wait()
 }
 
 func (m *Manager) Start(request workflow.Request) (importmodel.Job, error) {
@@ -140,6 +154,10 @@ func (m *Manager) Start(request workflow.Request) (importmodel.Job, error) {
 	request.ID = id
 
 	m.mu.Lock()
+	if m.closed {
+		m.mu.Unlock()
+		return importmodel.Job{}, errors.New("Import Manager is closed")
+	}
 	if _, exists := m.jobs[id]; exists {
 		m.mu.Unlock()
 		return importmodel.Job{}, fmt.Errorf("Import job %q already exists", id)
@@ -148,6 +166,7 @@ func (m *Manager) Start(request workflow.Request) (importmodel.Job, error) {
 	m.stages[id] = stage
 	ctx, cancel := context.WithCancel(m.rootCtx)
 	m.cancels[id] = cancel
+	m.wg.Add(1)
 	m.mu.Unlock()
 
 	first := make(chan importmodel.Job, 1)
@@ -157,6 +176,8 @@ func (m *Manager) Start(request workflow.Request) (importmodel.Job, error) {
 	}, 1)
 
 	go func() {
+		defer m.wg.Done()
+
 		outcome, err := m.workflow.Run(
 			ctx,
 			request,

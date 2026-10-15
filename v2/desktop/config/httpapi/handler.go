@@ -224,7 +224,7 @@ func (h *Handler) writeMutation(
 		"config": state,
 	}
 	if reconcile && h.refresh != nil {
-		if err := h.refresh(append([]string(nil), state.Sources...)); err != nil {
+		if err := h.refresh(append([]string{}, state.Sources...)); err != nil {
 			response["libraryRefresh"] = "FAILED"
 			response["warning"] = err.Error()
 			writeJSON(w, http.StatusOK, response)

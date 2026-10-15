@@ -2,7 +2,10 @@
 // human/provider music labels. It is intentionally not metadata authority or fuzzy-match policy.
 package musictext
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+)
 
 var noisePhrases = []string{
 	"official video",
@@ -26,7 +29,7 @@ func Normalize(value string) string {
 	var out strings.Builder
 	space := false
 	for _, r := range value {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r > 127 {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			out.WriteRune(r)
 			space = false
 		} else if !space {

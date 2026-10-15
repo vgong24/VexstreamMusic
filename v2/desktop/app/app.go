@@ -403,7 +403,7 @@ func (a *Application) exitHandler(
 		"ok":    true,
 		"state": "EXITING",
 	})
-	go a.exitOnce.Do(func() {
+	a.exitOnce.Do(func() {
 		close(a.exit)
 	})
 }

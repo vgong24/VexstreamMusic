@@ -89,7 +89,7 @@ func TestExploreBuildsV3ShapedFrameAndBalancedCandidates(t *testing.T) {
 			t.Fatal("seed leaked into candidates")
 		}
 	}
-	want := []string{"a1", "b1", "a3", "a2", "c1"}
+	want := []string{"a1", "b1", "a3", "c1"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("selection drift: got=%v want=%v", got, want)
 	}

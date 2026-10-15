@@ -181,6 +181,45 @@ launch
 Only after the lived shell is recognizably recovered should broader feature parity and another exact
 Windows qualification be spent.
 
+## Fresh-entry discipline
+
+A fresh executor must not treat this document or a successor bundle as proof that mutable repository
+state is unchanged.
+
+Before source mutation:
+
+```text
+read the current successor/oracle
+-> re-ground PR #5 head/base/draft state
+-> if head moved, inspect the delta from the recorded coordinate
+-> resume only from the first still-unconsumed compatible edge
+```
+
+Do not restart the program from old attempts merely because the conversation is fresh.
+
+## Role of V3 source during recovery
+
+The protected V3 source is the lived-product and behavior quarry. It is not the backend implementation
+to revive as the new architecture.
+
+In particular:
+
+```text
+V3 ui/index.html
+    = product/presentation oracle
+
+V3 root main.go and historical provider/network dependencies
+    = quarry for behavior and compatibility
+    != target runtime topology
+```
+
+Do not spend the recovery edge modernizing the old V3 backend just to make it run on a newer host.
+Reconnect the recognizable V3 shell/geometry to the current V4 owners and providers.
+
+A mock or UI-only preview may be used to understand the oracle, but it cannot satisfy the next edge.
+The next accepted checkpoint must use real V4 Library/media/Playback/Queue logic and a real
+HTMLAudioElement/media request.
+
 ## Migration discipline
 
 For each visible V3 behavior:

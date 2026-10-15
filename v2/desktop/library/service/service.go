@@ -92,6 +92,10 @@ func (l *Library) Reconcile(activeSources []string) (library.Projection, error) 
 	if err := filesystem.SaveFirstSeen(l.paths.FirstSeen, scan.FirstSeen); err != nil {
 		return library.Projection{}, fmt.Errorf("persist first-seen state: %w", err)
 	}
+	// FirstSeen is durable identity, not rebuildable cache. Adopt the successfully persisted
+	// identity in memory immediately so a same-process retry cannot mint a different AddedAt value
+	// if the following cache write fails.
+	l.firstSeen = cloneStrings(scan.FirstSeen)
 	if err := filesystem.SaveCache(l.paths.Cache, scan.Entries); err != nil {
 		return library.Projection{}, fmt.Errorf("persist library cache: %w", err)
 	}

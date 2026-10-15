@@ -262,6 +262,23 @@ func TestReconcileWritesFirstSeenBeforeCacheSoCacheFailureCannotEraseIdentity(t 
 	if len(opened.Library.entries) != 0 {
 		t.Fatalf("failed reconcile replaced in-memory raw truth: %+v", opened.Library.entries)
 	}
+	if len(opened.Library.firstSeen) != 1 {
+		t.Fatalf("durable firstSeen was not adopted in memory after cache failure: %+v", opened.Library.firstSeen)
+	}
+	var preserved string
+	for _, value := range firstSeen {
+		preserved = value
+	}
+	if err := os.RemoveAll(p.Cache); err != nil {
+		t.Fatal(err)
+	}
+	retry, err := opened.Library.Reconcile([]string{source})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(retry.Tracks) != 1 || retry.Tracks[0].AddedAt != preserved {
+		t.Fatalf("same-process retry changed firstSeen identity: preserved=%q tracks=%+v", preserved, retry.Tracks)
+	}
 }
 
 func TestPersistedCacheRemainsRawJsonWithoutOverlayFields(t *testing.T) {

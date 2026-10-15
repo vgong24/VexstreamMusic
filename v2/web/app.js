@@ -1095,6 +1095,7 @@ async function initialize(){
  }
 
  renderTrackChoices();
+ renderSources();
  renderPlaylistChoices();
  render();
  window.vexV4=Object.freeze({

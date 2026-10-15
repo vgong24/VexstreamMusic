@@ -102,3 +102,32 @@ test("Queue Connection keeps payload operations separate from stable Control sem
   queue.playNext(["x"]);
   assert.deepEqual(queue.currentProjection.state.items,["a","x","c","b"]);
 });
+
+
+test("Queue Connection hydration preserves durable flags and order without reshuffling", () => {
+  const queue=createQueueConnection({shuffle:reverse});
+  queue.restore({
+    items:["a","b","d","c"],
+    currentIndex:1,
+    shuffle:true,
+    repeat:true
+  });
+
+  const state=queue.currentProjection.state;
+  assert.deepEqual(state.items,["a","b","d","c"]);
+  assert.equal(state.currentIndex,1);
+  assert.equal(currentQueueRef(state),"b");
+  assert.equal(state.shuffle,true);
+  assert.equal(state.repeat,true);
+});
+
+test("Queue Connection hydration rejects an invalid durable current witness", () => {
+  const queue=createQueueConnection();
+  assert.throws(
+    () => queue.restore({
+      items:["a"],
+      currentIndex:1
+    }),
+    /currentIndex must address an item/
+  );
+});

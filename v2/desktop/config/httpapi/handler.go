@@ -24,23 +24,39 @@ type Config interface {
 }
 
 type Refresh func([]string) error
+type Picker func() (string, error)
 
 type Handler struct {
 	config  Config
 	refresh Refresh
+	picker  Picker
 }
 
 func New(config Config, refresh Refresh) *Handler {
+	return NewWithPicker(config, refresh, nil)
+}
+
+func NewWithPicker(
+	config Config,
+	refresh Refresh,
+	picker Picker,
+) *Handler {
 	if config == nil {
 		panic("source config http adapter requires config")
 	}
-	return &Handler{config: config, refresh: refresh}
+	return &Handler{
+		config: config,
+		refresh: refresh,
+		picker: picker,
+	}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/api/source/config":
 		h.snapshot(w, r)
+	case "/api/source/choose":
+		h.choose(w, r)
 	case "/api/source/add":
 		h.add(w, r)
 	case "/api/source/remove":
@@ -56,6 +72,32 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+func (h *Handler) choose(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w, http.MethodPost)
+		return
+	}
+	if h.picker == nil {
+		writeJSON(w, http.StatusNotImplemented, map[string]string{
+			"error": "folder picker unavailable",
+		})
+		return
+	}
+	path, err := h.picker()
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	path = strings.TrimSpace(path)
+	if path == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "folder selection cancelled",
+		})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"path": path})
 }
 
 func (h *Handler) snapshot(w http.ResponseWriter, r *http.Request) {

@@ -6,7 +6,11 @@
 package service
 
 import (
+	"errors"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/vgong24/VexstreamMusic/v2/desktop/library"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/library/filesystem"
@@ -25,7 +29,9 @@ type OpenResult struct {
 }
 
 type Library struct {
-	paths     Paths
+	mu          sync.RWMutex
+	reconcileMu sync.Mutex
+	paths       Paths
 	entries   map[string]library.CacheEntry
 	firstSeen map[string]string
 	overlays  map[string]library.Overlay
@@ -65,11 +71,16 @@ func Open(paths Paths) (OpenResult, error) {
 // Snapshot derives the current human-facing desktop catalog from already-loaded raw truth.
 // useAll is reserved for recovery projection when configuration/source truth is unavailable.
 func (l *Library) Snapshot(activeSources []string, useAll bool) library.Projection {
+	l.mu.RLock()
+	entries := cloneEntries(l.entries)
+	overlays := cloneOverlays(l.overlays)
+	windows := cloneWindows(l.windows)
+	l.mu.RUnlock()
 	return library.ProjectCatalog(
-		cloneEntries(l.entries),
+		entries,
 		append([]string(nil), activeSources...),
-		cloneOverlays(l.overlays),
-		cloneWindows(l.windows),
+		overlays,
+		windows,
 		useAll,
 	)
 }
@@ -80,10 +91,18 @@ func (l *Library) Snapshot(activeSources []string, useAll bool) library.Projecti
 // FirstSeen is persisted before Cache deliberately: if the second write fails, a later retry can
 // rebuild raw cache without silently minting a new AddedAt identity for already-observed media.
 func (l *Library) Reconcile(activeSources []string) (library.Projection, error) {
+	l.reconcileMu.Lock()
+	defer l.reconcileMu.Unlock()
+
+	l.mu.RLock()
+	previous := cloneEntries(l.entries)
+	firstSeen := cloneStrings(l.firstSeen)
+	l.mu.RUnlock()
+
 	scan, err := filesystem.Scan(filesystem.ScanInput{
 		Sources:   append([]string(nil), activeSources...),
-		Previous:  cloneEntries(l.entries),
-		FirstSeen: cloneStrings(l.firstSeen),
+		Previous:  previous,
+		FirstSeen: firstSeen,
 	})
 	if err != nil {
 		return library.Projection{}, fmt.Errorf("scan library sources: %w", err)
@@ -95,15 +114,162 @@ func (l *Library) Reconcile(activeSources []string) (library.Projection, error) 
 	// FirstSeen is durable identity, not rebuildable cache. Adopt the successfully persisted
 	// identity in memory immediately so a same-process retry cannot mint a different AddedAt value
 	// if the following cache write fails.
+	l.mu.Lock()
 	l.firstSeen = cloneStrings(scan.FirstSeen)
+	l.mu.Unlock()
 	if err := filesystem.SaveCache(l.paths.Cache, scan.Entries); err != nil {
 		return library.Projection{}, fmt.Errorf("persist library cache: %w", err)
 	}
 
+	l.mu.Lock()
 	l.entries = cloneEntries(scan.Entries)
 	l.firstSeen = cloneStrings(scan.FirstSeen)
+	l.mu.Unlock()
 
 	return l.Snapshot(activeSources, false), nil
+}
+
+type OverlayPatch struct {
+	Title  *string
+	Artist *string
+	Album  *string
+	Genre  *string
+}
+
+func (l *Library) UpdateOverlays(
+	trackRefs []string,
+	patch OverlayPatch,
+	restore bool,
+) (int, error) {
+	refs := normalizeRefs(trackRefs)
+	if len(refs) == 0 {
+		return 0, errors.New("track id required")
+	}
+	if !restore &&
+		patch.Title == nil &&
+		patch.Artist == nil &&
+		patch.Album == nil &&
+		patch.Genre == nil {
+		return 0, errors.New("no display fields supplied")
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	next := cloneOverlays(l.overlays)
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	for _, ref := range refs {
+		if restore {
+			delete(next, ref)
+			continue
+		}
+		value := next[ref]
+		if patch.Title != nil {
+			value.Title = cloneStringPointer(patch.Title)
+		}
+		if patch.Artist != nil {
+			value.Artist = cloneStringPointer(patch.Artist)
+		}
+		if patch.Album != nil {
+			value.Album = cloneStringPointer(patch.Album)
+		}
+		if patch.Genre != nil {
+			value.Genre = cloneStringPointer(patch.Genre)
+		}
+		value.UpdatedAt = now
+		next[ref] = value
+	}
+	if err := filesystem.SaveOverlays(l.paths.Overlays, next); err != nil {
+		return 0, fmt.Errorf("persist track overlays: %w", err)
+	}
+	l.overlays = next
+	return len(refs), nil
+}
+
+func (l *Library) UpdatePlaybackWindow(
+	trackRef string,
+	start float64,
+	end *float64,
+	restore bool,
+) (library.PlaybackWindow, bool, error) {
+	trackRef = strings.TrimSpace(trackRef)
+	if trackRef == "" {
+		return library.PlaybackWindow{}, false, errors.New("track id required")
+	}
+	if start < 0 {
+		start = 0
+	}
+	if start < 0.001 {
+		start = 0
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	next := cloneWindows(l.windows)
+	if restore || (start == 0 && end == nil) {
+		delete(next, trackRef)
+		if err := filesystem.SavePlaybackWindows(
+			l.paths.PlaybackWindows,
+			next,
+		); err != nil {
+			return library.PlaybackWindow{}, false,
+				fmt.Errorf("persist playback windows: %w", err)
+		}
+		l.windows = next
+		return library.PlaybackWindow{}, false, nil
+	}
+
+	var clonedEnd *float64
+	if end != nil {
+		value := *end
+		clonedEnd = &value
+	}
+	window := library.PlaybackWindow{
+		Start: start,
+		End: clonedEnd,
+		UpdatedAt: time.Now().UTC().Format(time.RFC3339Nano),
+	}
+	next[trackRef] = window
+	if err := filesystem.SavePlaybackWindows(
+		l.paths.PlaybackWindows,
+		next,
+	); err != nil {
+		return library.PlaybackWindow{}, false,
+			fmt.Errorf("persist playback windows: %w", err)
+	}
+	l.windows = next
+	return cloneWindow(window), true, nil
+}
+
+func normalizeRefs(values []string) []string {
+	seen := map[string]bool{}
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value == "" || seen[value] {
+			continue
+		}
+		seen[value] = true
+		out = append(out, value)
+	}
+	return out
+}
+
+func cloneStringPointer(value *string) *string {
+	if value == nil {
+		return nil
+	}
+	copy := *value
+	return &copy
+}
+
+func cloneWindow(value library.PlaybackWindow) library.PlaybackWindow {
+	if value.End != nil {
+		end := *value.End
+		value.End = &end
+	}
+	return value
 }
 
 func cloneEntries(input map[string]library.CacheEntry) map[string]library.CacheEntry {

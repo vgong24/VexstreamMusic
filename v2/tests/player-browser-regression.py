@@ -45,6 +45,20 @@ TRACKS = [
     },
 ]
 
+PLAYLISTS = [
+    {
+        "id": "road-trip",
+        "name": "Road Trip",
+        "trackIds": [
+            "media.vexstream.test-tone.1",
+            "media.vexstream.missing",
+            "media.vexstream.test-tone.3",
+        ],
+        "createdAt": "2026-10-14T00:00:00Z",
+        "updatedAt": "2026-10-14T00:00:00Z",
+    }
+]
+
 
 def require(condition: bool, message: str) -> None:
     if not condition:
@@ -216,6 +230,21 @@ def main() -> int:
             )
             return
 
+        if parsed.path == "/api/playlists":
+            if request.method != "GET":
+                route.fulfill(status=405, body="GET required")
+                return
+            route.fulfill(
+                status=200,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Content-Type": "application/json; charset=utf-8",
+                    "X-Content-Type-Options": "nosniff",
+                },
+                body=json.dumps({"playlists": PLAYLISTS}),
+            )
+            return
+
         if parsed.path.startswith("/media/"):
             media_response(route, fixture)
             return
@@ -281,6 +310,48 @@ def main() -> int:
                 and "VexStream QA"
                 in page.locator("#trackChoices").inner_text(),
                 "catalog metadata did not render",
+            ),
+        )
+        checked(
+            "browser-loads-durable-playlist-contract",
+            lambda: require(
+                any(
+                    row["method"] == "GET"
+                    and row["path"] == "/api/playlists"
+                    for row in report["requests"]
+                )
+                and page.evaluate("window.vexV4.playlists.length") == 1
+                and page.evaluate(
+                    "window.vexV4.playlists[0].trackRefs.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.missing,"
+                    "media.vexstream.test-tone.3"
+                ),
+                f"playlist contract not consumed: {report['requests']}",
+            ),
+        )
+        checked(
+            "playlist-availability-is-derived-without-rewriting-durable-refs",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.resolvedPlaylists[0].playableRefs.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3"
+                )
+                and page.evaluate(
+                    "window.vexV4.resolvedPlaylists[0].missingRefs.join(',')"
+                )
+                == "media.vexstream.missing"
+                and page.locator(
+                    '[data-playlist-id="road-trip"] '
+                    '[data-available="false"]'
+                ).count()
+                == 1,
+                "playlist availability projection drift",
             ),
         )
         checked(
@@ -577,6 +648,38 @@ def main() -> int:
                 "current item mutation guard drift",
             ),
         )
+        page.locator(
+            '[data-playlist-id="road-trip"] '
+            '[data-playlist-action="play"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.player.currentItem.ref"
+            "==='media.vexstream.test-tone.1'"
+        )
+        checked(
+            "play-playlist-composes-durable-playlist-through-current-library-into-queue",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items"
+                    ".join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3"
+                )
+                and page.evaluate(
+                    "window.vexV4.playlists[0].trackRefs.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.missing,"
+                    "media.vexstream.test-tone.3"
+                )
+                and page.evaluate("window.vexV4.media.paused") is False,
+                "Playlist -> Library availability -> Queue composition drift",
+            ),
+        )
+
         checked(
             "browser-finished-without-runtime-errors",
             lambda: require(

@@ -4,7 +4,11 @@
 // preview playback, import/acquisition, or AI recommendation semantics.
 package explore
 
-import (\n\t"strings"\n\n\t"github.com/vgong24/VexstreamMusic/v2/desktop/musictext"\n)
+import (
+	"strings"
+
+	"github.com/vgong24/VexstreamMusic/v2/desktop/musictext"
+)
 
 type Seed struct {
 	Kind       string  `json:"kind,omitempty"`
@@ -179,37 +183,6 @@ func candidateKey(candidate Candidate) string {
 		return ""
 	}
 	return "text:" + title + "|" + channel
-}
-
-func musictext.Normalize(value string) string {
-	value = strings.ToLower(value)
-	for _, noise := range []string{
-		"official video",
-		"official audio",
-		"lyrics",
-		"lyric video",
-		"music video",
-		"hd",
-		"4k",
-		"remastered",
-		"visualizer",
-		"full album",
-		"playlist",
-	} {
-		value = strings.ReplaceAll(value, noise, " ")
-	}
-	var out strings.Builder
-	space := false
-	for _, r := range value {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r > 127 {
-			out.WriteRune(r)
-			space = false
-		} else if !space {
-			out.WriteByte(' ')
-			space = true
-		}
-	}
-	return strings.Join(strings.Fields(out.String()), " ")
 }
 
 func firstNonEmpty(values ...string) string {

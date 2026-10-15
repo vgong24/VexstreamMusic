@@ -188,3 +188,80 @@ func TestSnapshotAndWrongMethodsStayBounded(t *testing.T) {
 		t.Fatalf("source add method drift: %d %q", wrong.Code, wrong.Header().Get("Allow"))
 	}
 }
+
+
+func TestNativePickerIsSeparateFromConfigMutation(t *testing.T) {
+	config := &configFixture{}
+	pickerCalls := 0
+	handler := NewWithPicker(
+		config,
+		nil,
+		func() (string, error) {
+			pickerCalls++
+			return " /music ", nil
+		},
+	)
+
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(
+		response,
+		httptest.NewRequest(
+			http.MethodPost,
+			"/api/source/choose",
+			strings.NewReader(`{}`),
+		),
+	)
+	if response.Code != http.StatusOK ||
+		pickerCalls != 1 ||
+		!strings.Contains(response.Body.String(), `"/music"`) ||
+		len(config.state.Sources) != 0 {
+		t.Fatalf(
+			"picker/config separation drift: code=%d calls=%d state=%+v body=%s",
+			response.Code,
+			pickerCalls,
+			config.state,
+			response.Body.String(),
+		)
+	}
+}
+
+func TestUnavailableOrCancelledPickerFailsWithoutConfigMutation(t *testing.T) {
+	config := &configFixture{}
+
+	unavailable := httptest.NewRecorder()
+	New(config, nil).ServeHTTP(
+		unavailable,
+		httptest.NewRequest(
+			http.MethodPost,
+			"/api/source/choose",
+			strings.NewReader(`{}`),
+		),
+	)
+	if unavailable.Code != http.StatusNotImplemented {
+		t.Fatalf("unavailable picker status drift: %d", unavailable.Code)
+	}
+
+	cancelled := httptest.NewRecorder()
+	NewWithPicker(
+		config,
+		nil,
+		func() (string, error) {
+			return "", errors.New("folder selection cancelled")
+		},
+	).ServeHTTP(
+		cancelled,
+		httptest.NewRequest(
+			http.MethodPost,
+			"/api/source/choose",
+			strings.NewReader(`{}`),
+		),
+	)
+	if cancelled.Code != http.StatusBadRequest ||
+		len(config.state.Sources) != 0 {
+		t.Fatalf(
+			"cancelled picker mutated config: code=%d state=%+v",
+			cancelled.Code,
+			config.state,
+		)
+	}
+}

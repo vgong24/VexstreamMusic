@@ -340,7 +340,6 @@ async function refreshCatalog(){
  renderTrackChoices();
  renderSources();
  renderPlaylistChoices();
- renderHome();
  renderLibraryEditor();
  renderTrash();
  render();
@@ -1477,7 +1476,6 @@ async function initialize(){
  renderTrackChoices();
  renderSources();
  renderPlaylistChoices();
- renderHome();
  renderShell();
  render();
  window.vexV4=Object.freeze({

@@ -1336,11 +1336,16 @@ def main() -> int:
             "window.vexV4.shellNavigation.currentProjection.view==='discover'"
         )
         checked(
-            "discover-terrain-exposes-source-owner-without-widening-library",
+            "discover-opens-on-recognizable-this-pc-route",
             lambda: require(
-                page.locator("#sourceDiscover").is_visible()
-                and page.locator("#exploreCandidates").is_visible(),
-                "Discover terrain did not expose V4 discovery owners",
+                page.evaluate(
+                    "window.vexV4.discoverNavigation.currentProjection.mode"
+                )
+                == "pc"
+                and page.locator("#sourceDiscover").is_visible()
+                and page.locator("#youtubeImportURL").is_hidden()
+                and page.locator("#exploreCandidates").is_hidden(),
+                "Discover did not preserve the This PC route",
             ),
         )
 
@@ -1400,6 +1405,49 @@ def main() -> int:
                 "Include did not currentize config/library independently",
             ),
         )
+
+        page.locator('[data-discover-mode="youtube"]').click()
+        page.wait_for_function(
+            "window.vexV4.discoverNavigation.currentProjection.mode==='youtube'"
+        )
+        direct_import_starts = sum(
+            1
+            for row in report["requests"]
+            if row["method"] == "POST"
+            and row["path"] == "/api/import/start"
+        )
+        page.locator("#youtubeImportURL").fill(
+            "https://www.youtube.com/watch?v=candidate.one"
+        )
+        page.locator("#youtubeInspect").click()
+        page.wait_for_function("window.vexV4.importReview!==null")
+        checked(
+            "youtube-link-route-reviews-before-any-download-admission",
+            lambda: require(
+                page.locator("#importReview").is_visible()
+                and page.locator("#importReviewSourceTitle").inner_text()
+                == "Candidate One"
+                and sum(
+                    1
+                    for row in report["requests"]
+                    if row["method"] == "POST"
+                    and row["path"] == "/api/import/start"
+                )
+                == direct_import_starts,
+                "direct YouTube review crossed into acquisition",
+            ),
+        )
+        page.locator("#importReviewClose").click()
+        checked(
+            "youtube-route-keeps-import-activity-in-its-own-terrain",
+            lambda: require(
+                page.locator("#importJobs").is_visible()
+                and page.locator("#sourceDiscover").is_hidden()
+                and page.locator("#exploreCandidates").is_hidden(),
+                "YouTube terrain composition drift",
+            ),
+        )
+        page.locator('[data-discover-mode="pc"]').click()
 
         before_picker_requests = len(report["requests"])
         page.locator("#sourceAdd").click()
@@ -2119,7 +2167,17 @@ def main() -> int:
         )
         page.locator("#discoverTopTab").click()
         page.wait_for_function(
-            "window.vexV4.shellNavigation.currentProjection.view==='discover'"
+            "window.vexV4.shellNavigation.currentProjection.view==='discover' "
+            "&& window.vexV4.discoverNavigation.currentProjection.mode==='explore'"
+        )
+        checked(
+            "explore-from-library-track-enters-the-recognizable-explore-route",
+            lambda: require(
+                page.locator("#exploreCandidates").is_visible()
+                and page.locator("#sourceDiscover").is_hidden()
+                and page.locator("#youtubeImportURL").is_hidden(),
+                "Explore intent did not select the Explore terrain",
+            ),
         )
         checked(
             "explore-from-library-track-forms-temporary-session",

@@ -154,7 +154,20 @@
       </div>
     </section>
 
-    <section class="sources" data-shell-panel="discover" aria-labelledby="sourcesTitle" hidden>
+    <section class="discover-workspace" data-shell-panel="discover" aria-labelledby="discoverTitle" hidden>
+      <div class="discover-head">
+        <div>
+          <div class="eyebrow">Add to VexStream</div>
+          <h2 id="discoverTitle">Discover music</h2>
+          <div class="muted">Browse this computer, review a YouTube link, or explore from music you already know.</div>
+        </div>
+        <div class="discover-tabs" role="tablist" aria-label="Discover route">
+          <button type="button" data-discover-mode="pc" aria-pressed="true" data-text-ref="discover.pc">This PC</button>
+          <button type="button" data-discover-mode="youtube" aria-pressed="false" data-text-ref="discover.youtube">YouTube</button>
+          <button type="button" data-discover-mode="explore" aria-pressed="false" data-text-ref="discover.explore">🌐 Explore</button>
+        </div>
+      </div>
+    <section class="sources" data-discover-panel="pc" aria-labelledby="sourcesTitle" hidden>
       <div class="section-heading">
         <div>
           <h2 id="sourcesTitle">Music folders</h2>
@@ -174,22 +187,33 @@
         <button id="clearIgnoredSources" type="button">Restore all ignored folders</button>
       </details>
     </section>
-
-    <section class="playlists" data-shell-panel="playlists" aria-labelledby="playlistsTitle" hidden>
+    <section class="youtube-import" data-discover-panel="youtube" hidden aria-labelledby="youtubeImportTitle">
       <div class="section-heading">
         <div>
-          <h2 id="playlistsTitle">Playlists</h2>
-          <span>Durable ordered track references</span>
-        </div>
-        <div class="playlist-create">
-          <input id="newPlaylistName" type="text" placeholder="New playlist name">
-          <button id="createPlaylist" type="button">Create</button>
+          <h2 id="youtubeImportTitle">YouTube</h2>
+          <span>Review a provider link before VexStream downloads anything.</span>
         </div>
       </div>
-      <div id="playlistChoices"></div>
+      <div class="youtube-import-entry">
+        <label for="youtubeImportURL">YouTube link</label>
+        <div class="youtube-import-row">
+          <input id="youtubeImportURL" type="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
+          <button id="youtubeInspect" type="button" class="primary">Review</button>
+        </div>
+        <div class="muted">Inspection and duplicate matching are read-only. Download begins only after the review step.</div>
+      </div>
+    <section class="imports"  aria-labelledby="importsTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="importsTitle">Imports</h2>
+          <span>Current preparation, review, and recovery state</span>
+        </div>
+        <button id="importRefresh" type="button">Refresh</button>
+      </div>
+      <div id="importJobs"></div>
     </section>
-
-    <section class="explore" data-shell-panel="discover" aria-labelledby="exploreTitle" hidden>
+    </section>
+    <section class="explore" data-discover-panel="explore" aria-labelledby="exploreTitle" hidden>
       <div class="section-heading">
         <div>
           <h2 id="exploreTitle">Explore</h2>
@@ -208,6 +232,21 @@
         allow="autoplay"
         hidden
       ></iframe>
+    </section>
+    </section>
+
+    <section class="playlists" data-shell-panel="playlists" aria-labelledby="playlistsTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <h2 id="playlistsTitle">Playlists</h2>
+          <span>Durable ordered track references</span>
+        </div>
+        <div class="playlist-create">
+          <input id="newPlaylistName" type="text" placeholder="New playlist name">
+          <button id="createPlaylist" type="button">Create</button>
+        </div>
+      </div>
+      <div id="playlistChoices"></div>
     </section>
 
     <section class="import-review" id="importReview" aria-labelledby="importReviewTitle" hidden>
@@ -262,17 +301,6 @@
         <button id="importStart" type="button" class="primary">Download &amp; add</button>
         <span id="importReviewHint">Temporary staging protects the library until commit completes.</span>
       </div>
-    </section>
-
-    <section class="imports" data-shell-panel="discover" aria-labelledby="importsTitle" hidden>
-      <div class="section-heading">
-        <div>
-          <h2 id="importsTitle">Imports</h2>
-          <span>Current preparation, review, and recovery state</span>
-        </div>
-        <button id="importRefresh" type="button">Refresh</button>
-      </div>
-      <div id="importJobs"></div>
     </section>
 
     <section class="trash" data-shell-panel="deleted" aria-labelledby="trashTitle" hidden>

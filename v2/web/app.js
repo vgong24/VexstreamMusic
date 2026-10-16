@@ -74,6 +74,10 @@ import {
   ShellView,
   createShellNavigation,
 } from "./features/shell/navigation.js";
+import {
+  DiscoverMode,
+  createDiscoverNavigation,
+} from "./features/discover/navigation.js";
 import { escapeHTML } from "./foundation/html.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
@@ -118,6 +122,10 @@ const homeAlbumCount=document.querySelector("#homeAlbumCount");
 const homeArtistCount=document.querySelector("#homeArtistCount");
 const homeSourceCount=document.querySelector("#homeSourceCount");
 const recentSongs=document.querySelector("#recentSongs");
+const discoverModeButtons=[...document.querySelectorAll("[data-discover-mode]")];
+const discoverPanels=[...document.querySelectorAll("[data-discover-panel]")];
+const youtubeImportURL=document.querySelector("#youtubeImportURL");
+const youtubeInspect=document.querySelector("#youtubeInspect");
 const sourceSummary=document.querySelector("#sourceSummary");
 const sourceAdd=document.querySelector("#sourceAdd");
 const sourceDiscover=document.querySelector("#sourceDiscover");
@@ -219,6 +227,7 @@ let currentImportJobs=Object.freeze({
 });
 
 const shellNavigation=createShellNavigation();
+const discoverNavigation=createDiscoverNavigation();
 
 
 function trackTitle(item){
@@ -272,9 +281,29 @@ function renderShell(projection=shellNavigation.currentProjection){
   renderTrackChoices();
  }
  renderLibraryGroupDetail();
+ renderDiscoverNavigation();
+}
+
+function renderDiscoverNavigation(
+ projection=discoverNavigation.currentProjection
+){
+ const discoverVisible=
+  shellNavigation.currentProjection.view===ShellView.DISCOVER;
+ document.body.dataset.discoverMode=projection.mode;
+ for(const button of discoverModeButtons){
+  const selected=button.dataset.discoverMode===projection.mode;
+  button.classList.toggle("active",selected);
+  button.setAttribute("aria-pressed",String(selected));
+ }
+ for(const panel of discoverPanels){
+  panel.hidden=
+   !discoverVisible||
+   panel.dataset.discoverPanel!==projection.mode;
+ }
 }
 
 shellNavigation.subscribe(renderShell);
+discoverNavigation.subscribe(renderDiscoverNavigation);
 
 function currentLibraryView(){
  return projectLibraryView(catalog,{
@@ -1062,6 +1091,27 @@ for(const button of shellViewButtons){
  });
 }
 
+for(const button of discoverModeButtons){
+ button.addEventListener("click",()=>{
+  discoverNavigation.select(button.dataset.discoverMode);
+ });
+}
+
+youtubeInspect.addEventListener("click",()=>void guarded(async()=>{
+ const url=youtubeImportURL.value.trim();
+ const [reviewed,destinations]=await Promise.all([
+  inspectImport(url),
+  loadImportDestinations()
+ ]);
+ currentImportReview=formImportReview(reviewed,destinations);
+}));
+
+youtubeImportURL.addEventListener("keydown",event=>{
+ if(event.key!=="Enter")return;
+ event.preventDefault();
+ youtubeInspect.click();
+});
+
 libraryNavToggle.addEventListener("click",()=>{
  shellNavigation.toggleSidebar();
 });
@@ -1099,6 +1149,7 @@ function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){
  if(action.dataset.trackAction==="explore"){
   void guarded(async()=>{
    await explore.replaceFromTrack(ref);
+   discoverNavigation.select(DiscoverMode.EXPLORE);
    explorePreview.hidden=true;
    explorePreview.removeAttribute("src");
   });
@@ -1600,6 +1651,7 @@ async function initialize(){
   get catalog(){return catalog;},
   get libraryView(){return libraryView;},
   shellNavigation,
+  discoverNavigation,
   get sourceConfig(){return sourceConfig;},
   get playlists(){return playlists;},
   get resolvedPlaylists(){return resolvedPlaylists;},

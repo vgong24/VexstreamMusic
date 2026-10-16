@@ -27,6 +27,7 @@ import {
 import {
   groupLibrary,
   libraryGenres,
+  projectLibraryHome,
   projectLibraryView,
 } from "./features/library/projection.js";
 import {
@@ -69,6 +70,10 @@ import {
   exitVexStream,
   loadSystemIdentity,
 } from "./features/system/client.js";
+import {
+  ShellView,
+  createShellNavigation,
+} from "./features/shell/navigation.js";
 import { escapeHTML } from "./foundation/html.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
@@ -95,6 +100,15 @@ const librarySearch=document.querySelector("#librarySearch");
 const libraryGenre=document.querySelector("#libraryGenre");
 const librarySort=document.querySelector("#librarySort");
 const libraryModeButtons=[...document.querySelectorAll("[data-library-mode]")];
+const shellViewButtons=[...document.querySelectorAll("[data-shell-view]")];
+const shellPanels=[...document.querySelectorAll("[data-shell-panel]")];
+const libraryNavToggle=document.querySelector("#libraryNavToggle");
+const librarySidebar=document.querySelector("#librarySidebar");
+const homeSongCount=document.querySelector("#homeSongCount");
+const homeAlbumCount=document.querySelector("#homeAlbumCount");
+const homeArtistCount=document.querySelector("#homeArtistCount");
+const homeSourceCount=document.querySelector("#homeSourceCount");
+const recentSongs=document.querySelector("#recentSongs");
 const sourceSummary=document.querySelector("#sourceSummary");
 const sourceAdd=document.querySelector("#sourceAdd");
 const sourceDiscover=document.querySelector("#sourceDiscover");
@@ -195,6 +209,9 @@ let currentImportJobs=Object.freeze({
  issues:Object.freeze([])
 });
 
+const shellNavigation=createShellNavigation();
+
+
 function trackTitle(item){
  return item?.title?.trim()||resolveText(locale,"library.unknown-title");
 }
@@ -202,6 +219,52 @@ function trackTitle(item){
 function trackArtist(item){
  return item?.artist?.trim()||resolveText(locale,"library.unknown-artist");
 }
+
+function renderHome(){
+ const projection=projectLibraryHome(catalog,{recentLimit:8});
+ homeSongCount.textContent=String(projection.songCount);
+ homeAlbumCount.textContent=String(projection.albumCount);
+ homeArtistCount.textContent=String(projection.artistCount);
+ homeSourceCount.textContent=String(sourceConfig.sources.length);
+ recentSongs.innerHTML=projection.recent.length
+  ? projection.recent.map(item=>`<article class="home-track" data-home-track-ref="${escapeHTML(item.ref)}">
+      <div class="home-track-copy">
+       <strong>${escapeHTML(trackTitle(item))}</strong>
+       <small>${escapeHTML(trackArtist(item))}</small>
+      </div>
+      <button type="button" data-home-track-action="play">${escapeHTML(resolveText(locale,"playback.play"))}</button>
+     </article>`).join("")
+  : `<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
+}
+
+function renderShell(projection=shellNavigation.currentProjection){
+ document.body.dataset.shellView=projection.view;
+ document.body.dataset.sidebarOpen=String(projection.sidebarOpen);
+ librarySidebar.hidden=!projection.sidebarOpen;
+ libraryNavToggle.setAttribute("aria-expanded",String(projection.sidebarOpen));
+
+ for(const button of shellViewButtons){
+  const selected=button.id==="libraryTopTab"
+   ? projection.view!==ShellView.DISCOVER
+   : button.dataset.shellView===projection.view;
+  button.classList.toggle("active",selected);
+  button.setAttribute("aria-pressed",String(selected));
+ }
+
+ for(const panel of shellPanels){
+  panel.hidden=panel.dataset.shellPanel!==projection.panel;
+ }
+
+ if(projection.libraryMode&&libraryView.mode!==projection.libraryMode){
+  libraryView=Object.freeze({
+   ...libraryView,
+   mode:projection.libraryMode
+  });
+  renderTrackChoices();
+ }
+}
+
+shellNavigation.subscribe(renderShell);
 
 function currentLibraryView(){
  return projectLibraryView(catalog,{
@@ -277,6 +340,7 @@ async function refreshCatalog(){
  renderTrackChoices();
  renderSources();
  renderPlaylistChoices();
+ renderHome();
  renderLibraryEditor();
  renderTrash();
  render();
@@ -801,6 +865,7 @@ function renderSources(){
    <div><small>${escapeHTML(path)}</small></div>
    <button data-ignored-source-action="restore">${escapeHTML(resolveText(locale,"sources.restore"))}</button>
   </article>`).join("");
+ renderHome();
 }
 
 function renderPlaylistChoices(){
@@ -913,13 +978,31 @@ librarySort.addEventListener("change",()=>{
 
 for(const button of libraryModeButtons){
  button.addEventListener("click",()=>{
-  libraryView=Object.freeze({
-   ...libraryView,
-   mode:button.dataset.libraryMode
-  });
-  renderTrackChoices();
+  shellNavigation.select(button.dataset.libraryMode);
  });
 }
+
+for(const button of shellViewButtons){
+ button.addEventListener("click",()=>{
+  shellNavigation.select(button.dataset.shellView);
+ });
+}
+
+libraryNavToggle.addEventListener("click",()=>{
+ shellNavigation.toggleSidebar();
+});
+
+recentSongs.addEventListener("click",event=>{
+ const action=event.target.closest("[data-home-track-action]");
+ const row=event.target.closest("[data-home-track-ref]");
+ if(!action||!row)return;
+ if(action.dataset.homeTrackAction==="play"){
+  void guarded(()=>player.playTrack(
+   row.dataset.homeTrackRef,
+   libraryPlaybackRefs()
+  ));
+ }
+});
 
 trackChoices.addEventListener("click",event=>{
  const groupAction=event.target.closest("[data-library-group-action]");
@@ -1394,6 +1477,8 @@ async function initialize(){
  renderTrackChoices();
  renderSources();
  renderPlaylistChoices();
+ renderHome();
+ renderShell();
  render();
  window.vexV4=Object.freeze({
   ready:true,
@@ -1405,6 +1490,7 @@ async function initialize(){
   media:audio,
   get catalog(){return catalog;},
   get libraryView(){return libraryView;},
+  shellNavigation,
   get sourceConfig(){return sourceConfig;},
   get playlists(){return playlists;},
   get resolvedPlaylists(){return resolvedPlaylists;},

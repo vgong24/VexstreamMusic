@@ -91,6 +91,33 @@ func TestMobileCatalogSanitizesDesktopPathsAndBindsMediaBytes(t *testing.T) {
 	}
 }
 
+func TestMobileCatalogProjectsDesktopPlaylistsWithoutMissingTracks(t *testing.T) {
+	available := map[string]bool{
+		"track-a": true,
+		"track-b": true,
+	}
+	projected := mobileProjectPlaylists(
+		[]Playlist{
+			{
+				ID:       "playlist.one",
+				Name:     "Road Trip",
+				TrackIDs: []string{"track-b", "missing-track", "track-a"},
+			},
+		},
+		available,
+	)
+
+	if len(projected) != 1 {
+		t.Fatalf("playlists=%d", len(projected))
+	}
+	if projected[0].PlaylistRef != "playlist.one" || projected[0].Name != "Road Trip" {
+		t.Fatalf("playlist=%+v", projected[0])
+	}
+	if got := strings.Join(projected[0].TrackRefs, ","); got != "track-b,track-a" {
+		t.Fatalf("trackRefs=%q", got)
+	}
+}
+
 func TestMobileMediaSupportsExactRangeReads(t *testing.T) {
 	dir := t.TempDir()
 	mediaPath := filepath.Join(dir, "song.mp3")

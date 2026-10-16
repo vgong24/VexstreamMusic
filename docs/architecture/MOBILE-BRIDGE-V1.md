@@ -243,3 +243,26 @@ LOCAL_VEXSTREAM_PAIRING
 The rightful Home/Safety owner remains required before this mechanism can claim remote/off-home
 authority.
 
+## Playlist projection
+
+VexStream 3.0 adds desktop-owned playlists to the same sanitized catalog response:
+
+```text
+playlists[]
+  playlistRef
+  name
+  trackRefs[]
+```
+
+Only track refs present in the current projected mobile catalog are emitted. Desktop timestamps,
+filesystem state, source paths, and playlist mutation APIs are not exposed.
+
+Current ownership is deliberately one-way:
+
+```text
+DESKTOP_PLAYLIST = CANONICAL_WRITER
+ANDROID_PLAYLIST_PROJECTION = READ_ONLY_BROWSE_AND_PLAY
+```
+
+Phone-local playlist authoring and explicit sync may be added later, but this contract does not
+invent automatic two-way conflict resolution.

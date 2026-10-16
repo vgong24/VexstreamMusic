@@ -1108,6 +1108,59 @@ def main() -> int:
                 f"library contract not consumed: {report['requests']}",
             ),
         )
+
+        checked(
+            "v3-shell-opens-on-library-home-over-real-v4-library-truth",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.shellNavigation.currentProjection.view"
+                )
+                == "home"
+                and page.locator("#homeView").is_visible()
+                and page.locator("#librarySidebar").is_visible()
+                and page.locator("#homeSongCount").inner_text() == "3"
+                and page.locator("#homeAlbumCount").inner_text() == "2"
+                and page.locator("#homeArtistCount").inner_text() == "2"
+                and page.locator("#homeSourceCount").inner_text() == "1"
+                and page.locator(
+                    "#recentSongs [data-home-track-ref]"
+                ).count()
+                == 3,
+                "recognizable Library Home did not project current V4 truth",
+            ),
+        )
+
+        page.locator("#libraryNavToggle").click()
+        checked(
+            "v3-sidebar-collapse-is-shell-presentation-state",
+            lambda: require(
+                page.locator("#librarySidebar").is_hidden()
+                and page.evaluate(
+                    "window.vexV4.shellNavigation.currentProjection.sidebarOpen"
+                )
+                is False,
+                "sidebar collapse crossed shell ownership",
+            ),
+        )
+        page.locator("#libraryNavToggle").click()
+
+        page.locator(
+            '#librarySidebar [data-shell-view="songs"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='songs'"
+        )
+        checked(
+            "songs-terrain-enters-library-through-shell-navigation",
+            lambda: require(
+                page.locator("#trackChoices").is_visible()
+                and page.evaluate(
+                    "window.vexV4.libraryView.mode"
+                )
+                == "songs",
+                "Songs terrain did not enter current Library projection",
+            ),
+        )
         checked(
             "dynamic-library-metadata-renders-as-data",
             lambda: require(
@@ -1178,24 +1231,69 @@ def main() -> int:
             ),
         )
 
-        page.locator('[data-library-mode="albums"]').click()
+        page.locator(
+            '#librarySidebar [data-shell-view="albums"]'
+        ).click()
         checked(
             "album-browse-is-derived-from-current-library-view",
             lambda: require(
-                page.locator("#trackChoices [data-library-group]").count() == 2,
+                page.evaluate(
+                    "window.vexV4.shellNavigation.currentProjection.view"
+                )
+                == "albums"
+                and page.locator(
+                    "#trackChoices [data-library-group]"
+                ).count()
+                == 2,
                 "album grouping drift",
             ),
         )
-        page.locator('[data-library-mode="artists"]').click()
+        page.locator(
+            '#librarySidebar [data-shell-view="artists"]'
+        ).click()
         checked(
             "artist-browse-is-derived-without-new-library-owner",
             lambda: require(
-                page.locator("#trackChoices [data-library-group]").count() == 2,
+                page.evaluate(
+                    "window.vexV4.shellNavigation.currentProjection.view"
+                )
+                == "artists"
+                and page.locator(
+                    "#trackChoices [data-library-group]"
+                ).count()
+                == 2,
                 "artist grouping drift",
             ),
         )
-        page.locator('[data-library-mode="songs"]').click()
+        page.locator("#brandHome").click()
+        checked(
+            "brand-returns-to-recognizable-library-home",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.shellNavigation.currentProjection.view"
+                )
+                == "home"
+                and page.locator("#homeView").is_visible(),
+                "brand Home route drift",
+            ),
+        )
+        page.locator(
+            '#librarySidebar [data-shell-view="songs"]'
+        ).click()
         page.locator("#librarySort").select_option("title")
+
+        page.locator("#discoverTopTab").click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='discover'"
+        )
+        checked(
+            "discover-terrain-exposes-source-owner-without-widening-library",
+            lambda: require(
+                page.locator("#sourceDiscover").is_visible()
+                and page.locator("#exploreCandidates").is_visible(),
+                "Discover terrain did not expose V4 discovery owners",
+            ),
+        )
 
         page.locator("#sourceDiscover").click()
         page.wait_for_function(
@@ -1278,6 +1376,13 @@ def main() -> int:
             ),
         )
 
+        page.locator(
+            '#librarySidebar [data-shell-view="playlists"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='playlists'"
+        )
+
         checked(
             "browser-loads-durable-playlist-contract",
             lambda: require(
@@ -1324,7 +1429,7 @@ def main() -> int:
             "stable-player-and-control-identities",
             lambda: require(
                 page.locator(
-                    '[data-vex-screen="vexstream.desktop.player-practicum"]'
+                    '[data-vex-screen="vexstream.desktop.library"]'
                 ).count()
                 == 1
                 and page.locator(
@@ -1343,6 +1448,13 @@ def main() -> int:
                 and len(journey["steps"]) == 6,
                 "journey drift",
             ),
+        )
+
+        page.locator(
+            '#librarySidebar [data-shell-view="songs"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='songs'"
         )
 
         page.locator(
@@ -1440,6 +1552,13 @@ def main() -> int:
         )
         page.locator("#libraryEditorClose").click()
 
+        page.locator(
+            '#librarySidebar [data-shell-view="playlists"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='playlists'"
+        )
+
         page.locator("#newPlaylistName").fill("Focus Mix")
         page.locator("#createPlaylist").click()
         page.wait_for_function(
@@ -1459,6 +1578,13 @@ def main() -> int:
                 and page.evaluate("window.vexV4.catalog.length") == 3,
                 "playlist creation mutated Library",
             ),
+        )
+
+        page.locator(
+            '#librarySidebar [data-shell-view="songs"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='songs'"
         )
 
         first_card = page.locator(
@@ -1485,6 +1611,13 @@ def main() -> int:
             "(id)=>window.vexV4.playlists.find(x=>x.id===id)"
             ".trackRefs.length===2",
             arg=focus_id,
+        )
+
+        page.locator(
+            '#librarySidebar [data-shell-view="playlists"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='playlists'"
         )
 
         focus_card = page.locator(
@@ -1547,6 +1680,13 @@ def main() -> int:
         )
 
         page.locator(
+            '#librarySidebar [data-shell-view="songs"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='songs'"
+        )
+
+        page.locator(
             '[data-track-ref="media.vexstream.test-tone.2"] '
             '[data-track-action="trash"]'
         ).click()
@@ -1570,6 +1710,13 @@ def main() -> int:
         )
 
         page.locator(
+            '#librarySidebar [data-shell-view="deleted"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='deleted'"
+        )
+
+        page.locator(
             '#trashItems [data-trash-action="restore"]'
         ).click()
         page.wait_for_function(
@@ -1586,6 +1733,13 @@ def main() -> int:
                 is True,
                 "restored track did not rejoin Library",
             ),
+        )
+
+        page.locator(
+            '#librarySidebar [data-shell-view="songs"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='songs'"
         )
 
         play = page.locator(
@@ -1862,6 +2016,13 @@ def main() -> int:
             ),
         )
         page.locator(
+            '#librarySidebar [data-shell-view="playlists"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='playlists'"
+        )
+
+        page.locator(
             '[data-playlist-id="road-trip"] '
             '[data-playlist-action="play"]'
         ).click()
@@ -1894,11 +2055,22 @@ def main() -> int:
         )
 
         page.locator(
+            '#librarySidebar [data-shell-view="songs"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='songs'"
+        )
+
+        page.locator(
             '[data-track-ref="media.vexstream.test-tone.1"] '
             '[data-track-action="explore"]'
         ).click()
         page.wait_for_function(
             "window.vexV4.exploreSession.currentProjection.kind==='active'"
+        )
+        page.locator("#discoverTopTab").click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='discover'"
         )
         checked(
             "explore-from-library-track-forms-temporary-session",
@@ -2159,12 +2331,26 @@ def main() -> int:
         restart.close()
 
         page.locator(
+            '#librarySidebar [data-shell-view="songs"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='songs'"
+        )
+
+        page.locator(
             '[data-track-ref="media.vexstream.test-tone.2"] '
             '[data-track-action="trash"]'
         ).click()
         page.wait_for_function(
             "window.vexV4.trash.trash.length===1"
         )
+        page.locator(
+            '#librarySidebar [data-shell-view="deleted"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='deleted'"
+        )
+
         page.locator(
             '#trashItems [data-trash-action="purge"]'
         ).click()
@@ -2182,6 +2368,11 @@ def main() -> int:
                 and page.evaluate("window.vexV4.catalog.length") == 2,
                 "permanent Trash delete drift",
             ),
+        )
+
+        page.locator("#discoverTopTab").click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='discover'"
         )
 
         page.locator(

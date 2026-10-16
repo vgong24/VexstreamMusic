@@ -3,20 +3,61 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VexStream Music — Desktop V4 Player Practicum</title>
+<title>VexStream Music — Desktop V4</title>
 <link rel="stylesheet" href="./styles.css">
 </head>
-<body data-vex-screen="vexstream.desktop.player-practicum">
+<body data-vex-screen="vexstream.desktop.library" data-shell-view="home">
 <main class="shell">
-  <section class="player" aria-labelledby="screenTitle">
-    <header class="app-identity">
-      <div>
-        <div class="eyebrow" data-text-ref="player.practicum.eyebrow">Desktop V4 player practicum</div>
-        <h1 id="screenTitle" data-text-ref="playback.screen.title">VexStream Music</h1>
-        <div id="buildIdentity" class="muted" data-text-ref="system.identity.loading">Loading desktop identity…</div>
+  <section class="player v3-product-shell" aria-labelledby="screenTitle">
+    <header class="app-identity product-header">
+      <button id="libraryNavToggle" class="nav-toggle" type="button" title="Toggle library navigation" aria-label="Toggle library navigation" aria-expanded="true">☰</button>
+      <button id="brandHome" class="brand brand-home" type="button" data-shell-view="home" title="Go to Library home" aria-label="Go to Library home"><span>Vex</span>Stream Music</button>
+      <div class="top-tabs" aria-label="VexStream terrain">
+        <button id="libraryTopTab" type="button" data-shell-view="home" class="active">Library</button>
+        <button id="discoverTopTab" type="button" data-shell-view="discover">Discover</button>
       </div>
+      <div class="header-spacer"></div>
+      <div id="buildIdentity" class="version" data-text-ref="system.identity.loading">Loading…</div>
       <button id="exitVexStream" type="button" data-vex-action="vexstream.system.exit">Exit VexStream</button>
+      <h1 id="screenTitle" class="sr-only" data-text-ref="playback.screen.title">VexStream Music</h1>
     </header>
+
+    <aside id="librarySidebar" class="sidebar" aria-label="Library navigation" data-sidebar-open="true">
+      <nav class="nav">
+        <button type="button" data-shell-view="home" class="active"><span class="nav-icon">⌂</span><span>Home</span></button>
+        <button type="button" data-shell-view="songs"><span class="nav-icon">♫</span><span>Songs</span></button>
+        <button type="button" data-shell-view="albums"><span class="nav-icon">▣</span><span>Albums</span></button>
+        <button type="button" data-shell-view="artists"><span class="nav-icon">◎</span><span>Artists</span></button>
+        <button type="button" data-shell-view="playlists"><span class="nav-icon">▤</span><span>Playlists</span></button>
+        <button type="button" data-shell-view="deleted"><span class="nav-icon">♲</span><span>Deleted music</span></button>
+      </nav>
+      <div class="sidebar-note">Your library is local. Music folders and provider discovery live under Discover.</div>
+    </aside>
+
+    <section id="homeView" class="home-view" data-shell-panel="home" aria-labelledby="homeTitle">
+      <div class="hero">
+        <div>
+          <h2 id="homeTitle">Local library</h2>
+          <div class="muted">Your real music collection, powered by the V4 Library owner.</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong id="homeSongCount">0</strong><span>songs</span></div>
+        <div class="stat"><strong id="homeAlbumCount">0</strong><span>albums / collections</span></div>
+        <div class="stat"><strong id="homeArtistCount">0</strong><span>artists</span></div>
+        <div class="stat"><strong id="homeSourceCount">0</strong><span>folders</span></div>
+      </div>
+      <section class="home-recent" aria-labelledby="recentTitle">
+        <div class="section-heading">
+          <div>
+            <h2 id="recentTitle">Recently discovered</h2>
+            <span>Current Library truth, newest first.</span>
+          </div>
+          <button type="button" data-shell-view="songs">See all</button>
+        </div>
+        <div id="recentSongs"></div>
+      </section>
+    </section>
 
     <div class="now">
       <div class="art" aria-hidden="true">♫</div>
@@ -34,7 +75,7 @@
       <button id="repeat" type="button" data-vex-control="vexstream.queue.repeat" data-text-ref="queue.repeat" aria-pressed="false">Repeat</button>
     </div>
 
-    <section class="library" aria-labelledby="libraryTitle">
+    <section class="library" data-shell-panel="library" aria-labelledby="libraryTitle" hidden>
       <div class="section-heading">
         <div>
           <h2 id="libraryTitle">Library</h2>
@@ -95,7 +136,7 @@
       </div>
     </section>
 
-    <section class="sources" aria-labelledby="sourcesTitle">
+    <section class="sources" data-shell-panel="discover" aria-labelledby="sourcesTitle" hidden>
       <div class="section-heading">
         <div>
           <h2 id="sourcesTitle">Music folders</h2>
@@ -116,7 +157,7 @@
       </details>
     </section>
 
-    <section class="playlists" aria-labelledby="playlistsTitle">
+    <section class="playlists" data-shell-panel="playlists" aria-labelledby="playlistsTitle" hidden>
       <div class="section-heading">
         <div>
           <h2 id="playlistsTitle">Playlists</h2>
@@ -130,7 +171,7 @@
       <div id="playlistChoices"></div>
     </section>
 
-    <section class="explore" aria-labelledby="exploreTitle">
+    <section class="explore" data-shell-panel="discover" aria-labelledby="exploreTitle" hidden>
       <div class="section-heading">
         <div>
           <h2 id="exploreTitle">Explore</h2>
@@ -205,7 +246,7 @@
       </div>
     </section>
 
-    <section class="imports" aria-labelledby="importsTitle">
+    <section class="imports" data-shell-panel="discover" aria-labelledby="importsTitle" hidden>
       <div class="section-heading">
         <div>
           <h2 id="importsTitle">Imports</h2>
@@ -216,7 +257,7 @@
       <div id="importJobs"></div>
     </section>
 
-    <section class="trash" aria-labelledby="trashTitle">
+    <section class="trash" data-shell-panel="deleted" aria-labelledby="trashTitle" hidden>
       <div class="section-heading">
         <div>
           <h2 id="trashTitle">Trash</h2>
@@ -232,7 +273,7 @@
       </div>
     </section>
 
-    <section class="queue" aria-labelledby="queueTitle">
+    <section class="queue queue-panel" aria-labelledby="queueTitle">
       <div class="section-heading">
         <div>
           <h2 id="queueTitle">Queue</h2>
@@ -243,7 +284,7 @@
       <ol id="queueList"></ol>
     </section>
 
-    <div class="proof-grid">
+    <div class="proof-grid" aria-hidden="true">
       <div class="proof-row"><span>Playback</span><strong id="semanticState">no-media</strong></div>
       <div class="proof-row"><span>Queue</span><strong id="queueState">empty</strong></div>
       <div class="proof-row"><span>Session</span><strong id="sessionState">Fresh</strong></div>

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
  groupLibrary,
  libraryGenres,
+ projectLibraryHome,
  projectLibraryView
 } from "../web/features/library/projection.js";
 
@@ -108,4 +109,15 @@ test("grouping keeps ordered refs and never becomes Library ownership",()=>{
 
 test("unknown grouping fails instead of inventing semantics",()=>{
  assert.throws(()=>groupLibrary(catalog,"genre"),/album or artist/);
+});
+
+
+test("Library home is a read-only projection of current catalog truth",()=>{
+ const home=projectLibraryHome(catalog,{recentLimit:2});
+ assert.equal(home.songCount,3);
+ assert.equal(home.albumCount,2);
+ assert.equal(home.artistCount,2);
+ assert.deepEqual(home.recent.map(item=>item.ref),["a","b"]);
+ assert.equal(Object.isFrozen(home),true);
+ assert.equal(Object.isFrozen(home.recent),true);
 });

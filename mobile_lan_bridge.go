@@ -32,14 +32,17 @@ const (
 	mobileLANServiceType     = "_vexstream._tcp"
 	mobilePairingWindow      = 5 * time.Minute
 	mobilePairingRequestLife = 10 * time.Minute
-	mobilePairingSchema      = "vexstream.mobile.local-pairing/v1"
+	mobilePairingSchemaV1    = "vexstream.mobile.local-pairing/v1"
+	mobilePairingSchema      = "vexstream.mobile.local-pairing/v2"
 )
 
 type mobilePairedDevice struct {
-	DeviceRef   string `json:"deviceRef"`
-	DisplayName string `json:"displayName"`
-	TokenHash   string `json:"tokenHash"`
-	ApprovedAt  string `json:"approvedAt"`
+	DeviceRef       string `json:"deviceRef"`
+	DisplayName     string `json:"displayName"`
+	TokenHash       string `json:"tokenHash"`
+	DevicePublicKey string `json:"devicePublicKey,omitempty"`
+	RemoteEnabled   bool   `json:"remoteEnabled,omitempty"`
+	ApprovedAt      string `json:"approvedAt"`
 }
 
 type mobilePairingFile struct {
@@ -128,14 +131,11 @@ func (b *mobileLANBridgeState) load() error {
 		return err
 	}
 	if len(data) > 0 {
-		var stored mobilePairingFile
-		if err := json.Unmarshal(data, &stored); err != nil {
+		devices, err := decodeRememberedMobileDevices(data)
+		if err != nil {
 			return err
 		}
-		if stored.SchemaVersion != mobilePairingSchema {
-			return fmt.Errorf("unsupported mobile pairing schema %q", stored.SchemaVersion)
-		}
-		for _, device := range stored.Devices {
+		for _, device := range devices {
 			if device.DeviceRef == "" || device.TokenHash == "" {
 				continue
 			}
@@ -147,9 +147,25 @@ func (b *mobileLANBridgeState) load() error {
 	return nil
 }
 
-func (b *mobileLANBridgeState) saveLocked() error {
-	devices := make([]mobilePairedDevice, 0, len(b.devices))
-	for _, device := range b.devices {
+func decodeRememberedMobileDevices(data []byte) ([]mobilePairedDevice, error) {
+	var stored mobilePairingFile
+	if err := json.Unmarshal(data, &stored); err != nil {
+		return nil, err
+	}
+
+	switch stored.SchemaVersion {
+	case mobilePairingSchemaV1, mobilePairingSchema:
+		return stored.Devices, nil
+	default:
+		return nil, fmt.Errorf("unsupported mobile pairing schema %q", stored.SchemaVersion)
+	}
+}
+
+func encodeRememberedMobileDevices(
+	devicesByRef map[string]mobilePairedDevice,
+) ([]byte, error) {
+	devices := make([]mobilePairedDevice, 0, len(devicesByRef))
+	for _, device := range devicesByRef {
 		devices = append(devices, device)
 	}
 	sort.Slice(devices, func(i, j int) bool {
@@ -161,9 +177,16 @@ func (b *mobileLANBridgeState) saveLocked() error {
 		Devices:       devices,
 	}, "", "  ")
 	if err != nil {
+		return nil, err
+	}
+	return append(payload, '\n'), nil
+}
+
+func (b *mobileLANBridgeState) saveLocked() error {
+	payload, err := encodeRememberedMobileDevices(b.devices)
+	if err != nil {
 		return err
 	}
-	payload = append(payload, '\n')
 
 	path := filepath.Join(appDataBase(), "mobile-bridge", "paired-devices.json")
 	tmp := path + ".tmp"

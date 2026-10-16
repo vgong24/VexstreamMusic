@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
@@ -171,6 +172,91 @@ func TestMobileLANPairingStatusNeverReturnsTokenWhilePending(t *testing.T) {
 	}
 	if _, ok := status["token"]; ok {
 		t.Fatalf("pending pairing response leaked token: %v", status)
+	}
+}
+
+func TestRememberedMobileDevicesAcceptV1AndWriteCurrentSchema(t *testing.T) {
+	devices, err := decodeRememberedMobileDevices([]byte(`{
+	  "schemaVersion": "vexstream.mobile.local-pairing/v1",
+	  "devices": [{
+	    "deviceRef": "vexlife.fixture",
+	    "displayName": "Victor's phone",
+	    "tokenHash": "fixture-token-hash",
+	    "approvedAt": "2026-10-11T12:00:00Z"
+	  }]
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(devices) != 1 || devices[0].DeviceRef != "vexlife.fixture" {
+		t.Fatalf("decoded v1 devices=%+v", devices)
+	}
+
+	payload, err := encodeRememberedMobileDevices(map[string]mobilePairedDevice{
+		devices[0].DeviceRef: devices[0],
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var stored mobilePairingFile
+	if err := json.Unmarshal(payload, &stored); err != nil {
+		t.Fatal(err)
+	}
+	if stored.SchemaVersion != mobilePairingSchema {
+		t.Fatalf("saved schema=%q want=%q", stored.SchemaVersion, mobilePairingSchema)
+	}
+	if len(stored.Devices) != 1 || stored.Devices[0].TokenHash != "fixture-token-hash" {
+		t.Fatalf("saved devices=%+v", stored.Devices)
+	}
+}
+
+func TestRememberedMobileDevicesPreserveV2Extensions(t *testing.T) {
+	devices, err := decodeRememberedMobileDevices([]byte(`{
+	  "schemaVersion": "vexstream.mobile.local-pairing/v2",
+	  "devices": [{
+	    "deviceRef": "vexlife.fixture",
+	    "displayName": "Victor's phone",
+	    "tokenHash": "fixture-token-hash",
+	    "devicePublicKey": "fixture-p256-public-key",
+	    "remoteEnabled": true,
+	    "approvedAt": "2026-10-11T12:00:00Z"
+	  }]
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(devices) != 1 {
+		t.Fatalf("decoded v2 devices=%+v", devices)
+	}
+
+	payload, err := encodeRememberedMobileDevices(map[string]mobilePairedDevice{
+		devices[0].DeviceRef: devices[0],
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var stored mobilePairingFile
+	if err := json.Unmarshal(payload, &stored); err != nil {
+		t.Fatal(err)
+	}
+	if len(stored.Devices) != 1 {
+		t.Fatalf("saved v2 devices=%+v", stored.Devices)
+	}
+	device := stored.Devices[0]
+	if device.DevicePublicKey != "fixture-p256-public-key" || !device.RemoteEnabled {
+		t.Fatalf("v2 extensions were not preserved: %+v", device)
+	}
+}
+
+func TestRememberedMobileDevicesRejectUnknownSchema(t *testing.T) {
+	_, err := decodeRememberedMobileDevices([]byte(`{
+	  "schemaVersion": "vexstream.mobile.local-pairing/v3",
+	  "devices": []
+	}`))
+	if err == nil || !strings.Contains(err.Error(), "vexstream.mobile.local-pairing/v3") {
+		t.Fatalf("unknown schema error=%v", err)
 	}
 }
 

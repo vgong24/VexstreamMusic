@@ -1075,7 +1075,7 @@ def main() -> int:
         page.wait_for_function("window.vexV4?.ready===true")
 
         checked(
-            "real-browser-loads-v4-player-surface",
+            "real-browser-loads-v3-shaped-v4-shell",
             lambda: require(
                 not report["pageErrors"],
                 f"page errors: {report['pageErrors']}",

@@ -41,6 +41,22 @@ export function projectLibraryView(
  return Object.freeze([...visible]);
 }
 
+export function projectLibraryHome(
+ catalog,
+ {recentLimit=8}={}
+){
+ const source=Array.isArray(catalog)?catalog:[];
+ const limit=Math.max(0,Number(recentLimit)||0);
+ return Object.freeze({
+  songCount:source.length,
+  albumCount:groupLibrary(source,"album").length,
+  artistCount:groupLibrary(source,"artist").length,
+  recent:Object.freeze(
+   projectLibraryView(source,{sort:"recent"}).slice(0,limit)
+  )
+ });
+}
+
 export function libraryGenres(catalog){
  const seen=new Map();
  for(const item of Array.isArray(catalog)?catalog:[]){

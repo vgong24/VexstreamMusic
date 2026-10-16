@@ -1249,6 +1249,32 @@ def main() -> int:
             ),
         )
         page.locator(
+            '#trackChoices [data-library-group="v4 practicum"] '
+            '[data-library-group-action="open"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.libraryDetail?.kind"
+            "==='album'"
+        )
+        checked(
+            "album-detail-restores-v3-drill-in-terrain-over-v4-library-truth",
+            lambda: require(
+                page.locator("#libraryGroupDetail").is_visible()
+                and page.locator("#libraryGroupTitle").inner_text()
+                == "V4 Practicum"
+                and page.locator(
+                    "#libraryGroupTracks [data-track-ref]"
+                ).count()
+                == 2,
+                "Album detail terrain drift",
+            ),
+        )
+        page.locator("#libraryGroupBack").click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.libraryDetail===null"
+        )
+
+        page.locator(
             '#librarySidebar [data-shell-view="artists"]'
         ).click()
         checked(
@@ -1265,6 +1291,29 @@ def main() -> int:
                 "artist grouping drift",
             ),
         )
+        page.locator(
+            '#trackChoices [data-library-group="vexstream qa"] '
+            '[data-library-group-action="open"]'
+        ).click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.libraryDetail?.kind"
+            "==='artist'"
+        )
+        checked(
+            "artist-detail-restores-v3-drill-in-terrain-over-v4-library-truth",
+            lambda: require(
+                page.locator("#libraryGroupDetail").is_visible()
+                and page.locator("#libraryGroupTitle").inner_text()
+                == "VexStream QA"
+                and page.locator(
+                    "#libraryGroupTracks [data-track-ref]"
+                ).count()
+                == 2,
+                "Artist detail terrain drift",
+            ),
+        )
+        page.locator("#libraryGroupBack").click()
+
         page.locator("#brandHome").click()
         checked(
             "brand-returns-to-recognizable-library-home",

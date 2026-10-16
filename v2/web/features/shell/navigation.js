@@ -21,6 +21,10 @@ const LIBRARY_VIEWS=new Set([
  ShellView.ALBUMS,
  ShellView.ARTISTS
 ]);
+const LIBRARY_DETAIL_VIEWS=Object.freeze({
+ album:ShellView.ALBUMS,
+ artist:ShellView.ARTISTS
+});
 
 export function shellPanelForView(view){
  const resolved=resolveShellView(view);
@@ -38,7 +42,8 @@ export function createShellNavigation({
 }={}){
  let state=freezeState({
   view:resolveShellView(initialView),
-  sidebarOpen:Boolean(sidebarOpen)
+  sidebarOpen:Boolean(sidebarOpen),
+  libraryDetail:null
  });
  const listeners=new Set();
 
@@ -54,6 +59,7 @@ export function createShellNavigation({
    view:state.view,
    panel:shellPanelForView(state.view),
    libraryMode:libraryModeForShellView(state.view),
+   libraryDetail:state.libraryDetail,
    sidebarOpen:state.sidebarOpen
   });
  }
@@ -62,8 +68,22 @@ export function createShellNavigation({
   get currentProjection(){return currentProjection();},
   select(view){
    const next=resolveShellView(view);
-   if(next===state.view)return currentProjection();
-   state=freezeState({...state,view:next});
+   if(next===state.view&&state.libraryDetail===null)return currentProjection();
+   state=freezeState({...state,view:next,libraryDetail:null});
+   return publish();
+  },
+  openLibraryDetail(kind,key){
+   const detail=resolveLibraryDetail(kind,key);
+   state=freezeState({
+    ...state,
+    view:LIBRARY_DETAIL_VIEWS[detail.kind],
+    libraryDetail:detail
+   });
+   return publish();
+  },
+  closeLibraryDetail(){
+   if(state.libraryDetail===null)return currentProjection();
+   state=freezeState({...state,libraryDetail:null});
    return publish();
   },
   toggleSidebar(){
@@ -75,6 +95,18 @@ export function createShellNavigation({
    return ()=>listeners.delete(listener);
   }
  });
+}
+
+function resolveLibraryDetail(kind,key){
+ const detailKind=String(kind??"").trim();
+ if(!Object.hasOwn(LIBRARY_DETAIL_VIEWS,detailKind)){
+  throw new Error("Library detail kind must be album or artist");
+ }
+ const detailKey=String(key??"").trim();
+ if(!detailKey){
+  throw new Error("Library detail key is required");
+ }
+ return Object.freeze({kind:detailKind,key:detailKey});
 }
 
 function resolveShellView(value){

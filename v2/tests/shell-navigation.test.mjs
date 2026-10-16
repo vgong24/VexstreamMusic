@@ -51,6 +51,36 @@ test("sidebar visibility is shell presentation state, not Library state",()=>{
  assert.equal(after.libraryMode,"albums");
 });
 
+test("album and artist detail remain nested shell locations",()=>{
+ const shell=createShellNavigation();
+
+ const album=shell.openLibraryDetail("album","road");
+ assert.equal(album.view,ShellView.ALBUMS);
+ assert.equal(album.panel,"library");
+ assert.equal(album.libraryMode,"albums");
+ assert.deepEqual(album.libraryDetail,{kind:"album",key:"road"});
+
+ const albumOverview=shell.select(ShellView.ALBUMS);
+ assert.equal(albumOverview.libraryDetail,null);
+
+ const artist=shell.openLibraryDetail("artist","alpha");
+ assert.equal(artist.view,ShellView.ARTISTS);
+ assert.deepEqual(artist.libraryDetail,{kind:"artist",key:"alpha"});
+
+ const closed=shell.closeLibraryDetail();
+ assert.equal(closed.view,ShellView.ARTISTS);
+ assert.equal(closed.libraryDetail,null);
+
+ assert.throws(
+  ()=>shell.openLibraryDetail("genre","ambient"),
+  /album or artist/
+ );
+ assert.throws(
+  ()=>shell.openLibraryDetail("album",""),
+  /detail key/
+ );
+});
+
 test("unknown shell terrain fails instead of silently inventing product navigation",()=>{
  const shell=createShellNavigation();
  assert.throws(()=>shell.select("settings"),/Unknown VexStream shell view/);

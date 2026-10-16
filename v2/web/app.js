@@ -95,6 +95,15 @@ const queueSummary=document.querySelector("#queueSummary");
 const queueList=document.querySelector("#queueList");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
+const libraryGroupDetail=document.querySelector("#libraryGroupDetail");
+const libraryGroupBack=document.querySelector("#libraryGroupBack");
+const libraryGroupTerrain=document.querySelector("#libraryGroupTerrain");
+const libraryGroupEyebrow=document.querySelector("#libraryGroupEyebrow");
+const libraryGroupTitle=document.querySelector("#libraryGroupTitle");
+const libraryGroupSummary=document.querySelector("#libraryGroupSummary");
+const libraryGroupPlay=document.querySelector("#libraryGroupPlay");
+const libraryGroupAppend=document.querySelector("#libraryGroupAppend");
+const libraryGroupTracks=document.querySelector("#libraryGroupTracks");
 const librarySummary=document.querySelector("#librarySummary");
 const librarySearch=document.querySelector("#librarySearch");
 const libraryGenre=document.querySelector("#libraryGenre");
@@ -262,6 +271,7 @@ function renderShell(projection=shellNavigation.currentProjection){
   });
   renderTrackChoices();
  }
+ renderLibraryGroupDetail();
 }
 
 shellNavigation.subscribe(renderShell);
@@ -733,6 +743,90 @@ function render(){
  }).join("");
 }
 
+function trackCardHTML(item){
+ return `<article class="track-card" data-track-ref="${escapeHTML(item.ref)}">
+      <div class="track-card-copy">
+       <strong>${escapeHTML(trackTitle(item))}</strong>
+       <small>${escapeHTML(trackArtist(item))}</small>
+       <span class="track-meta">${escapeHTML(
+        [item.album,item.genre,item.year].filter(Boolean).join(" · ")
+       )}</span>
+      </div>
+      <span class="track-actions">
+       <button data-track-action="play" data-vex-action="vexstream.player.play-track">${escapeHTML(resolveText(locale,"playback.play"))}</button>
+       <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
+       <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
+       <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+       <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
+       <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
+       ${playlists.length
+        ? `<select data-track-playlist-target>${playlists.map(playlist=>
+             `<option value="${escapeHTML(playlist.id)}">${escapeHTML(playlist.name)}</option>`
+            ).join("")}</select>
+           <button data-track-action="playlist-add">${escapeHTML(resolveText(locale,"playlist.add-track"))}</button>`
+        : ""}
+      </span>
+     </article>`;
+}
+
+function currentLibraryDetailGroup(){
+ const detail=shellNavigation.currentProjection.libraryDetail;
+ if(!detail)return null;
+ return groupLibrary(catalog,detail.kind)
+  .find(group=>group.key===detail.key)??null;
+}
+
+function renderLibraryGroupDetail(){
+ const detail=shellNavigation.currentProjection.libraryDetail;
+ if(!detail){
+  libraryGroupDetail.hidden=true;
+  trackChoices.hidden=false;
+  return;
+ }
+ const group=currentLibraryDetailGroup();
+ if(!group){
+  shellNavigation.closeLibraryDetail();
+  return;
+ }
+
+ const isAlbum=detail.kind==="album";
+ const related=isAlbum
+  ?new Set(group.tracks.map(item=>trackArtist(item))).size
+  :new Set(group.tracks.map(item=>
+    String(item?.album??"").trim()||"Unknown album"
+   )).size;
+
+ libraryGroupDetail.hidden=false;
+ trackChoices.hidden=true;
+ libraryGroupBack.textContent=resolveText(
+  locale,
+  isAlbum?"library.detail.back-albums":"library.detail.back-artists"
+ );
+ libraryGroupTerrain.textContent=resolveText(
+  locale,
+  isAlbum?"library.detail.terrain.album":"library.detail.terrain.artist"
+ );
+ libraryGroupEyebrow.textContent=resolveText(
+  locale,
+  isAlbum?"library.detail.eyebrow.album":"library.detail.eyebrow.artist"
+ );
+ libraryGroupTitle.textContent=group.name;
+ libraryGroupSummary.textContent=resolveText(
+  locale,
+  isAlbum?"library.detail.summary.album":"library.detail.summary.artist",
+  {tracks:group.refs.length,related}
+ );
+ libraryGroupPlay.textContent=resolveText(
+  locale,
+  isAlbum?"library.detail.play.album":"library.detail.play.artist"
+ );
+ libraryGroupAppend.textContent=resolveText(
+  locale,
+  isAlbum?"library.detail.queue.album":"library.detail.queue.artist"
+ );
+ libraryGroupTracks.innerHTML=group.tracks.map(trackCardHTML).join("");
+}
+
 function renderTrackChoices(){
  const visible=currentLibraryView();
  const genres=libraryGenres(catalog);
@@ -760,30 +854,9 @@ function renderTrackChoices(){
    total:catalog.length
   });
   trackChoices.innerHTML=visible.length
-   ? visible.map(item=>`<article class="track-card" data-track-ref="${escapeHTML(item.ref)}">
-      <div class="track-card-copy">
-       <strong>${escapeHTML(trackTitle(item))}</strong>
-       <small>${escapeHTML(trackArtist(item))}</small>
-       <span class="track-meta">${escapeHTML(
-        [item.album,item.genre,item.year].filter(Boolean).join(" · ")
-       )}</span>
-      </div>
-      <span class="track-actions">
-       <button data-track-action="play" data-vex-action="vexstream.player.play-track">${escapeHTML(resolveText(locale,"playback.play"))}</button>
-       <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
-       <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
-       <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
-       <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
-       <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
-       ${playlists.length
-        ? `<select data-track-playlist-target>${playlists.map(playlist=>
-             `<option value="${escapeHTML(playlist.id)}">${escapeHTML(playlist.name)}</option>`
-            ).join("")}</select>
-           <button data-track-action="playlist-add">${escapeHTML(resolveText(locale,"playlist.add-track"))}</button>`
-        : ""}
-      </span>
-     </article>`).join("")
-   : `<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
+   ?visible.map(trackCardHTML).join("")
+   :`<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
+  renderLibraryGroupDetail();
   return;
  }
 
@@ -797,7 +870,7 @@ function renderTrackChoices(){
   {count:groups.length,tracks:visible.length}
  );
  trackChoices.innerHTML=groups.length
-  ? groups.map(group=>`<article class="library-group-card"
+  ?groups.map(group=>`<article class="library-group-card"
        data-library-group="${escapeHTML(group.key)}"
        data-library-group-kind="${escapeHTML(groupKey)}">
       <div class="library-group-copy">
@@ -810,11 +883,13 @@ function renderTrackChoices(){
        )}</span>
       </div>
       <div class="track-actions">
+       <button data-library-group-action="open">${escapeHTML(resolveText(locale,"library.group.open"))}</button>
        <button data-library-group-action="play">${escapeHTML(resolveText(locale,"playback.play"))}</button>
        <button data-library-group-action="append">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
       </div>
      </article>`).join("")
-  : `<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
+  :`<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
+ renderLibraryGroupDetail();
 }
 
 function sourceLabel(path){
@@ -1003,43 +1078,23 @@ recentSongs.addEventListener("click",event=>{
  }
 });
 
-trackChoices.addEventListener("click",event=>{
- const groupAction=event.target.closest("[data-library-group-action]");
- const groupCard=event.target.closest("[data-library-group]");
- if(groupAction&&groupCard){
-  const groups=groupLibrary(
-   currentLibraryView(),
-   groupCard.dataset.libraryGroupKind
-  );
-  const group=groups.find(value=>value.key===groupCard.dataset.libraryGroup);
-  if(!group)return;
-  if(groupAction.dataset.libraryGroupAction==="play"){
-   void guarded(()=>player.playContext(group.refs,0));
-   return;
-  }
-  if(groupAction.dataset.libraryGroupAction==="append"){
-   player.append(group.refs);
-   render();
-   return;
-  }
- }
-
+function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){
  const action=event.target.closest("[data-track-action]");
  const card=event.target.closest("[data-track-ref]");
- if(!action||!card)return;
+ if(!action||!card)return false;
  const ref=card.dataset.trackRef;
  if(action.dataset.trackAction==="play"){
-  void guarded(()=>player.playTrack(ref,libraryPlaybackRefs()));
-  return;
+  void guarded(()=>player.playTrack(ref,playbackRefs));
+  return true;
  }
  if(action.dataset.trackAction==="play-next"){
   void guarded(()=>player.playNext([ref]));
-  return;
+  return true;
  }
  if(action.dataset.trackAction==="append"){
   player.append([ref]);
   render();
-  return;
+  return true;
  }
  if(action.dataset.trackAction==="explore"){
   void guarded(async()=>{
@@ -1047,12 +1102,12 @@ trackChoices.addEventListener("click",event=>{
    explorePreview.hidden=true;
    explorePreview.removeAttribute("src");
   });
-  return;
+  return true;
  }
  if(action.dataset.trackAction==="edit"){
   currentEditingTrackRef=ref;
   renderLibraryEditor();
-  return;
+  return true;
  }
  if(action.dataset.trackAction==="trash"){
   void guarded(async()=>{
@@ -1066,16 +1121,72 @@ trackChoices.addEventListener("click",event=>{
    ]);
    renderLibraryEditor();
   });
-  return;
+  return true;
  }
  if(action.dataset.trackAction==="playlist-add"){
   const target=card.querySelector("[data-track-playlist-target]")?.value??"";
-  if(!target)return;
+  if(!target)return true;
   void guarded(async()=>{
    await addTracksToPlaylist(target,[ref]);
    await refreshPlaylists();
   });
+  return true;
  }
+ return false;
+}
+
+trackChoices.addEventListener("click",event=>{
+ const groupAction=event.target.closest("[data-library-group-action]");
+ const groupCard=event.target.closest("[data-library-group]");
+ if(groupAction&&groupCard){
+  const groups=groupLibrary(
+   currentLibraryView(),
+   groupCard.dataset.libraryGroupKind
+  );
+  const group=groups.find(value=>value.key===groupCard.dataset.libraryGroup);
+  if(!group)return;
+  if(groupAction.dataset.libraryGroupAction==="open"){
+   shellNavigation.openLibraryDetail(
+    groupCard.dataset.libraryGroupKind,
+    group.key
+   );
+   return;
+  }
+  if(groupAction.dataset.libraryGroupAction==="play"){
+   void guarded(()=>player.playContext(group.refs,0));
+   return;
+  }
+  if(groupAction.dataset.libraryGroupAction==="append"){
+   player.append(group.refs);
+   render();
+   return;
+  }
+ }
+ handleTrackAction(event);
+});
+
+libraryGroupTracks.addEventListener("click",event=>{
+ const group=currentLibraryDetailGroup();
+ handleTrackAction(event,{
+  playbackRefs:group?.refs??libraryPlaybackRefs()
+ });
+});
+
+libraryGroupBack.addEventListener("click",()=>{
+ shellNavigation.closeLibraryDetail();
+});
+
+libraryGroupPlay.addEventListener("click",()=>{
+ const group=currentLibraryDetailGroup();
+ if(!group)return;
+ void guarded(()=>player.playContext(group.refs,0));
+});
+
+libraryGroupAppend.addEventListener("click",()=>{
+ const group=currentLibraryDetailGroup();
+ if(!group)return;
+ player.append(group.refs);
+ render();
 });
 
 libraryEditorClose.addEventListener("click",()=>{

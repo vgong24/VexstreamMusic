@@ -109,6 +109,24 @@
           </select>
         </label>
       </div>
+      <section id="libraryGroupDetail" class="library-group-detail" aria-labelledby="libraryGroupTitle" hidden>
+        <div class="library-detail-head">
+          <button id="libraryGroupBack" type="button">Back</button>
+          <span id="libraryGroupTerrain" class="muted"></span>
+        </div>
+        <div class="library-detail-hero">
+          <div>
+            <div id="libraryGroupEyebrow" class="eyebrow"></div>
+            <h2 id="libraryGroupTitle"></h2>
+            <div id="libraryGroupSummary" class="muted"></div>
+          </div>
+          <div class="library-detail-actions">
+            <button id="libraryGroupPlay" type="button" class="primary">Play</button>
+            <button id="libraryGroupAppend" type="button">Add to queue</button>
+          </div>
+        </div>
+        <div id="libraryGroupTracks" class="library-detail-tracks"></div>
+      </section>
       <div id="trackChoices"></div>
     </section>
 

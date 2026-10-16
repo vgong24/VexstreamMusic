@@ -10,7 +10,7 @@ from pathlib import Path
 import struct
 import subprocess
 
-VERSION = "2.2.0"
+VERSION = "3.0.0"
 EXPECTED_NAME = f"VexStreamMusic-{VERSION}.exe"
 
 
@@ -64,15 +64,18 @@ def main() -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
 
     steps: list[dict] = []
-    steps.append(run(["gofmt", "-d", "main.go", "procattr_windows.go", "procattr_unix.go"], root))
-    require(steps[-1]["exitCode"] == 0 and not steps[-1]["stdout"].strip(), "gofmt reports a source delta")
+    steps.append(run(["gofmt", "-d", "main.go", "mobile_bridge.go", "mobile_lan_bridge.go", "mobile_bridge_test.go", "mobile_lan_bridge_test.go", "procattr_windows.go", "procattr_unix.go"], root))
+    require(
+        steps[-1]["exitCode"] == 0 and not steps[-1]["stdout"].strip(),
+        "gofmt reports a source delta:\n" + steps[-1]["stdout"],
+    )
 
     env = dict(os.environ)
     env.update({"GOOS": "windows", "GOARCH": "amd64", "CGO_ENABLED": "0"})
-    steps.append(run(["go", "vet", "main.go", "procattr_windows.go"], root, env))
+    steps.append(run(["go", "vet", "main.go", "mobile_bridge.go", "mobile_lan_bridge.go", "procattr_windows.go"], root, env))
     require(steps[-1]["exitCode"] == 0, f"go vet failed: {steps[-1]['stderr']}")
 
-    steps.append(run(["go", "build", "-trimpath", "-ldflags=-H=windowsgui -s -w", "-o", str(output), "main.go", "procattr_windows.go"], root, env))
+    steps.append(run(["go", "build", "-trimpath", "-ldflags=-H=windowsgui -s -w", "-o", str(output), "main.go", "mobile_bridge.go", "mobile_lan_bridge.go", "procattr_windows.go"], root, env))
     require(steps[-1]["exitCode"] == 0, f"go build failed: {steps[-1]['stderr']}")
 
     version = run(["go", "version"], root)

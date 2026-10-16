@@ -1,8 +1,8 @@
-# VexStream Music 2.2.0 — 🌐 Explore multi-axis refinement
+# VexStream Music 3.0.0 — VexLife mobile bridge + 🌐 Explore
 
 `[VXG RealForever]`
 
-VexStream Music 2.2.0 keeps the source-native 2.x playback/import baseline and refines the temporary discovery capability after real use showed that the first Radio/search recipe clustered too heavily around the same artist.
+VexStream Music 3.0.0 promotes the VexLife phone connection to a first-class local product capability while preserving the source-native 2.2.0 playback/import/Explore baseline.
 
 ## 🌐 Explore from this song
 
@@ -20,7 +20,7 @@ VexStream forms a temporary metadata map without changing the ordinary library q
 
 2.1.0 fetched two seed-heavy searches in sequence. The first successful artist-centric query could fill most of the frame before another direction was represented.
 
-2.2.0 instead forms factual search axes and balances them:
+The preserved 2.2.0 Explore base forms factual search axes and balances them:
 
 ```text
 Closer        artist / album depth
@@ -79,7 +79,59 @@ Current source proof includes static/source checks, Chromium interaction checks,
 Build Windows:
 
 ```bash
-python3 tests/build_windows.py --root . --output ../VexStreamMusic-2.2.0.exe
+python3 tests/build_windows.py --root . --output ../VexStreamMusic-3.0.0.exe
 ```
 
 See `docs/architecture/EXPLORE-SESSION-V1.md` and `RELEASE-MANIFEST.json`.
+## VexLife mobile connection
+
+VexStream 3.0.0 adds a dedicated mobile surface for taking the canonical desktop library onto a
+VexLife Android phone.
+
+The ordinary desktop UI/admin server remains loopback-only. Phone access uses a separate bounded
+HTTPS surface with only pairing, sanitized catalog, and range-capable media.
+
+Human path:
+
+```text
+Windows VexStream
+-> click the phone icon
+-> VexStream becomes discoverable on the same Wi-Fi for five minutes
+-> six-digit confirmation code
+
+VexLife Android
+-> Home -> VexStream Music -> Find VexStream
+-> select the computer
+-> compare the same six-digit code
+-> Request access
+
+Windows
+-> Allow
+
+VexLife
+-> stream on the phone
+-> optionally Download for verified offline playback
+```
+
+The remembered relationship uses the desktop certificate identity rather than a temporary LAN
+address. Android pins that certificate, stores its bearer token encrypted with Android Keystore, and
+can rediscover the same computer after a route/DHCP change.
+
+The prior ADB-reverse transport remains only as a developer/recovery path.
+
+```text
+LOCAL_VEXSTREAM_PAIRING
+!= VEXHOME_MEMBERSHIP
+!= CANONICAL_HOME_AUTHENTICATION
+!= CAPABILITY_LEASE
+!= REMOTE_ACCESS_AUTHORITY
+```
+
+VexStream 3.0.0 also has an explicit **Exit VexStream** control in System status. Closing a browser
+window is not treated as process shutdown.
+
+The matching Android consumer is in `vgong24/VexLife-Android`, PR #13 /
+`VXG-101126-vexstream-mobile-stream-offline`.
+
+The historical 2.2.0 release manifest remains evidence for the preserved Explore base; current 3.0.0
+mobile-candidate proof is produced by the branch qualification/build workflow.

@@ -20,7 +20,7 @@ import time
 import urllib.error
 import urllib.request
 
-VERSION = "2.2.0"
+VERSION = "3.0.0"
 FIXTURE_SHA256 = "602e675b3d27d2496ac968172b68ca1dc74ddaec455be92d41b51ec65fa359a7"
 
 
@@ -66,7 +66,7 @@ def main() -> int:
         shutil.copy2(fixture, target)
         binary = temp / "vexstream-test-server"
         build = subprocess.run(
-            ["go", "build", "-trimpath", "-o", str(binary), "main.go", "procattr_unix.go"],
+            ["go", "build", "-trimpath", "-o", str(binary), "main.go", "mobile_bridge.go", "mobile_lan_bridge.go", "procattr_unix.go"],
             cwd=root, capture_output=True, text=True,
         )
         if build.returncode != 0:

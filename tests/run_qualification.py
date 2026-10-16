@@ -46,13 +46,13 @@ def main() -> int:
         ui_cmd += ["--browser-executable", args.browser_executable]
     steps.append(run("ui-runtime-regression", ui_cmd, root))
     steps.append(run("real-media-server-regression", [sys.executable, str(root / "tests" / "media_server_regression.py"), "--root", str(root), "--report", str(evidence / "real-media-server-regression.json")], root))
-    steps.append(run("go-duplicate-quality-tests", ["go", "test", "main.go", "procattr_unix.go", "duplicate_logic_test.go", "import_runtime_test.go", "discovery_radio_test.go"], root))
+    steps.append(run("go-duplicate-quality-tests", ["go", "test", "main.go", "mobile_bridge.go", "mobile_lan_bridge.go", "procattr_unix.go", "duplicate_logic_test.go", "import_runtime_test.go", "discovery_radio_test.go", "mobile_bridge_test.go", "mobile_lan_bridge_test.go"], root))
     steps.append(run("python-bridge-compile", [sys.executable, "-m", "py_compile", str(root / "media_bridge.py")], root))
     steps.append(run("python-bridge-self-test", [sys.executable, str(root / "media_bridge.py"), "self-test"], root))
 
     report = {
         "schemaVersion": "vexstream.release-qualification/v1",
-        "appVersion": "2.2.0",
+        "appVersion": "3.0.0",
         "sourceRoot": str(root),
         "artifact": str(args.artifact.resolve()) if args.artifact else None,
         "steps": steps,

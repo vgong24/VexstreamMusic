@@ -32,7 +32,8 @@ import (
 //go:embed ui/index.html media_bridge.py
 var assets embed.FS
 
-const version = "2.2.0"
+const version = "3.0.0"
+const buildRef = "vexstream.mobile-bridge.same-wifi/v1-pairing-state-v2"
 
 type Config struct {
 	Sources []string `json:"sources"`
@@ -346,7 +347,7 @@ func main() {
 	if b, e := os.ReadFile(state); e == nil {
 		u := strings.TrimSpace(string(b))
 		if u != "" {
-			if v := runningVersion(u); v == version {
+			if v, ref := runningIdentity(u); shouldReuseRunningInstance(v, ref) {
 				openBrowser(u)
 				return
 			} else if v != "" {
@@ -355,10 +356,11 @@ func main() {
 			}
 		}
 	}
+	var ln net.Listener
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", serveUI)
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		jsonOut(w, 200, map[string]any{"ok": true, "version": version})
+		jsonOut(w, 200, map[string]any{"ok": true, "version": version, "buildRef": buildRef})
 	})
 	mux.HandleFunc("/api/library", a.library)
 	mux.HandleFunc("/api/library/rescan", a.rescanAPI)
@@ -407,6 +409,31 @@ func main() {
 	mux.HandleFunc("/api/system/repair", a.systemRepair)
 	mux.HandleFunc("/api/system/sessions/retire-plan", a.sessionRetirePlan)
 	mux.HandleFunc("/api/system/sessions/retire", a.sessionRetire)
+	mux.HandleFunc("/api/system/exit", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.Header().Set("Allow", http.MethodPost)
+			jsonOut(w, http.StatusMethodNotAllowed, map[string]string{"error": "POST required"})
+			return
+		}
+
+		var request struct {
+			Confirm string `json:"confirm"`
+		}
+		if err := decode(r, &request); err != nil || request.Confirm != "EXIT_VEXSTREAM" {
+			jsonOut(w, http.StatusBadRequest, map[string]string{"error": "explicit exit confirmation required"})
+			return
+		}
+
+		jsonOut(w, http.StatusOK, map[string]any{"ok": true, "state": "EXITING"})
+		go func() {
+			time.Sleep(120 * time.Millisecond)
+			_ = ln.Close()
+		}()
+	})
+	mux.HandleFunc("/api/mobile/pairing", a.mobilePairingStatus)
+	mux.HandleFunc("/api/mobile/pairing/start", a.mobilePairingStart)
+	mux.HandleFunc("/api/mobile/pairing/decision", a.mobilePairingDecision)
+	mux.HandleFunc("/api/mobile/pairing/revoke", a.mobilePairingRevoke)
 	port := 0
 	if s := os.Getenv("VEXSTREAM_PORT"); s != "" {
 		if p, e := strconv.Atoi(s); e == nil {
@@ -437,6 +464,12 @@ func main() {
 		}
 	}()
 	a.startReconcile("startup")
+	if e := a.startMobileDevBridge(); e != nil {
+		fmt.Fprintln(os.Stderr, "VexStream mobile dev bridge unavailable:", e)
+	}
+	if e := initMobileLANBridge(a); e != nil {
+		fmt.Fprintln(os.Stderr, "VexStream nearby mobile bridge unavailable:", e)
+	}
 	go func() { time.Sleep(250 * time.Millisecond); openBrowser(url) }()
 	http.Serve(ln, mux)
 }
@@ -462,24 +495,37 @@ func jsonOut(w http.ResponseWriter, s int, v any) {
 	json.NewEncoder(w).Encode(v)
 }
 func decode(r *http.Request, v any) error { return json.NewDecoder(r.Body).Decode(v) }
-func runningVersion(url string) string {
+func shouldReuseRunningInstance(
+	runningVersion string,
+	runningBuildRef string,
+) bool {
+	return runningVersion == version && runningBuildRef == buildRef
+}
+
+func runningIdentity(url string) (string, string) {
 	c := http.Client{Timeout: 700 * time.Millisecond}
 	resp, e := c.Get(strings.TrimRight(url, "/") + "/health")
 	if e != nil {
-		return ""
+		return "", ""
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return ""
+		return "", ""
 	}
 	var h struct {
-		OK      bool   `json:"ok"`
-		Version string `json:"version"`
+		OK       bool   `json:"ok"`
+		Version  string `json:"version"`
+		BuildRef string `json:"buildRef"`
 	}
 	if json.NewDecoder(resp.Body).Decode(&h) != nil || !h.OK {
-		return ""
+		return "", ""
 	}
-	return h.Version
+	return h.Version, h.BuildRef
+}
+
+func runningVersion(url string) string {
+	version, _ := runningIdentity(url)
+	return version
 }
 func copyFile(src, dst string) error {
 	b, e := os.ReadFile(src)

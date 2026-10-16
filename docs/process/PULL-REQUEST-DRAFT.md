@@ -1,20 +1,45 @@
-# Pull request projection — VexStream Music 2.2.0
+# Pull request projection — VexStream Music 3.0.0
 
 ## Purpose
 
-Advance the existing source-native VexStream PR #1 from the working 2.0.1 import-runtime baseline to Explore Session v1 multi-axis refinement.
+Stack a first-class VexLife mobile streaming/offline capability on the current source-native 2.2.0
+Explore candidate without widening the ordinary localhost desktop administration server.
 
-## 2.2.0 change
+Current source-native lane:
 
-- temporary `🌐 Explore from this song` branching from local tracks;
-- metadata-first, search-derived candidate frames;
-- one visible YouTube provider preview at a time;
-- library-match annotations using existing duplicate/provenance logic;
-- explicit Add-to-library handoff into the existing import review;
-- branch/back/clear lifecycle in browser memory;
-- no normal queue mutation from metadata or preview;
-- deterministic seam for later AI ranking without making AI required.
+```text
+VexStream PR #1 = 2.2.0 Explore base
+VexStream PR #2 = 3.0.0 mobile producer/pairing successor
+VexLife Android PR #13 = matching phone consumer/player
+```
+
+## 3.0.0 change
+
+- sanitized mobile catalog + exact media-byte identity;
+- range-capable media producer;
+- dedicated same-Wi-Fi HTTPS mobile listener;
+- mDNS nearby discovery;
+- matching six-digit certificate-derived confirmation code;
+- explicit desktop Allow / Deny;
+- remembered per-device local credential;
+- desktop and phone revoke/forget;
+- route rediscovery by pinned certificate identity;
+- explicit VexStream process exit;
+- ADB reverse retained only for developer recovery.
 
 ## Gate
 
-Keep draft until the target Windows host confirms that provider preview, branch/back, leaving/resuming discovery, exact local-match behavior, and Add-to-library handoff work in ordinary use. Embedded provider availability and advertising remain provider-controlled.
+Keep draft until a physical Android phone proves the normal path with no ADB:
+
+```text
+pair
+-> stream
+-> download
+-> desktop unavailable
+-> local playback
+-> Android restart
+-> offline restoration
+```
+
+Remote/off-home access is not part of this PR and remains subject to canonical VexHome/Home-Safety
+authority.

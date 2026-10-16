@@ -2163,11 +2163,8 @@ def main() -> int:
             '[data-track-action="explore"]'
         ).click()
         page.wait_for_function(
-            "window.vexV4.exploreSession.currentProjection.kind==='active'"
-        )
-        page.locator("#discoverTopTab").click()
-        page.wait_for_function(
-            "window.vexV4.shellNavigation.currentProjection.view==='discover' "
+            "window.vexV4.exploreSession.currentProjection.kind==='active' "
+            "&& window.vexV4.shellNavigation.currentProjection.view==='discover' "
             "&& window.vexV4.discoverNavigation.currentProjection.mode==='explore'"
         )
         checked(
@@ -2213,7 +2210,18 @@ def main() -> int:
         page.locator(
             '[data-explore-index="0"] [data-explore-action="import"]'
         ).click()
-        page.wait_for_function("window.vexV4.importReview!==null")
+        page.wait_for_function(
+            "window.vexV4.importReview!==null "
+            "&& window.vexV4.discoverNavigation.currentProjection.mode==='youtube'"
+        )
+        checked(
+            "explore-import-review-enters-youtube-route-without-starting-download",
+            lambda: require(
+                page.locator("#youtubeImportURL").is_visible()
+                and page.locator("#exploreCandidates").is_hidden(),
+                "Explore import review did not enter YouTube terrain",
+            ),
+        )
         checked(
             "explore-import-review-is-read-only-until-human-start",
             lambda: require(

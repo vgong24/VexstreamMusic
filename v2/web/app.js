@@ -1148,8 +1148,9 @@ function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){
  }
  if(action.dataset.trackAction==="explore"){
   void guarded(async()=>{
-   await explore.replaceFromTrack(ref);
+   shellNavigation.select(ShellView.DISCOVER);
    discoverNavigation.select(DiscoverMode.EXPLORE);
+   await explore.replaceFromTrack(ref);
    explorePreview.hidden=true;
    explorePreview.removeAttribute("src");
   });
@@ -1455,6 +1456,7 @@ exploreCandidates.addEventListener("click",event=>{
     loadImportDestinations()
    ]);
    currentImportReview=formImportReview(reviewed,destinations);
+   discoverNavigation.select(DiscoverMode.YOUTUBE);
   });
  }
 });

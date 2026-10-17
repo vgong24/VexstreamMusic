@@ -840,6 +840,27 @@ function renderSessionState(){
  sessionState.textContent=sessionStatusText();
 }
 
+function holdPlayerSessionPersistence(failure){
+ playerSessionPersistenceEnabled=false;
+ currentSessionRestoration=Object.freeze({
+  kind:"persistence-held",
+  queue:null,
+  droppedRefs:Object.freeze([]),
+  currentRef:"",
+  detail:failure?.message??String(failure)
+ });
+ render();
+}
+
+function enqueuePlayerSessionSave(snapshot){
+ playerSessionSaveChain=playerSessionSaveChain
+  .then(()=>savePlayerSession(snapshot))
+  .catch(failure=>{
+   holdPlayerSessionPersistence(failure);
+  });
+ return playerSessionSaveChain;
+}
+
 function schedulePlayerSessionSave(state){
  if(!playerSessionPersistenceEnabled)return;
  pendingPlayerSessionState=state;
@@ -850,20 +871,27 @@ function schedulePlayerSessionSave(state){
   playerSessionSaveTimer=null;
   const snapshot=pendingPlayerSessionState;
   pendingPlayerSessionState=null;
-  playerSessionSaveChain=playerSessionSaveChain
-   .then(()=>savePlayerSession(snapshot))
-   .catch(failure=>{
-    playerSessionPersistenceEnabled=false;
-    currentSessionRestoration=Object.freeze({
-     kind:"persistence-held",
-     queue:null,
-     droppedRefs:Object.freeze([]),
-     currentRef:"",
-     detail:failure?.message??String(failure)
-    });
-    render();
-   });
+  if(snapshot)enqueuePlayerSessionSave(snapshot);
  },60);
+}
+
+async function flushPlayerSessionSave(){
+ if(playerSessionSaveTimer){
+  clearTimeout(playerSessionSaveTimer);
+  playerSessionSaveTimer=null;
+ }
+ const snapshot=pendingPlayerSessionState;
+ pendingPlayerSessionState=null;
+ if(snapshot&&playerSessionPersistenceEnabled){
+  enqueuePlayerSessionSave(snapshot);
+ }
+ await playerSessionSaveChain;
+ if(currentSessionRestoration?.kind==="persistence-held"){
+  throw new Error(
+   currentSessionRestoration.detail||
+   "Player session could not be saved before Exit"
+  );
+ }
 }
 
 function setControl(button,presentation){
@@ -1945,9 +1973,16 @@ systemDrawerClose.addEventListener("click",()=>{
 exitVexStreamButton.addEventListener("click",()=>void guarded(async()=>{
  exitVexStreamButton.disabled=true;
  exitVexStreamButton.textContent=resolveText(locale,"system.exit.exiting");
- await exitVexStream();
- buildIdentity.textContent=resolveText(locale,"system.exit.complete");
- status.textContent=resolveText(locale,"system.exit.complete");
+ try{
+  await flushPlayerSessionSave();
+  await exitVexStream();
+  buildIdentity.textContent=resolveText(locale,"system.exit.complete");
+  status.textContent=resolveText(locale,"system.exit.complete");
+ }catch(failure){
+  exitVexStreamButton.disabled=false;
+  exitVexStreamButton.textContent=resolveText(locale,"system.exit");
+  throw failure;
+ }
 }));
 
 playPause.addEventListener("click",()=>void guarded(()=>player.activatePlayPause()));

@@ -26,6 +26,7 @@ test("shell presentation state is not registered as a shell navigation control",
 
   assert.equal(/<body[^>]*data-shell-view=/.test(html),false);
   assert.equal(/<body[^>]*data-shell-current-view="home"/.test(html),true);
+  assert.equal(html.includes("phone-dialog"),false,"Phone connection must reuse the V3 modal shell instead of a bespoke phone-dialog surface");
   assert.equal(app.includes('document.querySelectorAll("button[data-shell-view]")'),true);
   assert.equal(app.includes("document.body.dataset.shellCurrentView=projection.view"),true);
 });
@@ -37,9 +38,11 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
   for(const landmark of [
     'id="brandHome"',
     'id="phoneConnectButton"',
-    'id="phoneConnectionDialog"',
-    'id="phoneConnectionClose"',
-    'id="phonePairingPanel"',
+    'id="modalBackdrop"',
+    'id="modalTitle"',
+    'id="modalBody"',
+    'id="modalActions"',
+    'id="modalCloseBtn"',
     'id="systemStatusButton"',
     'id="systemStatusBadge"',
     'id="systemDrawer"',

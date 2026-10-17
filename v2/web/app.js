@@ -107,9 +107,11 @@ const queueMiniBtn=document.querySelector("#queueMiniBtn");
 const queueMiniCount=document.querySelector("#queueMiniCount");
 const buildIdentity=document.querySelector("#buildIdentity");
 const phoneConnectButton=document.querySelector("#phoneConnectButton");
-const phoneConnectionDialog=document.querySelector("#phoneConnectionDialog");
-const phoneConnectionClose=document.querySelector("#phoneConnectionClose");
-const phonePairingPanel=document.querySelector("#phonePairingPanel");
+const modalBackdrop=document.querySelector("#modalBackdrop");
+const modalTitle=document.querySelector("#modalTitle");
+const modalBody=document.querySelector("#modalBody");
+const modalActions=document.querySelector("#modalActions");
+const modalCloseBtn=document.querySelector("#modalCloseBtn");
 const systemStatusButton=document.querySelector("#systemStatusButton");
 const systemStatusBadge=document.querySelector("#systemStatusBadge");
 const systemDrawer=document.querySelector("#systemDrawer");
@@ -1988,61 +1990,64 @@ function stopPhonePairPolling(){
  phonePairPollTimer=null;
 }
 
-function closePhoneConnection(){
+function openModal(title,body,actions=""){
+ modalTitle.textContent=title;
+ modalBody.innerHTML=body;
+ modalActions.innerHTML=actions;
+ modalBackdrop.hidden=false;
+}
+
+function closeModal(){
  stopPhonePairPolling();
- phoneConnectionDialog.hidden=true;
+ modalBackdrop.hidden=true;
+ modalBody.innerHTML="";
+ modalActions.innerHTML="";
  phoneConnectButton.setAttribute("aria-expanded","false");
 }
 
 async function refreshPhonePairing(){
- if(phoneConnectionDialog.hidden)return;
+ const box=document.querySelector("#phonePairingPanel");
+ if(!box||modalBackdrop.hidden)return;
  stopPhonePairPolling();
  try{
-  const state=await mobilePairingJSON("/api/mobile/pairing");
-  const pending=Array.isArray(state.pending)?state.pending:[];
-  const paired=Array.isArray(state.paired)?state.paired:[];
-  const pairing=state.pairingWindowOpen
-   ?`<div class="notice success">
-      <strong>Ready to pair for 5 minutes</strong>
-      <div class="small muted" style="margin-top:5px">On your phone open VexLife → VexStream Music → Find VexStream. Choose <strong>${escapeHTML(state.displayName||"this VexStream")}</strong>.</div>
-      <div class="phone-pair-code">${escapeHTML(formatPhonePairingCode(state.pairingCode))}</div>
-      <div class="small muted">The phone should show this same code before it asks for desktop approval.</div>
-     </div>`
-   :`<div class="notice">
-      <strong>${paired.length?"Connect another phone":"Connect a phone"}</strong>
-      <div class="small muted" style="margin-top:5px">Make this VexStream visible to VexLife on the same Wi-Fi for five minutes.</div>
-      <button type="button" class="primary" style="margin-top:10px" data-phone-action="start">${paired.length?"Connect another phone":"Connect a phone"}</button>
-     </div>`;
-
-  const pendingHTML=pending.length
-   ?`<div class="phone-pair-list"><h3>Waiting for your approval</h3>${pending.map(item=>`<div class="phone-pair-row">
-       <div><strong>${escapeHTML(item.displayName||"VexLife phone")}</strong><div class="small muted">Confirm the matching code on the phone, then allow it here.</div></div>
-       <div class="phone-pair-actions">
-        <button type="button" data-phone-action="deny" data-phone-request-ref="${escapeHTML(item.requestRef)}">Deny</button>
-        <button type="button" class="primary" data-phone-action="approve" data-phone-request-ref="${escapeHTML(item.requestRef)}">Allow</button>
-       </div>
-      </div>`).join("")}</div>`
-   :"";
-
-  const pairedHTML=paired.length
-   ?`<div class="phone-pair-list"><h3>Remembered phones</h3>${paired.map(item=>`<div class="phone-pair-row">
-       <div><strong>${escapeHTML(item.displayName||"VexLife phone")}</strong><div class="small muted">Approved ${escapeHTML(item.approvedAt||"")}</div></div>
-       <button type="button" data-phone-action="forget" data-phone-device-ref="${escapeHTML(item.deviceRef)}">Forget</button>
-      </div>`).join("")}</div>`
-   :"";
-
-  phonePairingPanel.innerHTML=pairing+pendingHTML+pairedHTML+
-   '<div class="small muted" style="margin-top:14px">This local pairing exposes only the sanitized VexStream catalog/media contract. Desktop administration remains loopback-only.</div>';
+  const d=await mobilePairingJSON("/api/mobile/pairing");
+  const pending=Array.isArray(d.pending)?d.pending:[];
+  const paired=Array.isArray(d.paired)?d.paired:[];
+  const open=!!d.pairingWindowOpen;
+  let pairingBlock="";
+  if(open){
+   pairingBlock='<div class="notice success"><strong>Ready to pair for 5 minutes</strong><div class="small muted" style="margin-top:5px">On your phone open VexLife → VexStream Music → Find VexStream. Choose <strong>'+escapeHTML(d.displayName||"this VexStream")+'</strong>.</div><div style="font-size:30px;font-weight:800;letter-spacing:.12em;margin-top:12px">'+escapeHTML(formatPhonePairingCode(d.pairingCode))+'</div><div class="small muted">The phone should show this same code before it asks for approval.</div></div>';
+  }else{
+   const addLabel=paired.length?"Connect another phone":"Connect a phone";
+   pairingBlock='<div class="notice"><strong>'+escapeHTML(addLabel)+'</strong><div class="small muted" style="margin-top:5px">Make this VexStream visible to VexLife on the same Wi-Fi for five minutes.</div><button class="primary" style="margin-top:10px" data-phone-action="start">'+escapeHTML(addLabel)+'</button></div>';
+  }
+  let pendingBlock="";
+  if(pending.length){
+   pendingBlock='<div style="margin-top:14px"><h3>Waiting for your approval</h3>'+pending.map(item=>
+    '<div class="issue info"><div class="row between"><div><strong>'+escapeHTML(item.displayName||"VexLife phone")+'</strong><div class="small muted">Confirm the matching code on the phone, then allow it here.</div></div><div class="row"><button data-phone-action="deny" data-phone-request-ref="'+escapeHTML(item.requestRef)+'">Deny</button><button class="primary" data-phone-action="approve" data-phone-request-ref="'+escapeHTML(item.requestRef)+'">Allow</button></div></div></div>'
+   ).join("")+'</div>';
+  }
+  let pairedBlock="";
+  if(paired.length){
+   pairedBlock='<div style="margin-top:14px"><h3>Remembered phones</h3>'+paired.map(item=>
+    '<div class="lifecycle-row"><div><strong>'+escapeHTML(item.displayName||"VexLife phone")+'</strong><div class="small muted">Approved '+escapeHTML(item.approvedAt||"")+'</div></div><button data-phone-action="forget" data-phone-device-ref="'+escapeHTML(item.deviceRef)+'">Forget</button></div>'
+   ).join("")+'</div>';
+  }
+  box.innerHTML=pairingBlock+pendingBlock+pairedBlock+
+   '<div class="small muted" style="margin-top:14px">This nearby pairing is a local VexStream connection candidate. It does not expose imports, delete, diagnostics, repair, or other desktop controls to the phone.</div>';
   phonePairPollTimer=setTimeout(()=>void refreshPhonePairing(),1000);
  }catch(failure){
-  phonePairingPanel.innerHTML=`<div class="notice">${escapeHTML(failure?.message??String(failure))}</div>`;
+  box.innerHTML='<div class="notice">'+escapeHTML(failure?.message??String(failure))+'</div>';
  }
 }
 
 async function openPhoneConnection(){
- phoneConnectionDialog.hidden=false;
  phoneConnectButton.setAttribute("aria-expanded","true");
- phonePairingPanel.innerHTML='<div class="small muted">Checking phone connection…</div>';
+ openModal(
+  "Connect your VexLife phone",
+  '<div id="phonePairingPanel"><div class="small muted">Checking phone connection…</div></div>',
+  '<button type="button" data-modal-close>Close</button>'
+ );
  try{
   const current=await mobilePairingJSON("/api/mobile/pairing");
   if(!current.pairingWindowOpen&&!(Array.isArray(current.paired)&&current.paired.length)){
@@ -2053,11 +2058,14 @@ async function openPhoneConnection(){
 }
 
 phoneConnectButton.addEventListener("click",()=>void guarded(openPhoneConnection));
-phoneConnectionClose.addEventListener("click",closePhoneConnection);
-phoneConnectionDialog.addEventListener("click",event=>{
- if(event.target===phoneConnectionDialog)closePhoneConnection();
+modalCloseBtn.addEventListener("click",closeModal);
+modalBackdrop.addEventListener("click",event=>{
+ if(event.target===modalBackdrop)closeModal();
 });
-phonePairingPanel.addEventListener("click",event=>void guarded(async()=>{
+modalActions.addEventListener("click",event=>{
+ if(event.target.closest("[data-modal-close]"))closeModal();
+});
+modalBody.addEventListener("click",event=>void guarded(async()=>{
  const action=event.target.closest("[data-phone-action]");
  if(!action)return;
  const kind=action.dataset.phoneAction;

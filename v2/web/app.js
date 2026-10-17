@@ -1558,7 +1558,8 @@ libraryGenre.addEventListener("change",()=>{
  libraryView=Object.freeze({...libraryView,genre:libraryGenre.value});
  if(shellNavigation.currentProjection.view===ShellView.HOME){
   shellNavigation.select(ShellView.SONGS);
- }else if(shellNavigation.currentProjection.libraryMode){
+ }
+ if(shellNavigation.currentProjection.libraryMode){
   renderTrackChoices();
  }
 });
@@ -2258,6 +2259,7 @@ async function initialize(){
  renderTrackChoices();
  renderSources();
  renderPlaylistChoices();
+ renderTrash();
  renderShell();
  render();
  window.vexV4=Object.freeze({

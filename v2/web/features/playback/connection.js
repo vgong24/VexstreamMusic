@@ -40,7 +40,7 @@ export function createHTMLMediaPlaybackConnection({
 
   const listeners = new Set();
   let effectRevision = 0;
-  let clearPending();
+  let pendingEffect = null;
   let pendingRevision = 0;
   let lastProjection = null;
 

@@ -25,6 +25,11 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
 
   for(const landmark of [
     'id="brandHome"',
+    'id="systemStatusButton"',
+    'id="systemStatusBadge"',
+    'id="systemDrawer"',
+    'id="systemSummary"',
+    'id="exitVexStream"',
     '>Library</button>',
     '>Discover</button>',
     'data-shell-view="home"',
@@ -64,4 +69,7 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
   }
 
   assert.equal(html.includes("Desktop V4 player practicum"),false);
+  assert.equal(html.includes('id="phoneConnectBtn"'),false);
+  assert.equal(html.includes('id="runDiagnosticsBtn"'),false);
+  assert.equal(html.includes('id="loadRepairPlanBtn"'),false);
 });

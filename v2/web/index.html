@@ -17,8 +17,8 @@
         <button id="discoverTopTab" type="button" data-shell-view="discover">Discover</button>
       </div>
       <div class="header-spacer"></div>
+      <button id="systemStatusButton" class="system-bell" type="button" title="System status" aria-label="System status" aria-expanded="false">🔔<span id="systemStatusBadge" class="system-badge" hidden>0</span></button>
       <div id="buildIdentity" class="version" data-text-ref="system.identity.loading">Loading…</div>
-      <button id="exitVexStream" type="button" data-vex-action="vexstream.system.exit">Exit VexStream</button>
       <h1 id="screenTitle" class="sr-only" data-text-ref="playback.screen.title">VexStream Music</h1>
     </header>
 
@@ -376,6 +376,49 @@
     <audio id="audio" preload="auto"></audio>
   </section>
 </main>
+<aside id="systemDrawer" class="system-drawer" aria-labelledby="systemDrawerTitle" hidden>
+  <div class="system-panel">
+    <div class="system-drawer-head">
+      <div>
+        <div class="eyebrow" data-text-ref="system.status.eyebrow">VexStream system</div>
+        <h2 id="systemDrawerTitle" data-text-ref="system.status.title">System status</h2>
+        <div class="muted" data-text-ref="system.status.scope">Current Desktop V4 truth and recovery state.</div>
+      </div>
+      <button id="systemDrawerClose" type="button" data-text-ref="system.status.close">Close</button>
+    </div>
+    <section id="systemSummary" class="system-status-card" aria-live="polite"></section>
+    <div class="system-status-grid">
+      <section class="system-status-card">
+        <h3 data-text-ref="system.status.desktop">Desktop</h3>
+        <strong id="systemBuildStatus"></strong>
+        <span id="systemBuildRef" class="muted"></span>
+      </section>
+      <section class="system-status-card">
+        <h3 data-text-ref="system.status.library">Library</h3>
+        <strong id="systemLibraryStatus"></strong>
+        <span id="systemTrashStatus" class="muted"></span>
+      </section>
+      <section class="system-status-card">
+        <h3 data-text-ref="system.status.listening">Listening session</h3>
+        <strong id="systemSessionStatus"></strong>
+        <span class="muted" data-text-ref="system.status.session-note">Restoration state only; Playback truth remains with Player.</span>
+      </section>
+      <section class="system-status-card">
+        <h3 data-text-ref="system.status.imports">Imports</h3>
+        <strong id="systemImportStatus"></strong>
+        <span class="muted" data-text-ref="system.status.import-note">Import job truth remains with the Import owner.</span>
+      </section>
+    </div>
+    <section id="systemAttention" class="system-status-card"></section>
+    <section class="system-status-card system-status-boundary">
+      <h3 data-text-ref="system.status.capability-boundary">Not migrated yet</h3>
+      <p data-text-ref="system.status.capability-detail">V3 diagnostics exports and reviewable safe-repair controls are not yet owned by Desktop V4. This status surface does not pretend those capabilities exist.</p>
+    </section>
+    <div class="system-drawer-actions">
+      <button id="exitVexStream" type="button" data-vex-action="vexstream.system.exit">Exit VexStream</button>
+    </div>
+  </div>
+</aside>
 <script type="module" src="./app.js"></script>
 </body>
 </html>

@@ -72,6 +72,7 @@ import {
   exitVexStream,
   loadSystemIdentity,
 } from "./features/system/client.js";
+import { projectSystemStatus } from "./features/system/status.js";
 import {
   ShellView,
   createShellNavigation,
@@ -92,6 +93,18 @@ const next=document.querySelector("#next");
 const shuffle=document.querySelector("#shuffle");
 const repeat=document.querySelector("#repeat");
 const buildIdentity=document.querySelector("#buildIdentity");
+const systemStatusButton=document.querySelector("#systemStatusButton");
+const systemStatusBadge=document.querySelector("#systemStatusBadge");
+const systemDrawer=document.querySelector("#systemDrawer");
+const systemDrawerClose=document.querySelector("#systemDrawerClose");
+const systemSummary=document.querySelector("#systemSummary");
+const systemBuildStatus=document.querySelector("#systemBuildStatus");
+const systemBuildRef=document.querySelector("#systemBuildRef");
+const systemLibraryStatus=document.querySelector("#systemLibraryStatus");
+const systemTrashStatus=document.querySelector("#systemTrashStatus");
+const systemSessionStatus=document.querySelector("#systemSessionStatus");
+const systemImportStatus=document.querySelector("#systemImportStatus");
+const systemAttention=document.querySelector("#systemAttention");
 const exitVexStreamButton=document.querySelector("#exitVexStream");
 const status=document.querySelector("#status");
 const semanticState=document.querySelector("#semanticState");
@@ -205,6 +218,7 @@ const artist=document.querySelector("#trackArtist");
 const error=document.querySelector("#error");
 
 let systemIdentity=null;
+let currentSystemStatus=null;
 let catalog=Object.freeze([]);
 let byRef=new Map();
 let refs=[];
@@ -738,6 +752,72 @@ async function refreshImportJobs(){
  return currentImportJobs;
 }
 
+function renderSystemStatus(){
+ if(!systemIdentity){
+  currentSystemStatus=null;
+  systemStatusBadge.hidden=true;
+  return;
+ }
+ const projection=projectSystemStatus({
+  identity:systemIdentity,
+  catalog,
+  sourceConfig,
+  sessionRestoration:currentSessionRestoration,
+  importJobs:currentImportJobs,
+  trash:trashSnapshot
+ });
+ currentSystemStatus=projection;
+ const attention=projection.attentionCount;
+ systemStatusBadge.hidden=attention===0;
+ systemStatusBadge.textContent=String(attention);
+ systemStatusButton.setAttribute(
+  "aria-label",
+  attention
+   ?resolveText(locale,"system.status.attention",{count:attention})
+   :resolveText(locale,"system.status.title")
+ );
+ systemSummary.innerHTML=`<strong>${escapeHTML(resolveText(
+  locale,
+  attention?"system.status.attention":"system.status.healthy",
+  {count:attention}
+ ))}</strong>`;
+ systemBuildStatus.textContent=`VexStream ${projection.version}`;
+ systemBuildRef.textContent=projection.buildRef;
+ systemLibraryStatus.textContent=resolveText(locale,"system.status.library-summary",{
+  tracks:projection.trackCount,
+  sources:projection.sourceCount
+ });
+ systemTrashStatus.textContent=resolveText(locale,"system.status.trash-summary",{
+  count:projection.trashCount
+ });
+ systemSessionStatus.textContent=sessionStatusText(currentSessionRestoration);
+ const importAttention=
+  projection.readyImports+
+  projection.importIssues+
+  projection.importRecovery;
+ systemImportStatus.textContent=resolveText(locale,"system.status.import-summary",{
+  active:projection.activeImports,
+  attention:importAttention
+ });
+ const attentionRows=[
+  ...projection.warnings.map(warning=>
+   resolveText(locale,"system.status.startup-warning",{warning})
+  ),
+  ...(projection.sessionHeld
+   ?[resolveText(locale,"system.status.session-held")]
+   :[]),
+  ...(importAttention
+   ?[resolveText(locale,"system.status.import-attention")]
+   :[]),
+  ...(projection.pendingPurge
+   ?[resolveText(locale,"system.status.trash-recovery")]
+   :[])
+ ];
+ systemAttention.innerHTML=attentionRows.length
+  ?`<ul>${attentionRows.map(row=>`<li>${escapeHTML(row)}</li>`).join("")}</ul>`
+  :`<span class="muted">${escapeHTML(resolveText(locale,"system.status.no-warnings"))}</span>`;
+}
+
 function render(){
  const pp=player.playPausePresentation;
  const qp=queue.currentProjection;
@@ -775,6 +855,7 @@ function render(){
  renderExplore();
  renderImportReview();
  renderImportJobs();
+ renderSystemStatus();
 
  queueList.innerHTML=qp.state.kind==="empty"?"":qp.state.items.map((ref,index)=>{
   const item=byRef.get(ref);
@@ -1151,6 +1232,17 @@ function removeDiscoveryCandidate(path){
   )
  });
 }
+
+systemStatusButton.addEventListener("click",()=>{
+ renderSystemStatus();
+ systemDrawer.hidden=false;
+ systemStatusButton.setAttribute("aria-expanded","true");
+});
+
+systemDrawerClose.addEventListener("click",()=>{
+ systemDrawer.hidden=true;
+ systemStatusButton.setAttribute("aria-expanded","false");
+});
 
 exitVexStreamButton.addEventListener("click",()=>void guarded(async()=>{
  exitVexStreamButton.disabled=true;
@@ -1860,6 +1952,7 @@ async function initialize(){
  window.vexV4=Object.freeze({
   ready:true,
   get identity(){return systemIdentity;},
+  get systemStatus(){return currentSystemStatus;},
   journey:playerJourney,
   queue,
   playback,

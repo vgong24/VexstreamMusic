@@ -1096,6 +1096,48 @@ def main() -> int:
             ),
         )
 
+        page.locator("#systemStatusButton").click()
+        checked(
+            "system-status-restores-recognizable-read-only-terrain",
+            lambda: require(
+                page.locator("#systemDrawer").is_visible()
+                and page.evaluate("window.vexV4.systemStatus.state")
+                == "healthy"
+                and page.evaluate("window.vexV4.systemStatus.trackCount")
+                == 3
+                and page.evaluate("window.vexV4.systemStatus.sourceCount")
+                == 1
+                and page.locator("#systemStatusBadge").is_hidden()
+                and "System looks healthy"
+                in page.locator("#systemSummary").inner_text()
+                and "3 tracks · 1 folders"
+                in page.locator("#systemLibraryStatus").inner_text(),
+                "System status projection drift",
+            ),
+        )
+        checked(
+            "system-status-exposes-unmigrated-diagnostics-boundary-without-fake-controls",
+            lambda: require(
+                "not yet owned by Desktop V4"
+                in page.locator(".system-status-boundary").inner_text()
+                and page.locator("#runDiagnosticsBtn").count() == 0
+                and page.locator("#loadRepairPlanBtn").count() == 0,
+                "System status invented unmigrated diagnostics or repair controls",
+            ),
+        )
+        page.locator("#systemDrawerClose").click()
+        checked(
+            "system-status-closes-without-changing-product-location",
+            lambda: require(
+                page.locator("#systemDrawer").is_hidden()
+                and page.evaluate(
+                    "window.vexV4.shellNavigation.currentProjection.view"
+                )
+                == "home",
+                "System drawer crossed shell navigation ownership",
+            ),
+        )
+
         checked(
             "browser-loads-read-only-library-contract",
             lambda: require(

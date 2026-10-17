@@ -72,6 +72,7 @@ export function createPlayerComposition({
 
     if (media.dataset.mediaRef !== item.ref) {
       media.pause();
+      playback.resetForMediaChange?.();
       media.dataset.mediaRef = item.ref;
       media.src = item.url;
       try {

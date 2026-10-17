@@ -201,3 +201,42 @@ test("No current media remains outside Playback queue-selection ownership", asyn
 
   connection.close();
 });
+
+test("media replacement supersedes stale pending Play without clearing a newer request", async () => {
+  const media = new FakeMedia();
+  const pending = [];
+  media.play = function () {
+    this.playCalls += 1;
+    return new Promise((resolve, reject) => {
+      pending.push({ resolve, reject });
+    });
+  };
+
+  const connection = connectionFor(media);
+
+  const first = connection.activate(PlaybackControl.PlayPause);
+  assert.equal(connection.currentProjection.state.requestPending, true);
+  assert.equal(connection.currentProjection.state.playRequested, true);
+
+  connection.resetForMediaChange();
+  assert.equal(connection.currentProjection.state.requestPending, false);
+  assert.equal(connection.currentProjection.state.playRequested, false);
+
+  const second = connection.activate(PlaybackControl.PlayPause);
+  assert.equal(connection.currentProjection.state.requestPending, true);
+  assert.equal(pending.length, 2);
+
+  pending[0].reject(new Error("superseded provider play"));
+  assert.equal(await first, null);
+  assert.equal(connection.currentProjection.state.requestPending, true);
+
+  media.paused = false;
+  media.dispatchEvent(new Event("play"));
+  pending[1].resolve();
+  await second;
+
+  assert.equal(connection.currentProjection.state.playRequested, true);
+  assert.equal(connection.currentProjection.state.requestPending, false);
+
+  connection.close();
+});

@@ -39,8 +39,15 @@ export function createHTMLMediaPlaybackConnection({
   }
 
   const listeners = new Set();
-  let pendingEffect = null;
+  let effectRevision = 0;
+  let clearPending();
+  let pendingRevision = 0;
   let lastProjection = null;
+
+  function clearPending() {
+    pendingEffect = null;
+    pendingRevision = 0;
+  }
 
   function observedState() {
     if (!hasCurrentMedia()) {
@@ -73,7 +80,7 @@ export function createHTMLMediaPlaybackConnection({
         observed.kind === "media" &&
         observed.playRequested
       ) {
-        pendingEffect = null;
+        clearPending();
         return observed;
       }
 
@@ -91,7 +98,7 @@ export function createHTMLMediaPlaybackConnection({
         observed.kind === "media" &&
         !observed.playRequested
       ) {
-        pendingEffect = null;
+        clearPending();
         return observed;
       }
 
@@ -106,7 +113,7 @@ export function createHTMLMediaPlaybackConnection({
 
     if (pendingEffect === PlaybackEffect.RestartCurrent) {
       if (observed.kind !== "ended") {
-        pendingEffect = null;
+        clearPending();
         return observed;
       }
 
@@ -116,7 +123,7 @@ export function createHTMLMediaPlaybackConnection({
       });
     }
 
-    pendingEffect = null;
+    clearPending();
     return observed;
   }
 
@@ -184,15 +191,28 @@ export function createHTMLMediaPlaybackConnection({
       return null;
     }
 
+    const revision = ++effectRevision;
     pendingEffect = relationship.effect;
+    pendingRevision = revision;
     publish();
 
     try {
       await realize(relationship.effect);
     } catch (failure) {
-      pendingEffect = null;
+      if (revision !== effectRevision) {
+        publish();
+        return null;
+      }
+      if (pendingRevision === revision) {
+        clearPending();
+      }
       publish();
       throw failure;
+    }
+
+    if (revision !== effectRevision) {
+      publish();
+      return null;
     }
 
     publish();
@@ -227,6 +247,11 @@ export function createHTMLMediaPlaybackConnection({
 
     refresh: publish,
 
+    resetForMediaChange() {
+      effectRevision += 1;
+      clearPending();
+    },
+
     activate,
 
     subscribe(listener) {
@@ -239,6 +264,8 @@ export function createHTMLMediaPlaybackConnection({
     },
 
     close() {
+      effectRevision += 1;
+      clearPending();
       for (const event of providerEvents) {
         media.removeEventListener(event, onProviderEvent);
       }

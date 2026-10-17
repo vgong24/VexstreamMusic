@@ -171,7 +171,10 @@ const libraryGroupEyebrow=document.querySelector("#libraryGroupEyebrow");
 const libraryGroupTitle=document.querySelector("#libraryGroupTitle");
 const libraryGroupSummary=document.querySelector("#libraryGroupSummary");
 const libraryGroupPlay=document.querySelector("#libraryGroupPlay");
+const libraryGroupShuffle=document.querySelector("#libraryGroupShuffle");
+const libraryGroupPlayNext=document.querySelector("#libraryGroupPlayNext");
 const libraryGroupAppend=document.querySelector("#libraryGroupAppend");
+const libraryGroupRelations=document.querySelector("#libraryGroupRelations");
 const libraryGroupTracks=document.querySelector("#libraryGroupTracks");
 const librarySummary=document.querySelector("#librarySummary");
 const songSortSummary=document.querySelector("#songSortSummary");
@@ -1251,12 +1254,19 @@ function currentLibraryDetailGroup(){
   .find(group=>group.key===detail.key)??null;
 }
 
+function currentLibraryDetailRelations(group,detail){
+ if(!group||!detail)return Object.freeze([]);
+ return groupLibrary(group.tracks,detail.kind==="album"?"artist":"album");
+}
+
 function renderLibraryGroupDetail(){
  const detail=shellNavigation.currentProjection.libraryDetail;
  if(!detail){
   libraryGroupDetail.hidden=true;
   delete libraryGroupDetail.dataset.libraryGroupKind;
   libraryGroupArtwork.innerHTML="";
+  libraryGroupRelations.innerHTML="";
+  libraryGroupRelations.hidden=true;
   trackChoices.hidden=false;
   return;
  }
@@ -1302,10 +1312,29 @@ function renderLibraryGroupDetail(){
   locale,
   isAlbum?"library.detail.play.album":"library.detail.play.artist"
  );
+ libraryGroupShuffle.textContent=resolveText(
+  locale,
+  isAlbum?"library.detail.shuffle.album":"library.detail.shuffle.artist"
+ );
+ libraryGroupPlayNext.textContent=resolveText(
+  locale,
+  isAlbum?"library.detail.play-next.album":"library.detail.play-next.artist"
+ );
  libraryGroupAppend.textContent=resolveText(
   locale,
   isAlbum?"library.detail.queue.album":"library.detail.queue.artist"
  );
+ const relations=currentLibraryDetailRelations(group,detail);
+ libraryGroupRelations.hidden=relations.length===0;
+ libraryGroupRelations.innerHTML=relations.length
+  ?`<span class="library-detail-relation-label">${escapeHTML(resolveText(
+     locale,
+     isAlbum?"library.detail.relations.album":"library.detail.relations.artist"
+    ))}:</span>
+    ${relations.map(relation=>`<button type="button" class="library-detail-relation"
+      data-library-relation-kind="${escapeHTML(isAlbum?"artist":"album")}"
+      data-library-relation-key="${escapeHTML(relation.key)}">${escapeHTML(relation.name)}</button>`).join("")}`
+  :"";
  libraryGroupTracks.innerHTML=group.tracks.map(trackCardHTML).join("");
 }
 
@@ -2049,6 +2078,28 @@ libraryGroupPlay.addEventListener("click",()=>{
  const group=currentLibraryDetailGroup();
  if(!group)return;
  void guarded(()=>player.playContext(group.refs,0));
+});
+
+libraryGroupShuffle.addEventListener("click",()=>{
+ const group=currentLibraryDetailGroup();
+ if(!group)return;
+ const shuffled=shuffleRefs([...group.refs]);
+ if(shuffled.length)void guarded(()=>player.playContext(shuffled,0));
+});
+
+libraryGroupPlayNext.addEventListener("click",()=>{
+ const group=currentLibraryDetailGroup();
+ if(!group)return;
+ void guarded(()=>player.playNext(group.refs));
+});
+
+libraryGroupRelations.addEventListener("click",event=>{
+ const relation=event.target.closest("[data-library-relation-kind][data-library-relation-key]");
+ if(!relation)return;
+ shellNavigation.openLibraryDetail(
+  relation.dataset.libraryRelationKind,
+  relation.dataset.libraryRelationKey
+ );
 });
 
 libraryGroupAppend.addEventListener("click",()=>{

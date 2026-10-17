@@ -881,3 +881,23 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
 .song-sort-head:hover{background:transparent;color:#2d3031}
 .song-sort-arrow{font-size:11px;color:#9b5a3e}
 .song-sort-rank{display:inline-grid;place-items:center;min-width:15px;height:15px;padding:0 3px;border-radius:999px;background:#eaded4;color:#7d412b;font-size:9px}
+
+/* V3-recognizable Album/Artist collection actions over existing Player/Queue + Shell owners. */
+.library-detail-relations{
+ grid-column:2/-1;
+ display:flex;
+ align-items:center;
+ gap:6px;
+ flex-wrap:wrap;
+ margin-top:3px;
+}
+.library-detail-relations[hidden]{display:none}
+.library-detail-relation-label{color:#73797a;font-size:11px}
+.library-detail-relation{
+ padding:5px 8px;
+ font-size:11px;
+ background:#fff;
+ color:#4a4f50;
+ border-color:#d9d3ca;
+}
+@media(max-width:720px){.library-detail-relations{grid-column:1/-1}}

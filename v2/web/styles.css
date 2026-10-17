@@ -188,30 +188,10 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
  border-radius:14px;
  padding:13px;
 }
-#recentSongs{
- display:grid;
- grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
- gap:8px;
- margin-top:10px;
-}
-.home-track{
- display:grid;
- grid-template-columns:minmax(0,1fr) auto;
- gap:8px;
- align-items:center;
- padding:10px;
- border:1px solid #e2ddd5;
- border-radius:10px;
-}
-.home-track-copy{min-width:0}
-.home-track-copy strong,
-.home-track-copy small{
- display:block;
- overflow:hidden;
- text-overflow:ellipsis;
- white-space:nowrap;
-}
-.home-track-copy small{color:#7b8182}
+#recentSongs{display:block;margin-top:10px}
+.home-recent-table-wrap{border-radius:10px}
+.home-recent-table{min-width:720px}
+.home-recent-table .song-title-cell{min-width:260px}
 .queue-drawer{
  position:fixed;
  left:0;

@@ -285,6 +285,31 @@ function trackArtist(item){
  return item?.artist?.trim()||resolveText(locale,"library.unknown-artist");
 }
 
+function homeRecentRowHTML(item){
+ const secondary=String(item?.sourceTitle??item?.channel??"").trim();
+ return `<tr data-home-track-ref="${escapeHTML(item.ref)}">
+   <td class="song-title-cell">
+    <div class="song-main">
+     ${trackArtworkHTML(item)}
+     <div class="song-copy">
+      <strong>${escapeHTML(trackTitle(item))}</strong>
+      ${secondary?`<small>${escapeHTML(secondary)}</small>`:""}
+     </div>
+    </div>
+   </td>
+   <td class="col-added"><span class="small">${escapeHTML(formatLibraryAdded(item.addedAt))}</span></td>
+   <td class="col-artist"><span class="clip2">${escapeHTML(trackArtist(item))}</span></td>
+   <td class="col-album"><span class="clip2">${escapeHTML(String(item?.album??"").trim()||"Unknown album")}</span></td>
+   <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
+   <td class="col-actions">
+    <div class="song-actions">
+     <button data-home-track-action="play" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+     <button data-home-track-action="append" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
+    </div>
+   </td>
+  </tr>`;
+}
+
 function renderHome(){
  const projection=projectLibraryHome(catalog,{recentLimit:8});
  homeSongCount.textContent=String(projection.songCount);
@@ -292,13 +317,23 @@ function renderHome(){
  homeArtistCount.textContent=String(projection.artistCount);
  homeSourceCount.textContent=String(sourceConfig.sources.length);
  recentSongs.innerHTML=projection.recent.length
-  ? projection.recent.map(item=>`<article class="home-track" data-home-track-ref="${escapeHTML(item.ref)}">
-      <div class="home-track-copy">
-       <strong>${escapeHTML(trackTitle(item))}</strong>
-       <small>${escapeHTML(trackArtist(item))}</small>
-      </div>
-      <button type="button" data-home-track-action="play">${escapeHTML(resolveText(locale,"playback.play"))}</button>
-     </article>`).join("")
+  ?`<div class="song-table-wrap home-recent-table-wrap">
+     <table class="song-table home-recent-table">
+      <thead>
+       <tr>
+        <th class="song-title-cell">Title</th>
+        <th class="col-added">Added</th>
+        <th class="col-artist">Artist</th>
+        <th class="col-album">Album</th>
+        <th class="col-duration">Time</th>
+        <th class="col-actions"></th>
+       </tr>
+      </thead>
+      <tbody>
+       ${projection.recent.map(homeRecentRowHTML).join("")}
+      </tbody>
+     </table>
+    </div>`
   : `<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
 }
 
@@ -1469,6 +1504,11 @@ recentSongs.addEventListener("click",event=>{
    row.dataset.homeTrackRef,
    libraryPlaybackRefs()
   ));
+  return;
+ }
+ if(action.dataset.homeTrackAction==="append"){
+  player.append([row.dataset.homeTrackRef]);
+  render();
  }
 });
 

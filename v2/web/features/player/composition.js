@@ -13,6 +13,7 @@ export function createPlayerComposition({
   resolveMedia,
   defaultContextRefs,
   onCurrentMedia = () => {},
+  timeline = null,
   previousRestartThresholdSeconds = 4,
 }) {
   if (!queue || !playback || !media) throw new Error("Player composition requires Queue, Playback, and media provider");
@@ -80,6 +81,7 @@ export function createPlayerComposition({
 
     onCurrentMedia(item, queue.currentProjection);
     playback.refresh();
+    timeline?.refresh?.();
 
     if (autoplay) {
       const control = playback.currentProjection.control;
@@ -163,6 +165,41 @@ export function createPlayerComposition({
     return queue.activate(QueueControl.ClearAfterCurrent);
   }
 
+  let handledWindowEndKey = "";
+  let windowEndPending = false;
+
+  async function realizeWindowEnd(projection) {
+    if (!timeline || projection?.kind !== "ready" || !projection.windowEndReached) {
+      handledWindowEndKey = "";
+      return;
+    }
+
+    const ref = currentRef();
+    if (!ref) return;
+    const key = `${ref}:${projection.endSeconds}`;
+    if (windowEndPending || handledWindowEndKey === key) return;
+
+    handledWindowEndKey = key;
+    windowEndPending = true;
+    try {
+      const relationship = await next();
+      if (
+        !relationship &&
+        currentRef() === ref &&
+        playback.currentProjection.state.kind === "media" &&
+        playback.currentProjection.state.playRequested
+      ) {
+        await playback.activate(PlaybackControl.PlayPause);
+      }
+    } finally {
+      windowEndPending = false;
+    }
+  }
+
+  const unsubscribeTimeline = timeline?.subscribe?.(projection => {
+    void realizeWindowEnd(projection);
+  }) ?? (() => {});
+
   const onEnded = () => {
     void next();
   };
@@ -203,6 +240,7 @@ export function createPlayerComposition({
     moveQueue: (from, to) => queue.move(from, to),
     removeQueue: index => queue.remove(index),
     close() {
+      unsubscribeTimeline();
       media.removeEventListener("ended", onEnded);
     },
   });

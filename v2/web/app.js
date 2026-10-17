@@ -139,7 +139,7 @@ const librarySearch=document.querySelector("#librarySearch");
 const libraryGenre=document.querySelector("#libraryGenre");
 const librarySort=document.querySelector("#librarySort");
 const libraryModeButtons=[...document.querySelectorAll("[data-library-mode]")];
-const shellViewButtons=[...document.querySelectorAll("[data-shell-view]")];
+const shellViewButtons=[...document.querySelectorAll("button[data-shell-view]")];
 const shellPanels=[...document.querySelectorAll("[data-shell-panel]")];
 const libraryNavToggle=document.querySelector("#libraryNavToggle");
 const librarySidebar=document.querySelector("#librarySidebar");
@@ -296,7 +296,7 @@ function renderHome(){
 }
 
 function renderShell(projection=shellNavigation.currentProjection){
- document.body.dataset.shellView=projection.view;
+ document.body.dataset.shellCurrentView=projection.view;
  document.body.dataset.sidebarOpen=String(projection.sidebarOpen);
  librarySidebar.hidden=!projection.sidebarOpen;
  libraryNavToggle.setAttribute("aria-expanded",String(projection.sidebarOpen));

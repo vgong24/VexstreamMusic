@@ -19,6 +19,17 @@ test("nullish values become empty text", () => {
 });
 
 
+test("shell presentation state is not registered as a shell navigation control",()=>{
+  const here=path.dirname(fileURLToPath(import.meta.url));
+  const html=fs.readFileSync(path.join(here,"../web/index.html"),"utf8");
+  const app=fs.readFileSync(path.join(here,"../web/app.js"),"utf8");
+
+  assert.equal(/<body[^>]*data-shell-view=/.test(html),false);
+  assert.equal(/<body[^>]*data-shell-current-view="home"/.test(html),true);
+  assert.equal(app.includes('document.querySelectorAll("button[data-shell-view]")'),true);
+  assert.equal(app.includes("document.body.dataset.shellCurrentView=projection.view"),true);
+});
+
 test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",()=>{
   const here=path.dirname(fileURLToPath(import.meta.url));
   const html=fs.readFileSync(path.join(here,"../web/index.html"),"utf8");

@@ -1465,19 +1465,19 @@ trackChoices.addEventListener("click",event=>{
  const groupAction=event.target.closest("[data-library-group-action]");
  const groupCard=event.target.closest("[data-library-group]");
  if(groupAction&&groupCard){
-  const groups=groupLibrary(
-   currentLibraryView(),
-   groupCard.dataset.libraryGroupKind
-  );
-  const group=groups.find(value=>value.key===groupCard.dataset.libraryGroup);
-  if(!group)return;
+  const groupKind=groupCard.dataset.libraryGroupKind;
+  const groupKey=groupCard.dataset.libraryGroup;
   if(groupAction.dataset.libraryGroupAction==="open"){
-   shellNavigation.openLibraryDetail(
-    groupCard.dataset.libraryGroupKind,
-    group.key
-   );
+   shellNavigation.openLibraryDetail(groupKind,groupKey);
    return;
   }
+
+  const groups=groupLibrary(
+   currentLibraryView(),
+   groupKind
+  );
+  const group=groups.find(value=>value.key===groupKey);
+  if(!group)return;
   if(groupAction.dataset.libraryGroupAction==="play"){
    void guarded(()=>player.playContext(group.refs,0));
    return;

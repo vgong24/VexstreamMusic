@@ -278,6 +278,10 @@
         </div>
         <button id="libraryEditorClose" type="button">Close</button>
       </div>
+      <div class="track-details-notice">
+        <strong>Library display and playback edits are reversible.</strong>
+        <span>Source/provider metadata and the original media bytes remain unchanged.</span>
+      </div>
       <div class="library-editor-grid">
         <label><span>Title</span><input id="editTitle" type="text"></label>
         <label><span>Artist</span><input id="editArtist" type="text"></label>
@@ -286,6 +290,12 @@
         <label><span>Play from (seconds)</span><input id="editPlaybackStart" type="number" min="0" step="0.1"></label>
         <label><span>Stop at (seconds, optional)</span><input id="editPlaybackEnd" type="number" min="0" step="0.1"></label>
       </div>
+      <div id="playbackWindowSummary" class="playback-window-summary"></div>
+      <details class="track-source-panel" open>
+        <summary>Source / provenance</summary>
+        <div id="trackSourceDetails" class="track-source-details"></div>
+        <div class="small muted">Local filesystem paths remain server-side; this browser projection exposes metadata/provenance only.</div>
+      </details>
       <div class="library-editor-actions">
         <button id="saveTrackDisplay" type="button" class="primary">Save details</button>
         <button id="restoreTrackDisplay" type="button">Restore original details</button>

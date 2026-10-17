@@ -1025,3 +1025,45 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
 .now-details-toggle::-webkit-details-marker{display:none}
 .now-details-toggle:hover,.now-details-toggle:focus-visible{background:#ece6dd;color:#25282a;outline:none}
 .now-details-menu{right:0;left:auto;bottom:calc(100% + 7px);top:auto;min-width:180px;z-index:60}
+
+
+/* Track Details projects existing Library source/provenance and playback-window truth. */
+.track-details-notice{
+ display:grid;
+ gap:3px;
+ padding:10px 12px;
+ border:1px solid #c8ddd1;
+ border-radius:11px;
+ background:#f4faf7;
+ color:#28594a;
+}
+.track-details-notice span{font-size:12px;color:#557069}
+.playback-window-summary{
+ display:flex;
+ align-items:center;
+ gap:7px;
+ flex-wrap:wrap;
+ padding:9px 11px;
+ border-radius:10px;
+ background:#faf8f4;
+ border:1px solid #ded8cf;
+ font-size:12px;
+}
+.playback-window-summary span{color:#6f7475}
+.track-source-panel{
+ border-top:1px solid #ded8cf;
+ padding-top:10px;
+}
+.track-source-panel summary{cursor:pointer;font-weight:700}
+.track-source-details{display:grid;gap:0;margin:9px 0}
+.track-source-row{
+ display:grid;
+ grid-template-columns:minmax(110px,150px) minmax(0,1fr);
+ gap:10px;
+ padding:7px 0;
+ border-top:1px solid #ebe6df;
+ font-size:12px;
+}
+.track-source-row:first-child{border-top:0}
+.track-source-row span{min-width:0;overflow-wrap:anywhere;color:#6f7475}
+@media(max-width:720px){.track-source-row{grid-template-columns:1fr;gap:3px}}

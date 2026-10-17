@@ -232,6 +232,8 @@ const editAlbum=document.querySelector("#editAlbum");
 const editGenre=document.querySelector("#editGenre");
 const editPlaybackStart=document.querySelector("#editPlaybackStart");
 const editPlaybackEnd=document.querySelector("#editPlaybackEnd");
+const playbackWindowSummary=document.querySelector("#playbackWindowSummary");
+const trackSourceDetails=document.querySelector("#trackSourceDetails");
 const saveTrackDisplay=document.querySelector("#saveTrackDisplay");
 const restoreTrackDisplayButton=document.querySelector("#restoreTrackDisplay");
 const savePlaybackWindow=document.querySelector("#savePlaybackWindow");
@@ -623,6 +625,11 @@ async function refreshTrash(){
  return trashSnapshot;
 }
 
+function sourceDetailValue(value,{fallback="—"}={}){
+ const text=String(value??"").trim();
+ return text||fallback;
+}
+
 function renderLibraryEditor(){
  const item=byRef.get(currentEditingTrackRef);
  if(!item){
@@ -641,6 +648,31 @@ function renderLibraryEditor(){
  editPlaybackEnd.value=item.playbackEndSeconds==null
   ?""
   :String(item.playbackEndSeconds);
+
+ const start=Number(item.playbackStartSeconds)||0;
+ const end=item.playbackEndSeconds==null?null:Number(item.playbackEndSeconds);
+ const cropped=start>0||Number.isFinite(end);
+ playbackWindowSummary.innerHTML=cropped
+  ?`<strong>Playback window active.</strong>
+    <span>${escapeHTML(formatSeconds(start))} → ${escapeHTML(Number.isFinite(end)?formatSeconds(end):"source end")} · non-destructive</span>`
+  :"<strong>Full track.</strong><span>Playback uses the original media duration; no source bytes are rewritten.</span>";
+
+ const sourceRows=[
+  ["Source title",sourceDetailValue(item.sourceTitle,{fallback:"Same as current title"})],
+  ["Source artist",sourceDetailValue(item.sourceArtist,{fallback:"Unresolved"})],
+  ["Source album",sourceDetailValue(item.sourceAlbum,{fallback:"—"})],
+  ["Source genre",sourceDetailValue(item.sourceGenre,{fallback:"—"})],
+  ["Provider creator",sourceDetailValue(item.channel,{fallback:"—"})],
+  ["Provider ID",sourceDetailValue(item.providerId,{fallback:"—"})],
+  ["Source URL",sourceDetailValue(item.sourceURL,{fallback:"—"})],
+  ["Source duration",item.durationSeconds>0?formatSeconds(item.durationSeconds):"—"]
+ ];
+ trackSourceDetails.innerHTML=sourceRows.map(([label,value])=>`
+   <div class="track-source-row">
+    <strong>${escapeHTML(label)}</strong>
+    <span>${escapeHTML(value)}</span>
+   </div>`
+  ).join("");
 }
 
 function validTrashIDs(values){

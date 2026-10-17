@@ -81,6 +81,9 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
     'id="curTime"',
     'id="seek"',
     'id="durTime"',
+    'id="volume"',
+    'id="queueMiniBtn"',
+    'id="queueMiniCount"',
     'id="playPause"',
     'id="audio"'
   ]){

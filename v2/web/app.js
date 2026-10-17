@@ -2,6 +2,7 @@
 import { PlaybackControl } from "./features/playback/behavior.js";
 import { createHTMLMediaPlaybackConnection } from "./features/playback/connection.js";
 import { createHTMLMediaPlaybackTimelineConnection } from "./features/playback/timeline.js";
+import { createHTMLMediaPlaybackVolumeConnection } from "./features/playback/volume.js";
 import { QueueControl, QueueState, currentQueueRef } from "./features/queue/behavior.js";
 import { createQueueConnection } from "./features/queue/connection.js";
 import { createPlayerComposition } from "./features/player/composition.js";
@@ -96,6 +97,9 @@ const repeat=document.querySelector("#repeat");
 const seek=document.querySelector("#seek");
 const curTime=document.querySelector("#curTime");
 const durTime=document.querySelector("#durTime");
+const volumeInput=document.querySelector("#volume");
+const queueMiniBtn=document.querySelector("#queueMiniBtn");
+const queueMiniCount=document.querySelector("#queueMiniCount");
 const buildIdentity=document.querySelector("#buildIdentity");
 const systemStatusButton=document.querySelector("#systemStatusButton");
 const systemStatusBadge=document.querySelector("#systemStatusBadge");
@@ -587,6 +591,11 @@ const timeline=createHTMLMediaPlaybackTimelineConnection({
  }
 });
 
+const playbackVolume=createHTMLMediaPlaybackVolumeConnection({
+ media:audio,
+ initialVolume:.8
+});
+
 const player=createPlayerComposition({
  queue,
  playback,
@@ -602,6 +611,7 @@ const player=createPlayerComposition({
 });
 
 timeline.subscribe(renderPlaybackTimeline);
+playbackVolume.subscribe(renderPlaybackVolume);
 
 const exploreSession=createExploreSession();
 const explore=createExploreComposition({
@@ -905,6 +915,22 @@ function renderPlaybackTimeline(
  durTime.textContent=formatSeconds(ready?projection.durationSeconds:0);
 }
 
+function renderPlaybackVolume(
+ projection=playbackVolume.currentProjection
+){
+ volumeInput.value=String(projection.volume);
+ volumeInput.title=`Volume ${projection.percent}%`;
+}
+
+function setQueueDrawerOpen(open){
+ queueDrawerOpen=Boolean(open);
+ render();
+}
+
+function toggleQueueDrawer(){
+ setQueueDrawerOpen(!queueDrawerOpen);
+}
+
 function render(){
  const pp=player.playPausePresentation;
  const qp=queue.currentProjection;
@@ -925,6 +951,9 @@ function render(){
  queueDrawer.classList.toggle("open",queueDrawerOpen);
  queueDrawer.setAttribute("aria-expanded",String(queueDrawerOpen));
  queueDrawerHandle.setAttribute("aria-expanded",String(queueDrawerOpen));
+ queueMiniBtn.setAttribute("aria-expanded",String(queueDrawerOpen));
+ queueMiniCount.textContent=String(queueCount);
+ queueMiniBtn.title=queueDrawerOpen?"Close Queue":"Open Queue";
  queueDrawerCount.textContent=String(queueCount);
  queueDrawerNextCount.textContent=resolveText(locale,"queue.drawer.next",{
   count:queueNextCount
@@ -1483,10 +1512,11 @@ repeat.addEventListener("click",()=>{player.toggleRepeat();render();});
 seek.addEventListener("input",()=>{
  timeline.seekNormalized(Number(seek.value)/1000);
 });
-queueDrawerHandle.addEventListener("click",()=>{
- queueDrawerOpen=!queueDrawerOpen;
- render();
+volumeInput.addEventListener("input",()=>{
+ playbackVolume.setVolume(Number(volumeInput.value));
 });
+queueDrawerHandle.addEventListener("click",toggleQueueDrawer);
+queueMiniBtn.addEventListener("click",toggleQueueDrawer);
 
 clearAfterCurrent.addEventListener("click",()=>{player.clearAfterCurrent();render();});
 
@@ -2201,6 +2231,7 @@ async function initialize(){
   queue,
   playback,
   timeline,
+  volume:playbackVolume,
   player,
   media:audio,
   get catalog(){return catalog;},

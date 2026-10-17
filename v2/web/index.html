@@ -80,6 +80,16 @@
         <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek" disabled>
         <span id="durTime">0:00</span>
       </div>
+      <div class="player-aux">
+        <label class="volume-control">
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
+          <span>Volume</span>
+        </label>
+        <button id="queueMiniBtn" class="queue-mini" type="button" aria-controls="queueDrawer" aria-expanded="false" title="Open Queue">
+          <span aria-hidden="true">☰</span>
+          <span id="queueMiniCount">0</span>
+        </button>
+      </div>
     </div>
 
     <section class="library" data-shell-panel="library" aria-labelledby="libraryTitle" hidden>

@@ -287,20 +287,25 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
 .transport{
  grid-area:transport;
  display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
  grid-template-rows:auto auto;
  align-content:center;
- gap:2px;
+ gap:2px 16px;
  padding:4px 14px 5px;
  background:#fff;
  border-top:1px solid #ddd7cd;
 }
 .transport-controls{
+ grid-column:1;
+ grid-row:1;
  display:flex;
  align-items:center;
  justify-content:center;
  gap:8px;
 }
 .timeline{
+ grid-column:1;
+ grid-row:2;
  display:grid;
  grid-template-columns:38px minmax(120px,420px) 38px;
  align-items:center;
@@ -313,6 +318,35 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
 .timeline span:first-child{text-align:right}
 .timeline input[type="range"]{width:100%;accent-color:#c65f39}
 .timeline input[type="range"]:disabled{opacity:.45}
+.player-aux{
+ grid-column:2;
+ grid-row:1/3;
+ display:flex;
+ align-items:center;
+ justify-content:flex-end;
+ gap:12px;
+ min-width:190px;
+}
+.volume-control{
+ display:grid;
+ justify-items:center;
+ gap:2px;
+ color:#747a7b;
+ font-size:11px;
+}
+.volume-control input[type="range"]{
+ width:128px;
+ accent-color:#c65f39;
+}
+.queue-mini{
+ display:flex!important;
+ grid-auto-flow:column;
+ gap:5px;
+ width:auto!important;
+ min-width:52px!important;
+ padding:0 10px!important;
+ font-size:13px!important;
+}
 .transport button{
  width:42px;
  height:42px;
@@ -413,9 +447,21 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
  body[data-sidebar-open="false"] .sidebar{display:none}
  .product-header .version{display:none}
  .now{border-top:1px solid #ddd7cd}
- .transport{flex-wrap:wrap}
- .transport button{min-width:0;flex:1}
- #error{left:12px;right:12px;bottom:140px}
+ .transport{
+  grid-template-columns:1fr;
+  grid-template-rows:auto auto auto;
+  gap:4px;
+ }
+ .transport-controls{grid-column:1;grid-row:1}
+ .timeline{grid-column:1;grid-row:2}
+ .player-aux{
+  grid-column:1;
+  grid-row:3;
+  min-width:0;
+  justify-content:center;
+ }
+ .volume-control input[type="range"]{width:min(150px,38vw)}
+ #error{left:12px;right:12px;bottom:180px}
  .home-view .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 

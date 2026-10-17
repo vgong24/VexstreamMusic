@@ -114,6 +114,7 @@ const queueSummary=document.querySelector("#queueSummary");
 const queueList=document.querySelector("#queueList");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
+const playAllSongs=document.querySelector("#playAllSongs");
 const selectSongs=document.querySelector("#selectSongs");
 const librarySelectionBar=document.querySelector("#librarySelectionBar");
 const librarySelectionCount=document.querySelector("#librarySelectionCount");
@@ -883,6 +884,15 @@ function render(){
  }).join("");
 }
 
+function trackPlaylistActionHTML(){
+ return playlists.length
+  ? `<select data-track-playlist-target>${playlists.map(playlist=>
+      `<option value="${escapeHTML(playlist.id)}">${escapeHTML(playlist.name)}</option>`
+     ).join("")}</select>
+    <button data-track-action="playlist-add">${escapeHTML(resolveText(locale,"playlist.add-track"))}</button>`
+  : "";
+}
+
 function trackCardHTML(item,{selectable=false}={}){
  const selected=selectable&&librarySelection.isSelected(item.ref);
  return `<article class="track-card ${selectable?"selectable":""} ${selected?"selected":""}" data-track-ref="${escapeHTML(item.ref)}">
@@ -906,14 +916,72 @@ function trackCardHTML(item,{selectable=false}={}){
        <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
        <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
        <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
-       ${playlists.length
-        ? `<select data-track-playlist-target>${playlists.map(playlist=>
-             `<option value="${escapeHTML(playlist.id)}">${escapeHTML(playlist.name)}</option>`
-            ).join("")}</select>
-           <button data-track-action="playlist-add">${escapeHTML(resolveText(locale,"playlist.add-track"))}</button>`
-        : ""}
+       ${trackPlaylistActionHTML()}
       </span>
      </article>`;
+}
+
+function formatLibraryAdded(value){
+ const parsed=Date.parse(String(value??""));
+ if(!Number.isFinite(parsed))return "—";
+ return new Intl.DateTimeFormat("en-US",{
+  month:"short",
+  day:"numeric"
+ }).format(new Date(parsed));
+}
+
+function trackArtworkHTML(item){
+ const source=String(item?.thumbnailURL??"").trim();
+ return `<span class="song-art${source?" has-art":""}">
+   ${source
+    ?`<img src="${escapeHTML(source)}" alt="">`
+    :"<span>♫</span>"}
+  </span>`;
+}
+
+function songRowHTML(item,{selectable=false}={}){
+ const selected=selectable&&librarySelection.isSelected(item.ref);
+ const secondary=String(item?.sourceTitle??item?.channel??"").trim();
+ return `<tr class="${selected?"selected":""}" data-track-ref="${escapeHTML(item.ref)}">
+   ${selectable
+    ?`<td class="select-cell">
+       <label class="song-select">
+        <input type="checkbox" data-track-select ${selected?"checked":""}>
+        <span class="sr-only">Select ${escapeHTML(trackTitle(item))}</span>
+       </label>
+      </td>`
+    :""}
+   <td class="song-title-cell">
+    <div class="song-main">
+     ${trackArtworkHTML(item)}
+     <div class="song-copy">
+      <strong>${escapeHTML(trackTitle(item))}</strong>
+      ${secondary?`<small>${escapeHTML(secondary)}</small>`:""}
+     </div>
+    </div>
+   </td>
+   <td class="col-added"><span class="small">${escapeHTML(formatLibraryAdded(item.addedAt))}</span></td>
+   <td class="col-artist"><span class="clip2">${escapeHTML(trackArtist(item))}</span></td>
+   <td class="col-album"><span class="clip2">${escapeHTML(String(item?.album??"").trim()||"Unknown album")}</span></td>
+   <td class="col-genre">${escapeHTML(String(item?.genre??"").trim()||"—")}</td>
+   <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
+   <td class="col-actions">
+    <div class="song-actions">
+     <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+     <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
+     <details class="song-more">
+      <summary aria-label="Track actions" title="Track actions">⋯</summary>
+      <div class="song-more-menu">
+       <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
+       <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+       <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
+       <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
+       ${trackPlaylistActionHTML()}
+      </div>
+     </details>
+    </div>
+   </td>
+  </tr>`;
 }
 
 function currentLibraryDetailGroup(){
@@ -981,6 +1049,8 @@ function selectedLibraryRefs(){
 function renderTrackSelection(){
  const projection=librarySelection.currentProjection;
  const songs=libraryView.mode==="songs";
+ playAllSongs.hidden=!songs;
+ playAllSongs.disabled=!songs||currentLibraryView().length===0;
  selectSongs.hidden=!songs;
  selectSongs.textContent=resolveText(
   locale,
@@ -1031,16 +1101,34 @@ function renderTrackChoices(){
   const selected=button.dataset.libraryMode===libraryView.mode;
   button.setAttribute("aria-pressed",String(selected));
  }
+ trackChoices.dataset.libraryTerrain=libraryView.mode;
 
  if(libraryView.mode==="songs"){
   librarySummary.textContent=resolveText(locale,"library.summary.songs",{
    visible:visible.length,
    total:catalog.length
   });
+  const selectable=librarySelection.currentProjection.active;
   trackChoices.innerHTML=visible.length
-   ?visible.map(item=>trackCardHTML(item,{
-      selectable:librarySelection.currentProjection.active
-     })).join("")
+   ?`<div class="song-table-wrap">
+      <table class="song-table">
+       <thead>
+        <tr>
+         ${selectable?'<th class="select-cell">✓</th>':""}
+         <th class="song-title-cell">Title</th>
+         <th class="col-added">Added</th>
+         <th class="col-artist">Artist</th>
+         <th class="col-album">Album</th>
+         <th class="col-genre">Genre</th>
+         <th class="col-duration">Time</th>
+         <th class="col-actions"></th>
+        </tr>
+       </thead>
+       <tbody>
+        ${visible.map(item=>songRowHTML(item,{selectable})).join("")}
+       </tbody>
+      </table>
+     </div>`
    :`<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
   renderTrackSelection();
   renderLibraryGroupDetail();
@@ -1390,6 +1478,14 @@ function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){
  }
  return false;
 }
+
+playAllSongs.addEventListener("click",()=>void guarded(async()=>{
+ const visible=currentLibraryView();
+ if(visible.length)await player.playContext(
+  visible.map(item=>item.ref),
+  0
+ );
+}));
 
 selectSongs.addEventListener("click",()=>{
  const wasActive=librarySelection.currentProjection.active;

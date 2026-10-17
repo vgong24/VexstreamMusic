@@ -31,6 +31,7 @@ export const en=Object.freeze({
  "library.summary.artists":"{count} artists · {tracks} tracks",
  "library.group.tracks":"{count} tracks",
  "library.group.open":"Open",
+ "library.play-all":"Play all",
  "library.selection.select":"Select",
  "library.selection.done":"Done",
  "library.selection.count":"{count} selected",

@@ -106,6 +106,9 @@ const volumeInput=document.querySelector("#volume");
 const queueMiniBtn=document.querySelector("#queueMiniBtn");
 const queueMiniCount=document.querySelector("#queueMiniCount");
 const buildIdentity=document.querySelector("#buildIdentity");
+const phoneConnectButton=document.querySelector("#phoneConnectButton");
+const phoneConnectionDialog=document.querySelector("#phoneConnectionDialog");
+const phoneConnectionClose=document.querySelector("#phoneConnectionClose");
 const systemStatusButton=document.querySelector("#systemStatusButton");
 const systemStatusBadge=document.querySelector("#systemStatusBadge");
 const systemDrawer=document.querySelector("#systemDrawer");
@@ -1958,6 +1961,20 @@ function removeDiscoveryCandidate(path){
   )
  });
 }
+
+phoneConnectButton.addEventListener("click",()=>{
+ phoneConnectionDialog.hidden=false;
+ phoneConnectButton.setAttribute("aria-expanded","true");
+});
+phoneConnectionClose.addEventListener("click",()=>{
+ phoneConnectionDialog.hidden=true;
+ phoneConnectButton.setAttribute("aria-expanded","false");
+});
+phoneConnectionDialog.addEventListener("click",event=>{
+ if(event.target!==phoneConnectionDialog)return;
+ phoneConnectionDialog.hidden=true;
+ phoneConnectButton.setAttribute("aria-expanded","false");
+});
 
 systemStatusButton.addEventListener("click",()=>{
  renderSystemStatus();

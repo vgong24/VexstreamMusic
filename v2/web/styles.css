@@ -1067,3 +1067,11 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
 .track-source-row:first-child{border-top:0}
 .track-source-row span{min-width:0;overflow-wrap:anywhere;color:#6f7475}
 @media(max-width:720px){.track-source-row{grid-template-columns:1fr;gap:3px}}
+
+
+.phone-dialog-backdrop{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:18px;background:#0008}
+.phone-dialog{width:min(560px,94vw);max-height:88vh;overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--bg);box-shadow:0 18px 70px #0005;padding:16px}
+.phone-dialog-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.phone-dialog-head>button{border:0;background:transparent;font-size:24px;line-height:1;padding:3px 6px}
+.phone-gate-card{margin-top:14px;padding:13px;border:1px solid #d9c9a3;border-radius:12px;background:#fff8e9}
+.phone-gate-card p{margin:7px 0 0}

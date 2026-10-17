@@ -36,6 +36,9 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
 
   for(const landmark of [
     'id="brandHome"',
+    'id="phoneConnectButton"',
+    'id="phoneConnectionDialog"',
+    'id="phoneConnectionClose"',
     'id="systemStatusButton"',
     'id="systemStatusBadge"',
     'id="systemDrawer"',

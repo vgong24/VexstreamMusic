@@ -17,6 +17,7 @@
         <button id="discoverTopTab" type="button" data-shell-view="discover">Discover</button>
       </div>
       <div class="header-spacer"></div>
+      <button id="phoneConnectButton" class="system-bell" type="button" title="Connect VexLife phone" aria-label="Connect VexLife phone" aria-expanded="false">📱</button>
       <button id="systemStatusButton" class="system-bell" type="button" title="System status" aria-label="System status" aria-expanded="false">🔔<span id="systemStatusBadge" class="system-badge" hidden>0</span></button>
       <div id="buildIdentity" class="version" data-text-ref="system.identity.loading">Loading…</div>
       <h1 id="screenTitle" class="sr-only" data-text-ref="playback.screen.title">VexStream Music</h1>
@@ -564,6 +565,19 @@
     <audio id="audio" preload="auto"></audio>
   </section>
 </main>
+<aside id="phoneConnectionDialog" class="phone-dialog-backdrop" aria-labelledby="phoneConnectionTitle" hidden>
+  <section class="phone-dialog" role="dialog" aria-modal="true">
+    <div class="phone-dialog-head">
+      <div><div class="eyebrow">VexLife</div><h2 id="phoneConnectionTitle">Connect your VexLife phone</h2></div>
+      <button id="phoneConnectionClose" type="button" aria-label="Close phone connection">×</button>
+    </div>
+    <div class="phone-gate-card">
+      <strong>Phone connection is held at Desktop Readiness.</strong>
+      <p>The V3 pairing flow remains the product oracle, but V4 is not reactivating the mobile producer contract until this desktop build is lived-accepted.</p>
+      <p class="small muted">This keeps the familiar phone entry point in its V3 header position without silently reopening mobile authority or pairing state early.</p>
+    </div>
+  </section>
+</aside>
 <aside id="systemDrawer" class="system-drawer" aria-labelledby="systemDrawerTitle" hidden>
   <div class="system-panel">
     <div class="system-drawer-head">

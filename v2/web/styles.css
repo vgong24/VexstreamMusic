@@ -289,7 +289,8 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
 .trash .section-heading{
  margin-bottom:10px;
 }
-.library #trackChoices{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}\n.library #trackChoices[hidden]{display:none}
+.library #trackChoices{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.library #trackChoices[hidden]{display:none}
 .track-card,.library-group-card,.playlist-card,.explore-card,.import-job,.trash-row,.source-row{
  background:#fff;
  color:#2d3031;

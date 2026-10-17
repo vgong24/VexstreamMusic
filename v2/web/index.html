@@ -80,11 +80,27 @@
       </section>
     </section>
 
-    <div class="now">
-      <div id="nowArt" class="art" aria-hidden="true">♫</div>
+    <div id="nowPlaying" class="now">
+      <button id="nowArtButton" class="now-art-button" type="button" title="Open current track actions" aria-label="Open current track actions" disabled>
+        <div id="nowArt" class="art" aria-hidden="true">♫</div>
+      </button>
       <div class="track-copy">
-        <strong id="trackTitle">Nothing playing</strong>
-        <span id="trackArtist">Choose something from your local library</span>
+        <div class="now-title-row">
+          <button id="nowTitleButton" class="now-title-button" type="button" title="Open current track actions" disabled>
+            <strong id="trackTitle">Nothing playing</strong>
+          </button>
+          <details id="nowDetails" class="now-details" hidden>
+            <summary class="now-details-toggle" aria-label="Current track actions" title="Current track actions">⋯</summary>
+            <div class="song-more-menu now-details-menu">
+              <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">Play next</button>
+              <button data-track-action="append" data-vex-action="vexstream.player.add-queue">Add to queue</button>
+              <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">Explore</button>
+              <button data-track-action="edit">Edit</button>
+              <button data-track-action="trash">Move to Deleted music</button>
+            </div>
+          </details>
+        </div>
+        <div id="nowMeta" class="now-meta">Choose something from your local library</div>
       </div>
     </div>
 

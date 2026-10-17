@@ -288,9 +288,13 @@ const importStart=document.querySelector("#importStart");
 const importReviewHint=document.querySelector("#importReviewHint");
 const importRefresh=document.querySelector("#importRefresh");
 const importJobs=document.querySelector("#importJobs");
+const nowPlaying=document.querySelector("#nowPlaying");
+const nowArtButton=document.querySelector("#nowArtButton");
 const nowArt=document.querySelector("#nowArt");
+const nowTitleButton=document.querySelector("#nowTitleButton");
 const title=document.querySelector("#trackTitle");
-const artist=document.querySelector("#trackArtist");
+const nowDetails=document.querySelector("#nowDetails");
+const nowMeta=document.querySelector("#nowMeta");
 const error=document.querySelector("#error");
 
 let systemIdentity=null;
@@ -371,6 +375,48 @@ function renderNowArtwork(item){
  nowArt.innerHTML=source
   ?`<img src="${escapeHTML(source)}" alt="">`
   :"♫";
+}
+
+function currentTrackLibraryRelation(kind,item){
+ if(!item)return null;
+ return groupLibrary(catalog,kind).find(group=>
+  group.refs.includes(item.ref)
+ )??null;
+}
+
+function nowLibraryRelationsHTML(item){
+ if(!item)return escapeHTML(resolveText(locale,"player.nothing.artist"));
+ const artistGroup=currentTrackLibraryRelation("artist",item);
+ const albumGroup=currentTrackLibraryRelation("album",item);
+ const artistLabel=trackArtist(item);
+ const albumLabel=String(item?.album??"").trim()||"Unknown album";
+ const artistHTML=artistGroup&&artistLabel!=="Unknown artist"
+  ?`<button type="button" class="now-relation"
+       data-now-library-kind="artist"
+       data-now-library-key="${escapeHTML(artistGroup.key)}">${escapeHTML(artistLabel)}</button>`
+  :`<span class="now-relation-static">${escapeHTML(artistLabel)}</span>`;
+ const albumHTML=albumGroup&&albumLabel!=="Unknown album"
+  ?`<button type="button" class="now-relation"
+       data-now-library-kind="album"
+       data-now-library-key="${escapeHTML(albumGroup.key)}">${escapeHTML(albumLabel)}</button>`
+  :`<span class="now-relation-static">${escapeHTML(albumLabel)}</span>`;
+ return `${artistHTML}<span aria-hidden="true"> · </span>${albumHTML}`;
+}
+
+function renderNowPlaying(item){
+ renderNowArtwork(item);
+ const active=Boolean(item);
+ nowPlaying.toggleAttribute("data-track-ref",active);
+ if(active)nowPlaying.dataset.trackRef=item.ref;
+ else delete nowPlaying.dataset.trackRef;
+ nowArtButton.disabled=!active;
+ nowTitleButton.disabled=!active;
+ nowDetails.hidden=!active;
+ if(!active)nowDetails.open=false;
+ title.textContent=active
+  ?trackTitle(item)
+  :resolveText(locale,"player.nothing.title");
+ nowMeta.innerHTML=nowLibraryRelationsHTML(item);
 }
 
 function homeRecentRowHTML(item){
@@ -722,9 +768,7 @@ const player=createPlayerComposition({
  resolveMedia:ref=>byRef.get(ref),
  defaultContextRefs:()=>libraryPlaybackRefs(),
  onCurrentMedia:item=>{
-  renderNowArtwork(item);
-  title.textContent=trackTitle(item);
-  artist.textContent=trackArtist(item);
+  renderNowPlaying(item);
  }
 });
 
@@ -1094,9 +1138,7 @@ function render(){
 
  const current=currentQueueRef(qp.state);
  if(!current){
-  renderNowArtwork(null);
-  title.textContent=resolveText(locale,"player.nothing.title");
-  artist.textContent=resolveText(locale,"player.nothing.artist");
+  renderNowPlaying(null);
  }
 
  queueSummary.textContent=qp.state.kind==="empty"
@@ -1989,6 +2031,24 @@ shuffleAllBtn.addEventListener("click",()=>void guarded(async()=>{
  const shuffled=shuffleRefs([...refs]);
  if(shuffled.length)await player.playContext(shuffled,0);
 }));
+
+nowPlaying.addEventListener("click",event=>{
+ const relation=event.target.closest("[data-now-library-kind][data-now-library-key]");
+ if(relation){
+  shellNavigation.openLibraryDetail(
+   relation.dataset.nowLibraryKind,
+   relation.dataset.nowLibraryKey
+  );
+  return;
+ }
+ if(event.target.closest("#nowArtButton,#nowTitleButton")){
+  if(!nowDetails.hidden)nowDetails.open=!nowDetails.open;
+  return;
+ }
+ if(handleTrackAction(event,{playbackRefs:libraryPlaybackRefs()})){
+  nowDetails.open=false;
+ }
+});
 
 recentSongs.addEventListener("click",event=>{
  const action=event.target.closest("[data-home-track-action]");

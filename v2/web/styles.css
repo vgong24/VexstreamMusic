@@ -995,3 +995,33 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
  .playlist-detail-entries .playlist-entry{grid-template-columns:24px 42px minmax(0,1fr)}
  .playlist-entry-actions{grid-column:2/-1;justify-content:flex-start}
 }
+
+
+/* Fixed Now Playing projects current Library relationships and existing track actions. */
+.now-art-button,.now-title-button{
+ border:0;
+ background:transparent;
+ color:inherit;
+ padding:0;
+ text-align:left;
+}
+.now-art-button{display:block;width:52px;height:52px;border-radius:12px}
+.now-art-button:disabled,.now-title-button:disabled{cursor:default}
+.now-art-button:not(:disabled):hover,.now-art-button:not(:disabled):focus-visible,
+.now-title-button:not(:disabled):hover,.now-title-button:not(:disabled):focus-visible{
+ outline:2px solid #d6a58f;
+ outline-offset:2px;
+}
+.now-title-row{display:flex;align-items:center;gap:5px;min-width:0}
+.now-title-button{min-width:0;overflow:hidden;white-space:nowrap;border-radius:4px}
+.now-title-button strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.now-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#6f7475;font-size:12px}
+.now-relation{border:0;background:transparent;color:inherit;padding:0;font:inherit;text-decoration:underline;text-decoration-color:#b7b2a9;text-underline-offset:2px}
+.now-relation:hover,.now-relation:focus-visible{color:#a85435;outline:none}
+.now-relation-static{color:#777d7e}
+.now-details{position:relative}
+.now-details[hidden]{display:none}
+.now-details-toggle{list-style:none;cursor:pointer;padding:2px 5px;border-radius:6px;color:#6f7475}
+.now-details-toggle::-webkit-details-marker{display:none}
+.now-details-toggle:hover,.now-details-toggle:focus-visible{background:#ece6dd;color:#25282a;outline:none}
+.now-details-menu{right:0;left:auto;bottom:calc(100% + 7px);top:auto;min-width:180px;z-index:60}

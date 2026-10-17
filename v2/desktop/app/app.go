@@ -145,9 +145,6 @@ func Open(options Options) (*Application, error) {
 		return nil, err
 	}
 	application.mobile = mobileOwner
-	if err := mobileOwner.ResumeRemembered(); err != nil {
-		application.addWarning("remembered VexLife phone bridge: " + err.Error())
-	}
 
 	trashOwner, err := trash.Open(
 		trash.Paths{
@@ -341,6 +338,10 @@ func Open(options Options) (*Application, error) {
 	mux.HandleFunc("/health", application.health)
 	mux.HandleFunc("/api/system/exit", application.exitHandler)
 	mux.Handle("/", http.FileServer(http.FS(web)))
+
+	if err := mobileOwner.ResumeRemembered(); err != nil {
+		application.addWarning("remembered VexLife phone bridge: " + err.Error())
+	}
 	return application, nil
 }
 

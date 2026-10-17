@@ -79,6 +79,10 @@ export const en=Object.freeze({
  "trash.restore":"Restore",
  "trash.delete":"Delete permanently",
  "trash.history":"Deleted history · {count}",
+ "trash.count":"{count} item{suffix}",
+ "trash.history-count":"{count} record{suffix}",
+ "trash.selection-count":"{count} selected",
+ "trash.purge-confirm":"Permanently delete {count} track{suffix}? This removes the audio bytes.",
 
  "session.status.fresh":"Fresh",
  "session.status.empty":"No saved queue",

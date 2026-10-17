@@ -782,3 +782,68 @@ body[data-shell-current-view="discover"] .discover-workspace{
   grid-template-areas:"header" "main" "main" "now" "transport";
  }
 }
+
+/* V3-recognizable Deleted music terrain over V4 Trash custody.
+   Browser presentation never reacquires raw filesystem custody paths. */
+.deleted-music-view{display:grid;align-content:start;gap:12px}
+.deleted-music-view[hidden]{display:none}
+.deleted-heading{align-items:flex-start}
+.trash-selection-bar{margin:0}
+.trash-card{
+ display:grid;
+ gap:10px;
+ padding:13px;
+ border:1px solid #ded8cf;
+ border-radius:14px;
+ background:#fff;
+}
+.trash-card h3{margin:0}
+.trash-list{display:grid;gap:7px}
+.trash-row{
+ display:grid;
+ grid-template-columns:28px minmax(0,1fr) auto;
+ gap:10px;
+ align-items:center;
+ padding:10px 11px;
+ border:1px solid #e5dfd6;
+ border-radius:10px;
+ background:#fff;
+ color:#2d3031;
+}
+.trash-row.selected{background:#fff1e7;border-color:#e6b99f}
+.trash-select{display:grid;place-items:center}
+.trash-select input{width:17px;height:17px}
+.trash-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.trash-copy small,.deleted-row small{color:#73797a}
+.trash-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.trash-actions button{padding:7px 9px;font-size:12px}
+button.danger{border-color:#d7aaa1;color:#8e2c22;background:#fff8f6}
+button.danger:hover{background:#fff0ec}
+.deleted-row{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
+ gap:10px;
+ align-items:center;
+ padding:8px 4px;
+ border-bottom:1px solid #eee8df;
+}
+.deleted-row:last-child{border-bottom:0}
+.trash-purge-confirm,.trash-recovery{
+ display:grid;
+ gap:10px;
+ padding:12px;
+ border:1px solid #d7aaa1;
+ border-radius:12px;
+ background:#fff7f4;
+}
+.trash-purge-confirm[hidden],.trash-recovery[hidden]{display:none}
+.trash-preserve-history{display:flex;align-items:flex-start;gap:9px}
+.trash-preserve-history input{margin-top:3px}
+.trash-preserve-history span{display:flex;flex-direction:column;gap:2px}
+.trash-preserve-history small{color:#73797a}
+.trash-confirm-actions{display:flex;justify-content:flex-end;gap:8px}
+@media(max-width:720px){
+ .trash-row{grid-template-columns:28px 1fr}
+ .trash-actions{grid-column:2;justify-content:flex-start}
+ .deleted-row{grid-template-columns:1fr}
+}

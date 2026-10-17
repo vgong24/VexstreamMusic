@@ -367,17 +367,61 @@
       </div>
     </section>
 
-    <section class="trash" data-shell-panel="deleted" aria-labelledby="trashTitle" hidden>
-      <div class="section-heading">
+    <section class="trash deleted-music-view" data-shell-panel="deleted" aria-labelledby="trashTitle" hidden>
+      <div class="section-heading deleted-heading">
         <div>
-          <h2 id="trashTitle">Trash</h2>
-          <span id="trashSummary">Nothing in Trash</span>
+          <h2 id="trashTitle">Deleted music</h2>
+          <span id="trashSummary">A reversible file trash first; optional metadata history after permanent erase.</span>
         </div>
         <button id="trashRefresh" type="button">Refresh</button>
       </div>
-      <div id="trashItems"></div>
-      <div id="deletedHistory"></div>
-      <div id="purgeRecovery" hidden>
+
+      <div id="trashSelectionBar" class="selection-bar trash-selection-bar" hidden>
+        <strong id="trashSelectionCount">0 selected</strong>
+        <button id="restoreSelectedTrash" type="button">Restore</button>
+        <span class="selection-spacer"></span>
+        <button id="purgeSelectedTrash" type="button" class="danger">Permanently delete…</button>
+        <button id="clearTrashSelection" type="button">Clear</button>
+      </div>
+
+      <section class="trash-card" aria-labelledby="trashCardTitle">
+        <div class="section-heading">
+          <div>
+            <h3 id="trashCardTitle">VexStream Trash</h3>
+            <span>Audio remains on disk here until you permanently delete it.</span>
+          </div>
+          <span id="trashCount" class="small muted">0 items</span>
+        </div>
+        <div id="trashItems" class="trash-list"></div>
+      </section>
+
+      <section class="trash-card" aria-labelledby="deletedHistoryTitle">
+        <div class="section-heading">
+          <div>
+            <h3 id="deletedHistoryTitle">Metadata-only history</h3>
+            <span>Optional memory of permanently erased tracks. No audio is retained here.</span>
+          </div>
+          <span id="deletedHistoryCount" class="small muted">0 records</span>
+        </div>
+        <div id="deletedHistory" class="trash-list"></div>
+      </section>
+
+      <section id="trashPurgeConfirm" class="trash-purge-confirm" aria-labelledby="trashPurgeConfirmTitle" hidden>
+        <div>
+          <strong id="trashPurgeConfirmTitle">Permanently delete selected music?</strong>
+          <div id="trashPurgeConfirmSummary" class="small muted">This removes the audio bytes. This cannot restore the music file afterward.</div>
+        </div>
+        <label class="trash-preserve-history">
+          <input id="preserveDeletedMetadata" type="checkbox" checked>
+          <span><strong>Keep metadata-only history</strong><small>Remember title and provenance after the audio bytes are gone.</small></span>
+        </label>
+        <div class="trash-confirm-actions">
+          <button id="trashPurgeCancel" type="button">Cancel</button>
+          <button id="trashPurgeCommit" type="button" class="danger">Permanently delete</button>
+        </div>
+      </section>
+
+      <div id="purgeRecovery" class="trash-recovery" hidden>
         <span>A permanent-delete operation needs recovery.</span>
         <button id="recoverTrashPurge" type="button">Recover admitted delete</button>
       </div>

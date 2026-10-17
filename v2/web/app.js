@@ -212,7 +212,19 @@ const playlistDetailEntries=document.querySelector("#playlistDetailEntries");
 const trashSummary=document.querySelector("#trashSummary");
 const trashRefresh=document.querySelector("#trashRefresh");
 const trashItems=document.querySelector("#trashItems");
+const trashCount=document.querySelector("#trashCount");
+const trashSelectionBar=document.querySelector("#trashSelectionBar");
+const trashSelectionCount=document.querySelector("#trashSelectionCount");
+const restoreSelectedTrashButton=document.querySelector("#restoreSelectedTrash");
+const purgeSelectedTrashButton=document.querySelector("#purgeSelectedTrash");
+const clearTrashSelectionButton=document.querySelector("#clearTrashSelection");
 const deletedHistory=document.querySelector("#deletedHistory");
+const deletedHistoryCount=document.querySelector("#deletedHistoryCount");
+const trashPurgeConfirm=document.querySelector("#trashPurgeConfirm");
+const trashPurgeConfirmSummary=document.querySelector("#trashPurgeConfirmSummary");
+const preserveDeletedMetadata=document.querySelector("#preserveDeletedMetadata");
+const trashPurgeCancel=document.querySelector("#trashPurgeCancel");
+const trashPurgeCommit=document.querySelector("#trashPurgeCommit");
 const purgeRecovery=document.querySelector("#purgeRecovery");
 const recoverTrashPurgeButton=document.querySelector("#recoverTrashPurge");
 const exploreSummary=document.querySelector("#exploreSummary");
@@ -268,6 +280,8 @@ let trashSnapshot=Object.freeze({
  deletedHistory:Object.freeze([]),
  pendingPurge:null
 });
+const selectedTrashIDs=new Set();
+let pendingTrashPurgeIDs=Object.freeze([]);
 let currentSessionRestoration=Object.freeze({
  kind:"fresh",
  queue:null,
@@ -533,36 +547,79 @@ function renderLibraryEditor(){
   :String(item.playbackEndSeconds);
 }
 
+function validTrashIDs(values){
+ const live=new Set(trashSnapshot.trash.map(item=>item.id));
+ return [...new Set(values)].filter(id=>live.has(id));
+}
+
+function openTrashPurgeConfirmation(ids){
+ const valid=validTrashIDs(ids);
+ if(!valid.length)return;
+ pendingTrashPurgeIDs=Object.freeze(valid);
+ preserveDeletedMetadata.checked=true;
+ trashPurgeConfirmSummary.textContent=resolveText(locale,"trash.purge-confirm",{
+  count:valid.length,
+  suffix:valid.length===1?"":"s"
+ });
+ trashPurgeConfirm.hidden=false;
+}
+
+function closeTrashPurgeConfirmation(){
+ pendingTrashPurgeIDs=Object.freeze([]);
+ trashPurgeConfirm.hidden=true;
+}
+
 function renderTrash(){
- trashNavCount.textContent=trashSnapshot.trash.length?`(${trashSnapshot.trash.length})`:"";
- trashSummary.textContent=trashSnapshot.trash.length
-  ? resolveText(locale,"trash.summary",{count:trashSnapshot.trash.length})
-  : resolveText(locale,"trash.empty");
- trashItems.innerHTML=trashSnapshot.trash.length
-  ? trashSnapshot.trash.map(item=>`<article class="trash-row" data-trash-id="${escapeHTML(item.id)}">
-      <div>
+ const live=new Set(trashSnapshot.trash.map(item=>item.id));
+ for(const id of [...selectedTrashIDs]){
+  if(!live.has(id))selectedTrashIDs.delete(id);
+ }
+ if(pendingTrashPurgeIDs.some(id=>!live.has(id))){
+  closeTrashPurgeConfirmation();
+ }
+
+ const trashCountValue=trashSnapshot.trash.length;
+ const historyCountValue=trashSnapshot.deletedHistory.length;
+ trashNavCount.textContent=trashCountValue?`(${trashCountValue})`:"";
+ trashSummary.textContent="A reversible file trash first; optional metadata history after permanent erase.";
+ trashCount.textContent=resolveText(locale,"trash.count",{
+  count:trashCountValue,
+  suffix:trashCountValue===1?"":"s"
+ });
+ deletedHistoryCount.textContent=resolveText(locale,"trash.history-count",{
+  count:historyCountValue,
+  suffix:historyCountValue===1?"":"s"
+ });
+ trashSelectionBar.hidden=selectedTrashIDs.size===0;
+ trashSelectionCount.textContent=resolveText(locale,"trash.selection-count",{
+  count:selectedTrashIDs.size
+ });
+
+ trashItems.innerHTML=trashCountValue
+  ?trashSnapshot.trash.map(item=>`<article class="trash-row ${selectedTrashIDs.has(item.id)?"selected":""}" data-trash-id="${escapeHTML(item.id)}">
+      <label class="trash-select">
+       <input type="checkbox" data-trash-select aria-label="Select ${escapeHTML(item.track?.title||resolveText(locale,"library.unknown-title"))}" ${selectedTrashIDs.has(item.id)?"checked":""}>
+      </label>
+      <div class="trash-copy">
        <strong>${escapeHTML(item.track?.title||resolveText(locale,"library.unknown-title"))}</strong>
-       <small>${escapeHTML(item.track?.artist||resolveText(locale,"library.unknown-artist"))}</small>
+       <small>${escapeHTML(item.track?.artist||resolveText(locale,"library.unknown-artist"))} · trashed ${escapeHTML(item.trashedAt||"")}</small>
       </div>
       <div class="trash-actions">
        <button data-trash-action="restore">${escapeHTML(resolveText(locale,"trash.restore"))}</button>
-       <button data-trash-action="purge">${escapeHTML(resolveText(locale,"trash.delete"))}</button>
+       <button data-trash-action="purge" class="danger">Permanently delete…</button>
       </div>
      </article>`).join("")
-  : "";
+  :`<div class="empty-state">${escapeHTML(resolveText(locale,"trash.empty"))}</div>`;
 
- deletedHistory.innerHTML=trashSnapshot.deletedHistory.length
-  ? `<details class="deleted-history">
-      <summary>${escapeHTML(resolveText(locale,"trash.history",{
-       count:trashSnapshot.deletedHistory.length
-      }))}</summary>
-      <div>${trashSnapshot.deletedHistory.slice(0,20).map(item=>`
-       <div class="deleted-row">
-        <span>${escapeHTML(item.track?.title||resolveText(locale,"library.unknown-title"))}</span>
-        <small>${escapeHTML(item.deletedAt||"")}</small>
-       </div>`).join("")}</div>
-     </details>`
-  : "";
+ deletedHistory.innerHTML=historyCountValue
+  ?trashSnapshot.deletedHistory.slice(0,20).map(item=>`<div class="deleted-row">
+      <span>
+       <strong>${escapeHTML(item.track?.title||resolveText(locale,"library.unknown-title"))}</strong>
+       <small>${escapeHTML(item.track?.artist||resolveText(locale,"library.unknown-artist"))}</small>
+      </span>
+      <small>${escapeHTML(item.deletedAt||"")}</small>
+     </div>`).join("")
+  :`<div class="empty-state">No metadata-only deletion history yet.</div>`;
 
  purgeRecovery.hidden=!trashSnapshot.pendingPurge;
 }
@@ -2145,6 +2202,15 @@ importJobs.addEventListener("click",event=>{
 
 trashRefresh.addEventListener("click",()=>void guarded(()=>refreshTrash()));
 
+trashItems.addEventListener("change",event=>{
+ const input=event.target.closest("[data-trash-select]");
+ const row=event.target.closest("[data-trash-id]");
+ if(!input||!row)return;
+ if(input.checked)selectedTrashIDs.add(row.dataset.trashId);
+ else selectedTrashIDs.delete(row.dataset.trashId);
+ renderTrash();
+});
+
 trashItems.addEventListener("click",event=>{
  const action=event.target.closest("[data-trash-action]");
  const row=event.target.closest("[data-trash-id]");
@@ -2154,6 +2220,7 @@ trashItems.addEventListener("click",event=>{
  if(action.dataset.trashAction==="restore"){
   void guarded(async()=>{
    await restoreTrashItems([id]);
+   selectedTrashIDs.delete(id);
    await Promise.all([
     refreshTrash(),
     refreshCatalog()
@@ -2163,12 +2230,45 @@ trashItems.addEventListener("click",event=>{
  }
 
  if(action.dataset.trashAction==="purge"){
-  void guarded(async()=>{
-   await purgeTrashItems([id],{preserveMetadata:true});
-   await refreshTrash();
-  });
+  openTrashPurgeConfirmation([id]);
  }
 });
+
+restoreSelectedTrashButton.addEventListener("click",()=>void guarded(async()=>{
+ const ids=validTrashIDs([...selectedTrashIDs]);
+ if(!ids.length)return;
+ await restoreTrashItems(ids);
+ selectedTrashIDs.clear();
+ await Promise.all([
+  refreshTrash(),
+  refreshCatalog()
+ ]);
+}));
+
+purgeSelectedTrashButton.addEventListener("click",()=>{
+ openTrashPurgeConfirmation([...selectedTrashIDs]);
+});
+
+clearTrashSelectionButton.addEventListener("click",()=>{
+ selectedTrashIDs.clear();
+ renderTrash();
+});
+
+trashPurgeCancel.addEventListener("click",closeTrashPurgeConfirmation);
+
+trashPurgeCommit.addEventListener("click",()=>void guarded(async()=>{
+ const ids=validTrashIDs(pendingTrashPurgeIDs);
+ if(!ids.length){
+  closeTrashPurgeConfirmation();
+  return;
+ }
+ await purgeTrashItems(ids,{
+  preserveMetadata:preserveDeletedMetadata.checked
+ });
+ for(const id of ids)selectedTrashIDs.delete(id);
+ closeTrashPurgeConfirmation();
+ await refreshTrash();
+}));
 
 recoverTrashPurgeButton.addEventListener("click",()=>void guarded(async()=>{
  await recoverTrashPurge();

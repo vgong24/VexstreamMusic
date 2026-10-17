@@ -81,6 +81,14 @@ import {
 } from "./features/system/client.js";
 import { projectSystemStatus } from "./features/system/status.js";
 import {
+  decidePhonePairing,
+  forgetPairedPhone,
+  loadPhonePairing,
+  startPhonePairing,
+} from "./features/phone/client.js";
+import { createPhoneConnection } from "./features/phone/connection.js";
+import { presentPhoneConnection } from "./features/phone/presentation.js";
+import {
   ShellView,
   createShellNavigation,
 } from "./features/shell/navigation.js";
@@ -354,7 +362,6 @@ let queueDrawerOpen=false;
 let playerSessionSaveTimer=null;
 let pendingPlayerSessionState=null;
 let playerSessionSaveChain=Promise.resolve();
-let phonePairPollTimer=null;
 let currentImportReview=null;
 let currentImportJobs=Object.freeze({
  active:Object.freeze([]),
@@ -368,6 +375,15 @@ const shellNavigation=createShellNavigation();
 const discoverNavigation=createDiscoverNavigation();
 const librarySelection=createTrackSelection();
 const playlistNavigation=createPlaylistNavigation();
+const phoneConnection=createPhoneConnection({
+ loadPairing:()=>loadPhonePairing(),
+ startPairing:()=>startPhonePairing(),
+ decidePairing:(requestRef,decision)=>decidePhonePairing(requestRef,decision),
+ forgetPairedPhone:deviceRef=>forgetPairedPhone(deviceRef),
+ confirmForget:()=>globalThis.confirm(
+  "Forget this phone? It will need to pair again before using your VexStream library."
+ )
+});
 
 
 function trackTitle(item){
@@ -1966,123 +1982,43 @@ function removeDiscoveryCandidate(path){
  });
 }
 
-async function mobilePairingJSON(path,{method="GET",body=null}={}){
- const response=await fetch(path,{
-  method,
-  headers:{Accept:"application/json","Content-Type":"application/json"},
-  ...(body==null?{}:{body:JSON.stringify(body)})
- });
- let payload={};
- try{payload=await response.json();}catch{}
- if(!response.ok){
-  throw new Error(String(payload?.error??`Phone connection request failed: ${response.status}`));
+function renderPhoneConnection(projection){
+ const view=presentPhoneConnection(projection);
+ if(!view){
+  modalBackdrop.hidden=true;
+  modalBody.innerHTML="";
+  modalActions.innerHTML="";
+  phoneConnectButton.setAttribute("aria-expanded","false");
+  return;
  }
- return payload;
-}
-
-function formatPhonePairingCode(code){
- const value=String(code??"").padStart(6,"0");
- return value.slice(0,3)+" "+value.slice(3);
-}
-
-function stopPhonePairPolling(){
- if(phonePairPollTimer)clearTimeout(phonePairPollTimer);
- phonePairPollTimer=null;
-}
-
-function openModal(title,body,actions=""){
- modalTitle.textContent=title;
- modalBody.innerHTML=body;
- modalActions.innerHTML=actions;
+ modalTitle.textContent=view.title;
+ modalBody.innerHTML=view.bodyHTML;
+ modalActions.innerHTML=view.actionsHTML;
  modalBackdrop.hidden=false;
-}
-
-function closeModal(){
- stopPhonePairPolling();
- modalBackdrop.hidden=true;
- modalBody.innerHTML="";
- modalActions.innerHTML="";
- phoneConnectButton.setAttribute("aria-expanded","false");
-}
-
-async function refreshPhonePairing(){
- const box=document.querySelector("#phonePairingPanel");
- if(!box||modalBackdrop.hidden)return;
- stopPhonePairPolling();
- try{
-  const d=await mobilePairingJSON("/api/mobile/pairing");
-  const pending=Array.isArray(d.pending)?d.pending:[];
-  const paired=Array.isArray(d.paired)?d.paired:[];
-  const open=!!d.pairingWindowOpen;
-  let pairingBlock="";
-  if(open){
-   pairingBlock='<div class="notice success"><strong>Ready to pair for 5 minutes</strong><div class="small muted" style="margin-top:5px">On your phone open VexLife → VexStream Music → Find VexStream. Choose <strong>'+escapeHTML(d.displayName||"this VexStream")+'</strong>.</div><div style="font-size:30px;font-weight:800;letter-spacing:.12em;margin-top:12px">'+escapeHTML(formatPhonePairingCode(d.pairingCode))+'</div><div class="small muted">The phone should show this same code before it asks for approval.</div></div>';
-  }else{
-   const addLabel=paired.length?"Connect another phone":"Connect a phone";
-   pairingBlock='<div class="notice"><strong>'+escapeHTML(addLabel)+'</strong><div class="small muted" style="margin-top:5px">Make this VexStream visible to VexLife on the same Wi-Fi for five minutes.</div><button class="primary" style="margin-top:10px" data-phone-action="start">'+escapeHTML(addLabel)+'</button></div>';
-  }
-  let pendingBlock="";
-  if(pending.length){
-   pendingBlock='<div style="margin-top:14px"><h3>Waiting for your approval</h3>'+pending.map(item=>
-    '<div class="issue info"><div class="row between"><div><strong>'+escapeHTML(item.displayName||"VexLife phone")+'</strong><div class="small muted">Confirm the matching code on the phone, then allow it here.</div></div><div class="row"><button data-phone-action="deny" data-phone-request-ref="'+escapeHTML(item.requestRef)+'">Deny</button><button class="primary" data-phone-action="approve" data-phone-request-ref="'+escapeHTML(item.requestRef)+'">Allow</button></div></div></div>'
-   ).join("")+'</div>';
-  }
-  let pairedBlock="";
-  if(paired.length){
-   pairedBlock='<div style="margin-top:14px"><h3>Remembered phones</h3>'+paired.map(item=>
-    '<div class="lifecycle-row"><div><strong>'+escapeHTML(item.displayName||"VexLife phone")+'</strong><div class="small muted">Approved '+escapeHTML(item.approvedAt||"")+'</div></div><button data-phone-action="forget" data-phone-device-ref="'+escapeHTML(item.deviceRef)+'">Forget</button></div>'
-   ).join("")+'</div>';
-  }
-  box.innerHTML=pairingBlock+pendingBlock+pairedBlock+
-   '<div class="small muted" style="margin-top:14px">This nearby pairing is a local VexStream connection candidate. It does not expose imports, delete, diagnostics, repair, or other desktop controls to the phone.</div>';
-  phonePairPollTimer=setTimeout(()=>void refreshPhonePairing(),1000);
- }catch(failure){
-  box.innerHTML='<div class="notice">'+escapeHTML(failure?.message??String(failure))+'</div>';
- }
-}
-
-async function openPhoneConnection(){
  phoneConnectButton.setAttribute("aria-expanded","true");
- openModal(
-  "Connect your VexLife phone",
-  '<div id="phonePairingPanel"><div class="small muted">Checking phone connection…</div></div>',
-  '<button type="button" data-modal-close>Close</button>'
- );
- try{
-  const current=await mobilePairingJSON("/api/mobile/pairing");
-  if(!current.pairingWindowOpen&&!(Array.isArray(current.paired)&&current.paired.length)){
-   await mobilePairingJSON("/api/mobile/pairing/start",{method:"POST",body:{}});
-  }
- }catch{}
- await refreshPhonePairing();
 }
 
-phoneConnectButton.addEventListener("click",()=>void guarded(openPhoneConnection));
-modalCloseBtn.addEventListener("click",closeModal);
+phoneConnection.subscribe(renderPhoneConnection);
+
+phoneConnectButton.addEventListener(
+ "click",
+ ()=>void guarded(()=>phoneConnection.open())
+);
+modalCloseBtn.addEventListener("click",()=>phoneConnection.close());
 modalBackdrop.addEventListener("click",event=>{
- if(event.target===modalBackdrop)closeModal();
+ if(event.target===modalBackdrop)phoneConnection.close();
 });
 modalActions.addEventListener("click",event=>{
- if(event.target.closest("[data-modal-close]"))closeModal();
+ if(event.target.closest("[data-modal-close]"))phoneConnection.close();
 });
 modalBody.addEventListener("click",event=>void guarded(async()=>{
- const action=event.target.closest("[data-phone-action]");
- if(!action)return;
- const kind=action.dataset.phoneAction;
- if(kind==="start"){
-  await mobilePairingJSON("/api/mobile/pairing/start",{method:"POST",body:{}});
- }else if(kind==="approve"||kind==="deny"){
-  await mobilePairingJSON("/api/mobile/pairing/decision",{
-   method:"POST",
-   body:{requestRef:action.dataset.phoneRequestRef,decision:kind.toUpperCase()}
-  });
- }else if(kind==="forget"){
-  await mobilePairingJSON("/api/mobile/pairing/revoke",{
-   method:"POST",
-   body:{deviceRef:action.dataset.phoneDeviceRef}
-  });
- }
- await refreshPhonePairing();
+ const target=event.target.closest("[data-phone-action]");
+ if(!target)return;
+ await phoneConnection.activate({
+  kind:target.dataset.phoneAction,
+  requestRef:target.dataset.phoneRequestRef,
+  deviceRef:target.dataset.phoneDeviceRef,
+ });
 }));
 
 systemStatusButton.addEventListener("click",()=>{
@@ -3080,6 +3016,7 @@ async function initialize(){
   discoverNavigation,
   librarySelection,
   playlistNavigation,
+  phoneConnection,
   get sourceConfig(){return sourceConfig;},
   get playlists(){return playlists;},
   get resolvedPlaylists(){return resolvedPlaylists;},

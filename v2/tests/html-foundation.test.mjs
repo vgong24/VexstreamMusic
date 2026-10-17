@@ -27,6 +27,10 @@ test("shell presentation state is not registered as a shell navigation control",
   assert.equal(/<body[^>]*data-shell-view=/.test(html),false);
   assert.equal(/<body[^>]*data-shell-current-view="home"/.test(html),true);
   assert.equal(html.includes("phone-dialog"),false,"Phone connection must reuse the V3 modal shell instead of a bespoke phone-dialog surface");
+  assert.equal(app.includes('from "./features/phone/client.js"'),true);
+  assert.equal(app.includes('from "./features/phone/connection.js"'),true);
+  assert.equal(app.includes('from "./features/phone/presentation.js"'),true);
+  assert.equal(app.includes("async function mobilePairingJSON"),false,"Phone request choreography must not live in app.js");
   assert.equal(app.includes('document.querySelectorAll("button[data-shell-view]")'),true);
   assert.equal(app.includes("document.body.dataset.shellCurrentView=projection.view"),true);
 });

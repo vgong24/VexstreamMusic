@@ -12,7 +12,7 @@ import (
 	"github.com/vgong24/VexstreamMusic/v2/desktop/appdata"
 )
 
-func TestOpenFormsLocalDesktopCompositionWithoutMobileIngress(t *testing.T) {
+func TestOpenFormsLocalDesktopCompositionWithRecoveredPhoneAdministration(t *testing.T) {
 	root := t.TempDir()
 	application, err := Open(Options{
 		Version:  "4.0.0",
@@ -64,10 +64,20 @@ func TestOpenFormsLocalDesktopCompositionWithoutMobileIngress(t *testing.T) {
 		response.Body.Close()
 	}
 
+	response, err = http.Get(server.URL + "/api/mobile/pairing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.StatusCode != http.StatusOK {
+		response.Body.Close()
+		t.Fatalf("recovered phone administration status=%d", response.StatusCode)
+	}
+	response.Body.Close()
+
 	for _, path := range []string{
 		"/v1/pairing/request",
-		"/api/mobile/pairing",
-		"/mobile/catalog",
+		"/v1/catalog",
+		"/v1/media/track-ref",
 	} {
 		response, err := http.Get(server.URL + path)
 		if err != nil {
@@ -75,7 +85,7 @@ func TestOpenFormsLocalDesktopCompositionWithoutMobileIngress(t *testing.T) {
 		}
 		if response.StatusCode != http.StatusNotFound {
 			response.Body.Close()
-			t.Fatalf("mobile ingress leaked into Desktop-first composition: %s -> %d", path, response.StatusCode)
+			t.Fatalf("sanitized LAN contract leaked into localhost admin mux: %s -> %d", path, response.StatusCode)
 		}
 		response.Body.Close()
 	}

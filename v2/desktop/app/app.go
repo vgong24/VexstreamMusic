@@ -1,8 +1,8 @@
 // Package app composes the local Desktop V4 product.
 //
 // Feature semantics remain with their owners. This package chooses persistence placement, connects
-// dependencies, and exposes one loopback browser/admin handler. Mobile ingress is deliberately not
-// part of this composition before Desktop Readiness.
+// dependencies, exposes one loopback browser/admin handler, and reconnects the already-proven
+// bounded VexStream phone producer without widening desktop administration to the LAN.
 package app
 
 import (
@@ -38,6 +38,7 @@ import (
 	libraryservice "github.com/vgong24/VexstreamMusic/v2/desktop/library/service"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/library/trash"
 	trashhttp "github.com/vgong24/VexstreamMusic/v2/desktop/library/trash/httpapi"
+	"github.com/vgong24/VexstreamMusic/v2/desktop/mobile"
 	playersession "github.com/vgong24/VexstreamMusic/v2/desktop/player/session"
 	playersessionhttp "github.com/vgong24/VexstreamMusic/v2/desktop/player/session/httpapi"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/playlists"
@@ -60,6 +61,7 @@ type Application struct {
 	layout   appdata.Layout
 	mux      *http.ServeMux
 	jobs     *importjobs.Manager
+	mobile   *mobile.Service
 	exit     chan struct{}
 	exitOnce sync.Once
 
@@ -116,9 +118,35 @@ func Open(options Options) (*Application, error) {
 		)
 	}
 
+	librarySnapshot := func() library.Projection {
+		return libraryOwner.Snapshot(config.Sources(), false)
+	}
+	trackSnapshot := func() []library.Track {
+		projection := librarySnapshot()
+		return append([]library.Track(nil), projection.Tracks...)
+	}
+	refreshLibrary := func() error {
+		_, err := libraryOwner.Reconcile(config.Sources())
+		return err
+	}
+
 	playlistsOwner, err := playlists.Open(options.Layout.Playlists)
 	if err != nil {
 		return nil, err
+	}
+
+	mobileOwner, err := mobile.New(mobile.Options{
+		Root:             options.Layout.MobileBridge,
+		Version:          options.Version,
+		LibrarySnapshot:  librarySnapshot,
+		PlaylistSnapshot: playlistsOwner.Snapshot,
+	})
+	if err != nil {
+		return nil, err
+	}
+	application.mobile = mobileOwner
+	if err := mobileOwner.ResumeRemembered(); err != nil {
+		application.addWarning("remembered VexLife phone bridge: " + err.Error())
 	}
 
 	trashOwner, err := trash.Open(
@@ -155,18 +183,6 @@ func Open(options Options) (*Application, error) {
 		runtimeenv.BridgeEnv(),
 		runtimeOwner.Python,
 	)
-
-	librarySnapshot := func() library.Projection {
-		return libraryOwner.Snapshot(config.Sources(), false)
-	}
-	trackSnapshot := func() []library.Track {
-		projection := librarySnapshot()
-		return append([]library.Track(nil), projection.Tracks...)
-	}
-	refreshLibrary := func() error {
-		_, err := libraryOwner.Reconcile(config.Sources())
-		return err
-	}
 
 	exploreMatcher := librarymatch.New(trackSnapshot)
 	exploreSeedResolver := librarymatch.NewSeedResolver(librarySnapshot)
@@ -296,6 +312,7 @@ func Open(options Options) (*Application, error) {
 		"/api/import/setup",
 	)
 	register(mux, playerSessionHTTP, "/api/player/session")
+	mux.Handle("/api/mobile/", mobileOwner.AdminHandler())
 
 	mux.HandleFunc("/api/library/rescan", func(
 		w http.ResponseWriter,
@@ -336,6 +353,9 @@ func (a *Application) ExitRequested() <-chan struct{} {
 }
 
 func (a *Application) Close() {
+	if a.mobile != nil {
+		a.mobile.Close()
+	}
 	if a.jobs != nil {
 		a.jobs.Close()
 	}

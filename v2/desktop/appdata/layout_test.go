@@ -67,6 +67,9 @@ func TestSharedProviderRuntimeStaysOutsideV4SpecificRoot(t *testing.T) {
 	if got.SharedRuntime == filepath.Join(got.V4Root, "runtime") {
 		t.Fatal("V4 unnecessarily duplicated established provider runtime")
 	}
+	if got.MobileBridge != filepath.Join(base, "mobile-bridge") {
+		t.Fatalf("shared mobile bridge placement drift: %q", got.MobileBridge)
+	}
 }
 
 func TestPlayerSessionStaysSideBySideWithProtectedV3Stores(t *testing.T) {

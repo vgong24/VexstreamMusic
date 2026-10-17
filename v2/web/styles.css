@@ -391,3 +391,17 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
 .youtube-import-row input{width:100%;border:1px solid #d9d3ca;border-radius:10px;padding:10px 11px;background:#fff;color:#2c3031;font:inherit}
 .youtube-import .imports{padding-top:8px;border-top:1px solid #ded8cf}
 @media(max-width:720px){.discover-head{align-items:stretch;display:grid}.discover-tabs{width:100%}.discover-tabs button{flex:1}.youtube-import-row{grid-template-columns:1fr}}
+
+
+.library-heading-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+#selectSongs{padding:8px 10px}
+.selection-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:10px 0;padding:10px 12px;background:#fff;border:1px solid #ded8cf;border-radius:12px}
+.selection-bar[hidden]{display:none}
+.selection-bar button,.selection-bar select{padding:7px 9px;font-size:12px}
+.selection-bar select{border:1px solid #d9d3ca;border-radius:9px;background:#fff;color:#2c3031}
+.selection-spacer{flex:1}
+.track-card.selectable{grid-template-columns:auto minmax(0,1fr) auto;align-items:center}
+.track-card.selected{border-color:#d8a68a;background:#fff7f1}
+.track-selection{display:grid;place-items:center;padding:4px}
+.track-selection input{width:18px;height:18px}
+@media(max-width:720px){.library-heading-actions{justify-content:flex-start}.selection-spacer{display:none}.track-card.selectable{grid-template-columns:auto minmax(0,1fr)}.track-card.selectable .track-actions{grid-column:2}}

@@ -30,6 +30,7 @@ import {
   projectLibraryHome,
   projectLibraryView,
 } from "./features/library/projection.js";
+import { createTrackSelection } from "./features/library/selection.js";
 import {
   addSource,
   chooseSourceFolder,
@@ -99,6 +100,17 @@ const queueSummary=document.querySelector("#queueSummary");
 const queueList=document.querySelector("#queueList");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
+const selectSongs=document.querySelector("#selectSongs");
+const librarySelectionBar=document.querySelector("#librarySelectionBar");
+const librarySelectionCount=document.querySelector("#librarySelectionCount");
+const selectVisibleSongs=document.querySelector("#selectVisibleSongs");
+const bulkPlaySelected=document.querySelector("#bulkPlaySelected");
+const bulkPlayNextSelected=document.querySelector("#bulkPlayNextSelected");
+const bulkQueueSelected=document.querySelector("#bulkQueueSelected");
+const bulkPlaylistTarget=document.querySelector("#bulkPlaylistTarget");
+const bulkPlaylistSelected=document.querySelector("#bulkPlaylistSelected");
+const bulkTrashSelected=document.querySelector("#bulkTrashSelected");
+const clearSongSelection=document.querySelector("#clearSongSelection");
 const libraryGroupDetail=document.querySelector("#libraryGroupDetail");
 const libraryGroupBack=document.querySelector("#libraryGroupBack");
 const libraryGroupTerrain=document.querySelector("#libraryGroupTerrain");
@@ -228,6 +240,7 @@ let currentImportJobs=Object.freeze({
 
 const shellNavigation=createShellNavigation();
 const discoverNavigation=createDiscoverNavigation();
+const librarySelection=createTrackSelection();
 
 
 function trackTitle(item){
@@ -304,6 +317,7 @@ function renderDiscoverNavigation(
 
 shellNavigation.subscribe(renderShell);
 discoverNavigation.subscribe(renderDiscoverNavigation);
+librarySelection.subscribe(renderTrackChoices);
 
 function currentLibraryView(){
  return projectLibraryView(catalog,{
@@ -321,6 +335,7 @@ function applyCatalog(nextCatalog){
  catalog=nextCatalog;
  byRef=new Map(catalog.map(item=>[item.ref,item]));
  refs=catalog.map(item=>item.ref);
+ librarySelection.reconcile(refs);
  resolvedPlaylists=Object.freeze(
   playlists.map(playlist=>resolvePlaylistAvailability(playlist,catalog))
  );
@@ -772,8 +787,15 @@ function render(){
  }).join("");
 }
 
-function trackCardHTML(item){
- return `<article class="track-card" data-track-ref="${escapeHTML(item.ref)}">
+function trackCardHTML(item,{selectable=false}={}){
+ const selected=selectable&&librarySelection.isSelected(item.ref);
+ return `<article class="track-card ${selectable?"selectable":""} ${selected?"selected":""}" data-track-ref="${escapeHTML(item.ref)}">
+      ${selectable
+       ? `<label class="track-selection">
+           <input type="checkbox" data-track-select ${selected?"checked":""}>
+           <span class="sr-only">Select ${escapeHTML(trackTitle(item))}</span>
+          </label>`
+       : ""}
       <div class="track-card-copy">
        <strong>${escapeHTML(trackTitle(item))}</strong>
        <small>${escapeHTML(trackArtist(item))}</small>
@@ -856,6 +878,43 @@ function renderLibraryGroupDetail(){
  libraryGroupTracks.innerHTML=group.tracks.map(trackCardHTML).join("");
 }
 
+function selectedLibraryRefs(){
+ return librarySelection.currentProjection.selectedRefs.filter(ref=>byRef.has(ref));
+}
+
+function renderTrackSelection(){
+ const projection=librarySelection.currentProjection;
+ const songs=libraryView.mode==="songs";
+ selectSongs.hidden=!songs;
+ selectSongs.textContent=resolveText(
+  locale,
+  projection.active?"library.selection.done":"library.selection.select"
+ );
+ librarySelectionBar.hidden=!(songs&&projection.active);
+ librarySelectionCount.textContent=resolveText(locale,"library.selection.count",{
+  count:projection.count
+ });
+ const disabled=projection.count===0;
+ for(const button of [
+  bulkPlaySelected,
+  bulkPlayNextSelected,
+  bulkQueueSelected,
+  bulkTrashSelected
+ ]){
+  button.disabled=disabled;
+ }
+ const prior=bulkPlaylistTarget.value;
+ bulkPlaylistTarget.innerHTML=playlists.length
+  ?playlists.map(playlist=>
+    `<option value="${escapeHTML(playlist.id)}">${escapeHTML(playlist.name)}</option>`
+   ).join("")
+  :`<option value="">${escapeHTML(resolveText(locale,"playlist.empty"))}</option>`;
+ if(playlists.some(playlist=>playlist.id===prior)){
+  bulkPlaylistTarget.value=prior;
+ }
+ bulkPlaylistSelected.disabled=disabled||playlists.length===0;
+}
+
 function renderTrackChoices(){
  const visible=currentLibraryView();
  const genres=libraryGenres(catalog);
@@ -883,8 +942,11 @@ function renderTrackChoices(){
    total:catalog.length
   });
   trackChoices.innerHTML=visible.length
-   ?visible.map(trackCardHTML).join("")
+   ?visible.map(item=>trackCardHTML(item,{
+      selectable:librarySelection.currentProjection.active
+     })).join("")
    :`<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
+  renderTrackSelection();
   renderLibraryGroupDetail();
   return;
  }
@@ -918,6 +980,7 @@ function renderTrackChoices(){
       </div>
      </article>`).join("")
   :`<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;
+ renderTrackSelection();
  renderLibraryGroupDetail();
 }
 
@@ -1186,6 +1249,63 @@ function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){
  }
  return false;
 }
+
+selectSongs.addEventListener("click",()=>{
+ librarySelection.toggleMode();
+});
+
+selectVisibleSongs.addEventListener("click",()=>{
+ librarySelection.selectVisible(
+  currentLibraryView().map(item=>item.ref)
+ );
+});
+
+clearSongSelection.addEventListener("click",()=>{
+ librarySelection.clear();
+});
+
+trackChoices.addEventListener("change",event=>{
+ const input=event.target.closest("[data-track-select]");
+ const card=event.target.closest("[data-track-ref]");
+ if(!input||!card)return;
+ librarySelection.toggle(card.dataset.trackRef,input.checked);
+});
+
+bulkPlaySelected.addEventListener("click",()=>void guarded(async()=>{
+ const selected=selectedLibraryRefs();
+ if(selected.length)await player.playContext(selected,0);
+}));
+
+bulkPlayNextSelected.addEventListener("click",()=>void guarded(async()=>{
+ const selected=selectedLibraryRefs();
+ if(selected.length)await player.playNext(selected);
+}));
+
+bulkQueueSelected.addEventListener("click",()=>{
+ const selected=selectedLibraryRefs();
+ if(!selected.length)return;
+ player.append(selected);
+ render();
+});
+
+bulkPlaylistSelected.addEventListener("click",()=>void guarded(async()=>{
+ const selected=selectedLibraryRefs();
+ const playlistID=bulkPlaylistTarget.value;
+ if(!selected.length||!playlistID)return;
+ await addTracksToPlaylist(playlistID,selected);
+ await refreshPlaylists();
+}));
+
+bulkTrashSelected.addEventListener("click",()=>void guarded(async()=>{
+ const selected=selectedLibraryRefs();
+ if(!selected.length)return;
+ await moveTracksToTrash(selected);
+ librarySelection.clear();
+ await Promise.all([
+  refreshCatalog(),
+  refreshTrash()
+ ]);
+}));
 
 trackChoices.addEventListener("click",event=>{
  const groupAction=event.target.closest("[data-library-group-action]");
@@ -1654,6 +1774,7 @@ async function initialize(){
   get libraryView(){return libraryView;},
   shellNavigation,
   discoverNavigation,
+  librarySelection,
   get sourceConfig(){return sourceConfig;},
   get playlists(){return playlists;},
   get resolvedPlaylists(){return resolvedPlaylists;},

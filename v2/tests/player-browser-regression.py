@@ -1171,6 +1171,59 @@ def main() -> int:
                 "catalog metadata did not render",
             ),
         )
+        page.locator("#selectSongs").click()
+        page.locator(
+            '[data-track-ref="media.vexstream.test-tone.1"] [data-track-select]'
+        ).check()
+        page.locator(
+            '[data-track-ref="media.vexstream.test-tone.3"] [data-track-select]'
+        ).check()
+        checked(
+            "songs-selection-is-ephemeral-experience-state-over-library-truth",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.librarySelection.currentProjection.selectedRefs.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3"
+                )
+                and page.locator("#librarySelectionBar").is_visible()
+                and page.locator("#librarySelectionCount").inner_text()
+                == "2 selected"
+                and page.evaluate("window.vexV4.catalog.length") == 3,
+                "Songs selection drifted into Library truth",
+            ),
+        )
+        page.locator("#selectVisibleSongs").click()
+        checked(
+            "select-visible-follows-the-current-songs-projection",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.librarySelection.currentProjection.count"
+                )
+                == 3,
+                "Select visible did not consume current Library projection",
+            ),
+        )
+        page.locator("#clearSongSelection").click()
+        page.locator("#selectSongs").click()
+        checked(
+            "done-clears-and-closes-song-selection",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.librarySelection.currentProjection.active"
+                )
+                is False
+                and page.evaluate(
+                    "window.vexV4.librarySelection.currentProjection.count"
+                )
+                == 0
+                and page.locator("#librarySelectionBar").is_hidden(),
+                "Selection did not close cleanly",
+            ),
+        )
+
         checked(
             "source-config-loads-separately-from-library-catalog",
             lambda: require(

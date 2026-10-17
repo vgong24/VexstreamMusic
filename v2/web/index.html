@@ -81,10 +81,13 @@
           <h2 id="libraryTitle">Library</h2>
           <span id="librarySummary">0 tracks</span>
         </div>
-        <div class="library-view-toggle" role="group" aria-label="Library view">
-          <button type="button" data-library-mode="songs" aria-pressed="true">Songs</button>
-          <button type="button" data-library-mode="albums" aria-pressed="false">Albums</button>
-          <button type="button" data-library-mode="artists" aria-pressed="false">Artists</button>
+        <div class="library-heading-actions">
+          <button id="selectSongs" type="button" data-text-ref="library.selection.select">Select</button>
+          <div class="library-view-toggle" role="group" aria-label="Library view">
+            <button type="button" data-library-mode="songs" aria-pressed="true">Songs</button>
+            <button type="button" data-library-mode="albums" aria-pressed="false">Albums</button>
+            <button type="button" data-library-mode="artists" aria-pressed="false">Artists</button>
+          </div>
         </div>
       </div>
       <div class="library-toolbar">
@@ -108,6 +111,18 @@
             <option value="duration-desc">Longest first</option>
           </select>
         </label>
+      </div>
+      <div id="librarySelectionBar" class="selection-bar" hidden>
+        <strong id="librarySelectionCount">0 selected</strong>
+        <button id="selectVisibleSongs" type="button">Select visible</button>
+        <button id="bulkPlaySelected" type="button">Play</button>
+        <button id="bulkPlayNextSelected" type="button">Play next</button>
+        <button id="bulkQueueSelected" type="button">Add to queue</button>
+        <select id="bulkPlaylistTarget" aria-label="Playlist"></select>
+        <button id="bulkPlaylistSelected" type="button">Add to playlist</button>
+        <span class="selection-spacer"></span>
+        <button id="bulkTrashSelected" type="button">Move to Trash</button>
+        <button id="clearSongSelection" type="button">Clear</button>
       </div>
       <section id="libraryGroupDetail" class="library-group-detail" aria-labelledby="libraryGroupTitle" hidden>
         <div class="library-detail-head">

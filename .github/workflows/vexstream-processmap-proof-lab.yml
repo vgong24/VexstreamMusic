@@ -12,6 +12,7 @@ permissions:
 env:
   TARGET_SHA: d80c7fe1780aa5374b0dc84a7ac192658e1dba12
   TARGET_PR: "5"
+  V3_ORACLE_SHA: 8ffc302b3f03281ada06acab134cef5a11ac85b8
 
 jobs:
   diagnose:
@@ -38,6 +39,12 @@ jobs:
           ref: ${{ env.TARGET_SHA }}
           path: target
 
+      - name: Checkout protected V3 product oracle
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.V3_ORACLE_SHA }}
+          path: oracle
+
       - name: Bind exact candidate identity
         run: |
           set -euo pipefail
@@ -48,6 +55,12 @@ jobs:
           printf 'head=%s\ntree=%s\nstatus=%s\n' "$head" "$tree" "$status" | tee evidence/target-identity.txt
           test "$head" = "$TARGET_SHA"
           test -z "$status"
+          oracle_head="$(git -C oracle rev-parse HEAD)"
+          oracle_tree="$(git -C oracle rev-parse HEAD^{tree})"
+          oracle_status="$(git -C oracle status --porcelain=v1)"
+          printf 'head=%s\ntree=%s\nstatus=%s\n' "$oracle_head" "$oracle_tree" "$oracle_status" | tee evidence/v3-oracle-identity.txt
+          test "$oracle_head" = "$V3_ORACLE_SHA"
+          test -z "$oracle_status"
 
       - name: Exact target Node proof
         id: node
@@ -66,6 +79,17 @@ jobs:
             --output "$GITHUB_WORKSPACE/evidence" \
             2>&1 | tee evidence/processmap-diagnostic.log
 
+      - name: Capture protected V3 ↔ exact V4 named-state visual evidence
+        id: visual
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          node proof/v2/tests/processmap-visual-oracle.mjs \
+            --v3 "$GITHUB_WORKSPACE/oracle" \
+            --v4 "$GITHUB_WORKSPACE/target" \
+            --output "$GITHUB_WORKSPACE/evidence/visual" \
+            2>&1 | tee evidence/processmap-visual.log
+
       - name: Retain ProcessMap evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -78,6 +102,7 @@ jobs:
       - name: Preserve proof disposition
         if: always()
         run: |
-          printf 'node=%s\ndiagnostic=%s\n' '${{ steps.node.outcome }}' '${{ steps.diagnostic.outcome }}'
+          printf 'node=%s\ndiagnostic=%s\nvisual=%s\n' '${{ steps.node.outcome }}' '${{ steps.diagnostic.outcome }}' '${{ steps.visual.outcome }}'
           test '${{ steps.node.outcome }}' = success
           test '${{ steps.diagnostic.outcome }}' = success
+          test '${{ steps.visual.outcome }}' = success

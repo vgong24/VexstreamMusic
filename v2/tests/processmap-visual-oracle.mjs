@@ -6,6 +6,7 @@
 // those fixture facts are canonical product truth.
 
 import fs from "node:fs";
+import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import {spawn} from "node:child_process";
@@ -141,7 +142,7 @@ async function screenshot(c,sessionId,file){
  fs.writeFileSync(file,Buffer.from(shot.data,"base64"));
 }
 
-async function pageSession(c,markup){
+async function pageSession(c,url,timeout){
  const {targetId}=await c.send("Target.createTarget",{url:"about:blank"});
  const {sessionId}=await c.send("Target.attachToTarget",{targetId,flatten:true});
  await c.send("Page.enable",{},sessionId);
@@ -152,10 +153,8 @@ async function pageSession(c,markup){
   deviceScaleFactor:1,
   mobile:false
  },sessionId);
- const tree=await c.send("Page.getFrameTree",{},sessionId);
- const frameId=tree.frameTree?.frame?.id;
- if(!frameId)throw new Error("root frame missing");
- await c.send("Page.setDocumentContent",{frameId,html:markup},sessionId);
+ await c.send("Page.navigate",{url},sessionId);
+ await waitFor(c,sessionId,'document.readyState==="complete"',"document load",timeout);
  return {targetId,sessionId};
 }
 
@@ -211,9 +210,9 @@ async function captureState(c,sessionId,dir,version,name,meta){
  await recordMeta(c,sessionId,version,name,file,meta);
 }
 
-async function captureV3(c,markup,dir,meta,timeout){
+async function captureV3(c,url,dir,meta,timeout){
  fs.mkdirSync(dir,{recursive:true});
- const {sessionId}=await pageSession(c,markup);
+ const {sessionId}=await pageSession(c,url,timeout);
  await waitFor(c,sessionId,'document.querySelector("#statSongs")?.textContent==="3"',"V3 library fixture",timeout);
 
  const states=[
@@ -234,9 +233,9 @@ async function captureV3(c,markup,dir,meta,timeout){
  }
 }
 
-async function captureV4(c,markup,dir,meta,timeout){
+async function captureV4(c,url,dir,meta,timeout){
  fs.mkdirSync(dir,{recursive:true});
- const {sessionId}=await pageSession(c,markup);
+ const {sessionId}=await pageSession(c,url,timeout);
  await waitFor(c,sessionId,"window.vexV4?.ready===true","V4 ready",timeout);
  const states=[
   ["home",'window.vexV4.shellNavigation.select("home")','window.vexV4.shellNavigation.currentProjection.view==="home"&&document.querySelector("#homeView")&&!document.querySelector("#homeView").hidden'],
@@ -267,6 +266,22 @@ async function main(){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),"vexstream-visual-oracle-"));
  const profile=path.join(root,"profile");
  fs.mkdirSync(profile,{recursive:true});
+ const v3HTML=v3Markup(opt.v3);
+ const v4HTML=await v4Markup(opt.v4);
+ const server=http.createServer((request,response)=>{
+  const pathname=new URL(request.url||"/","http://127.0.0.1").pathname;
+  const body=pathname==="/v3"?v3HTML:pathname==="/v4"?v4HTML:null;
+  if(body===null){response.writeHead(404,{"Content-Type":"text/plain"});response.end("not found");return;}
+  response.writeHead(200,{"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store"});
+  response.end(body);
+ });
+ await new Promise((resolve,reject)=>{
+  server.once("error",reject);
+  server.listen(0,"127.0.0.1",resolve);
+ });
+ const address=server.address();
+ if(!address||typeof address==="string")throw new Error("visual oracle HTTP address unavailable");
+ const origin=`http://127.0.0.1:${address.port}`;
  const child=spawn(exe,[
   "--headless=new",
   "--no-sandbox",
@@ -286,8 +301,8 @@ async function main(){
   const [port,route]=active.split(/\r?\n/);
   c=await connect(`ws://127.0.0.1:${port}${route}`);
   const version=await c.send("Browser.getVersion");
-  await captureV3(c,v3Markup(opt.v3),v3Dir,meta,opt.timeout);
-  await captureV4(c,await v4Markup(opt.v4),v4Dir,meta,opt.timeout);
+  await captureV3(c,`${origin}/v3`,v3Dir,meta,opt.timeout);
+  await captureV4(c,`${origin}/v4`,v4Dir,meta,opt.timeout);
   const manifest={
    schemaVersion:"vexstream.processmap.visual-oracle/v1",
    status:"CAPTURED_NOT_ACCEPTED",
@@ -303,6 +318,7 @@ async function main(){
   console.log(JSON.stringify({status:manifest.status,browserVersion:manifest.browserVersion,states:manifest.states,captures:meta.length},null,2));
  }finally{
   c?.close();
+  await new Promise(resolve=>server.close(()=>resolve()));
   kill(child,"SIGTERM");
   await Promise.race([new Promise(resolve=>child.once("exit",resolve)),sleep(1000)]);
   kill(child,"SIGKILL");

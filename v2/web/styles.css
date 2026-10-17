@@ -968,3 +968,30 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
  .artist-mini-search{min-width:0;width:100%}
  .artist-album-shelf{grid-template-columns:1fr}
 }
+
+
+/* Playlist terrain keeps durable Playlist order separate from temporary Player/Queue context. */
+.playlist-detail-entries{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.playlist-detail-entries .playlist-entry{
+ display:grid;
+ grid-template-columns:28px 46px minmax(0,1fr) auto;
+ gap:9px;
+ align-items:center;
+ padding:9px 10px;
+ border:1px solid #ded8cf;
+ border-radius:11px;
+ background:#fff;
+}
+.playlist-detail-entries .playlist-entry.missing{opacity:.72;background:#faf7f2}
+.playlist-entry-order{font:12px ui-monospace,SFMono-Regular,Consolas,monospace;color:#777d7e;text-align:center}
+.playlist-detail-entries .song-art{width:46px;height:46px;border-radius:10px}
+.playlist-entry-copy{display:grid;gap:3px;min-width:0}
+.playlist-entry-copy strong,.playlist-entry-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playlist-entry-copy small{color:#777d7e}
+.playlist-entry-actions,.playlist-track-actions{display:flex;gap:4px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.playlist-entry-actions>button,.playlist-track-actions>button{padding:6px 8px}
+.playlist-entry-actions .song-more{position:relative}
+@media(max-width:720px){
+ .playlist-detail-entries .playlist-entry{grid-template-columns:24px 42px minmax(0,1fr)}
+ .playlist-entry-actions{grid-column:2/-1;justify-content:flex-start}
+}

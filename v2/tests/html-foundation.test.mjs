@@ -78,6 +78,8 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
     'id="playlistOverview"',
     'id="playlistDetail"',
     'id="playlistDetailBack"',
+    'id="playlistDetailShuffle"',
+    'data-text-ref="playlist.shuffle"',
     'id="playlistDetailAddSongs"',
     'id="playlistDetailEntries"',
     'id="trashTitle"',

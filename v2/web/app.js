@@ -245,6 +245,7 @@ const playlistDetailBack=document.querySelector("#playlistDetailBack");
 const playlistDetailName=document.querySelector("#playlistDetailName");
 const playlistDetailAvailability=document.querySelector("#playlistDetailAvailability");
 const playlistDetailPlay=document.querySelector("#playlistDetailPlay");
+const playlistDetailShuffle=document.querySelector("#playlistDetailShuffle");
 const playlistDetailAddSongs=document.querySelector("#playlistDetailAddSongs");
 const playlistDetailRename=document.querySelector("#playlistDetailRename");
 const playlistDetailDelete=document.querySelector("#playlistDetailDelete");
@@ -1708,20 +1709,69 @@ function currentPlaylistDetail(){
  return resolvedPlaylists.find(value=>value.playlist.id===id)??null;
 }
 
+function playlistUnavailableWitness(ref){
+ const matches=item=>
+  String(item?.track?.ref??item?.track?.id??"")===ref;
+ const trashed=trashSnapshot.trash.find(matches);
+ if(trashed?.track){
+  return Object.freeze({
+   track:trashed.track,
+   status:resolveText(locale,"playlist.unavailable.trash")
+  });
+ }
+ const deleted=trashSnapshot.deletedHistory.find(matches);
+ if(deleted?.track){
+  return Object.freeze({
+   track:deleted.track,
+   status:resolveText(locale,"playlist.unavailable.deleted")
+  });
+ }
+ return Object.freeze({
+  track:null,
+  status:resolveText(locale,"playlist.unavailable.missing")
+ });
+}
+
 function playlistEntryHTML(entry,index,total){
- const label=entry.available
-  ?trackTitle(entry.track)
+ const witness=entry.available
+  ?Object.freeze({track:entry.track,status:""})
+  :playlistUnavailableWitness(entry.ref);
+ const item=witness.track;
+ const label=item
+  ?trackTitle(item)
   :resolveText(locale,"playlist.missing-track");
- return `<li data-playlist-track-ref="${escapeHTML(entry.ref)}"
+ const metadata=entry.available
+  ?[trackArtist(item),String(item?.album??"").trim()].filter(Boolean).join(" · ")
+  :[item?trackArtist(item):entry.ref,witness.status].filter(Boolean).join(" · ");
+ return `<li class="playlist-entry ${entry.available?"":"missing"}"
+      data-playlist-track-ref="${escapeHTML(entry.ref)}"
+      data-track-ref="${escapeHTML(entry.ref)}"
       data-playlist-index="${index}"
       data-available="${String(entry.available)}">
+   <span class="playlist-entry-order">${index+1}</span>
+   ${item
+    ?trackArtworkHTML(item)
+    :'<span class="song-art"><span>♫</span></span>'}
    <span class="playlist-entry-copy">
     <strong>${escapeHTML(label)}</strong>
-    <small>${escapeHTML(entry.available?trackArtist(entry.track):entry.ref)}</small>
+    <small>${escapeHTML(metadata)}</small>
    </span>
    <span class="playlist-entry-actions">
     ${entry.available
-     ?`<button data-playlist-entry-action="play">${escapeHTML(resolveText(locale,"playback.play"))}</button>`
+     ?`<span class="playlist-track-actions">
+       <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+       <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
+       <details class="song-more">
+        <summary aria-label="Track actions" title="Track actions">⋯</summary>
+        <div class="song-more-menu">
+         <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
+         <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+         <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
+         <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
+         ${trackPlaylistActionHTML()}
+        </div>
+       </details>
+      </span>`
      :""}
     <button data-playlist-entry-action="up" ${index===0?"disabled":""}>↑</button>
     <button data-playlist-entry-action="down" ${index===total-1?"disabled":""}>↓</button>
@@ -1750,6 +1800,7 @@ function renderPlaylistChoices(){
     </div>
     <div class="playlist-card-actions">
      <button data-playlist-action="play" ${resolved.playableRefs.length?"":"disabled"}>${escapeHTML(resolveText(locale,"playlist.play"))}</button>
+     <button data-playlist-action="shuffle" ${resolved.playableRefs.length?"":"disabled"}>${escapeHTML(resolveText(locale,"playlist.shuffle"))}</button>
      <button data-playlist-action="open">${escapeHTML(resolveText(locale,"playlist.open"))}</button>
     </div>
    </article>`;
@@ -2409,6 +2460,13 @@ playlistChoices.addEventListener("click",event=>{
   }
   return;
  }
+ if(action.dataset.playlistAction==="shuffle"){
+  const shuffled=shuffleRefs([...resolved.playableRefs]);
+  if(shuffled.length){
+   void guarded(()=>player.playContext(shuffled,0));
+  }
+  return;
+ }
  if(action.dataset.playlistAction==="open"){
   playlistNavigation.open(id);
  }
@@ -2422,6 +2480,14 @@ playlistDetailPlay.addEventListener("click",()=>{
  const resolved=currentPlaylistDetail();
  if(resolved?.playableRefs.length){
   void guarded(()=>player.playContext(resolved.playableRefs,0));
+ }
+});
+
+playlistDetailShuffle.addEventListener("click",()=>{
+ const resolved=currentPlaylistDetail();
+ const shuffled=shuffleRefs([...(resolved?.playableRefs??[])]);
+ if(shuffled.length){
+  void guarded(()=>player.playContext(shuffled,0));
  }
 });
 
@@ -2450,20 +2516,14 @@ playlistDetailDelete.addEventListener("click",()=>void guarded(async()=>{
 }));
 
 playlistDetailEntries.addEventListener("click",event=>{
+ const resolved=currentPlaylistDetail();
+ if(!resolved)return;
+ if(handleTrackAction(event,{playbackRefs:resolved.playableRefs}))return;
  const action=event.target.closest("[data-playlist-entry-action]");
  const entry=event.target.closest("[data-playlist-index]");
- const resolved=currentPlaylistDetail();
- if(!action||!entry||!resolved)return;
+ if(!action||!entry)return;
  const index=Number(entry.dataset.playlistIndex);
  const refs=[...resolved.playlist.trackRefs];
-
- if(action.dataset.playlistEntryAction==="play"){
-  const ref=refs[index];
-  if(resolved.entries[index]?.available){
-   void guarded(()=>player.playTrack(ref,resolved.playableRefs));
-  }
-  return;
- }
 
  if(action.dataset.playlistEntryAction==="remove"){
   const ref=refs[index];

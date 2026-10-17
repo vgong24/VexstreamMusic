@@ -219,6 +219,7 @@ const importStart=document.querySelector("#importStart");
 const importReviewHint=document.querySelector("#importReviewHint");
 const importRefresh=document.querySelector("#importRefresh");
 const importJobs=document.querySelector("#importJobs");
+const nowArt=document.querySelector("#nowArt");
 const title=document.querySelector("#trackTitle");
 const artist=document.querySelector("#trackArtist");
 const error=document.querySelector("#error");
@@ -283,6 +284,14 @@ function trackTitle(item){
 
 function trackArtist(item){
  return item?.artist?.trim()||resolveText(locale,"library.unknown-artist");
+}
+
+function renderNowArtwork(item){
+ const source=String(item?.thumbnailURL??"").trim();
+ nowArt.classList.toggle("has-art",Boolean(source));
+ nowArt.innerHTML=source
+  ?`<img src="${escapeHTML(source)}" alt="">`
+  :"♫";
 }
 
 function homeRecentRowHTML(item){
@@ -570,6 +579,7 @@ const player=createPlayerComposition({
  resolveMedia:ref=>byRef.get(ref),
  defaultContextRefs:()=>libraryPlaybackRefs(),
  onCurrentMedia:item=>{
+  renderNowArtwork(item);
   title.textContent=trackTitle(item);
   artist.textContent=trackArtist(item);
  }
@@ -642,6 +652,13 @@ function setControl(button,presentation){
  if("selected" in presentation){
   button.setAttribute("aria-pressed",String(Boolean(presentation.selected)));
  }
+}
+
+function setTransportIcon(button,presentation,icon){
+ const label=resolveText(locale,presentation.textRef);
+ button.textContent=icon;
+ button.setAttribute("aria-label",label);
+ button.title=label;
 }
 
 function renderExplore(){
@@ -868,6 +885,10 @@ function render(){
  setControl(shuffle,qp.controls.shuffle);
  setControl(repeat,qp.controls.repeat);
  setControl(clearAfterCurrent,qp.controls.clearAfterCurrent);
+ setTransportIcon(playPause,pp,pp.iconRef==="pause"?"❚❚":"▶");
+ setTransportIcon(next,qp.controls.next,"⏭");
+ setTransportIcon(shuffle,qp.controls.shuffle,"🔀");
+ setTransportIcon(repeat,qp.controls.repeat,"↻");
 
  const queueCount=qp.state.kind==="empty"?0:qp.state.items.length;
  const queueNextCount=qp.state.kind==="empty"
@@ -882,9 +903,12 @@ function render(){
  });
 
  const hasCurrent=Boolean(currentQueueRef(qp.state));
+ const previousLabel=resolveText(locale,"queue.previous");
  previous.disabled=!hasCurrent;
- previous.textContent=resolveText(locale,"queue.previous");
+ previous.textContent="⏮";
  previous.dataset.textRef="queue.previous";
+ previous.setAttribute("aria-label",previousLabel);
+ previous.title=previousLabel;
 
  semanticState.textContent=playback.currentProjection.state.kind;
  queueState.textContent=qp.state.kind;
@@ -895,6 +919,7 @@ function render(){
 
  const current=currentQueueRef(qp.state);
  if(!current){
+  renderNowArtwork(null);
   title.textContent=resolveText(locale,"player.nothing.title");
   artist.textContent=resolveText(locale,"player.nothing.artist");
  }

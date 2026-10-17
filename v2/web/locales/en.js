@@ -9,7 +9,7 @@ export const en=Object.freeze({
  "playback.status.pending":"Waiting for provider",
  "player.practicum.eyebrow":"Desktop V4 player practicum",
  "player.nothing.title":"Nothing playing",
- "player.nothing.artist":"Choose Play or a track",
+ "player.nothing.artist":"Choose something from your local library",
  "player.play-next":"Play next",
  "player.add-to-queue":"Add to queue",
  "queue.previous":"Previous",

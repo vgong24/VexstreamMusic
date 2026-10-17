@@ -274,7 +274,9 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
  height:52px;
  border-radius:12px;
  font-size:22px;
+ overflow:hidden;
 }
+.now .art img{width:100%;height:100%;object-fit:cover;display:block}
 .now .track-copy{min-width:0}
 .now .track-copy strong,
 .now .track-copy span{
@@ -293,15 +295,24 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
  border-top:1px solid #ddd7cd;
 }
 .transport button{
- min-width:72px;
+ width:42px;
+ height:42px;
+ min-width:42px;
+ padding:0;
+ display:grid;
+ place-items:center;
  background:#f4f1ec;
  color:#2c3031;
  border-color:#d9d3ca;
+ font-size:16px;
 }
 .transport button.primary{
+ width:46px;
+ height:46px;
  border-radius:999px;
  background:#23292b;
  color:#fff;
+ font-size:17px;
 }
 .library,.sources,.playlists,.explore,.imports,.trash{
  color:#2b2e2f;

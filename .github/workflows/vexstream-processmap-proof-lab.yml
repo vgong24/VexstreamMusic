@@ -1,0 +1,83 @@
+name: VexStream ProcessMap Proof Lab
+
+on:
+  push:
+    branches:
+      - VXG-101626-vexstream-processmap-album-proof-lab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  TARGET_SHA: 605e19c8a8df69838bcaa671dddb16dcdd9d3070
+  TARGET_PR: "5"
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout proof lab
+        uses: actions/checkout@v4
+        with:
+          path: proof
+
+      - name: Confirm parent PR still names the exact target
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          current="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${TARGET_PR}" --jq .head.sha)"
+          printf 'current PR head=%s\nexpected target=%s\n' "$current" "$TARGET_SHA"
+          test "$current" = "$TARGET_SHA"
+
+      - name: Checkout exact product candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          path: target
+
+      - name: Bind exact candidate identity
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          head="$(git -C target rev-parse HEAD)"
+          tree="$(git -C target rev-parse HEAD^{tree})"
+          status="$(git -C target status --porcelain=v1)"
+          printf 'head=%s\ntree=%s\nstatus=%s\n' "$head" "$tree" "$status" | tee evidence/target-identity.txt
+          test "$head" = "$TARGET_SHA"
+          test -z "$status"
+
+      - name: Exact target Node proof
+        id: node
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm --prefix target/v2 test 2>&1 | tee evidence/node-test.log
+
+      - name: Exact target lived diagnostic and screenshots
+        id: diagnostic
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          node proof/v2/tests/processmap-lived-diagnostic.mjs \
+            --target "$GITHUB_WORKSPACE/target" \
+            --output "$GITHUB_WORKSPACE/evidence" \
+            2>&1 | tee evidence/processmap-diagnostic.log
+
+      - name: Retain ProcessMap evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vexstream-processmap-proof-${{ env.TARGET_SHA }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Preserve proof disposition
+        if: always()
+        run: |
+          printf 'node=%s\ndiagnostic=%s\n' '${{ steps.node.outcome }}' '${{ steps.diagnostic.outcome }}'
+          test '${{ steps.node.outcome }}' = success
+          test '${{ steps.diagnostic.outcome }}' = success

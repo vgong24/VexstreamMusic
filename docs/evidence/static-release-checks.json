@@ -1,0 +1,213 @@
+{
+  "schemaVersion": "vexstream.static-release-checks/v1",
+  "appVersion": "2.2.0",
+  "sourceRoot": "/mnt/data/vexstream-2.2.0-src",
+  "artifact": null,
+  "checks": [
+    {
+      "name": "go-version-binding",
+      "status": "PASS"
+    },
+    {
+      "name": "bridge-version-binding",
+      "status": "PASS"
+    },
+    {
+      "name": "ui-version-binding",
+      "status": "PASS"
+    },
+    {
+      "name": "embedded-source-binding",
+      "status": "PASS"
+    },
+    {
+      "name": "platform-process-boundary",
+      "status": "PASS"
+    },
+    {
+      "name": "single-master-multiplatform-distribution-builder-present",
+      "status": "PASS"
+    },
+    {
+      "name": "mac-youtube-runtime-bootstrap-present",
+      "status": "PASS"
+    },
+    {
+      "name": "mac-private-import-venv-present",
+      "status": "PASS"
+    },
+    {
+      "name": "import-readiness-split-present",
+      "status": "PASS"
+    },
+    {
+      "name": "windows-winget-ffmpeg-discovery-present",
+      "status": "PASS"
+    },
+    {
+      "name": "windows-import-setup-is-direct-and-idempotent",
+      "status": "PASS"
+    },
+    {
+      "name": "import-start-readiness-preflight-present",
+      "status": "PASS"
+    },
+    {
+      "name": "dom-ids-unique",
+      "status": "PASS"
+    },
+    {
+      "name": "library-sequence-activation-present",
+      "status": "PASS"
+    },
+    {
+      "name": "filtered-songs-display-playback-separation-present",
+      "status": "PASS"
+    },
+    {
+      "name": "startup-session-version-source-bound",
+      "status": "PASS"
+    },
+    {
+      "name": "real-media-server-regression-present",
+      "status": "PASS"
+    },
+    {
+      "name": "play-source-recovery-present",
+      "status": "PASS"
+    },
+    {
+      "name": "loaded-track-identity-present",
+      "status": "PASS"
+    },
+    {
+      "name": "render-player-bounds-in-function-scope",
+      "status": "PASS"
+    },
+    {
+      "name": "collapsed-drawer-contract-present",
+      "status": "PASS"
+    },
+    {
+      "name": "crop-contract-present",
+      "status": "PASS"
+    },
+    {
+      "name": "album-drilldown-terrain-present",
+      "status": "PASS"
+    },
+    {
+      "name": "album-reverse-artist-lattice-present",
+      "status": "PASS"
+    },
+    {
+      "name": "artist-navigation-card-contract-present",
+      "status": "PASS"
+    },
+    {
+      "name": "artist-search-sort-terrain-present",
+      "status": "PASS"
+    },
+    {
+      "name": "artist-collapsible-album-shelf-present",
+      "status": "PASS"
+    },
+    {
+      "name": "queue-timeline-context-present",
+      "status": "PASS"
+    },
+    {
+      "name": "queue-reorder-current-preservation-present",
+      "status": "PASS"
+    },
+    {
+      "name": "queue-action-feedback-present",
+      "status": "PASS"
+    },
+    {
+      "name": "shuffle-visible-order-contract-present",
+      "status": "PASS"
+    },
+    {
+      "name": "adaptive-navigation-drawer-present",
+      "status": "PASS"
+    },
+    {
+      "name": "configurable-song-fields-present",
+      "status": "PASS"
+    },
+    {
+      "name": "narrow-track-card-projection-present",
+      "status": "PASS"
+    },
+    {
+      "name": "intent-first-track-actions-present",
+      "status": "PASS"
+    },
+    {
+      "name": "single-track-action-close-present",
+      "status": "PASS"
+    },
+    {
+      "name": "repeat-scope-navigation-present",
+      "status": "PASS"
+    },
+    {
+      "name": "now-playing-lattice-navigation-present",
+      "status": "PASS"
+    },
+    {
+      "name": "punctuation-insensitive-token-search-present",
+      "status": "PASS"
+    },
+    {
+      "name": "whole-source-duplicate-warning-present",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate-quality-comparison-present",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate-logic-regression-test-present",
+      "status": "PASS"
+    },
+    {
+      "name": "existing-library-artist-suggestion-present",
+      "status": "PASS"
+    },
+    {
+      "name": "discovery-explore-route-present",
+      "status": "PASS"
+    },
+    {
+      "name": "discovery-explore-ui-present",
+      "status": "PASS"
+    },
+    {
+      "name": "discovery-multi-axis-diversity-present",
+      "status": "PASS"
+    },
+    {
+      "name": "discovery-provider-preview-is-visible-youtube-embed",
+      "status": "PASS"
+    },
+    {
+      "name": "discovery-session-is-memory-only-and-queue-separate",
+      "status": "PASS"
+    },
+    {
+      "name": "discovery-library-match-uses-existing-duplicate-semantics",
+      "status": "PASS"
+    },
+    {
+      "name": "discovery-go-regression-test-present",
+      "status": "PASS"
+    },
+    {
+      "name": "embedded-javascript-syntax",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

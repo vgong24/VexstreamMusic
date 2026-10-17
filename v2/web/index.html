@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VexStream Music — Desktop V4</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body data-vex-screen="vexstream.desktop.library" data-shell-current-view="home">
+<main class="shell">
+  <section class="player v3-product-shell" aria-labelledby="screenTitle">
+    <header class="app-identity product-header">
+      <button id="libraryNavToggle" class="nav-toggle" type="button" title="Toggle library navigation" aria-label="Toggle library navigation" aria-expanded="true">☰</button>
+      <button id="brandHome" class="brand brand-home" type="button" data-shell-view="home" title="Go to Library home" aria-label="Go to Library home"><span>Vex</span>Stream Music</button>
+      <div class="top-tabs" aria-label="VexStream terrain">
+        <button id="libraryTopTab" type="button" data-shell-view="home" class="active">Library</button>
+        <button id="discoverTopTab" type="button" data-shell-view="discover">Discover</button>
+      </div>
+      <div class="header-spacer"></div>
+      <button id="phoneConnectButton" class="system-bell" type="button" title="Connect VexLife phone" aria-label="Connect VexLife phone" aria-expanded="false">📱</button>
+      <button id="systemStatusButton" class="system-bell" type="button" title="System status" aria-label="System status" aria-expanded="false">🔔<span id="systemStatusBadge" class="system-badge" hidden>0</span></button>
+      <div id="buildIdentity" class="version" data-text-ref="system.identity.loading">Loading…</div>
+      <h1 id="screenTitle" class="sr-only" data-text-ref="playback.screen.title">VexStream Music</h1>
+    </header>
+
+    <aside id="librarySidebar" class="sidebar" aria-label="Library navigation" data-sidebar-open="true">
+      <nav class="nav">
+        <button type="button" data-shell-view="home" class="active"><span class="nav-icon">⌂</span><span>Home</span></button>
+        <button type="button" data-shell-view="songs"><span class="nav-icon">♫</span><span>Songs</span></button>
+        <button type="button" data-shell-view="albums"><span class="nav-icon">▣</span><span>Albums</span></button>
+        <button type="button" data-shell-view="artists"><span class="nav-icon">◎</span><span>Artists</span></button>
+        <button type="button" data-shell-view="playlists"><span class="nav-icon">▤</span><span>Playlists <span id="playlistNavCount" class="small muted"></span></span></button>
+        <button type="button" data-shell-view="deleted"><span class="nav-icon">♲</span><span>Deleted music <span id="trashNavCount" class="small muted"></span></span></button>
+      </nav>
+      <div class="sidebar-actions nav">
+        <button id="rescanLibraryBtn" type="button"><span class="nav-icon">↻</span><span>Rescan library</span></button>
+        <button id="shuffleAllBtn" type="button"><span class="nav-icon">⤨</span><span>Shuffle all</span></button>
+      </div>
+      <div class="sidebar-note">Your library is local. Source folders are managed under Discover → This PC.</div>
+    </aside>
+
+    <div id="libraryUtilityBar" class="library-toolbar library-utility-bar">
+      <div class="library-search">
+        <input id="librarySearch" type="search" placeholder="Search this library…" aria-label="Search library">
+        <button id="librarySearchExecute" class="search-go" type="button" title="Search" aria-label="Search">🔍</button>
+        <button id="librarySearchClear" class="search-clear" type="button" title="Clear search" hidden>Clear</button>
+      </div>
+      <div class="toolbar-group">
+        <label>
+          <span class="sr-only">Genre</span>
+          <select id="libraryGenre" title="Filter by genre">
+            <option value="all">Genre: All</option>
+          </select>
+        </label>
+        <button id="goDiscoverAdd" type="button">＋ Add music</button>
+      </div>
+    </div>
+
+    <section id="homeView" class="home-view" data-shell-panel="home" aria-labelledby="homeTitle">
+      <div class="hero">
+        <div>
+          <h2 id="homeTitle">Local library</h2>
+          <div class="muted">Your real MP3 collection, organized from folders you choose.</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong id="homeSongCount">0</strong><span>songs</span></div>
+        <div class="stat"><strong id="homeAlbumCount">0</strong><span>albums / collections</span></div>
+        <div class="stat"><strong id="homeArtistCount">0</strong><span>artists</span></div>
+        <div class="stat"><strong id="homeSourceCount">0</strong><span>folders</span></div>
+      </div>
+      <section class="home-recent" aria-labelledby="recentTitle">
+        <div class="section-heading">
+          <div>
+            <h2 id="recentTitle">Recently discovered</h2>
+            <span>Actual local files.</span>
+          </div>
+          <button type="button" data-shell-view="songs">See all</button>
+        </div>
+        <div id="recentSongs"></div>
+      </section>
+    </section>
+
+    <div id="nowPlaying" class="now">
+      <button id="nowArtButton" class="now-art-button" type="button" title="Open current track actions" aria-label="Open current track actions" disabled>
+        <div id="nowArt" class="art" aria-hidden="true">♫</div>
+      </button>
+      <div class="track-copy">
+        <div class="now-title-row">
+          <button id="nowTitleButton" class="now-title-button" type="button" title="Open current track actions" disabled>
+            <strong id="trackTitle">Nothing playing</strong>
+          </button>
+          <details id="nowDetails" class="now-details" hidden>
+            <summary class="now-details-toggle" aria-label="Current track actions" title="Current track actions">⋯</summary>
+            <div class="song-more-menu now-details-menu">
+              <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">Play next</button>
+              <button data-track-action="append" data-vex-action="vexstream.player.add-queue">Add to queue</button>
+              <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">Explore</button>
+              <button data-track-action="edit">Edit</button>
+              <button data-track-action="trash">Move to Deleted music</button>
+            </div>
+          </details>
+        </div>
+        <div id="nowMeta" class="now-meta">Choose something from your local library</div>
+      </div>
+    </div>
+
+    <div class="transport" aria-label="Playback and queue controls">
+      <div class="transport-controls">
+        <button id="previous" type="button" data-vex-control="vexstream.queue.previous" data-text-ref="queue.previous">Previous</button>
+        <button id="playPause" type="button" class="primary" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
+        <button id="next" type="button" data-vex-control="vexstream.queue.next" data-text-ref="queue.next">Next</button>
+        <button id="shuffle" type="button" data-vex-control="vexstream.queue.shuffle" data-text-ref="queue.shuffle" aria-pressed="false">Shuffle</button>
+        <button id="repeat" type="button" data-vex-control="vexstream.queue.repeat" data-text-ref="queue.repeat" aria-pressed="false">Repeat</button>
+      </div>
+      <div class="timeline small" aria-label="Playback position">
+        <span id="curTime">0:00</span>
+        <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek" disabled>
+        <span id="durTime">0:00</span>
+      </div>
+      <div class="player-aux">
+        <label class="volume-control">
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
+          <span>Volume</span>
+        </label>
+        <button id="queueMiniBtn" class="queue-mini" type="button" aria-controls="queueDrawer" aria-expanded="false" title="Open Queue">
+          <span aria-hidden="true">☰</span>
+          <span id="queueMiniCount">0</span>
+        </button>
+      </div>
+    </div>
+
+    <section class="library" data-shell-panel="library" aria-labelledby="libraryTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <h2 id="libraryTitle">Library</h2>
+          <span id="librarySummary">0 tracks</span>
+          <div id="songSortSummary" class="sort-help" hidden></div>
+        </div>
+        <div class="library-heading-actions">
+          <button id="songLayoutButton" type="button" title="Choose visible fields and title space">▥ Columns</button>
+          <button id="playAllSongs" type="button" data-text-ref="library.play-all">Play all</button>
+          <button id="selectSongs" type="button" data-text-ref="library.selection.select">Select</button>
+          <label class="library-sort-control">
+            <span class="sr-only">Sort library</span>
+            <select id="librarySort">
+              <option value="title">Title</option>
+              <option value="artist">Artist</option>
+              <option value="album">Album</option>
+              <option value="genre">Genre</option>
+              <option value="recent">Recently added</option>
+              <option value="duration">Shortest first</option>
+              <option value="duration-desc">Longest first</option>
+              <option value="custom" disabled>Custom precedence</option>
+            </select>
+          </label>
+          <div class="library-view-toggle" role="group" aria-label="Library view">
+            <button type="button" data-library-mode="songs" aria-pressed="true">Songs</button>
+            <button type="button" data-library-mode="albums" aria-pressed="false">Albums</button>
+            <button type="button" data-library-mode="artists" aria-pressed="false">Artists</button>
+          </div>
+        </div>
+      </div>
+      <div id="librarySelectionBar" class="selection-bar" hidden>
+        <strong id="librarySelectionCount">0 selected</strong>
+        <button id="selectVisibleSongs" type="button">Select visible</button>
+        <button id="bulkPlaySelected" type="button">Play</button>
+        <button id="bulkPlayNextSelected" type="button">Play next</button>
+        <button id="bulkQueueSelected" type="button">Add to queue</button>
+        <button id="bulkEditSelected" type="button">Edit display…</button>
+        <select id="bulkPlaylistTarget" aria-label="Playlist"></select>
+        <button id="bulkPlaylistSelected" type="button">Add to playlist</button>
+        <span class="selection-spacer"></span>
+        <button id="bulkTrashSelected" type="button">Move to Trash</button>
+        <button id="clearSongSelection" type="button">Clear</button>
+      </div>
+
+      <section id="songLayoutPanel" class="song-layout-panel" aria-labelledby="songLayoutTitle" hidden>
+        <div class="song-layout-head">
+          <div>
+            <strong id="songLayoutTitle">Song layout</strong>
+            <span class="small muted">Choose which metadata fields deserve space in this VexStream session.</span>
+          </div>
+          <button id="songLayoutDone" type="button">Done</button>
+        </div>
+        <div class="song-layout-grid">
+          <label><input type="checkbox" data-song-layout-field="artist" checked><span><strong>Artist</strong><small>Who performs the track</small></span></label>
+          <label><input type="checkbox" data-song-layout-field="album" checked><span><strong>Album</strong><small>Collection / album terrain</small></span></label>
+          <label><input type="checkbox" data-song-layout-field="added" checked><span><strong>Added</strong><small>When VexStream discovered it</small></span></label>
+          <label><input type="checkbox" data-song-layout-field="duration" checked><span><strong>Time</strong><small>Track duration</small></span></label>
+          <label><input type="checkbox" data-song-layout-field="genre"><span><strong>Genre</strong><small>Optional classification</small></span></label>
+        </div>
+        <label class="song-title-width">
+          <strong>Title space</strong>
+          <input id="songTitleWidth" type="range" min="34" max="62" value="46">
+          <span id="songTitleWidthValue" class="small muted">46%</span>
+        </label>
+        <div class="song-layout-actions">
+          <button id="songLayoutReset" type="button">Reset layout</button>
+        </div>
+      </section>
+
+      <section id="bulkDisplayEditor" class="library-editor bulk-display-editor" aria-labelledby="bulkDisplayEditorTitle" hidden>
+        <div class="section-heading">
+          <div>
+            <h2 id="bulkDisplayEditorTitle">Edit shared display fields</h2>
+            <span id="bulkDisplayEditorSummary">Only checked fields change. Source metadata is not rewritten.</span>
+          </div>
+          <button id="bulkDisplayEditorClose" type="button">Close</button>
+        </div>
+        <div class="bulk-display-grid">
+          <label class="bulk-display-field"><input id="bulkApplyArtist" type="checkbox"><span>Artist</span></label>
+          <input id="bulkArtist" type="text" placeholder="Mixed / unchanged">
+          <label class="bulk-display-field"><input id="bulkApplyAlbum" type="checkbox"><span>Album / collection</span></label>
+          <input id="bulkAlbum" type="text" placeholder="Mixed / unchanged">
+          <label class="bulk-display-field"><input id="bulkApplyGenre" type="checkbox"><span>Genre</span></label>
+          <input id="bulkGenre" type="text" placeholder="Mixed / unchanged">
+        </div>
+        <div class="small muted">Titles are intentionally excluded from bulk edit so one shared title cannot overwrite distinct tracks by accident.</div>
+        <div class="library-editor-actions">
+          <button id="applyBulkDisplay" type="button" class="primary">Apply checked fields</button>
+          <button id="cancelBulkDisplay" type="button">Cancel</button>
+        </div>
+      </section>
+
+      <section id="libraryGroupDetail" class="library-group-detail" aria-labelledby="libraryGroupTitle" hidden>
+        <div class="library-detail-head">
+          <button id="libraryGroupBack" type="button">Back</button>
+          <span id="libraryGroupTerrain" class="muted"></span>
+        </div>
+        <div class="library-detail-hero">
+          <div id="libraryGroupArtwork" class="library-detail-artwork" aria-hidden="true"></div>
+          <div class="library-detail-copy">
+            <div id="libraryGroupEyebrow" class="eyebrow"></div>
+            <h2 id="libraryGroupTitle"></h2>
+            <div id="libraryGroupSummary" class="muted"></div>
+          </div>
+          <div class="library-detail-actions">
+            <button id="libraryGroupPlay" type="button" class="primary">Play</button>
+            <button id="libraryGroupShuffle" type="button">Shuffle</button>
+            <button id="libraryGroupPlayNext" type="button">Play next</button>
+            <button id="libraryGroupAppend" type="button">Add to queue</button>
+          </div>
+          <div id="libraryGroupRelations" class="library-detail-relations"></div>
+        </div>
+        <section id="artistDetailAlbums" class="artist-detail-section" aria-labelledby="artistAlbumsToggle" hidden>
+          <button id="artistAlbumsToggle" class="artist-section-toggle" type="button" aria-expanded="false">
+            <span>▸ Albums</span>
+            <span id="artistAlbumCount" class="artist-section-count">0</span>
+            <span id="artistAlbumsHint" class="artist-section-hint">Expand album terrain</span>
+          </button>
+          <div id="artistAlbumShelf" class="artist-album-shelf" hidden></div>
+        </section>
+        <section id="artistDetailSongs" class="artist-detail-section artist-songs-section" aria-labelledby="artistSongsTitle" hidden>
+          <div class="artist-songs-head">
+            <div>
+              <h3 id="artistSongsTitle">Songs</h3>
+              <div id="artistSongSummary" class="small muted"></div>
+            </div>
+            <div class="artist-mini-search">
+              <span aria-hidden="true">⌕</span>
+              <input id="artistSongSearch" type="search" placeholder="Search artist songs…" aria-label="Search this artist's songs">
+            </div>
+          </div>
+          <div id="artistAlbumFilter" class="artist-album-filter"></div>
+          <div id="artistSortSummary" class="sort-help"></div>
+          <div id="artistSongTable" class="artist-song-table-host"></div>
+        </section>
+        <div id="libraryGroupTracks" class="library-detail-tracks"></div>
+      </section>
+      <div id="trackChoices"></div>
+    </section>
+
+    <section class="library-editor" id="libraryEditor" aria-labelledby="libraryEditorTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <h2 id="libraryEditorTitle">Track details</h2>
+          <span id="libraryEditorSummary">Reversible VexStream display and playback edits</span>
+        </div>
+        <button id="libraryEditorClose" type="button">Close</button>
+      </div>
+      <div class="track-details-notice">
+        <strong>Library display and playback edits are reversible.</strong>
+        <span>Source/provider metadata and the original media bytes remain unchanged.</span>
+      </div>
+      <div class="library-editor-grid">
+        <label><span>Title</span><input id="editTitle" type="text"></label>
+        <label><span>Artist</span><input id="editArtist" type="text"></label>
+        <label><span>Album</span><input id="editAlbum" type="text"></label>
+        <label><span>Genre</span><input id="editGenre" type="text"></label>
+        <label><span>Play from (seconds)</span><input id="editPlaybackStart" type="number" min="0" step="0.1"></label>
+        <label><span>Stop at (seconds, optional)</span><input id="editPlaybackEnd" type="number" min="0" step="0.1"></label>
+      </div>
+      <div id="playbackWindowSummary" class="playback-window-summary"></div>
+      <details class="track-source-panel" open>
+        <summary>Source / provenance</summary>
+        <div id="trackSourceDetails" class="track-source-details"></div>
+        <div class="small muted">Local filesystem paths remain server-side; this browser projection exposes metadata/provenance only.</div>
+      </details>
+      <div class="library-editor-actions">
+        <button id="saveTrackDisplay" type="button" class="primary">Save details</button>
+        <button id="restoreTrackDisplay" type="button">Restore original details</button>
+        <button id="savePlaybackWindow" type="button">Save playback window</button>
+        <button id="restorePlaybackWindow" type="button">Use full track</button>
+      </div>
+    </section>
+
+    <section class="discover-workspace" data-shell-panel="discover" aria-labelledby="discoverTitle" hidden>
+      <div class="discover-head">
+        <div>
+          <div class="eyebrow">Add to VexStream</div>
+          <h2 id="discoverTitle">Discover music</h2>
+          <div class="muted">Browse this computer, review a YouTube link, or explore from music you already know.</div>
+        </div>
+        <div class="discover-tabs" role="tablist" aria-label="Discover route">
+          <button type="button" data-discover-mode="pc" aria-pressed="true" data-text-ref="discover.pc">This PC</button>
+          <button type="button" data-discover-mode="youtube" aria-pressed="false" data-text-ref="discover.youtube">YouTube</button>
+          <button type="button" data-discover-mode="explore" aria-pressed="false" data-text-ref="discover.explore">🌐 Explore</button>
+        </div>
+      </div>
+    <section class="sources" data-discover-panel="pc" aria-labelledby="sourcesTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <h2 id="sourcesTitle">Music folders</h2>
+          <span id="sourceSummary">No folders included</span>
+        </div>
+        <div class="source-actions">
+          <button id="sourceAdd" type="button">Add folder…</button>
+          <button id="sourceDiscover" type="button">Find music</button>
+          <button id="sourceDiscoverDeep" type="button">Deep scan</button>
+        </div>
+      </div>
+      <div id="sourceList"></div>
+      <div id="sourceDiscovery"></div>
+      <details id="ignoredSources">
+        <summary>Ignored folders</summary>
+        <div id="ignoredSourceList"></div>
+        <button id="clearIgnoredSources" type="button">Restore all ignored folders</button>
+      </details>
+    </section>
+    <section class="youtube-import" data-discover-panel="youtube" hidden aria-labelledby="youtubeImportTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="youtubeImportTitle">YouTube</h2>
+          <span>Review a provider link before VexStream downloads anything.</span>
+        </div>
+      </div>
+      <div class="youtube-import-entry">
+        <label for="youtubeImportURL">YouTube link</label>
+        <div class="youtube-import-row">
+          <input id="youtubeImportURL" type="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
+          <button id="youtubeInspect" type="button" class="primary">Review</button>
+        </div>
+        <div class="muted">Inspection and duplicate matching are read-only. Download begins only after the review step.</div>
+      </div>
+    <section class="imports"  aria-labelledby="importsTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="importsTitle">Imports</h2>
+          <span>Current preparation, review, and recovery state</span>
+        </div>
+        <button id="importRefresh" type="button">Refresh</button>
+      </div>
+      <div id="importJobs"></div>
+    </section>
+    </section>
+    <section class="explore" data-discover-panel="explore" aria-labelledby="exploreTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <h2 id="exploreTitle">Explore</h2>
+          <span id="exploreSummary">No Explore session</span>
+        </div>
+        <div class="explore-actions">
+          <button id="exploreBack" type="button" data-vex-control="vexstream.explore.back">Back</button>
+          <button id="exploreClear" type="button" data-vex-control="vexstream.explore.clear">Clear</button>
+        </div>
+      </div>
+      <div id="exploreCandidates"></div>
+      <iframe
+        id="explorePreview"
+        title="Explore preview"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allow="autoplay"
+        hidden
+      ></iframe>
+    </section>
+    </section>
+
+    <section class="playlists" data-shell-panel="playlists" aria-labelledby="playlistsTitle" hidden>
+      <div id="playlistOverview">
+        <div class="section-heading">
+          <div>
+            <h2 id="playlistsTitle">Playlists</h2>
+            <span>Durable local collections. Playlist order persists; the playback queue stays temporary.</span>
+          </div>
+          <div class="playlist-create">
+            <input id="newPlaylistName" type="text" placeholder="New playlist name">
+            <button id="createPlaylist" type="button">Create</button>
+          </div>
+        </div>
+        <div id="playlistChoices"></div>
+      </div>
+      <section id="playlistDetail" class="playlist-detail" aria-labelledby="playlistDetailName" hidden>
+        <div class="playlist-detail-head">
+          <button id="playlistDetailBack" type="button" data-text-ref="playlist.detail.back">← All playlists</button>
+          <span class="muted" data-text-ref="playlist.detail.terrain">Playlist terrain</span>
+        </div>
+        <div class="playlist-detail-hero">
+          <div class="playlist-detail-copy">
+            <input id="playlistDetailName" type="text" aria-label="Playlist name">
+            <span id="playlistDetailAvailability" class="muted"></span>
+          </div>
+          <div class="playlist-detail-actions">
+            <button id="playlistDetailPlay" type="button" class="primary" data-text-ref="playlist.play">Play playlist</button>
+            <button id="playlistDetailShuffle" type="button" data-text-ref="playlist.shuffle">Shuffle playlist</button>
+            <button id="playlistDetailAddSongs" type="button" data-text-ref="playlist.add-songs">Add songs</button>
+            <button id="playlistDetailRename" type="button" data-text-ref="playlist.rename">Rename</button>
+            <button id="playlistDetailDelete" type="button" data-text-ref="playlist.delete">Delete playlist</button>
+          </div>
+        </div>
+        <ol id="playlistDetailEntries" class="playlist-detail-entries"></ol>
+      </section>
+    </section>
+
+    <section class="import-review" id="importReview" aria-labelledby="importReviewTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <h2 id="importReviewTitle">Add to library</h2>
+          <span id="importReviewSummary">Review provider media before download</span>
+        </div>
+        <button id="importReviewClose" type="button">Close</button>
+      </div>
+
+      <div class="import-review-grid">
+        <div>
+          <strong id="importReviewSourceTitle">Source</strong>
+          <div id="importReviewSourceCreator" class="muted"></div>
+          <div id="importDuplicateSummary" class="import-note"></div>
+        </div>
+
+        <label>
+          <span>Save to</span>
+          <select id="importDestination"></select>
+        </label>
+
+        <label>
+          <span>Track layout</span>
+          <select id="importMode">
+            <option value="split">Save as individual tracks</option>
+            <option value="whole">Keep as one track</option>
+            <option value="both">Save both</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Collection / album label</span>
+          <input id="importCollection" type="text">
+        </label>
+
+        <label>
+          <span>Artist override</span>
+          <input id="importArtist" type="text" placeholder="Unknown — set if you know it">
+        </label>
+
+        <label>
+          <span>Genre / library label</span>
+          <input id="importGenre" type="text">
+        </label>
+      </div>
+
+      <div id="importSections"></div>
+
+      <div class="import-actions">
+        <button id="importStart" type="button" class="primary">Download &amp; add</button>
+        <span id="importReviewHint">Temporary staging protects the library until commit completes.</span>
+      </div>
+    </section>
+
+    <section class="trash deleted-music-view" data-shell-panel="deleted" aria-labelledby="trashTitle" hidden>
+      <div class="section-heading deleted-heading">
+        <div>
+          <h2 id="trashTitle">Deleted music</h2>
+          <span id="trashSummary">A reversible file trash first; optional metadata history after permanent erase.</span>
+        </div>
+        <button id="trashRefresh" type="button">Refresh</button>
+      </div>
+
+      <div id="trashSelectionBar" class="selection-bar trash-selection-bar" hidden>
+        <strong id="trashSelectionCount">0 selected</strong>
+        <button id="restoreSelectedTrash" type="button">Restore</button>
+        <span class="selection-spacer"></span>
+        <button id="purgeSelectedTrash" type="button" class="danger">Permanently delete…</button>
+        <button id="clearTrashSelection" type="button">Clear</button>
+      </div>
+
+      <section class="trash-card" aria-labelledby="trashCardTitle">
+        <div class="section-heading">
+          <div>
+            <h3 id="trashCardTitle">VexStream Trash</h3>
+            <span>Audio remains on disk here until you permanently delete it.</span>
+          </div>
+          <span id="trashCount" class="small muted">0 items</span>
+        </div>
+        <div id="trashItems" class="trash-list"></div>
+      </section>
+
+      <section class="trash-card" aria-labelledby="deletedHistoryTitle">
+        <div class="section-heading">
+          <div>
+            <h3 id="deletedHistoryTitle">Metadata-only history</h3>
+            <span>Optional memory of permanently erased tracks. No audio is retained here.</span>
+          </div>
+          <span id="deletedHistoryCount" class="small muted">0 records</span>
+        </div>
+        <div id="deletedHistory" class="trash-list"></div>
+      </section>
+
+      <section id="trashPurgeConfirm" class="trash-purge-confirm" aria-labelledby="trashPurgeConfirmTitle" hidden>
+        <div>
+          <strong id="trashPurgeConfirmTitle">Permanently delete selected music?</strong>
+          <div id="trashPurgeConfirmSummary" class="small muted">This removes the audio bytes. This cannot restore the music file afterward.</div>
+        </div>
+        <label class="trash-preserve-history">
+          <input id="preserveDeletedMetadata" type="checkbox" checked>
+          <span><strong>Keep metadata-only history</strong><small>Remember title and provenance after the audio bytes are gone.</small></span>
+        </label>
+        <div class="trash-confirm-actions">
+          <button id="trashPurgeCancel" type="button">Cancel</button>
+          <button id="trashPurgeCommit" type="button" class="danger">Permanently delete</button>
+        </div>
+      </section>
+
+      <div id="purgeRecovery" class="trash-recovery" hidden>
+        <span>A permanent-delete operation needs recovery.</span>
+        <button id="recoverTrashPurge" type="button">Recover admitted delete</button>
+      </div>
+    </section>
+
+    <div id="queueDrawer" class="queue-drawer" aria-expanded="false">
+      <button id="queueDrawerHandle" class="queue-handle" type="button" aria-controls="queueDrawerBody" aria-expanded="false">
+        <span class="grabber" aria-hidden="true"></span>
+        <strong>Queue</strong>
+        <span id="queueDrawerCount" class="small muted">0</span>
+        <span id="queueDrawerNextCount" class="queue-summary">0 next</span>
+      </button>
+      <section id="queueDrawerBody" class="queue queue-drawer-body" aria-labelledby="queueTitle">
+        <div class="section-heading">
+          <div>
+            <h2 id="queueTitle">Playback timeline</h2>
+            <span id="queueSummary">Empty</span>
+          </div>
+          <button id="clearAfterCurrent" type="button" data-vex-control="vexstream.queue.clear-after-current" data-text-ref="queue.clear-after-current">Clear after current</button>
+        </div>
+        <ol id="queueList"></ol>
+      </section>
+    </div>
+
+    <div class="proof-grid" aria-hidden="true">
+      <div class="proof-row"><span>Playback</span><strong id="semanticState">no-media</strong></div>
+      <div class="proof-row"><span>Queue</span><strong id="queueState">empty</strong></div>
+      <div class="proof-row"><span>Session</span><strong id="sessionState">Fresh</strong></div>
+      <div class="proof-row"><span>Provider</span><strong id="status">Provider ready</strong></div>
+    </div>
+    <div id="error" role="alert"></div>
+    <audio id="audio" preload="auto"></audio>
+  </section>
+</main>
+<div id="modalBackdrop" class="modal-backdrop" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="row between modal-head">
+      <h2 id="modalTitle">VexStream</h2>
+      <button id="modalCloseBtn" class="modal-close" type="button" title="Close" aria-label="Close">×</button>
+    </div>
+    <div id="modalBody" style="margin-top:12px"></div>
+    <div id="modalActions" class="modal-actions"></div>
+  </div>
+</div>
+<aside id="systemDrawer" class="system-drawer" aria-labelledby="systemDrawerTitle" hidden>
+  <div class="system-panel">
+    <div class="system-drawer-head">
+      <div>
+        <div class="eyebrow" data-text-ref="system.status.eyebrow">VexStream system</div>
+        <h2 id="systemDrawerTitle" data-text-ref="system.status.title">System status</h2>
+        <div class="muted" data-text-ref="system.status.scope">Current Desktop V4 truth and recovery state.</div>
+      </div>
+      <button id="systemDrawerClose" type="button" data-text-ref="system.status.close">Close</button>
+    </div>
+    <section id="systemSummary" class="system-status-card" aria-live="polite"></section>
+    <div class="system-status-grid">
+      <section class="system-status-card">
+        <h3 data-text-ref="system.status.desktop">Desktop</h3>
+        <strong id="systemBuildStatus"></strong>
+        <span id="systemBuildRef" class="muted"></span>
+      </section>
+      <section class="system-status-card">
+        <h3 data-text-ref="system.status.library">Library</h3>
+        <strong id="systemLibraryStatus"></strong>
+        <span id="systemTrashStatus" class="muted"></span>
+      </section>
+      <section class="system-status-card">
+        <h3 data-text-ref="system.status.listening">Listening session</h3>
+        <strong id="systemSessionStatus"></strong>
+        <span class="muted" data-text-ref="system.status.session-note">Restoration state only; Playback truth remains with Player.</span>
+      </section>
+      <section class="system-status-card">
+        <h3 data-text-ref="system.status.imports">Imports</h3>
+        <strong id="systemImportStatus"></strong>
+        <span class="muted" data-text-ref="system.status.import-note">Import job truth remains with the Import owner.</span>
+      </section>
+    </div>
+    <section id="systemAttention" class="system-status-card"></section>
+    <section class="system-status-card system-status-boundary">
+      <h3 data-text-ref="system.status.capability-boundary">Not migrated yet</h3>
+      <p data-text-ref="system.status.capability-detail">V3 diagnostics exports and reviewable safe-repair controls are not yet owned by Desktop V4. This status surface does not pretend those capabilities exist.</p>
+    </section>
+    <div class="system-drawer-actions">
+      <button id="exitVexStream" type="button" data-vex-action="vexstream.system.exit">Exit VexStream</button>
+    </div>
+  </div>
+</aside>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

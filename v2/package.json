@@ -1,0 +1,10 @@
+{
+  "name": "vexstream-desktop-v2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/playback-behavior.test.mjs tests/playback-connection.test.mjs tests/playback-timeline.test.mjs tests/playback-volume.test.mjs tests/queue-behavior.test.mjs tests/player-composition.test.mjs tests/library-client.test.mjs tests/playlist-client.test.mjs tests/html-foundation.test.mjs tests/explore-session.test.mjs tests/explore-client.test.mjs tests/explore-composition.test.mjs tests/import-client.test.mjs tests/import-review.test.mjs tests/player-session.test.mjs tests/system-client.test.mjs tests/phone-client.test.mjs tests/phone-connection.test.mjs tests/phone-presentation.test.mjs tests/library-projection.test.mjs tests/source-client.test.mjs tests/library-admin.test.mjs tests/library-trash-client.test.mjs tests/shell-navigation.test.mjs tests/discover-navigation.test.mjs tests/library-selection.test.mjs tests/playlist-navigation.test.mjs tests/system-status.test.mjs",
+    "test:lived": "node tests/lived-shell-browser-smoke.mjs",
+    "test:browser": "python3 tests/player-browser-regression.py"
+  }
+}

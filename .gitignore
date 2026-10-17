@@ -1,0 +1,15 @@
+# User libraries and runtime state
+*.mp3
+*.m4a
+*.wav
+*.flac
+*.ogg
+
+# Local build / patch inputs and outputs
+VexStreamMusic-*.exe
+VexStreamMusic-*.zip
+
+# Python / Node transient files
+__pycache__/
+*.pyc
+node_modules/

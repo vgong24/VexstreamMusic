@@ -226,6 +226,29 @@
           </div>
           <div id="libraryGroupRelations" class="library-detail-relations"></div>
         </div>
+        <section id="artistDetailAlbums" class="artist-detail-section" aria-labelledby="artistAlbumsToggle" hidden>
+          <button id="artistAlbumsToggle" class="artist-section-toggle" type="button" aria-expanded="false">
+            <span>▸ Albums</span>
+            <span id="artistAlbumCount" class="artist-section-count">0</span>
+            <span id="artistAlbumsHint" class="artist-section-hint">Expand album terrain</span>
+          </button>
+          <div id="artistAlbumShelf" class="artist-album-shelf" hidden></div>
+        </section>
+        <section id="artistDetailSongs" class="artist-detail-section artist-songs-section" aria-labelledby="artistSongsTitle" hidden>
+          <div class="artist-songs-head">
+            <div>
+              <h3 id="artistSongsTitle">Songs</h3>
+              <div id="artistSongSummary" class="small muted"></div>
+            </div>
+            <div class="artist-mini-search">
+              <span aria-hidden="true">⌕</span>
+              <input id="artistSongSearch" type="search" placeholder="Search artist songs…" aria-label="Search this artist's songs">
+            </div>
+          </div>
+          <div id="artistAlbumFilter" class="artist-album-filter"></div>
+          <div id="artistSortSummary" class="sort-help"></div>
+          <div id="artistSongTable" class="artist-song-table-host"></div>
+        </section>
         <div id="libraryGroupTracks" class="library-detail-tracks"></div>
       </section>
       <div id="trackChoices"></div>

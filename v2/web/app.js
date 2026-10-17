@@ -175,6 +175,17 @@ const libraryGroupShuffle=document.querySelector("#libraryGroupShuffle");
 const libraryGroupPlayNext=document.querySelector("#libraryGroupPlayNext");
 const libraryGroupAppend=document.querySelector("#libraryGroupAppend");
 const libraryGroupRelations=document.querySelector("#libraryGroupRelations");
+const artistDetailAlbums=document.querySelector("#artistDetailAlbums");
+const artistAlbumsToggle=document.querySelector("#artistAlbumsToggle");
+const artistAlbumCount=document.querySelector("#artistAlbumCount");
+const artistAlbumsHint=document.querySelector("#artistAlbumsHint");
+const artistAlbumShelf=document.querySelector("#artistAlbumShelf");
+const artistDetailSongs=document.querySelector("#artistDetailSongs");
+const artistSongSummary=document.querySelector("#artistSongSummary");
+const artistSongSearch=document.querySelector("#artistSongSearch");
+const artistAlbumFilter=document.querySelector("#artistAlbumFilter");
+const artistSortSummary=document.querySelector("#artistSortSummary");
+const artistSongTable=document.querySelector("#artistSongTable");
 const libraryGroupTracks=document.querySelector("#libraryGroupTracks");
 const librarySummary=document.querySelector("#librarySummary");
 const songSortSummary=document.querySelector("#songSortSummary");
@@ -308,6 +319,10 @@ let currentEditingTrackRef="";
 const defaultSongLayout=Object.freeze({artist:true,album:true,added:true,duration:true,genre:false,titleWidth:46});
 let songLayout=Object.freeze({...defaultSongLayout});
 let bulkDisplayRefs=Object.freeze([]);
+let artistDetailIdentity="";
+let artistAlbumsExpanded=false;
+let artistSongQuery="";
+let artistAlbumFilterKey="";
 let trashSnapshot=Object.freeze({
  trash:Object.freeze([]),
  deletedHistory:Object.freeze([]),
@@ -1259,6 +1274,93 @@ function currentLibraryDetailRelations(group,detail){
  return groupLibrary(group.tracks,detail.kind==="album"?"artist":"album");
 }
 
+function resetArtistDetailExperience(){
+ artistDetailIdentity="";
+ artistAlbumsExpanded=false;
+ artistSongQuery="";
+ artistAlbumFilterKey="";
+}
+
+function artistDetailVisibleTracks(group){
+ const projected=projectLibraryView(group?.tracks??[],{
+  query:artistSongQuery,
+  sortStack:libraryView.sortStack
+ });
+ return artistAlbumFilterKey
+  ?projected.filter(track=>
+    (String(track?.album??"").trim()||"Unknown album").toLocaleLowerCase()===artistAlbumFilterKey
+   )
+  :projected;
+}
+
+function artistSortSummaryHTML(){
+ return `<span>Sort precedence:</span>
+  ${libraryView.sortStack.map((spec,index)=>`
+   <span class="sort-chip"><strong>${index+1}</strong> ${escapeHTML(sortLabel(spec.key))} ${escapeHTML(sortDirectionLabel(spec))}</span>
+  `).join("")}
+  ${librarySortPresetForStack(libraryView.sortStack)!=="title"
+   ?'<button type="button" class="sort-reset" data-artist-sort-reset>Reset</button>'
+   :""}`;
+}
+
+function renderArtistDetailTerrain(group,detail){
+ const active=detail?.kind==="artist";
+ artistDetailAlbums.hidden=!active;
+ artistDetailSongs.hidden=!active;
+ libraryGroupTracks.hidden=active;
+ if(!active){
+  resetArtistDetailExperience();
+  artistAlbumShelf.innerHTML="";
+  artistSongTable.innerHTML="";
+  return;
+ }
+ if(artistDetailIdentity!==detail.key){
+  artistDetailIdentity=detail.key;
+  artistAlbumsExpanded=false;
+  artistSongQuery="";
+  artistAlbumFilterKey="";
+ }
+ const albums=groupLibrary(group.tracks,"album");
+ const visible=artistDetailVisibleTracks(group);
+ artistAlbumCount.textContent=String(albums.length);
+ artistAlbumsToggle.setAttribute("aria-expanded",String(artistAlbumsExpanded));
+ artistAlbumsToggle.firstElementChild.textContent=(artistAlbumsExpanded?"▾ ":"▸ ")+"Albums";
+ artistAlbumsHint.textContent=artistAlbumsExpanded?"Hide album terrain":"Expand album terrain";
+ artistAlbumShelf.hidden=!artistAlbumsExpanded;
+ artistAlbumShelf.innerHTML=artistAlbumsExpanded
+  ?albums.map(album=>`<button type="button" class="artist-album-card" data-artist-album-filter="${escapeHTML(album.key)}">
+      ${libraryGroupArtworkHTML(album,{kind:"album"})}
+      <span class="artist-album-copy">
+       <strong>${escapeHTML(album.name)}</strong>
+       <small>${escapeHTML(resolveText(locale,"library.group.tracks",{count:album.refs.length}))}</small>
+      </span>
+     </button>`).join("")
+  :"";
+ artistSongSearch.value=artistSongQuery;
+ artistSongSummary.textContent=`${visible.length} of ${group.refs.length} song${group.refs.length===1?"":"s"} shown${artistSongQuery?` · Search: “${artistSongQuery}”`:""}`;
+ const selectedAlbum=albums.find(album=>album.key===artistAlbumFilterKey);
+ artistAlbumFilter.innerHTML=selectedAlbum
+  ?`<span class="artist-filter-chip">Album: <strong>${escapeHTML(selectedAlbum.name)}</strong><button type="button" data-artist-album-filter-clear aria-label="Clear album filter">×</button></span>`
+  :"";
+ artistSortSummary.innerHTML=artistSortSummaryHTML();
+ artistSongTable.innerHTML=visible.length
+  ?`<div class="song-table-wrap">
+     <table class="song-table artist-song-table">
+      <thead><tr>
+       <th class="song-title-cell">${songSortHeader("title","Title")}</th>
+       <th class="col-added">${songSortHeader("added","Added")}</th>
+       <th class="col-artist">Artist</th>
+       <th class="col-album">${songSortHeader("album","Album")}</th>
+       <th class="col-genre">${songSortHeader("genre","Genre")}</th>
+       <th class="col-duration">${songSortHeader("duration","Time")}</th>
+       <th class="col-actions"></th>
+      </tr></thead>
+      <tbody>${visible.map(item=>songRowHTML(item)).join("")}</tbody>
+     </table>
+    </div>`
+  :'<div class="empty-state">No matching songs for this artist.</div>';
+}
+
 function renderLibraryGroupDetail(){
  const detail=shellNavigation.currentProjection.libraryDetail;
  if(!detail){
@@ -1267,6 +1369,8 @@ function renderLibraryGroupDetail(){
   libraryGroupArtwork.innerHTML="";
   libraryGroupRelations.innerHTML="";
   libraryGroupRelations.hidden=true;
+  renderArtistDetailTerrain(null,null);
+  libraryGroupTracks.hidden=false;
   trackChoices.hidden=false;
   return;
  }
@@ -1335,7 +1439,10 @@ function renderLibraryGroupDetail(){
       data-library-relation-kind="${escapeHTML(isAlbum?"artist":"album")}"
       data-library-relation-key="${escapeHTML(relation.key)}">${escapeHTML(relation.name)}</button>`).join("")}`
   :"";
- libraryGroupTracks.innerHTML=group.tracks.map(trackCardHTML).join("");
+ renderArtistDetailTerrain(group,detail);
+ libraryGroupTracks.innerHTML=isAlbum
+  ?group.tracks.map(trackCardHTML).join("")
+  :"";
 }
 
 function selectedLibraryRefs(){
@@ -2067,6 +2174,62 @@ libraryGroupTracks.addEventListener("click",event=>{
  const group=currentLibraryDetailGroup();
  handleTrackAction(event,{
   playbackRefs:group?.refs??libraryPlaybackRefs()
+ });
+});
+
+artistAlbumsToggle.addEventListener("click",()=>{
+ artistAlbumsExpanded=!artistAlbumsExpanded;
+ renderLibraryGroupDetail();
+});
+
+artistAlbumShelf.addEventListener("click",event=>{
+ const card=event.target.closest("[data-artist-album-filter]");
+ if(!card)return;
+ artistAlbumFilterKey=card.dataset.artistAlbumFilter;
+ artistSongQuery="";
+ renderLibraryGroupDetail();
+});
+
+artistSongSearch.addEventListener("input",()=>{
+ artistSongQuery=artistSongSearch.value;
+ renderLibraryGroupDetail();
+});
+
+artistAlbumFilter.addEventListener("click",event=>{
+ if(!event.target.closest("[data-artist-album-filter-clear]"))return;
+ artistAlbumFilterKey="";
+ renderLibraryGroupDetail();
+});
+
+artistSortSummary.addEventListener("click",event=>{
+ if(!event.target.closest("[data-artist-sort-reset]"))return;
+ libraryView=Object.freeze({
+  ...libraryView,
+  sort:"title",
+  sortStack:resetLibrarySortStack()
+ });
+ renderLibraryGroupDetail();
+});
+
+artistSongTable.addEventListener("click",event=>{
+ const sortAction=event.target.closest("[data-song-sort]");
+ if(sortAction){
+  const next=activateLibrarySortStack(
+   libraryView.sortStack,
+   sortAction.dataset.songSort
+  );
+  libraryView=Object.freeze({
+   ...libraryView,
+   sort:librarySortPresetForStack(next),
+   sortStack:next
+  });
+  renderLibraryGroupDetail();
+  return;
+ }
+ const group=currentLibraryDetailGroup();
+ const visible=group?artistDetailVisibleTracks(group):[];
+ handleTrackAction(event,{
+  playbackRefs:visible.map(item=>item.ref)
  });
 });
 

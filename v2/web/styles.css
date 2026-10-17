@@ -901,3 +901,70 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
  border-color:#d9d3ca;
 }
 @media(max-width:720px){.library-detail-relations{grid-column:1/-1}}
+
+/* Artist detail is its own read-only Library terrain over the current group. */
+.artist-detail-section{display:grid;gap:10px;padding:12px;background:#fff;border:1px solid #ded8cf;border-radius:14px}
+.artist-detail-section[hidden],.artist-album-shelf[hidden]{display:none}
+.artist-section-toggle{
+ width:100%;
+ display:grid;
+ grid-template-columns:auto auto minmax(0,1fr);
+ align-items:center;
+ gap:8px;
+ text-align:left;
+ padding:8px 9px;
+ background:#faf8f4;
+ color:#343839;
+ border-color:#ded8cf;
+}
+.artist-section-count{
+ display:inline-grid;
+ place-items:center;
+ min-width:22px;
+ height:20px;
+ padding:0 6px;
+ border-radius:999px;
+ background:#eaded4;
+ color:#7d412b;
+ font-size:11px;
+}
+.artist-section-hint{text-align:right;color:#777d7e;font-size:11px;font-weight:500}
+.artist-album-shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,190px));gap:9px}
+.artist-album-card{
+ display:grid;
+ grid-template-columns:58px minmax(0,1fr);
+ align-items:center;
+ gap:9px;
+ padding:9px;
+ text-align:left;
+ background:#fff;
+ color:#2d3031;
+ border:1px solid #e1dcd3;
+ border-radius:11px;
+}
+.artist-album-card .library-group-cover{width:58px;border-radius:9px}
+.artist-album-copy{display:grid;gap:3px;min-width:0}
+.artist-album-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.artist-songs-head{display:flex;align-items:end;justify-content:space-between;gap:12px}
+.artist-songs-head h3{margin:0}
+.artist-mini-search{
+ display:flex;
+ align-items:center;
+ gap:6px;
+ min-width:min(320px,100%);
+ padding:0 10px;
+ border:1px solid #d9d3ca;
+ border-radius:20px;
+ background:#fff;
+}
+.artist-mini-search input{min-width:0;width:100%;border:0;outline:0;padding:8px 0;background:transparent;color:#2d3031;font:inherit}
+.artist-album-filter:empty{display:none}
+.artist-filter-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;background:#fff1e7;border:1px solid #e6b99f;font-size:11px}
+.artist-filter-chip button{padding:0 3px;border:0;background:transparent;color:#7d412b}
+.artist-song-table-host{min-width:0}
+.artist-song-table .col-artist{display:none!important}
+@media(max-width:720px){
+ .artist-songs-head{display:grid;align-items:stretch}
+ .artist-mini-search{min-width:0;width:100%}
+ .artist-album-shelf{grid-template-columns:1fr}
+}

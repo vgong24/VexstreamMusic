@@ -43,3 +43,25 @@ func TestProtectedDesktopConflictExplainsSingleWriterRequirement(t *testing.T) {
 		t.Fatalf("protected desktop conflict message drift: %v", err)
 	}
 }
+
+
+func TestDifferentV4BuildConflictExplainsExactSingleWriterRequirement(t *testing.T) {
+	err := differentV4BuildConflict(
+		lifecycle.LiveClaim{
+			URL: "http://127.0.0.1:4321/",
+			Identity: lifecycle.Identity{
+				OK:       true,
+				Version:  "4.0.0",
+				BuildRef: "v4-old.bin-1111111111111111",
+			},
+		},
+		"v4-new.bin-2222222222222222",
+	)
+	if err == nil ||
+		!strings.Contains(err.Error(), "v4-old.bin-1111111111111111") ||
+		!strings.Contains(err.Error(), "v4-new.bin-2222222222222222") ||
+		!strings.Contains(err.Error(), "Exit the running V4") ||
+		!strings.Contains(err.Error(), "shared Library state") {
+		t.Fatalf("different V4 build conflict message drift: %v", err)
+	}
+}

@@ -47,6 +47,14 @@ func run() error {
 		return lifecycle.OpenBrowser(url)
 	}
 
+	// A stale V4 current-url file is replaceable, but a live non-matching V4 is
+	// another writer. Exact reuse above is the only multi-launch shortcut.
+	if claim, ok := lifecycle.CurrentLiveClaim(
+		layout.CurrentURL,
+	); ok {
+		return differentV4BuildConflict(claim, ref)
+	}
+
 	if claim, ok := lifecycle.CurrentLiveClaim(
 		layout.ProtectedCurrentURL,
 	); ok {
@@ -161,6 +169,29 @@ func run() error {
 		}
 	}
 	return err
+}
+
+func differentV4BuildConflict(
+	claim lifecycle.LiveClaim,
+	requestedBuildRef string,
+) error {
+	runningBuildRef := strings.TrimSpace(claim.Identity.BuildRef)
+	if runningBuildRef == "" {
+		runningBuildRef = "unknown-build"
+	}
+	requestedBuildRef = strings.TrimSpace(requestedBuildRef)
+	if requestedBuildRef == "" {
+		requestedBuildRef = "requested-build"
+	}
+	return fmt.Errorf(
+		"VexStream 4.0 is already running at %s with build %s; "+
+			"the requested build is %s. Exit the running V4 before starting "+
+			"a different V4 build so two desktop processes never write the "+
+			"same V4 and shared Library state at the same time",
+		claim.URL,
+		runningBuildRef,
+		requestedBuildRef,
+	)
 }
 
 func protectedDesktopConflict(

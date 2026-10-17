@@ -40,17 +40,17 @@ body{
  box-shadow:none;
  background:#f7f5f1;
  display:grid;
- grid-template-columns:190px minmax(0,1fr) 330px;
+ grid-template-columns:190px minmax(0,1fr);
  grid-template-rows:56px minmax(0,1fr) 76px;
  grid-template-areas:
-  "header header header"
-  "sidebar main queue"
-  "now transport transport";
+  "header header"
+  "sidebar main"
+  "now transport";
  gap:0;
  overflow:hidden;
 }
 body[data-sidebar-open="false"] .player.v3-product-shell{
- grid-template-columns:0 minmax(0,1fr) 330px;
+ grid-template-columns:0 minmax(0,1fr);
 }
 .product-header{
  grid-area:header;
@@ -212,22 +212,67 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
  white-space:nowrap;
 }
 .home-track-copy small{color:#7b8182}
-.queue-panel{
- grid-area:queue;
+.queue-drawer{
+ position:fixed;
+ left:0;
+ right:0;
+ bottom:76px;
+ height:36px;
+ z-index:25;
+ overflow:hidden;
+ display:grid;
+ grid-template-rows:36px minmax(0,1fr);
+ background:#f7f5f1;
+ border-top:1px solid #ddd7cd;
+ box-shadow:0 -12px 30px #0002;
+ transition:height .22s ease;
+}
+.queue-drawer.open{height:min(62vh,560px)}
+.queue-handle{
+ height:36px;
+ width:100%;
+ border:0;
+ border-radius:0;
+ padding:0 12px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:10px;
+ background:#fff;
+ color:#2c3031;
+ border-bottom:1px solid #ddd7cd;
+ cursor:ns-resize;
+}
+.queue-handle:hover{background:#faf8f4}
+.grabber{
+ width:44px;
+ height:5px;
+ border-radius:999px;
+ background:#b9b7b1;
+}
+.queue-summary{color:#767c7d;font-size:12px}
+.queue-drawer-body{
  min-width:0;
  min-height:0;
  overflow:auto;
- padding:12px;
- background:#fbf9f6;
+ padding:12px 16px 18px;
+ background:#fbf9f5;
  color:#2a2d2e;
- border-left:1px solid #ddd7cd;
 }
-.queue-panel #queueList li{
+.queue-drawer-body .section-heading{
+ position:sticky;
+ top:0;
+ z-index:2;
+ gap:12px;
+ padding:4px 0 10px;
+ background:#fbf9f5;
+}
+.queue-drawer-body #queueList li{
  background:#fff;
  color:#646a6b;
  border:1px solid #e0dbd2;
 }
-.queue-panel #queueList li.current{
+.queue-drawer-body #queueList li.current{
  background:#fff0e6;
  color:#2a2d2e;
  border-color:#e6b99f;
@@ -327,8 +372,8 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
  position:fixed;
  z-index:40;
  left:210px;
- right:350px;
- bottom:84px;
+ right:14px;
+ bottom:120px;
  min-height:0;
  pointer-events:none;
 }
@@ -342,7 +387,6 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
    "sidebar main"
    "now transport";
  }
- .queue-panel{display:none}
  #error{left:175px;right:14px}
 }
 @media(max-width:680px){
@@ -444,7 +488,6 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
 /* Discover is a top-level V3 product terrain, not a Library subpanel.
    ShellNavigation owns location; this block only projects that State into chrome. */
 body[data-shell-current-view="discover"] .sidebar,
-body[data-shell-current-view="discover"] .queue-panel,
 body[data-shell-current-view="discover"] #libraryNavToggle{
  display:none;
 }
@@ -454,11 +497,11 @@ body[data-shell-current-view="discover"] .discover-workspace{
 }
 @media(min-width:921px){
  body[data-shell-current-view="discover"] .player.v3-product-shell{
-  grid-template-columns:190px minmax(0,1fr) 0;
+  grid-template-columns:190px minmax(0,1fr);
   grid-template-areas:
-   "header header header"
-   "main main main"
-   "now transport transport";
+   "header header"
+   "main main"
+   "now transport";
  }
 }
 @media(min-width:681px) and (max-width:920px){

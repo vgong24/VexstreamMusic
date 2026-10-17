@@ -71,7 +71,11 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
     'id="libraryGroupDetail"',
     'id="libraryGroupBack"',
     'id="libraryGroupTracks"',
-    'class="queue queue-panel"',
+    'id="queueDrawer"',
+    'id="queueDrawerHandle"',
+    'id="queueDrawerCount"',
+    'id="queueDrawerNextCount"',
+    'class="queue queue-drawer-body"',
     'id="trackTitle"',
     'id="playPause"',
     'id="audio"'
@@ -79,6 +83,7 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
     assert.equal(html.includes(landmark),true,landmark);
   }
 
+  assert.equal(html.includes('class="queue queue-panel"'),false);
   assert.equal(html.includes("Desktop V4 player practicum"),false);
   assert.equal(html.includes('id="phoneConnectBtn"'),false);
   assert.equal(html.includes('id="runDiagnosticsBtn"'),false);

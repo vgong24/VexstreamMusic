@@ -110,6 +110,10 @@ const status=document.querySelector("#status");
 const semanticState=document.querySelector("#semanticState");
 const queueState=document.querySelector("#queueState");
 const sessionState=document.querySelector("#sessionState");
+const queueDrawer=document.querySelector("#queueDrawer");
+const queueDrawerHandle=document.querySelector("#queueDrawerHandle");
+const queueDrawerCount=document.querySelector("#queueDrawerCount");
+const queueDrawerNextCount=document.querySelector("#queueDrawerNextCount");
 const queueSummary=document.querySelector("#queueSummary");
 const queueList=document.querySelector("#queueList");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
@@ -253,6 +257,7 @@ let currentSessionRestoration=Object.freeze({
  currentRef:""
 });
 let playerSessionPersistenceEnabled=false;
+let queueDrawerOpen=false;
 let playerSessionSaveTimer=null;
 let pendingPlayerSessionState=null;
 let playerSessionSaveChain=Promise.resolve();
@@ -828,6 +833,18 @@ function render(){
  setControl(repeat,qp.controls.repeat);
  setControl(clearAfterCurrent,qp.controls.clearAfterCurrent);
 
+ const queueCount=qp.state.kind==="empty"?0:qp.state.items.length;
+ const queueNextCount=qp.state.kind==="empty"
+  ?0
+  :Math.max(0,qp.state.items.length-qp.state.currentIndex-1);
+ queueDrawer.classList.toggle("open",queueDrawerOpen);
+ queueDrawer.setAttribute("aria-expanded",String(queueDrawerOpen));
+ queueDrawerHandle.setAttribute("aria-expanded",String(queueDrawerOpen));
+ queueDrawerCount.textContent=String(queueCount);
+ queueDrawerNextCount.textContent=resolveText(locale,"queue.drawer.next",{
+  count:queueNextCount
+ });
+
  const hasCurrent=Boolean(currentQueueRef(qp.state));
  previous.disabled=!hasCurrent;
  previous.textContent=resolveText(locale,"queue.previous");
@@ -1345,6 +1362,11 @@ next.addEventListener("click",()=>void guarded(()=>player.next()));
 previous.addEventListener("click",()=>void guarded(()=>player.previous()));
 shuffle.addEventListener("click",()=>{player.toggleShuffle();render();});
 repeat.addEventListener("click",()=>{player.toggleRepeat();render();});
+queueDrawerHandle.addEventListener("click",()=>{
+ queueDrawerOpen=!queueDrawerOpen;
+ render();
+});
+
 clearAfterCurrent.addEventListener("click",()=>{player.clearAfterCurrent();render();});
 
 librarySearch.addEventListener("input",()=>{

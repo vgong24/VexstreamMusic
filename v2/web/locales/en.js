@@ -20,6 +20,7 @@ export const en=Object.freeze({
  "queue.remove":"Remove",
  "queue.summary.empty":"Empty",
  "queue.summary.positioned":"{count} items · {position} current",
+ "queue.drawer.next":"{count} next",
  "queue.item.played":"Played",
  "queue.item.current":"Current",
  "queue.item.up-next":"Up next",

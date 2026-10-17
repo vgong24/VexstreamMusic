@@ -109,6 +109,7 @@ const buildIdentity=document.querySelector("#buildIdentity");
 const phoneConnectButton=document.querySelector("#phoneConnectButton");
 const phoneConnectionDialog=document.querySelector("#phoneConnectionDialog");
 const phoneConnectionClose=document.querySelector("#phoneConnectionClose");
+const phonePairingPanel=document.querySelector("#phonePairingPanel");
 const systemStatusButton=document.querySelector("#systemStatusButton");
 const systemStatusBadge=document.querySelector("#systemStatusBadge");
 const systemDrawer=document.querySelector("#systemDrawer");
@@ -351,6 +352,7 @@ let queueDrawerOpen=false;
 let playerSessionSaveTimer=null;
 let pendingPlayerSessionState=null;
 let playerSessionSaveChain=Promise.resolve();
+let phonePairPollTimer=null;
 let currentImportReview=null;
 let currentImportJobs=Object.freeze({
  active:Object.freeze([]),
@@ -1962,19 +1964,118 @@ function removeDiscoveryCandidate(path){
  });
 }
 
-phoneConnectButton.addEventListener("click",()=>{
+async function mobilePairingJSON(path,{method="GET",body=null}={}){
+ const response=await fetch(path,{
+  method,
+  headers:{Accept:"application/json","Content-Type":"application/json"},
+  ...(body==null?{}:{body:JSON.stringify(body)})
+ });
+ let payload={};
+ try{payload=await response.json();}catch{}
+ if(!response.ok){
+  throw new Error(String(payload?.error??`Phone connection request failed: ${response.status}`));
+ }
+ return payload;
+}
+
+function formatPhonePairingCode(code){
+ const value=String(code??"").padStart(6,"0");
+ return value.slice(0,3)+" "+value.slice(3);
+}
+
+function stopPhonePairPolling(){
+ if(phonePairPollTimer)clearTimeout(phonePairPollTimer);
+ phonePairPollTimer=null;
+}
+
+function closePhoneConnection(){
+ stopPhonePairPolling();
+ phoneConnectionDialog.hidden=true;
+ phoneConnectButton.setAttribute("aria-expanded","false");
+}
+
+async function refreshPhonePairing(){
+ if(phoneConnectionDialog.hidden)return;
+ stopPhonePairPolling();
+ try{
+  const state=await mobilePairingJSON("/api/mobile/pairing");
+  const pending=Array.isArray(state.pending)?state.pending:[];
+  const paired=Array.isArray(state.paired)?state.paired:[];
+  const pairing=state.pairingWindowOpen
+   ?`<div class="notice success">
+      <strong>Ready to pair for 5 minutes</strong>
+      <div class="small muted" style="margin-top:5px">On your phone open VexLife → VexStream Music → Find VexStream. Choose <strong>${escapeHTML(state.displayName||"this VexStream")}</strong>.</div>
+      <div class="phone-pair-code">${escapeHTML(formatPhonePairingCode(state.pairingCode))}</div>
+      <div class="small muted">The phone should show this same code before it asks for desktop approval.</div>
+     </div>`
+   :`<div class="notice">
+      <strong>${paired.length?"Connect another phone":"Connect a phone"}</strong>
+      <div class="small muted" style="margin-top:5px">Make this VexStream visible to VexLife on the same Wi-Fi for five minutes.</div>
+      <button type="button" class="primary" style="margin-top:10px" data-phone-action="start">${paired.length?"Connect another phone":"Connect a phone"}</button>
+     </div>`;
+
+  const pendingHTML=pending.length
+   ?`<div class="phone-pair-list"><h3>Waiting for your approval</h3>${pending.map(item=>`<div class="phone-pair-row">
+       <div><strong>${escapeHTML(item.displayName||"VexLife phone")}</strong><div class="small muted">Confirm the matching code on the phone, then allow it here.</div></div>
+       <div class="phone-pair-actions">
+        <button type="button" data-phone-action="deny" data-phone-request-ref="${escapeHTML(item.requestRef)}">Deny</button>
+        <button type="button" class="primary" data-phone-action="approve" data-phone-request-ref="${escapeHTML(item.requestRef)}">Allow</button>
+       </div>
+      </div>`).join("")}</div>`
+   :"";
+
+  const pairedHTML=paired.length
+   ?`<div class="phone-pair-list"><h3>Remembered phones</h3>${paired.map(item=>`<div class="phone-pair-row">
+       <div><strong>${escapeHTML(item.displayName||"VexLife phone")}</strong><div class="small muted">Approved ${escapeHTML(item.approvedAt||"")}</div></div>
+       <button type="button" data-phone-action="forget" data-phone-device-ref="${escapeHTML(item.deviceRef)}">Forget</button>
+      </div>`).join("")}</div>`
+   :"";
+
+  phonePairingPanel.innerHTML=pairing+pendingHTML+pairedHTML+
+   '<div class="small muted" style="margin-top:14px">This local pairing exposes only the sanitized VexStream catalog/media contract. Desktop administration remains loopback-only.</div>';
+  phonePairPollTimer=setTimeout(()=>void refreshPhonePairing(),1000);
+ }catch(failure){
+  phonePairingPanel.innerHTML=`<div class="notice">${escapeHTML(failure?.message??String(failure))}</div>`;
+ }
+}
+
+async function openPhoneConnection(){
  phoneConnectionDialog.hidden=false;
  phoneConnectButton.setAttribute("aria-expanded","true");
-});
-phoneConnectionClose.addEventListener("click",()=>{
- phoneConnectionDialog.hidden=true;
- phoneConnectButton.setAttribute("aria-expanded","false");
-});
+ phonePairingPanel.innerHTML='<div class="small muted">Checking phone connection…</div>';
+ try{
+  const current=await mobilePairingJSON("/api/mobile/pairing");
+  if(!current.pairingWindowOpen&&!(Array.isArray(current.paired)&&current.paired.length)){
+   await mobilePairingJSON("/api/mobile/pairing/start",{method:"POST",body:{}});
+  }
+ }catch{}
+ await refreshPhonePairing();
+}
+
+phoneConnectButton.addEventListener("click",()=>void guarded(openPhoneConnection));
+phoneConnectionClose.addEventListener("click",closePhoneConnection);
 phoneConnectionDialog.addEventListener("click",event=>{
- if(event.target!==phoneConnectionDialog)return;
- phoneConnectionDialog.hidden=true;
- phoneConnectButton.setAttribute("aria-expanded","false");
+ if(event.target===phoneConnectionDialog)closePhoneConnection();
 });
+phonePairingPanel.addEventListener("click",event=>void guarded(async()=>{
+ const action=event.target.closest("[data-phone-action]");
+ if(!action)return;
+ const kind=action.dataset.phoneAction;
+ if(kind==="start"){
+  await mobilePairingJSON("/api/mobile/pairing/start",{method:"POST",body:{}});
+ }else if(kind==="approve"||kind==="deny"){
+  await mobilePairingJSON("/api/mobile/pairing/decision",{
+   method:"POST",
+   body:{requestRef:action.dataset.phoneRequestRef,decision:kind.toUpperCase()}
+  });
+ }else if(kind==="forget"){
+  await mobilePairingJSON("/api/mobile/pairing/revoke",{
+   method:"POST",
+   body:{deviceRef:action.dataset.phoneDeviceRef}
+  });
+ }
+ await refreshPhonePairing();
+}));
 
 systemStatusButton.addEventListener("click",()=>{
  renderSystemStatus();

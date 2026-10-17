@@ -39,6 +39,7 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
     'id="phoneConnectButton"',
     'id="phoneConnectionDialog"',
     'id="phoneConnectionClose"',
+    'id="phonePairingPanel"',
     'id="systemStatusButton"',
     'id="systemStatusBadge"',
     'id="systemDrawer"',

@@ -26,7 +26,7 @@ export const en=Object.freeze({
  "queue.item.up-next":"Up next",
  "library.unknown-title":"Unknown title",
  "library.unknown-artist":"Unknown artist",
- "library.genre.all":"All genres",
+ "library.genre.all":"Genre: All",
  "library.summary.songs":"{visible} of {total} tracks",
  "library.summary.albums":"{count} albums · {tracks} tracks",
  "library.summary.artists":"{count} artists · {tracks} tracks",

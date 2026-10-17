@@ -49,6 +49,22 @@ export function projectLibraryCatalog(payload) {
   );
 }
 
+export async function rescanLibrary({ request = globalThis.fetch } = {}) {
+  if (typeof request !== "function") throw new Error("library rescan requires fetch-like request function");
+  const response = await request("/api/library/rescan", {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: "{}",
+  });
+  if (!response?.ok) {
+    let detail = "";
+    try { detail = String((await response.json())?.error ?? "").trim(); } catch {}
+    throw new Error(detail || `library rescan request failed: ${response?.status ?? "unknown"}`);
+  }
+  const payload = await response.json();
+  return Object.freeze({ ok: payload?.ok === true, tracks: finiteNonNegative(payload?.tracks) });
+}
+
 export async function loadLibraryCatalog({ request = globalThis.fetch } = {}) {
   if (typeof request !== "function") {
     throw new Error("library catalog requires fetch-like request function");

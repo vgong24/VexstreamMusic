@@ -41,9 +41,10 @@ body{
  background:#f7f5f1;
  display:grid;
  grid-template-columns:190px minmax(0,1fr);
- grid-template-rows:56px minmax(0,1fr) 76px;
+ grid-template-rows:56px 52px minmax(0,1fr) 76px;
  grid-template-areas:
   "header header"
+  "sidebar utility"
   "sidebar main"
   "now transport";
  gap:0;
@@ -148,14 +149,42 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
  font-weight:750;
 }
 .nav-icon{text-align:center;color:#697173}
+.sidebar-actions{margin-top:14px;padding-top:12px;border-top:1px solid #e0dbd2}
 .sidebar-note{
- margin-top:16px;
+ margin-top:14px;
  padding-top:12px;
  border-top:1px solid #e0dbd2;
  color:#767b7c;
  font-size:12px;
  line-height:1.45;
 }
+.library-utility-bar{
+ grid-area:utility;
+ min-width:0;
+ margin:0;
+ padding:7px 18px;
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
+ align-items:center;
+ gap:10px;
+ background:#f7f5f1;
+ border-bottom:1px solid #ded8cf;
+}
+.library-utility-bar[hidden]{display:none}
+.library-search{min-width:0;display:flex;align-items:center;gap:6px}
+.library-utility-bar .library-search input{
+ min-width:0;width:100%;height:38px;border:1px solid #d9d3ca;border-radius:20px;
+ padding:8px 12px;background:#fff;color:#2c3031;
+}
+.search-go{width:38px;height:38px;min-width:38px;padding:0;border-radius:50%;background:#fff;color:#2c3031;border-color:#d9d3ca}
+.search-clear{border:0;background:transparent;color:#767c7d;padding:6px 4px}
+.toolbar-group{display:flex;align-items:center;gap:8px}
+.toolbar-group select,.library-sort-control select{
+ height:38px;border:1px solid #d9d3ca;border-radius:9px;padding:0 10px;background:#fff;color:#2c3031;font:inherit;
+}
+#goDiscoverAdd{height:38px;padding:0 12px;background:#fff;color:#2c3031;border-color:#d9d3ca}
+.library-sort-control{display:flex}
+.library-sort-control select{height:34px;font-size:12px}
 [data-shell-panel]{
  grid-area:main;
  min-width:0;
@@ -428,6 +457,7 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
   grid-template-columns:160px minmax(0,1fr);
   grid-template-areas:
    "header header"
+   "sidebar utility"
    "sidebar main"
    "now transport";
  }
@@ -436,9 +466,10 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
 @media(max-width:680px){
  .player.v3-product-shell{
   grid-template-columns:1fr;
-  grid-template-rows:56px minmax(0,1fr) auto auto;
+  grid-template-rows:56px auto minmax(0,1fr) auto auto;
   grid-template-areas:
    "header"
+   "utility"
    "main"
    "now"
    "transport";
@@ -461,6 +492,10 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
   justify-content:center;
  }
  .volume-control input[type="range"]{width:min(150px,38vw)}
+ .library-utility-bar{grid-template-columns:1fr;padding:7px 12px}
+ .toolbar-group{justify-content:space-between}
+ .toolbar-group label{flex:1}
+ .toolbar-group select{width:100%}
  #error{left:12px;right:12px;bottom:180px}
  .home-view .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -602,6 +637,7 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
 /* Discover is a top-level V3 product terrain, not a Library subpanel.
    ShellNavigation owns location; this block only projects that State into chrome. */
 body[data-shell-current-view="discover"] .sidebar,
+body[data-shell-current-view="discover"] .library-utility-bar,
 body[data-shell-current-view="discover"] #libraryNavToggle{
  display:none;
 }
@@ -612,8 +648,10 @@ body[data-shell-current-view="discover"] .discover-workspace{
 @media(min-width:921px){
  body[data-shell-current-view="discover"] .player.v3-product-shell{
   grid-template-columns:190px minmax(0,1fr);
+  grid-template-rows:56px 0 minmax(0,1fr) 76px;
   grid-template-areas:
    "header header"
+   "main main"
    "main main"
    "now transport";
  }
@@ -621,8 +659,10 @@ body[data-shell-current-view="discover"] .discover-workspace{
 @media(min-width:681px) and (max-width:920px){
  body[data-shell-current-view="discover"] .player.v3-product-shell{
   grid-template-columns:160px minmax(0,1fr);
+  grid-template-rows:56px 0 minmax(0,1fr) 76px;
   grid-template-areas:
    "header header"
+   "main main"
    "main main"
    "now transport";
  }
@@ -735,3 +775,10 @@ body[data-shell-current-view="discover"] .discover-workspace{
  font-size:12px;
 }
 
+
+@media(max-width:680px){
+ body[data-shell-current-view="discover"] .player.v3-product-shell{
+  grid-template-rows:56px 0 minmax(0,1fr) auto auto;
+  grid-template-areas:"header" "main" "main" "now" "transport";
+ }
+}

@@ -5,6 +5,7 @@ import {
   loadLibraryCatalog,
   mediaURLFor,
   projectLibraryCatalog,
+  rescanLibrary,
 } from "../web/features/library/client.js";
 
 test("catalog projects opaque media refs without filesystem custody", () => {
@@ -89,4 +90,21 @@ test("failed HTTP response remains a load failure", async () => {
     () => loadLibraryCatalog({ request: async () => ({ ok: false, status: 503 }) }),
     /503/,
   );
+});
+
+test("rescan uses explicit Library reconciliation without inventing catalog truth",async()=>{
+ let request;
+ const result=await rescanLibrary({request:async(url,options)=>{
+  request={url,options};
+  return{ok:true,status:200,json:async()=>({ok:true,tracks:7})};
+ }});
+ assert.equal(request.url,"/api/library/rescan");
+ assert.equal(request.options.method,"POST");
+ assert.equal(request.options.body,"{}");
+ assert.deepEqual(result,{ok:true,tracks:7});
+});
+test("rescan preserves backend failure detail",async()=>{
+ await assert.rejects(()=>rescanLibrary({request:async()=>({
+  ok:false,status:500,json:async()=>({error:"reconcile held"})
+ })}),/reconcile held/);
 });

@@ -12,7 +12,7 @@ import {
   reconcilePlayerSession,
   savePlayerSession,
 } from "./features/player/session.js";
-import { loadLibraryCatalog } from "./features/library/client.js";
+import { loadLibraryCatalog, rescanLibrary } from "./features/library/client.js";
 import {
   restorePlaybackWindow,
   restoreTrackDisplay,
@@ -152,6 +152,14 @@ const librarySummary=document.querySelector("#librarySummary");
 const librarySearch=document.querySelector("#librarySearch");
 const libraryGenre=document.querySelector("#libraryGenre");
 const librarySort=document.querySelector("#librarySort");
+const libraryUtilityBar=document.querySelector("#libraryUtilityBar");
+const librarySearchExecute=document.querySelector("#librarySearchExecute");
+const librarySearchClear=document.querySelector("#librarySearchClear");
+const goDiscoverAdd=document.querySelector("#goDiscoverAdd");
+const rescanLibraryBtn=document.querySelector("#rescanLibraryBtn");
+const shuffleAllBtn=document.querySelector("#shuffleAllBtn");
+const playlistNavCount=document.querySelector("#playlistNavCount");
+const trashNavCount=document.querySelector("#trashNavCount");
 const libraryModeButtons=[...document.querySelectorAll("[data-library-mode]")];
 const shellViewButtons=[...document.querySelectorAll("button[data-shell-view]")];
 const shellPanels=[...document.querySelectorAll("[data-shell-panel]")];
@@ -356,6 +364,7 @@ function renderHome(){
 
 function renderShell(projection=shellNavigation.currentProjection){
  document.body.dataset.shellCurrentView=projection.view;
+ libraryUtilityBar.hidden=projection.view===ShellView.DISCOVER;
  document.body.dataset.sidebarOpen=String(projection.sidebarOpen);
  librarySidebar.hidden=!projection.sidebarOpen;
  libraryNavToggle.setAttribute("aria-expanded",String(projection.sidebarOpen));
@@ -525,6 +534,7 @@ function renderLibraryEditor(){
 }
 
 function renderTrash(){
+ trashNavCount.textContent=trashSnapshot.trash.length?`(${trashSnapshot.trash.length})`:"";
  trashSummary.textContent=trashSnapshot.trash.length
   ? resolveText(locale,"trash.summary",{count:trashSnapshot.trash.length})
   : resolveText(locale,"trash.empty");
@@ -566,9 +576,10 @@ function randomShuffle(values){
  return result;
 }
 
+const shuffleRefs=window.__VEXSTREAM_V4_SHUFFLE??randomShuffle;
 const queue=createQueueConnection({
  initialState:QueueState.empty(),
- shuffle:window.__VEXSTREAM_V4_SHUFFLE??randomShuffle
+ shuffle:shuffleRefs
 });
 
 const playback=createHTMLMediaPlaybackConnection({
@@ -1264,6 +1275,7 @@ function renderTrackChoices(){
  )?preferredGenre:"all";
 
  librarySearch.value=libraryView.query;
+ librarySearchClear.hidden=!libraryView.query.trim();
  librarySort.value=libraryView.sort;
  for(const button of libraryModeButtons){
   const selected=button.dataset.libraryMode===libraryView.mode;
@@ -1411,6 +1423,7 @@ function playlistEntryHTML(entry,index,total){
 }
 
 function renderPlaylistChoices(){
+ playlistNavCount.textContent=playlists.length?`(${playlists.length})`:"";
  const openID=playlistNavigation.currentProjection.openPlaylistID;
  playlistOverview.hidden=Boolean(openID);
  playlistDetail.hidden=!openID;
@@ -1521,19 +1534,33 @@ queueMiniBtn.addEventListener("click",toggleQueueDrawer);
 clearAfterCurrent.addEventListener("click",()=>{player.clearAfterCurrent();render();});
 
 librarySearch.addEventListener("input",()=>{
- libraryView=Object.freeze({
-  ...libraryView,
-  query:librarySearch.value
- });
- renderTrackChoices();
+ libraryView=Object.freeze({...libraryView,query:librarySearch.value});
+ librarySearchClear.hidden=!libraryView.query.trim();
+ if(shellNavigation.currentProjection.libraryMode)renderTrackChoices();
 });
-
-libraryGenre.addEventListener("change",()=>{
- libraryView=Object.freeze({
-  ...libraryView,
-  genre:libraryGenre.value
- });
+function executeLibrarySearch(){
+ shellNavigation.select(ShellView.SONGS);
  renderTrackChoices();
+ librarySearch.focus();
+}
+librarySearchExecute.addEventListener("click",executeLibrarySearch);
+librarySearch.addEventListener("keydown",event=>{
+ if(event.key!=="Enter")return;
+ event.preventDefault();
+ executeLibrarySearch();
+});
+librarySearchClear.addEventListener("click",()=>{
+ libraryView=Object.freeze({...libraryView,query:""});
+ renderTrackChoices();
+ librarySearch.focus();
+});
+libraryGenre.addEventListener("change",()=>{
+ libraryView=Object.freeze({...libraryView,genre:libraryGenre.value});
+ if(shellNavigation.currentProjection.view===ShellView.HOME){
+  shellNavigation.select(ShellView.SONGS);
+ }else if(shellNavigation.currentProjection.libraryMode){
+  renderTrackChoices();
+ }
 });
 
 librarySort.addEventListener("change",()=>{
@@ -1577,9 +1604,19 @@ youtubeImportURL.addEventListener("keydown",event=>{
  youtubeInspect.click();
 });
 
-libraryNavToggle.addEventListener("click",()=>{
- shellNavigation.toggleSidebar();
+libraryNavToggle.addEventListener("click",()=>{shellNavigation.toggleSidebar();});
+goDiscoverAdd.addEventListener("click",()=>{
+ shellNavigation.select(ShellView.DISCOVER);
+ discoverNavigation.select(DiscoverMode.PC);
 });
+rescanLibraryBtn.addEventListener("click",()=>void guarded(async()=>{
+ await rescanLibrary();
+ await refreshCatalog();
+}));
+shuffleAllBtn.addEventListener("click",()=>void guarded(async()=>{
+ const shuffled=shuffleRefs([...refs]);
+ if(shuffled.length)await player.playContext(shuffled,0);
+}));
 
 recentSongs.addEventListener("click",event=>{
  const action=event.target.closest("[data-home-track-action]");

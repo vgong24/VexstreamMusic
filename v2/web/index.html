@@ -28,11 +28,32 @@
         <button type="button" data-shell-view="songs"><span class="nav-icon">♫</span><span>Songs</span></button>
         <button type="button" data-shell-view="albums"><span class="nav-icon">▣</span><span>Albums</span></button>
         <button type="button" data-shell-view="artists"><span class="nav-icon">◎</span><span>Artists</span></button>
-        <button type="button" data-shell-view="playlists"><span class="nav-icon">▤</span><span>Playlists</span></button>
-        <button type="button" data-shell-view="deleted"><span class="nav-icon">♲</span><span>Deleted music</span></button>
+        <button type="button" data-shell-view="playlists"><span class="nav-icon">▤</span><span>Playlists <span id="playlistNavCount" class="small muted"></span></span></button>
+        <button type="button" data-shell-view="deleted"><span class="nav-icon">♲</span><span>Deleted music <span id="trashNavCount" class="small muted"></span></span></button>
       </nav>
+      <div class="sidebar-actions nav">
+        <button id="rescanLibraryBtn" type="button"><span class="nav-icon">↻</span><span>Rescan library</span></button>
+        <button id="shuffleAllBtn" type="button"><span class="nav-icon">⤨</span><span>Shuffle all</span></button>
+      </div>
       <div class="sidebar-note">Your library is local. Source folders are managed under Discover → This PC.</div>
     </aside>
+
+    <div id="libraryUtilityBar" class="library-toolbar library-utility-bar">
+      <div class="library-search">
+        <input id="librarySearch" type="search" placeholder="Search this library…" aria-label="Search library">
+        <button id="librarySearchExecute" class="search-go" type="button" title="Search" aria-label="Search">🔍</button>
+        <button id="librarySearchClear" class="search-clear" type="button" title="Clear search" hidden>Clear</button>
+      </div>
+      <div class="toolbar-group">
+        <label>
+          <span class="sr-only">Genre</span>
+          <select id="libraryGenre" title="Filter by genre">
+            <option value="all">Genre: All</option>
+          </select>
+        </label>
+        <button id="goDiscoverAdd" type="button">＋ Add music</button>
+      </div>
+    </div>
 
     <section id="homeView" class="home-view" data-shell-panel="home" aria-labelledby="homeTitle">
       <div class="hero">
@@ -101,34 +122,22 @@
         <div class="library-heading-actions">
           <button id="playAllSongs" type="button" data-text-ref="library.play-all">Play all</button>
           <button id="selectSongs" type="button" data-text-ref="library.selection.select">Select</button>
+          <label class="library-sort-control">
+            <span class="sr-only">Sort library</span>
+            <select id="librarySort">
+              <option value="title">Title</option>
+              <option value="artist">Artist</option>
+              <option value="album">Album</option>
+              <option value="recent">Recently added</option>
+              <option value="duration-desc">Longest first</option>
+            </select>
+          </label>
           <div class="library-view-toggle" role="group" aria-label="Library view">
             <button type="button" data-library-mode="songs" aria-pressed="true">Songs</button>
             <button type="button" data-library-mode="albums" aria-pressed="false">Albums</button>
             <button type="button" data-library-mode="artists" aria-pressed="false">Artists</button>
           </div>
         </div>
-      </div>
-      <div class="library-toolbar">
-        <label class="library-search">
-          <span class="sr-only">Search library</span>
-          <input id="librarySearch" type="search" placeholder="Search songs, artists, albums…">
-        </label>
-        <label>
-          <span class="sr-only">Genre</span>
-          <select id="libraryGenre">
-            <option value="all">All genres</option>
-          </select>
-        </label>
-        <label>
-          <span class="sr-only">Sort library</span>
-          <select id="librarySort">
-            <option value="title">Title</option>
-            <option value="artist">Artist</option>
-            <option value="album">Album</option>
-            <option value="recent">Recently added</option>
-            <option value="duration-desc">Longest first</option>
-          </select>
-        </label>
       </div>
       <div id="librarySelectionBar" class="selection-bar" hidden>
         <strong id="librarySelectionCount">0 selected</strong>

@@ -250,6 +250,7 @@ export function createHTMLMediaPlaybackConnection({
     resetForMediaChange() {
       effectRevision += 1;
       clearPending();
+      publish();
     },
 
     activate,

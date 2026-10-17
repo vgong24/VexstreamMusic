@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  TARGET_SHA: 8c6c8590fb6407d2c194308bb4478ff65fb1b73a
+  TARGET_SHA: 21d38d82cf42c39b29792f7f8a64b5ed537d3d70
   TARGET_PR: "5"
   V3_ORACLE_SHA: 8ffc302b3f03281ada06acab134cef5a11ac85b8
 

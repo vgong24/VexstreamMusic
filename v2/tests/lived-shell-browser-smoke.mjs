@@ -29,7 +29,7 @@ function args(argv=process.argv.slice(2)){
 }
 function executable(explicit=''){
   const home=os.homedir();
-  for(const value of [explicit,process.env.VEXSTREAM_CHROMIUM,'/usr/bin/chromium','/usr/bin/google-chrome','/opt/homebrew/bin/chromium','/usr/local/bin/chromium','/Applications/Google Chrome.app/Contents/MacOS/Google Chrome','/Applications/Chromium.app/Contents/MacOS/Chromium',path.join(home,'Applications/Google Chrome.app/Contents/MacOS/Google Chrome')]){
+  for(const value of [explicit,process.env.VEXSTREAM_CHROMIUM,'/usr/bin/chromium','/usr/bin/google-chrome','/opt/homebrew/bin/chromium','/usr/local/bin/chromium','/Applications/Google Chrome.app/Contents/MacOS/Google Chrome','/Applications/Chromium.app/Contents/MacOS/Chromium','/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge','/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',path.join(home,'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'),path.join(home,'Applications/Chromium.app/Contents/MacOS/Chromium'),path.join(home,'Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge'),path.join(home,'Applications/Brave Browser.app/Contents/MacOS/Brave Browser')]){
     if(!value||!path.isAbsolute(value))continue;
     try{if(fs.statSync(value).isFile())return value;}catch{}
   }

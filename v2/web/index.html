@@ -120,6 +120,7 @@
           <span id="librarySummary">0 tracks</span>
         </div>
         <div class="library-heading-actions">
+          <button id="songLayoutButton" type="button" title="Choose visible fields and title space">▥ Columns</button>
           <button id="playAllSongs" type="button" data-text-ref="library.play-all">Play all</button>
           <button id="selectSongs" type="button" data-text-ref="library.selection.select">Select</button>
           <label class="library-sort-control">
@@ -145,12 +146,62 @@
         <button id="bulkPlaySelected" type="button">Play</button>
         <button id="bulkPlayNextSelected" type="button">Play next</button>
         <button id="bulkQueueSelected" type="button">Add to queue</button>
+        <button id="bulkEditSelected" type="button">Edit display…</button>
         <select id="bulkPlaylistTarget" aria-label="Playlist"></select>
         <button id="bulkPlaylistSelected" type="button">Add to playlist</button>
         <span class="selection-spacer"></span>
         <button id="bulkTrashSelected" type="button">Move to Trash</button>
         <button id="clearSongSelection" type="button">Clear</button>
       </div>
+
+      <section id="songLayoutPanel" class="song-layout-panel" aria-labelledby="songLayoutTitle" hidden>
+        <div class="song-layout-head">
+          <div>
+            <strong id="songLayoutTitle">Song layout</strong>
+            <span class="small muted">Choose which metadata fields deserve space in this VexStream session.</span>
+          </div>
+          <button id="songLayoutDone" type="button">Done</button>
+        </div>
+        <div class="song-layout-grid">
+          <label><input type="checkbox" data-song-layout-field="artist" checked><span><strong>Artist</strong><small>Who performs the track</small></span></label>
+          <label><input type="checkbox" data-song-layout-field="album" checked><span><strong>Album</strong><small>Collection / album terrain</small></span></label>
+          <label><input type="checkbox" data-song-layout-field="added" checked><span><strong>Added</strong><small>When VexStream discovered it</small></span></label>
+          <label><input type="checkbox" data-song-layout-field="duration" checked><span><strong>Time</strong><small>Track duration</small></span></label>
+          <label><input type="checkbox" data-song-layout-field="genre"><span><strong>Genre</strong><small>Optional classification</small></span></label>
+        </div>
+        <label class="song-title-width">
+          <strong>Title space</strong>
+          <input id="songTitleWidth" type="range" min="34" max="62" value="46">
+          <span id="songTitleWidthValue" class="small muted">46%</span>
+        </label>
+        <div class="song-layout-actions">
+          <button id="songLayoutReset" type="button">Reset layout</button>
+        </div>
+      </section>
+
+      <section id="bulkDisplayEditor" class="library-editor bulk-display-editor" aria-labelledby="bulkDisplayEditorTitle" hidden>
+        <div class="section-heading">
+          <div>
+            <h2 id="bulkDisplayEditorTitle">Edit shared display fields</h2>
+            <span id="bulkDisplayEditorSummary">Only checked fields change. Source metadata is not rewritten.</span>
+          </div>
+          <button id="bulkDisplayEditorClose" type="button">Close</button>
+        </div>
+        <div class="bulk-display-grid">
+          <label class="bulk-display-field"><input id="bulkApplyArtist" type="checkbox"><span>Artist</span></label>
+          <input id="bulkArtist" type="text" placeholder="Mixed / unchanged">
+          <label class="bulk-display-field"><input id="bulkApplyAlbum" type="checkbox"><span>Album / collection</span></label>
+          <input id="bulkAlbum" type="text" placeholder="Mixed / unchanged">
+          <label class="bulk-display-field"><input id="bulkApplyGenre" type="checkbox"><span>Genre</span></label>
+          <input id="bulkGenre" type="text" placeholder="Mixed / unchanged">
+        </div>
+        <div class="small muted">Titles are intentionally excluded from bulk edit so one shared title cannot overwrite distinct tracks by accident.</div>
+        <div class="library-editor-actions">
+          <button id="applyBulkDisplay" type="button" class="primary">Apply checked fields</button>
+          <button id="cancelBulkDisplay" type="button">Cancel</button>
+        </div>
+      </section>
+
       <section id="libraryGroupDetail" class="library-group-detail" aria-labelledby="libraryGroupTitle" hidden>
         <div class="library-detail-head">
           <button id="libraryGroupBack" type="button">Back</button>

@@ -6,6 +6,7 @@ import {
   restoreTrackDisplay,
   updatePlaybackWindow,
   updateTrackDisplay,
+  updateTrackDisplays,
 } from "../web/features/library/admin.js";
 
 function okJSON(payload={ok:true}){
@@ -28,6 +29,16 @@ test("display edit sends only VexStream overlay fields",async()=>{
   artist:"",
   album:"Album"
  });
+});
+
+test("shared display edit uses one multi-track overlay mutation and excludes Title",async()=>{
+ let body;
+ await updateTrackDisplays(
+  [" a ","b","a"],
+  {artist:"Shared Artist",genre:"",title:"Do not bulk-title"},
+  {request:async(_url,options)=>{body=JSON.parse(options.body);return okJSON({ok:true,updated:2});}}
+ );
+ assert.deepEqual(body,{ids:["a","b"],artist:"Shared Artist",genre:""});
 });
 
 test("display restore is explicit",async()=>{
@@ -70,5 +81,7 @@ test("invalid edits fail before request",async()=>{
   ()=>updatePlaybackWindow("a",{start:-1},{request}),
   /non-negative/
  );
+ await assert.rejects(()=>updateTrackDisplays([], {artist:"x"},{request}),/track refs/);
+ await assert.rejects(()=>updateTrackDisplays(["a"], {title:"not admitted"},{request}),/shared field/);
  assert.equal(calls,0);
 });

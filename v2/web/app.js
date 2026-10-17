@@ -18,6 +18,7 @@ import {
   restoreTrackDisplay,
   updatePlaybackWindow,
   updateTrackDisplay,
+  updateTrackDisplays,
 } from "./features/library/admin.js";
 import {
   loadTrash,
@@ -127,6 +128,13 @@ const queueList=document.querySelector("#queueList");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
 const playAllSongs=document.querySelector("#playAllSongs");
+const songLayoutButton=document.querySelector("#songLayoutButton");
+const songLayoutPanel=document.querySelector("#songLayoutPanel");
+const songLayoutDone=document.querySelector("#songLayoutDone");
+const songLayoutReset=document.querySelector("#songLayoutReset");
+const songTitleWidth=document.querySelector("#songTitleWidth");
+const songTitleWidthValue=document.querySelector("#songTitleWidthValue");
+const songLayoutFieldInputs=[...document.querySelectorAll("[data-song-layout-field]")];
 const selectSongs=document.querySelector("#selectSongs");
 const librarySelectionBar=document.querySelector("#librarySelectionBar");
 const librarySelectionCount=document.querySelector("#librarySelectionCount");
@@ -134,6 +142,19 @@ const selectVisibleSongs=document.querySelector("#selectVisibleSongs");
 const bulkPlaySelected=document.querySelector("#bulkPlaySelected");
 const bulkPlayNextSelected=document.querySelector("#bulkPlayNextSelected");
 const bulkQueueSelected=document.querySelector("#bulkQueueSelected");
+const bulkEditSelected=document.querySelector("#bulkEditSelected");
+const bulkDisplayEditor=document.querySelector("#bulkDisplayEditor");
+const bulkDisplayEditorTitle=document.querySelector("#bulkDisplayEditorTitle");
+const bulkDisplayEditorSummary=document.querySelector("#bulkDisplayEditorSummary");
+const bulkDisplayEditorClose=document.querySelector("#bulkDisplayEditorClose");
+const bulkApplyArtist=document.querySelector("#bulkApplyArtist");
+const bulkArtist=document.querySelector("#bulkArtist");
+const bulkApplyAlbum=document.querySelector("#bulkApplyAlbum");
+const bulkAlbum=document.querySelector("#bulkAlbum");
+const bulkApplyGenre=document.querySelector("#bulkApplyGenre");
+const bulkGenre=document.querySelector("#bulkGenre");
+const applyBulkDisplay=document.querySelector("#applyBulkDisplay");
+const cancelBulkDisplay=document.querySelector("#cancelBulkDisplay");
 const bulkPlaylistTarget=document.querySelector("#bulkPlaylistTarget");
 const bulkPlaylistSelected=document.querySelector("#bulkPlaylistSelected");
 const bulkTrashSelected=document.querySelector("#bulkTrashSelected");
@@ -275,6 +296,9 @@ let playlists=Object.freeze([]);
 let resolvedPlaylists=Object.freeze([]);
 let playlistSelectionTargetID="";
 let currentEditingTrackRef="";
+const defaultSongLayout=Object.freeze({artist:true,album:true,added:true,duration:true,genre:false,titleWidth:46});
+let songLayout=Object.freeze({...defaultSongLayout});
+let bulkDisplayRefs=Object.freeze([]);
 let trashSnapshot=Object.freeze({
  trash:Object.freeze([]),
  deletedHistory:Object.freeze([]),
@@ -1282,6 +1306,49 @@ function selectedLibraryRefs(){
  return librarySelection.currentProjection.selectedRefs.filter(ref=>byRef.has(ref));
 }
 
+function sharedDisplayValue(rows,key){
+ const values=[...new Set(rows.map(item=>String(item?.[key]??"")))];
+ return values.length===1?values[0]:"";
+}
+
+function applySongLayoutProjection(){
+ document.documentElement.style.setProperty("--song-title-width",songLayout.titleWidth+"%");
+ for(const key of ["artist","album","added","duration","genre"]){
+  document.body.dataset["songField"+key[0].toUpperCase()+key.slice(1)]=String(Boolean(songLayout[key]));
+ }
+ for(const input of songLayoutFieldInputs){
+  input.checked=Boolean(songLayout[input.dataset.songLayoutField]);
+ }
+ songTitleWidth.value=String(songLayout.titleWidth);
+ songTitleWidthValue.textContent=songLayout.titleWidth+"%";
+}
+
+function closeBulkDisplayEditor(){
+ bulkDisplayRefs=Object.freeze([]);
+ bulkDisplayEditor.hidden=true;
+}
+
+function openBulkDisplayEditor(){
+ const refs=selectedLibraryRefs();
+ if(!refs.length)return;
+ if(refs.length===1){
+  currentEditingTrackRef=refs[0];
+  renderLibraryEditor();
+  return;
+ }
+ const rows=refs.map(ref=>byRef.get(ref)).filter(Boolean);
+ bulkDisplayRefs=Object.freeze(refs);
+ bulkDisplayEditorTitle.textContent=`Edit shared display fields for ${refs.length} tracks`;
+ bulkDisplayEditorSummary.textContent="Only checked fields change. Source MP3/provider metadata is not rewritten.";
+ bulkApplyArtist.checked=false;
+ bulkApplyAlbum.checked=false;
+ bulkApplyGenre.checked=false;
+ bulkArtist.value=sharedDisplayValue(rows,"artist");
+ bulkAlbum.value=sharedDisplayValue(rows,"album");
+ bulkGenre.value=sharedDisplayValue(rows,"genre");
+ bulkDisplayEditor.hidden=false;
+}
+
 function renderTrackSelection(){
  const projection=librarySelection.currentProjection;
  const songs=libraryView.mode==="songs";
@@ -1301,6 +1368,7 @@ function renderTrackSelection(){
   bulkPlaySelected,
   bulkPlayNextSelected,
   bulkQueueSelected,
+  bulkEditSelected,
   bulkTrashSelected
  ]){
   button.disabled=disabled;
@@ -1315,9 +1383,12 @@ function renderTrackSelection(){
   bulkPlaylistTarget.value=prior;
  }
  bulkPlaylistSelected.disabled=disabled||playlists.length===0;
+ bulkEditSelected.textContent=projection.count>1?"Edit shared fields…":"Edit display…";
+ if(projection.count<2&&!bulkDisplayEditor.hidden)closeBulkDisplayEditor();
 }
 
 function renderTrackChoices(){
+ applySongLayoutProjection();
  const visible=currentLibraryView();
  const genres=libraryGenres(catalog);
  const preferredGenre=libraryView.genre;
@@ -1760,6 +1831,22 @@ playAllSongs.addEventListener("click",()=>void guarded(async()=>{
  );
 }));
 
+songLayoutButton.addEventListener("click",()=>{songLayoutPanel.hidden=false;});
+songLayoutDone.addEventListener("click",()=>{songLayoutPanel.hidden=true;});
+songLayoutReset.addEventListener("click",()=>{songLayout=Object.freeze({...defaultSongLayout});applySongLayoutProjection();});
+for(const input of songLayoutFieldInputs){
+ input.addEventListener("change",()=>{
+  const key=input.dataset.songLayoutField;
+  songLayout=Object.freeze({...songLayout,[key]:input.checked});
+  applySongLayoutProjection();
+ });
+}
+songTitleWidth.addEventListener("input",()=>{
+ const value=Math.max(34,Math.min(62,Number(songTitleWidth.value)||46));
+ songLayout=Object.freeze({...songLayout,titleWidth:value});
+ applySongLayoutProjection();
+});
+
 selectSongs.addEventListener("click",()=>{
  const wasActive=librarySelection.currentProjection.active;
  librarySelection.toggleMode();
@@ -1801,6 +1888,22 @@ bulkQueueSelected.addEventListener("click",()=>{
  player.append(selected);
  render();
 });
+
+bulkEditSelected.addEventListener("click",openBulkDisplayEditor);
+bulkDisplayEditorClose.addEventListener("click",closeBulkDisplayEditor);
+cancelBulkDisplay.addEventListener("click",closeBulkDisplayEditor);
+applyBulkDisplay.addEventListener("click",()=>void guarded(async()=>{
+ const ids=bulkDisplayRefs.filter(ref=>byRef.has(ref));
+ if(ids.length<2){closeBulkDisplayEditor();return;}
+ const patch={};
+ if(bulkApplyArtist.checked)patch.artist=bulkArtist.value;
+ if(bulkApplyAlbum.checked)patch.album=bulkAlbum.value;
+ if(bulkApplyGenre.checked)patch.genre=bulkGenre.value;
+ if(!Object.keys(patch).length)throw new Error("Choose Artist, Album / collection, or Genre before applying the bulk edit");
+ await updateTrackDisplays(ids,patch);
+ await refreshCatalog();
+ closeBulkDisplayEditor();
+}));
 
 bulkPlaylistSelected.addEventListener("click",()=>void guarded(async()=>{
  const selected=selectedLibraryRefs();

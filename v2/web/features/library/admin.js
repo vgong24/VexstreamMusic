@@ -19,6 +19,25 @@ export async function updateTrackDisplay(
   return postJSON("/api/library/overlay",body,request,"Track display update");
 }
 
+export async function updateTrackDisplays(
+  refs,
+  fields,
+  {request=globalThis.fetch}={}
+){
+  const ids=normalizeRefs(refs);
+  if(!ids.length)throw new Error("Shared display update requires track refs");
+  const body={ids};
+  for(const key of ["artist","album","genre"]){
+    if(Object.prototype.hasOwnProperty.call(fields??{},key)){
+      body[key]=String(fields[key]??"");
+    }
+  }
+  if(Object.keys(body).length===1){
+    throw new Error("Shared display update requires at least one shared field");
+  }
+  return postJSON("/api/library/overlay",body,request,"Shared display update");
+}
+
 export function restoreTrackDisplay(ref,{request=globalThis.fetch}={}){
   return postJSON(
     "/api/library/overlay",
@@ -87,6 +106,18 @@ async function postJSON(path,body,request,label){
     );
   }
   return response.json();
+}
+
+function normalizeRefs(values){
+  const seen=new Set();
+  const out=[];
+  for(const value of Array.isArray(values)?values:[values]){
+    const ref=String(value??"").trim();
+    if(!ref||seen.has(ref))continue;
+    seen.add(ref);
+    out.push(ref);
+  }
+  return out;
 }
 
 function requiredRef(value,label){

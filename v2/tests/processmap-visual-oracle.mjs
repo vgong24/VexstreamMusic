@@ -318,11 +318,11 @@ async function main(){
   console.log(JSON.stringify({status:manifest.status,browserVersion:manifest.browserVersion,states:manifest.states,captures:meta.length},null,2));
  }finally{
   c?.close();
-  await new Promise(resolve=>server.close(()=>resolve()));
   kill(child,"SIGTERM");
   await Promise.race([new Promise(resolve=>child.once("exit",resolve)),sleep(1000)]);
   kill(child,"SIGKILL");
   await sleep(100);
+  await new Promise(resolve=>server.close(()=>resolve()));
   fs.rmSync(root,{recursive:true,force:true,maxRetries:20,retryDelay:100});
  }
 }

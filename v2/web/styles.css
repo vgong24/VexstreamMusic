@@ -440,3 +440,26 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
 .system-drawer-actions{display:flex;justify-content:flex-end;padding-top:4px}
 #exitVexStream{background:#fff;color:#2c3031;border-color:#d9d3ca}
 @media(max-width:600px){.system-status-grid{grid-template-columns:1fr}.system-panel{width:100%}}
+
+/* Discover is a top-level V3 product terrain, not a Library subpanel.
+   ShellNavigation owns location; this block only projects that State into chrome. */
+body[data-shell-current-view="discover"] .sidebar,
+body[data-shell-current-view="discover"] .queue-panel,
+body[data-shell-current-view="discover"] #libraryNavToggle{
+ display:none;
+}
+body[data-shell-current-view="discover"] .discover-workspace{
+ width:min(1180px,100%);
+ justify-self:center;
+}
+@media(min-width:921px){
+ body[data-shell-current-view="discover"] .player.v3-product-shell{
+  grid-template-columns:0 minmax(0,1fr) 0;
+ }
+}
+@media(min-width:681px) and (max-width:920px){
+ body[data-shell-current-view="discover"] .player.v3-product-shell{
+  grid-template-columns:0 minmax(0,1fr);
+ }
+}
+

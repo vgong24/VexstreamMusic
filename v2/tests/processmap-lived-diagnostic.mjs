@@ -130,27 +130,27 @@ function instrumentationScript(){
     const clone=value=>{try{return JSON.parse(JSON.stringify(value))}catch{return String(value)}};
     const shell=()=>window.vexV4?.shellNavigation?.currentProjection??null;
     const library=()=>window.vexV4?.libraryView??null;
-    const describe=event=>{const target=event?.target;const action=target?.closest?.('[data-library-group-action]')??null;const card=target?.closest?.('[data-library-group]')??null;return{target:target?.tagName??null,targetId:target?.id??null,action:action?.dataset?.libraryGroupAction??null,groupKey:card?.dataset?.libraryGroup??null,groupKind:card?.dataset?.libraryGroupKind??null,defaultPrevented:Boolean(event?.defaultPrevented),cancelBubble:Boolean(event?.cancelBubble)};};
+    const describeNode=node=>node instanceof Element?{tag:node.tagName,id:node.id||null,action:node.dataset?.libraryGroupAction??null,groupKey:node.dataset?.libraryGroup??null,groupKind:node.dataset?.libraryGroupKind??null,shellView:node.dataset?.shellView??null,libraryMode:node.dataset?.libraryMode??null}:node===document?{tag:'#document'}:node===window?{tag:'#window'}:{tag:String(node?.constructor?.name??'unknown')};
+    const describe=event=>{const target=event?.target;const action=target?.closest?.('[data-library-group-action]')??null;const card=target?.closest?.('[data-library-group]')??null;return{target:target?.tagName??null,targetId:target?.id??null,action:action?.dataset?.libraryGroupAction??null,groupKey:card?.dataset?.libraryGroup??null,groupKind:card?.dataset?.libraryGroupKind??null,defaultPrevented:Boolean(event?.defaultPrevented),cancelBubble:Boolean(event?.cancelBubble),path:event?.composedPath?.().map(describeNode)??[]};};
     const record=(kind,detail={})=>trace.push({at:performance.now(),kind,...clone(detail),shell:clone(shell()),libraryView:clone(library())});
     const capture=name=>{if(captured.has(name))return;captured.add(name);captures.push({name,at:performance.now(),shell:clone(shell()),libraryView:clone(library())});};
     const originalClick=HTMLElement.prototype.click;
     HTMLElement.prototype.click=function(){const relevant=this.matches?.('[data-library-group-action]');if(relevant)record('programmatic-click-before',{element:{action:this.dataset.libraryGroupAction,text:this.textContent}});const result=originalClick.call(this);if(relevant)record('programmatic-click-after',{element:{action:this.dataset.libraryGroupAction,text:this.textContent}});return result;};
-    const originalAdd=EventTarget.prototype.addEventListener;
+    const originalAdd=EventTarget.prototype.addEventListener;let clickRegistration=0;
     EventTarget.prototype.addEventListener=function(type,listener,options){
-      if(type==='click'&&this instanceof Element&&this.id==='trackChoices'&&typeof listener==='function'){
-        const registration=trace.filter(x=>x.kind==='trackChoices-listener-registered').length+1;
-        record('trackChoices-listener-registered',{registration});
-        const wrapped=function(event){record('trackChoices-listener-before',{registration,event:describe(event)});try{return listener.call(this,event);}finally{record('trackChoices-listener-after',{registration,event:describe(event)});}};
+      if(type==='click'&&typeof listener==='function'){
+        const owner=this;const registration=++clickRegistration;
+        const wrapped=function(event){const d=describe(event),relevant=Boolean(d.action||d.groupKey);if(relevant)record('click-listener-before',{registration,owner:describeNode(owner),event:d});try{return listener.call(this,event);}finally{if(relevant)record('click-listener-after',{registration,owner:describeNode(owner),event:describe(event)});}};
         return originalAdd.call(this,type,wrapped,options);
       }
       return originalAdd.call(this,type,listener,options);
     };
-    document.addEventListener('click',event=>{const d=describe(event);if(d.action||d.groupKey)record('document-click-capture',{event:d});},true);
-    document.addEventListener('click',event=>{const d=describe(event);if(d.action||d.groupKey)record('document-click-bubble',{event:d});});
+    originalAdd.call(document,'click',event=>{const d=describe(event);if(d.action||d.groupKey)record('document-click-capture',{event:d});},true);
+    originalAdd.call(document,'click',event=>{const d=describe(event);if(d.action||d.groupKey)record('document-click-bubble',{event:d});});
     let subscribed=false;
     const timer=setInterval(()=>{
       if(!window.vexV4?.ready)return;
-      if(!subscribed){subscribed=true;window.vexV4.shellNavigation.subscribe(projection=>record('shell-publish',{projection:clone(projection)}));record('shell-subscriber-attached');}
+      if(!subscribed){subscribed=true;window.vexV4.shellNavigation.subscribe(projection=>record('shell-publish',{projection:clone(projection),stack:new Error('shell-publish').stack}));record('shell-subscriber-attached');}
       const projection=shell();
       if(projection?.view==='home'&&!document.querySelector('#homeView')?.hidden)capture('library-home');
       if(projection?.view==='songs'&&document.querySelectorAll('#trackChoices [data-track-ref]').length)capture('songs');

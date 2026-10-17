@@ -82,7 +82,7 @@ async function connect(url){
 }
 
 async function activePort(file,child,stderr,timeout){
-  const end=Date.now()+Math.min(timeout,8000);
+  const end=Date.now()+Math.min(timeout,15000);
   while(Date.now()<end){
     if(fs.existsSync(file)){const value=fs.readFileSync(file,'utf8').trim();if(value)return value;}
     if(child.exitCode!==null)throw new Error(`browser exited ${child.exitCode}: ${stderr()}`);

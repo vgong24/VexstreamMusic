@@ -68,11 +68,18 @@
     </div>
 
     <div class="transport" aria-label="Playback and queue controls">
-      <button id="previous" type="button" data-vex-control="vexstream.queue.previous" data-text-ref="queue.previous">Previous</button>
-      <button id="playPause" type="button" class="primary" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
-      <button id="next" type="button" data-vex-control="vexstream.queue.next" data-text-ref="queue.next">Next</button>
-      <button id="shuffle" type="button" data-vex-control="vexstream.queue.shuffle" data-text-ref="queue.shuffle" aria-pressed="false">Shuffle</button>
-      <button id="repeat" type="button" data-vex-control="vexstream.queue.repeat" data-text-ref="queue.repeat" aria-pressed="false">Repeat</button>
+      <div class="transport-controls">
+        <button id="previous" type="button" data-vex-control="vexstream.queue.previous" data-text-ref="queue.previous">Previous</button>
+        <button id="playPause" type="button" class="primary" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
+        <button id="next" type="button" data-vex-control="vexstream.queue.next" data-text-ref="queue.next">Next</button>
+        <button id="shuffle" type="button" data-vex-control="vexstream.queue.shuffle" data-text-ref="queue.shuffle" aria-pressed="false">Shuffle</button>
+        <button id="repeat" type="button" data-vex-control="vexstream.queue.repeat" data-text-ref="queue.repeat" aria-pressed="false">Repeat</button>
+      </div>
+      <div class="timeline small" aria-label="Playback position">
+        <span id="curTime">0:00</span>
+        <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek" disabled>
+        <span id="durTime">0:00</span>
+      </div>
     </div>
 
     <section class="library" data-shell-panel="library" aria-labelledby="libraryTitle" hidden>

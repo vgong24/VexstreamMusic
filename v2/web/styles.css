@@ -286,14 +286,33 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
 }
 .transport{
  grid-area:transport;
+ display:grid;
+ grid-template-rows:auto auto;
+ align-content:center;
+ gap:2px;
+ padding:4px 14px 5px;
+ background:#fff;
+ border-top:1px solid #ddd7cd;
+}
+.transport-controls{
  display:flex;
  align-items:center;
  justify-content:center;
  gap:8px;
- padding:8px 14px;
- background:#fff;
- border-top:1px solid #ddd7cd;
 }
+.timeline{
+ display:grid;
+ grid-template-columns:38px minmax(120px,420px) 38px;
+ align-items:center;
+ justify-content:center;
+ gap:8px;
+ color:#747a7b;
+ font-size:11px;
+ font-variant-numeric:tabular-nums;
+}
+.timeline span:first-child{text-align:right}
+.timeline input[type="range"]{width:100%;accent-color:#c65f39}
+.timeline input[type="range"]:disabled{opacity:.45}
 .transport button{
  width:42px;
  height:42px;

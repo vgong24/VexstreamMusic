@@ -1,6 +1,7 @@
 // [VXG RealForever]
 import { PlaybackControl } from "./features/playback/behavior.js";
 import { createHTMLMediaPlaybackConnection } from "./features/playback/connection.js";
+import { createHTMLMediaPlaybackTimelineConnection } from "./features/playback/timeline.js";
 import { QueueControl, QueueState, currentQueueRef } from "./features/queue/behavior.js";
 import { createQueueConnection } from "./features/queue/connection.js";
 import { createPlayerComposition } from "./features/player/composition.js";
@@ -92,6 +93,9 @@ const previous=document.querySelector("#previous");
 const next=document.querySelector("#next");
 const shuffle=document.querySelector("#shuffle");
 const repeat=document.querySelector("#repeat");
+const seek=document.querySelector("#seek");
+const curTime=document.querySelector("#curTime");
+const durTime=document.querySelector("#durTime");
 const buildIdentity=document.querySelector("#buildIdentity");
 const systemStatusButton=document.querySelector("#systemStatusButton");
 const systemStatusBadge=document.querySelector("#systemStatusBadge");
@@ -572,9 +576,21 @@ const playback=createHTMLMediaPlaybackConnection({
  }
 });
 
+const timeline=createHTMLMediaPlaybackTimelineConnection({
+ media:audio,
+ currentWindow:()=>{
+  const item=byRef.get(currentQueueRef(queue.currentProjection.state));
+  return item?{
+   startSeconds:item.playbackStartSeconds,
+   endSeconds:item.playbackEndSeconds
+  }:null;
+ }
+});
+
 const player=createPlayerComposition({
  queue,
  playback,
+ timeline,
  media:audio,
  resolveMedia:ref=>byRef.get(ref),
  defaultContextRefs:()=>libraryPlaybackRefs(),
@@ -584,6 +600,8 @@ const player=createPlayerComposition({
   artist.textContent=trackArtist(item);
  }
 });
+
+timeline.subscribe(renderPlaybackTimeline);
 
 const exploreSession=createExploreSession();
 const explore=createExploreComposition({
@@ -875,6 +893,16 @@ function renderSystemStatus(){
  systemAttention.innerHTML=attentionRows.length
   ?`<ul>${attentionRows.map(row=>`<li>${escapeHTML(row)}</li>`).join("")}</ul>`
   :`<span class="muted">${escapeHTML(resolveText(locale,"system.status.no-warnings"))}</span>`;
+}
+
+function renderPlaybackTimeline(
+ projection=timeline.currentProjection
+){
+ const ready=projection.kind==="ready"&&projection.seekAvailable;
+ seek.disabled=!ready;
+ seek.value=ready?String(Math.round(projection.normalized*1000)):"0";
+ curTime.textContent=formatSeconds(ready?projection.elapsedSeconds:0);
+ durTime.textContent=formatSeconds(ready?projection.durationSeconds:0);
 }
 
 function render(){
@@ -1452,6 +1480,9 @@ next.addEventListener("click",()=>void guarded(()=>player.next()));
 previous.addEventListener("click",()=>void guarded(()=>player.previous()));
 shuffle.addEventListener("click",()=>{player.toggleShuffle();render();});
 repeat.addEventListener("click",()=>{player.toggleRepeat();render();});
+seek.addEventListener("input",()=>{
+ timeline.seekNormalized(Number(seek.value)/1000);
+});
 queueDrawerHandle.addEventListener("click",()=>{
  queueDrawerOpen=!queueDrawerOpen;
  render();
@@ -2169,6 +2200,7 @@ async function initialize(){
   journey:playerJourney,
   queue,
   playback,
+  timeline,
   player,
   media:audio,
   get catalog(){return catalog;},

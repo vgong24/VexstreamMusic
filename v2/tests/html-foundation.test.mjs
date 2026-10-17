@@ -78,6 +78,9 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
     'id="queueDrawerNextCount"',
     'class="queue queue-drawer-body"',
     'id="trackTitle"',
+    'id="curTime"',
+    'id="seek"',
+    'id="durTime"',
     'id="playPause"',
     'id="audio"'
   ]){

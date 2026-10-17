@@ -251,17 +251,38 @@
     </section>
 
     <section class="playlists" data-shell-panel="playlists" aria-labelledby="playlistsTitle" hidden>
-      <div class="section-heading">
-        <div>
-          <h2 id="playlistsTitle">Playlists</h2>
-          <span>Durable ordered track references</span>
+      <div id="playlistOverview">
+        <div class="section-heading">
+          <div>
+            <h2 id="playlistsTitle">Playlists</h2>
+            <span>Durable local collections. Playlist order persists; the playback queue stays temporary.</span>
+          </div>
+          <div class="playlist-create">
+            <input id="newPlaylistName" type="text" placeholder="New playlist name">
+            <button id="createPlaylist" type="button">Create</button>
+          </div>
         </div>
-        <div class="playlist-create">
-          <input id="newPlaylistName" type="text" placeholder="New playlist name">
-          <button id="createPlaylist" type="button">Create</button>
-        </div>
+        <div id="playlistChoices"></div>
       </div>
-      <div id="playlistChoices"></div>
+      <section id="playlistDetail" class="playlist-detail" aria-labelledby="playlistDetailName" hidden>
+        <div class="playlist-detail-head">
+          <button id="playlistDetailBack" type="button" data-text-ref="playlist.detail.back">← All playlists</button>
+          <span class="muted" data-text-ref="playlist.detail.terrain">Playlist terrain</span>
+        </div>
+        <div class="playlist-detail-hero">
+          <div class="playlist-detail-copy">
+            <input id="playlistDetailName" type="text" aria-label="Playlist name">
+            <span id="playlistDetailAvailability" class="muted"></span>
+          </div>
+          <div class="playlist-detail-actions">
+            <button id="playlistDetailPlay" type="button" class="primary" data-text-ref="playlist.play">Play playlist</button>
+            <button id="playlistDetailAddSongs" type="button" data-text-ref="playlist.add-songs">Add songs</button>
+            <button id="playlistDetailRename" type="button" data-text-ref="playlist.rename">Rename</button>
+            <button id="playlistDetailDelete" type="button" data-text-ref="playlist.delete">Delete playlist</button>
+          </div>
+        </div>
+        <ol id="playlistDetailEntries" class="playlist-detail-entries"></ol>
+      </section>
     </section>
 
     <section class="import-review" id="importReview" aria-labelledby="importReviewTitle" hidden>

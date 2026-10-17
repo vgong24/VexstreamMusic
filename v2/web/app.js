@@ -51,6 +51,7 @@ import {
   reorderPlaylist,
   resolvePlaylistAvailability,
 } from "./features/playlists/client.js";
+import { createPlaylistNavigation } from "./features/playlists/navigation.js";
 import { createExploreSession } from "./features/explore/session.js";
 import { createExploreComposition } from "./features/explore/composition.js";
 import {
@@ -162,7 +163,17 @@ const savePlaybackWindow=document.querySelector("#savePlaybackWindow");
 const restorePlaybackWindowButton=document.querySelector("#restorePlaybackWindow");
 const newPlaylistName=document.querySelector("#newPlaylistName");
 const createPlaylistButton=document.querySelector("#createPlaylist");
+const playlistOverview=document.querySelector("#playlistOverview");
 const playlistChoices=document.querySelector("#playlistChoices");
+const playlistDetail=document.querySelector("#playlistDetail");
+const playlistDetailBack=document.querySelector("#playlistDetailBack");
+const playlistDetailName=document.querySelector("#playlistDetailName");
+const playlistDetailAvailability=document.querySelector("#playlistDetailAvailability");
+const playlistDetailPlay=document.querySelector("#playlistDetailPlay");
+const playlistDetailAddSongs=document.querySelector("#playlistDetailAddSongs");
+const playlistDetailRename=document.querySelector("#playlistDetailRename");
+const playlistDetailDelete=document.querySelector("#playlistDetailDelete");
+const playlistDetailEntries=document.querySelector("#playlistDetailEntries");
 const trashSummary=document.querySelector("#trashSummary");
 const trashRefresh=document.querySelector("#trashRefresh");
 const trashItems=document.querySelector("#trashItems");
@@ -213,6 +224,7 @@ let sourceDiscoveryState=Object.freeze({
 });
 let playlists=Object.freeze([]);
 let resolvedPlaylists=Object.freeze([]);
+let playlistSelectionTargetID="";
 let currentEditingTrackRef="";
 let trashSnapshot=Object.freeze({
  trash:Object.freeze([]),
@@ -241,6 +253,7 @@ let currentImportJobs=Object.freeze({
 const shellNavigation=createShellNavigation();
 const discoverNavigation=createDiscoverNavigation();
 const librarySelection=createTrackSelection();
+const playlistNavigation=createPlaylistNavigation();
 
 
 function trackTitle(item){
@@ -318,6 +331,7 @@ function renderDiscoverNavigation(
 shellNavigation.subscribe(renderShell);
 discoverNavigation.subscribe(renderDiscoverNavigation);
 librarySelection.subscribe(renderTrackChoices);
+playlistNavigation.subscribe(renderPlaylistChoices);
 
 function currentLibraryView(){
  return projectLibraryView(catalog,{
@@ -405,6 +419,7 @@ async function refreshPlaylists(){
  resolvedPlaylists=Object.freeze(
   playlists.map(playlist=>resolvePlaylistAvailability(playlist,catalog))
  );
+ playlistNavigation.reconcile(playlists.map(playlist=>playlist.id));
  renderPlaylistChoices();
  renderTrackChoices();
  return playlists;
@@ -1034,43 +1049,77 @@ function renderSources(){
  renderHome();
 }
 
+function currentPlaylistDetail(){
+ const id=playlistNavigation.currentProjection.openPlaylistID;
+ if(!id)return null;
+ return resolvedPlaylists.find(value=>value.playlist.id===id)??null;
+}
+
+function playlistEntryHTML(entry,index,total){
+ const label=entry.available
+  ?trackTitle(entry.track)
+  :resolveText(locale,"playlist.missing-track");
+ return `<li data-playlist-track-ref="${escapeHTML(entry.ref)}"
+      data-playlist-index="${index}"
+      data-available="${String(entry.available)}">
+   <span class="playlist-entry-copy">
+    <strong>${escapeHTML(label)}</strong>
+    <small>${escapeHTML(entry.available?trackArtist(entry.track):entry.ref)}</small>
+   </span>
+   <span class="playlist-entry-actions">
+    ${entry.available
+     ?`<button data-playlist-entry-action="play">${escapeHTML(resolveText(locale,"playback.play"))}</button>`
+     :""}
+    <button data-playlist-entry-action="up" ${index===0?"disabled":""}>↑</button>
+    <button data-playlist-entry-action="down" ${index===total-1?"disabled":""}>↓</button>
+    <button data-playlist-entry-action="remove">${escapeHTML(resolveText(locale,"playlist.remove-track"))}</button>
+   </span>
+  </li>`;
+}
+
 function renderPlaylistChoices(){
+ const openID=playlistNavigation.currentProjection.openPlaylistID;
+ playlistOverview.hidden=Boolean(openID);
+ playlistDetail.hidden=!openID;
+
  playlistChoices.innerHTML=resolvedPlaylists.length
-  ? resolvedPlaylists.map(resolved=>{
+  ?resolvedPlaylists.map(resolved=>{
    const playlist=resolved.playlist;
    const availability=resolveText(locale,"playlist.availability",{
     available:resolved.playableRefs.length,
     missing:resolved.missingRefs.length
    });
-   const entries=resolved.entries.map((entry,index)=>{
-    const label=entry.available
-     ? trackTitle(entry.track)
-     : resolveText(locale,"playlist.missing-track");
-    return `<li data-playlist-track-ref="${escapeHTML(entry.ref)}"
-        data-playlist-index="${index}"
-        data-available="${String(entry.available)}">
-      <span>${escapeHTML(label)}</span>
-      <span class="playlist-entry-actions">
-       <button data-playlist-entry-action="up" ${index===0?"disabled":""}>↑</button>
-       <button data-playlist-entry-action="down" ${index===resolved.entries.length-1?"disabled":""}>↓</button>
-       <button data-playlist-entry-action="remove">${escapeHTML(resolveText(locale,"playlist.remove-track"))}</button>
-      </span>
-     </li>`;
-   }).join("");
    return `<article class="playlist-card" data-playlist-id="${escapeHTML(playlist.id)}">
     <div class="playlist-heading">
-     <input data-playlist-name value="${escapeHTML(playlist.name)}" aria-label="${escapeHTML(resolveText(locale,"playlist.name"))}">
+     <strong>${escapeHTML(playlist.name)}</strong>
      <small>${escapeHTML(availability)}</small>
     </div>
     <div class="playlist-card-actions">
      <button data-playlist-action="play" ${resolved.playableRefs.length?"":"disabled"}>${escapeHTML(resolveText(locale,"playlist.play"))}</button>
-     <button data-playlist-action="rename">${escapeHTML(resolveText(locale,"playlist.rename"))}</button>
-     <button data-playlist-action="delete">${escapeHTML(resolveText(locale,"playlist.delete"))}</button>
+     <button data-playlist-action="open">${escapeHTML(resolveText(locale,"playlist.open"))}</button>
     </div>
-    <ol class="playlist-entries">${entries}</ol>
    </article>`;
   }).join("")
-  : `<div class="empty-state">${escapeHTML(resolveText(locale,"playlist.empty"))}</div>`;
+  :`<div class="empty-state">${escapeHTML(resolveText(locale,"playlist.empty"))}</div>`;
+
+ if(!openID)return;
+ const resolved=currentPlaylistDetail();
+ if(!resolved){
+  playlistNavigation.close();
+  return;
+ }
+ const playlist=resolved.playlist;
+ playlistDetailName.value=playlist.name;
+ playlistDetailAvailability.textContent=resolveText(locale,"playlist.availability",{
+  available:resolved.playableRefs.length,
+  missing:resolved.missingRefs.length
+ });
+ playlistDetailPlay.disabled=resolved.playableRefs.length===0;
+ playlistDetailEntries.innerHTML=resolved.entries.length
+  ?resolved.entries.map((entry,index)=>
+    playlistEntryHTML(entry,index,resolved.entries.length)
+   ).join("")
+  :`<li class="empty-state">${escapeHTML(resolveText(locale,"playlist.empty"))}</li>`;
 }
 
 async function guarded(effect){
@@ -1251,7 +1300,11 @@ function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){
 }
 
 selectSongs.addEventListener("click",()=>{
+ const wasActive=librarySelection.currentProjection.active;
  librarySelection.toggleMode();
+ if(wasActive&&!librarySelection.currentProjection.active){
+  playlistSelectionTargetID="";
+ }
 });
 
 selectVisibleSongs.addEventListener("click",()=>{
@@ -1292,8 +1345,17 @@ bulkPlaylistSelected.addEventListener("click",()=>void guarded(async()=>{
  const selected=selectedLibraryRefs();
  const playlistID=bulkPlaylistTarget.value;
  if(!selected.length||!playlistID)return;
+ const returnToPlaylist=playlistSelectionTargetID===playlistID
+  ?playlistID
+  :"";
  await addTracksToPlaylist(playlistID,selected);
  await refreshPlaylists();
+ if(returnToPlaylist){
+  playlistSelectionTargetID="";
+  librarySelection.deactivate();
+  shellNavigation.select(ShellView.PLAYLISTS);
+  playlistNavigation.open(returnToPlaylist);
+ }
 }));
 
 bulkTrashSelected.addEventListener("click",()=>void guarded(async()=>{
@@ -1489,54 +1551,87 @@ playlistChoices.addEventListener("click",event=>{
  const id=card.dataset.playlistId;
  const resolved=resolvedPlaylists.find(value=>value.playlist.id===id);
  if(!resolved)return;
-
  const action=event.target.closest("[data-playlist-action]");
- if(action){
-  if(action.dataset.playlistAction==="play"){
-   if(resolved.playableRefs.length){
-    void guarded(()=>player.playContext(resolved.playableRefs,0));
-   }
-   return;
-  }
-  if(action.dataset.playlistAction==="rename"){
-   const name=card.querySelector("[data-playlist-name]")?.value??"";
-   void guarded(async()=>{
-    await renamePlaylist(id,name);
-    await refreshPlaylists();
-   });
-   return;
-  }
-  if(action.dataset.playlistAction==="delete"){
-   void guarded(async()=>{
-    await deletePlaylist(id);
-    await refreshPlaylists();
-   });
-   return;
-  }
- }
+ if(!action)return;
 
- const entryAction=event.target.closest("[data-playlist-entry-action]");
+ if(action.dataset.playlistAction==="play"){
+  if(resolved.playableRefs.length){
+   void guarded(()=>player.playContext(resolved.playableRefs,0));
+  }
+  return;
+ }
+ if(action.dataset.playlistAction==="open"){
+  playlistNavigation.open(id);
+ }
+});
+
+playlistDetailBack.addEventListener("click",()=>{
+ playlistNavigation.close();
+});
+
+playlistDetailPlay.addEventListener("click",()=>{
+ const resolved=currentPlaylistDetail();
+ if(resolved?.playableRefs.length){
+  void guarded(()=>player.playContext(resolved.playableRefs,0));
+ }
+});
+
+playlistDetailAddSongs.addEventListener("click",()=>{
+ const resolved=currentPlaylistDetail();
+ if(!resolved)return;
+ playlistSelectionTargetID=resolved.playlist.id;
+ librarySelection.activate();
+ shellNavigation.select(ShellView.SONGS);
+ renderTrackChoices();
+ bulkPlaylistTarget.value=resolved.playlist.id;
+});
+
+playlistDetailRename.addEventListener("click",()=>void guarded(async()=>{
+ const resolved=currentPlaylistDetail();
+ if(!resolved)return;
+ await renamePlaylist(resolved.playlist.id,playlistDetailName.value);
+ await refreshPlaylists();
+}));
+
+playlistDetailDelete.addEventListener("click",()=>void guarded(async()=>{
+ const resolved=currentPlaylistDetail();
+ if(!resolved)return;
+ await deletePlaylist(resolved.playlist.id);
+ await refreshPlaylists();
+}));
+
+playlistDetailEntries.addEventListener("click",event=>{
+ const action=event.target.closest("[data-playlist-entry-action]");
  const entry=event.target.closest("[data-playlist-index]");
- if(!entryAction||!entry)return;
+ const resolved=currentPlaylistDetail();
+ if(!action||!entry||!resolved)return;
  const index=Number(entry.dataset.playlistIndex);
  const refs=[...resolved.playlist.trackRefs];
 
- if(entryAction.dataset.playlistEntryAction==="remove"){
+ if(action.dataset.playlistEntryAction==="play"){
+  const ref=refs[index];
+  if(resolved.entries[index]?.available){
+   void guarded(()=>player.playTrack(ref,resolved.playableRefs));
+  }
+  return;
+ }
+
+ if(action.dataset.playlistEntryAction==="remove"){
   const ref=refs[index];
   void guarded(async()=>{
-   await removeTracksFromPlaylist(id,[ref]);
+   await removeTracksFromPlaylist(resolved.playlist.id,[ref]);
    await refreshPlaylists();
   });
   return;
  }
 
- const target=entryAction.dataset.playlistEntryAction==="up"
+ const target=action.dataset.playlistEntryAction==="up"
   ?index-1
   :index+1;
  if(target<0||target>=refs.length)return;
  [refs[index],refs[target]]=[refs[target],refs[index]];
  void guarded(async()=>{
-  await reorderPlaylist(id,refs);
+  await reorderPlaylist(resolved.playlist.id,refs);
   await refreshPlaylists();
  });
 });
@@ -1775,6 +1870,7 @@ async function initialize(){
   shellNavigation,
   discoverNavigation,
   librarySelection,
+  playlistNavigation,
   get sourceConfig(){return sourceConfig;},
   get playlists(){return playlists;},
   get resolvedPlaylists(){return resolvedPlaylists;},

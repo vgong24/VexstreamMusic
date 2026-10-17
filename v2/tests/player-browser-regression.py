@@ -1773,8 +1773,53 @@ def main() -> int:
         focus_card = page.locator(
             f'[data-playlist-id="{focus_id}"]'
         )
-        focus_card.locator(
-            '[data-playlist-index="1"] '
+        focus_card.locator('[data-playlist-action="open"]').click()
+        page.wait_for_function(
+            "(id)=>window.vexV4.playlistNavigation.currentProjection"
+            ".openPlaylistID===id",
+            arg=focus_id,
+        )
+        checked(
+            "playlist-browse-opens-recognizable-detail-terrain",
+            lambda: require(
+                page.locator("#playlistOverview").is_hidden()
+                and page.locator("#playlistDetail").is_visible()
+                and page.locator("#playlistDetailName").input_value()
+                == "Focus Mix"
+                and page.locator("#playlistDetailEntries li").count() == 2,
+                "Playlist detail terrain drift",
+            ),
+        )
+
+        page.locator("#playlistDetailAddSongs").click()
+        page.wait_for_function(
+            "window.vexV4.shellNavigation.currentProjection.view==='songs' "
+            "&& window.vexV4.librarySelection.currentProjection.active===true"
+        )
+        checked(
+            "playlist-add-songs-hands-off-to-existing-songs-selection",
+            lambda: require(
+                page.locator("#bulkPlaylistTarget").input_value() == focus_id
+                and page.locator("#librarySelectionBar").is_visible(),
+                "Playlist add-songs handoff did not preserve target",
+            ),
+        )
+        page.locator(
+            '[data-track-ref="media.vexstream.test-tone.2"] [data-track-select]'
+        ).check()
+        page.locator("#bulkPlaylistSelected").click()
+        page.wait_for_function(
+            "(id)=>window.vexV4.shellNavigation.currentProjection.view"
+            "==='playlists' "
+            "&& window.vexV4.playlistNavigation.currentProjection"
+            ".openPlaylistID===id "
+            "&& window.vexV4.playlists.find(x=>x.id===id)"
+            ".trackRefs.length===3",
+            arg=focus_id,
+        )
+
+        page.locator(
+            '#playlistDetailEntries [data-playlist-index="1"] '
             '[data-playlist-entry-action="up"]'
         ).click()
         page.wait_for_function(
@@ -1783,31 +1828,25 @@ def main() -> int:
             arg=focus_id,
         )
 
-        focus_card = page.locator(
-            f'[data-playlist-id="{focus_id}"]'
-        )
-        focus_card.locator("[data-playlist-name]").fill("Focus Renamed")
-        focus_card.locator('[data-playlist-action="rename"]').click()
+        page.locator("#playlistDetailName").fill("Focus Renamed")
+        page.locator("#playlistDetailRename").click()
         page.wait_for_function(
             "(id)=>window.vexV4.playlists.find(x=>x.id===id).name"
             "==='Focus Renamed'",
             arg=focus_id,
         )
 
-        focus_card = page.locator(
-            f'[data-playlist-id="{focus_id}"]'
-        )
-        focus_card.locator(
-            '[data-playlist-index="1"] '
+        page.locator(
+            '#playlistDetailEntries [data-playlist-index="2"] '
             '[data-playlist-entry-action="remove"]'
         ).click()
         page.wait_for_function(
             "(id)=>window.vexV4.playlists.find(x=>x.id===id)"
-            ".trackRefs.length===1",
+            ".trackRefs.length===2",
             arg=focus_id,
         )
         checked(
-            "playlist-crud-keeps-durable-order-and-current-availability-separate",
+            "playlist-detail-crud-keeps-durable-order-and-current-availability-separate",
             lambda: require(
                 page.evaluate(
                     "(id)=>window.vexV4.playlists.find(x=>x.id===id)"
@@ -1816,16 +1855,15 @@ def main() -> int:
                 )
                 == "media.vexstream.test-tone.3"
                 and page.evaluate("window.vexV4.catalog.length") == 3,
-                "playlist CRUD crossed into Library",
+                "playlist detail CRUD crossed into Library",
             ),
         )
 
-        focus_card = page.locator(
-            f'[data-playlist-id="{focus_id}"]'
-        )
-        focus_card.locator('[data-playlist-action="delete"]').click()
+        page.locator("#playlistDetailDelete").click()
         page.wait_for_function(
-            "(id)=>!window.vexV4.playlists.some(x=>x.id===id)",
+            "(id)=>!window.vexV4.playlists.some(x=>x.id===id) "
+            "&& window.vexV4.playlistNavigation.currentProjection"
+            ".openPlaylistID===''",
             arg=focus_id,
         )
 

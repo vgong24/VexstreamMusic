@@ -405,3 +405,19 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
 .track-selection{display:grid;place-items:center;padding:4px}
 .track-selection input{width:18px;height:18px}
 @media(max-width:720px){.library-heading-actions{justify-content:flex-start}.selection-spacer{display:none}.track-card.selectable{grid-template-columns:auto minmax(0,1fr)}.track-card.selectable .track-actions{grid-column:2}}
+
+
+.playlist-detail{display:grid;gap:14px}
+.playlist-detail[hidden],#playlistOverview[hidden]{display:none}
+.playlist-detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.playlist-detail-head button{padding:7px 9px;font-size:12px}
+.playlist-detail-hero{display:flex;align-items:end;justify-content:space-between;gap:18px;padding:16px;background:#fff;border:1px solid #ded8cf;border-radius:14px}
+.playlist-detail-copy{display:grid;gap:6px;min-width:0;flex:1}
+.playlist-detail-copy input{width:min(440px,100%);border:1px solid #d9d3ca;border-radius:9px;padding:8px 9px;background:#fff;color:#2c3031;font:inherit;font-weight:750}
+.playlist-detail-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.playlist-detail-entries{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+.playlist-detail-entries li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;background:#fff;border:1px solid #e1dcd3;border-radius:10px}
+.playlist-entry-copy{display:grid;gap:3px;min-width:0}
+.playlist-entry-copy strong,.playlist-entry-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playlist-entry-copy small{color:#7b8182}
+@media(max-width:720px){.playlist-detail-hero,.playlist-detail-entries li{display:grid;grid-template-columns:1fr}.playlist-detail-actions{justify-content:flex-start}}

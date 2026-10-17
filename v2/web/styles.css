@@ -454,12 +454,20 @@ body[data-shell-current-view="discover"] .discover-workspace{
 }
 @media(min-width:921px){
  body[data-shell-current-view="discover"] .player.v3-product-shell{
-  grid-template-columns:0 minmax(0,1fr) 0;
+  grid-template-columns:190px minmax(0,1fr) 0;
+  grid-template-areas:
+   "header header header"
+   "main main main"
+   "now transport transport";
  }
 }
 @media(min-width:681px) and (max-width:920px){
  body[data-shell-current-view="discover"] .player.v3-product-shell{
-  grid-template-columns:0 minmax(0,1fr);
+  grid-template-columns:160px minmax(0,1fr);
+  grid-template-areas:
+   "header header"
+   "main main"
+   "now transport";
  }
 }
 

@@ -133,6 +133,7 @@ const clearSongSelection=document.querySelector("#clearSongSelection");
 const libraryGroupDetail=document.querySelector("#libraryGroupDetail");
 const libraryGroupBack=document.querySelector("#libraryGroupBack");
 const libraryGroupTerrain=document.querySelector("#libraryGroupTerrain");
+const libraryGroupArtwork=document.querySelector("#libraryGroupArtwork");
 const libraryGroupEyebrow=document.querySelector("#libraryGroupEyebrow");
 const libraryGroupTitle=document.querySelector("#libraryGroupTitle");
 const libraryGroupSummary=document.querySelector("#libraryGroupSummary");
@@ -1001,6 +1002,32 @@ function songRowHTML(item,{selectable=false}={}){
   </tr>`;
 }
 
+function libraryGroupArtworkHTML(group,{kind,hero=false}={}){
+ const artworkTrack=group?.tracks?.find(track=>
+  String(track?.thumbnailURL??"").trim()
+ )??group?.tracks?.[0]??null;
+ const source=String(artworkTrack?.thumbnailURL??"").trim();
+ const fallback=kind==="artist"?"♫":group?.name??"♫";
+ return `<span class="library-group-cover${hero?" library-group-cover-hero":""}${source?" has-art":""}">
+   ${source
+    ?`<img src="${escapeHTML(source)}" alt="">`
+    :`<span>${escapeHTML(fallback)}</span>`}
+  </span>`;
+}
+
+function libraryGroupCardMeta(group,kind){
+ const related=kind==="album"
+  ?[...new Set(group.tracks.map(track=>trackArtist(track)))]
+  :[...new Set(group.tracks.map(track=>
+    String(track?.album??"").trim()||"Unknown album"
+   ))];
+ const relationship=related.slice(0,2).join(", ");
+ const trackCount=resolveText(locale,"library.group.tracks",{
+  count:group.refs.length
+ });
+ return [relationship,trackCount].filter(Boolean).join(" · ");
+}
+
 function currentLibraryDetailGroup(){
  const detail=shellNavigation.currentProjection.libraryDetail;
  if(!detail)return null;
@@ -1012,6 +1039,8 @@ function renderLibraryGroupDetail(){
  const detail=shellNavigation.currentProjection.libraryDetail;
  if(!detail){
   libraryGroupDetail.hidden=true;
+  delete libraryGroupDetail.dataset.libraryGroupKind;
+  libraryGroupArtwork.innerHTML="";
   trackChoices.hidden=false;
   return;
  }
@@ -1029,6 +1058,11 @@ function renderLibraryGroupDetail(){
    )).size;
 
  libraryGroupDetail.hidden=false;
+ libraryGroupDetail.dataset.libraryGroupKind=detail.kind;
+ libraryGroupArtwork.innerHTML=libraryGroupArtworkHTML(group,{
+  kind:detail.kind,
+  hero:true
+ });
  trackChoices.hidden=true;
  libraryGroupBack.textContent=resolveText(
   locale,
@@ -1165,19 +1199,15 @@ function renderTrackChoices(){
   ?groups.map(group=>`<article class="library-group-card"
        data-library-group="${escapeHTML(group.key)}"
        data-library-group-kind="${escapeHTML(groupKey)}">
+      ${libraryGroupArtworkHTML(group,{kind:groupKey})}
       <div class="library-group-copy">
        <strong>${escapeHTML(group.name)}</strong>
-       <small>${escapeHTML(resolveText(locale,"library.group.tracks",{
-        count:group.refs.length
-       }))}</small>
-       <span class="track-meta">${escapeHTML(
-        group.tracks.slice(0,3).map(track=>trackTitle(track)).join(" · ")
-       )}</span>
+       <small>${escapeHTML(libraryGroupCardMeta(group,groupKey))}</small>
       </div>
-      <div class="track-actions">
+      <div class="library-group-actions">
+       <button data-library-group-action="play">▶ ${escapeHTML(resolveText(locale,"playback.play"))}</button>
+       <button data-library-group-action="append">☷＋ ${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
        <button data-library-group-action="open">${escapeHTML(resolveText(locale,"library.group.open"))}</button>
-       <button data-library-group-action="play">${escapeHTML(resolveText(locale,"playback.play"))}</button>
-       <button data-library-group-action="append">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
       </div>
      </article>`).join("")
   :`<div class="empty-state">${escapeHTML(resolveText(locale,"library.empty.filtered"))}</div>`;

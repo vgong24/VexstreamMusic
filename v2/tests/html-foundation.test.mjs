@@ -69,6 +69,7 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
     'data-discover-mode="explore"',
     'id="youtubeImportURL"',
     'id="libraryGroupDetail"',
+    'id="libraryGroupArtwork"',
     'id="libraryGroupBack"',
     'id="libraryGroupTracks"',
     'id="queueDrawer"',

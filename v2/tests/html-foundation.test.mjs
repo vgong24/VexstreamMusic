@@ -60,6 +60,7 @@ test("desktop HTML preserves recognizable V3 shell landmarks around V4 owners",(
     'id="libraryGenre"',
     'id="goDiscoverAdd"',
     'id="recentSongs"',
+    'id="songSortSummary"',
     'id="songLayoutButton"',
     'id="songLayoutPanel"',
     'id="songTitleWidth"',

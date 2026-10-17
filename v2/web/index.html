@@ -118,6 +118,7 @@
         <div>
           <h2 id="libraryTitle">Library</h2>
           <span id="librarySummary">0 tracks</span>
+          <div id="songSortSummary" class="sort-help" hidden></div>
         </div>
         <div class="library-heading-actions">
           <button id="songLayoutButton" type="button" title="Choose visible fields and title space">▥ Columns</button>
@@ -129,8 +130,11 @@
               <option value="title">Title</option>
               <option value="artist">Artist</option>
               <option value="album">Album</option>
+              <option value="genre">Genre</option>
               <option value="recent">Recently added</option>
+              <option value="duration">Shortest first</option>
               <option value="duration-desc">Longest first</option>
+              <option value="custom" disabled>Custom precedence</option>
             </select>
           </label>
           <div class="library-view-toggle" role="group" aria-label="Library view">

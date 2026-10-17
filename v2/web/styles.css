@@ -870,3 +870,14 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
 .bulk-display-grid{display:grid;grid-template-columns:minmax(150px,.55fr) minmax(180px,1fr);gap:8px;align-items:center}
 .bulk-display-grid>input{width:100%;border:1px solid #d9d3ca;border-radius:9px;padding:8px 9px;background:#fff;color:#2c3031;font:inherit}
 @media(max-width:720px){.song-layout-grid{grid-template-columns:1fr}.song-title-width{grid-template-columns:1fr}.bulk-display-grid{grid-template-columns:1fr}}
+
+/* V3 multi-column Songs sorting stays a pure Library projection. */
+.sort-help{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px;color:#73797a;font-size:11px}
+.sort-help[hidden]{display:none}
+.sort-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid #ddd7cf;border-radius:999px;background:#fff}
+.sort-chip strong{font-size:10px;color:#9b5a3e}
+.sort-reset{padding:3px 6px!important;font-size:10px!important;background:transparent!important}
+.song-sort-head{display:inline-flex;align-items:center;gap:4px;padding:0;border:0;border-radius:0;background:transparent;color:inherit;font:inherit;font-weight:750;text-transform:inherit;letter-spacing:inherit}
+.song-sort-head:hover{background:transparent;color:#2d3031}
+.song-sort-arrow{font-size:11px;color:#9b5a3e}
+.song-sort-rank{display:inline-grid;place-items:center;min-width:15px;height:15px;padding:0 3px;border-radius:999px;background:#eaded4;color:#7d412b;font-size:9px}

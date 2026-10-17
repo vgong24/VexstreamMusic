@@ -2,10 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+ activateLibrarySortStack,
  groupLibrary,
  libraryGenres,
+ librarySortPresetForStack,
+ librarySortStackForPreset,
  projectLibraryHome,
- projectLibraryView
+ projectLibraryView,
+ resetLibrarySortStack
 } from "../web/features/library/projection.js";
 
 const catalog=Object.freeze([
@@ -75,6 +79,51 @@ test("genre filter and sort are current view projections",()=>{
   projectLibraryView(catalog,{sort:"duration-desc"}).map(item=>item.ref),
   ["b","c","a"]
  );
+});
+
+test("multi-column sort precedence is pure Library projection state",()=>{
+ const original=catalog.map(item=>item.ref);
+ let stack=librarySortStackForPreset("title");
+ stack=activateLibrarySortStack(stack,"artist");
+ assert.deepEqual(stack,[
+  {key:"artist",dir:"asc"},
+  {key:"title",dir:"asc"}
+ ]);
+ assert.deepEqual(
+  projectLibraryView(catalog,{sortStack:stack}).map(item=>item.ref),
+  ["b","a","c"]
+ );
+
+ stack=activateLibrarySortStack(stack,"added");
+ assert.deepEqual(stack,[
+  {key:"added",dir:"desc"},
+  {key:"artist",dir:"asc"},
+  {key:"title",dir:"asc"}
+ ]);
+ assert.deepEqual(
+  projectLibraryView(catalog,{sortStack:stack}).map(item=>item.ref),
+  ["a","b","c"]
+ );
+
+ stack=activateLibrarySortStack(stack,"added");
+ assert.equal(stack[0].dir,"asc");
+ assert.deepEqual(
+  projectLibraryView(catalog,{sortStack:stack}).map(item=>item.ref),
+  ["c","b","a"]
+ );
+
+ stack=activateLibrarySortStack(stack,"artist");
+ assert.deepEqual(stack.slice(0,2),[
+  {key:"artist",dir:"asc"},
+  {key:"added",dir:"asc"}
+ ]);
+ assert.deepEqual(
+  projectLibraryView(catalog,{sortStack:stack}).map(item=>item.ref),
+  ["b","a","c"]
+ );
+ assert.equal(librarySortPresetForStack(stack),"custom");
+ assert.deepEqual(resetLibrarySortStack(),[{key:"title",dir:"asc"}]);
+ assert.deepEqual(catalog.map(item=>item.ref),original);
 });
 
 test("artist and album sorting use title as stable tie break",()=>{

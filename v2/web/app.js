@@ -28,10 +28,14 @@ import {
   restoreTrashItems,
 } from "./features/library/trash.js";
 import {
+  activateLibrarySortStack,
   groupLibrary,
   libraryGenres,
+  librarySortPresetForStack,
+  librarySortStackForPreset,
   projectLibraryHome,
   projectLibraryView,
+  resetLibrarySortStack,
 } from "./features/library/projection.js";
 import { createTrackSelection } from "./features/library/selection.js";
 import {
@@ -170,6 +174,7 @@ const libraryGroupPlay=document.querySelector("#libraryGroupPlay");
 const libraryGroupAppend=document.querySelector("#libraryGroupAppend");
 const libraryGroupTracks=document.querySelector("#libraryGroupTracks");
 const librarySummary=document.querySelector("#librarySummary");
+const songSortSummary=document.querySelector("#songSortSummary");
 const librarySearch=document.querySelector("#librarySearch");
 const libraryGenre=document.querySelector("#libraryGenre");
 const librarySort=document.querySelector("#librarySort");
@@ -282,6 +287,7 @@ let libraryView=Object.freeze({
  query:"",
  genre:"all",
  sort:"title",
+ sortStack:librarySortStackForPreset("title"),
  mode:"songs"
 });
 let sourceConfig=Object.freeze({
@@ -457,7 +463,8 @@ function currentLibraryView(){
  return projectLibraryView(catalog,{
   query:libraryView.query,
   genre:libraryView.genre,
-  sort:libraryView.sort
+  sort:libraryView.sort,
+  sortStack:libraryView.sortStack
  });
 }
 
@@ -1387,6 +1394,42 @@ function renderTrackSelection(){
  if(projection.count<2&&!bulkDisplayEditor.hidden)closeBulkDisplayEditor();
 }
 
+function sortLabel(key){
+ return {title:"Title",added:"Added",artist:"Artist",album:"Album",genre:"Genre",duration:"Time"}[key]??key;
+}
+
+function sortDirectionLabel(spec){
+ if(spec.key==="added")return spec.dir==="desc"?"Newest":"Oldest";
+ if(spec.key==="duration")return spec.dir==="desc"?"Longest":"Shortest";
+ return spec.dir==="desc"?"Z→A":"A→Z";
+}
+
+function songSortHeader(key,label){
+ const index=libraryView.sortStack.findIndex(spec=>spec.key===key);
+ const active=index>=0;
+ const spec=active?libraryView.sortStack[index]:null;
+ return `<button type="button" class="song-sort-head" data-song-sort="${escapeHTML(key)}">
+   <span>${escapeHTML(label)}</span>
+   ${active?`<span class="song-sort-arrow">${spec.dir==="asc"?"↑":"↓"}</span><span class="song-sort-rank">${index+1}</span>`:""}
+  </button>`;
+}
+
+function renderSongSortSummary(){
+ const songs=libraryView.mode==="songs";
+ songSortSummary.hidden=!songs;
+ if(!songs){
+  songSortSummary.innerHTML="";
+  return;
+ }
+ songSortSummary.innerHTML=`<span>Sort precedence:</span>
+  ${libraryView.sortStack.map((spec,index)=>`
+   <span class="sort-chip"><strong>${index+1}</strong> ${escapeHTML(sortLabel(spec.key))} ${escapeHTML(sortDirectionLabel(spec))}</span>
+  `).join("")}
+  ${librarySortPresetForStack(libraryView.sortStack)!=="title"
+   ?'<button type="button" class="sort-reset" data-song-sort-reset>Reset</button>'
+   :""}`;
+}
+
 function renderTrackChoices(){
  applySongLayoutProjection();
  const visible=currentLibraryView();
@@ -1404,7 +1447,8 @@ function renderTrackChoices(){
 
  librarySearch.value=libraryView.query;
  librarySearchClear.hidden=!libraryView.query.trim();
- librarySort.value=libraryView.sort;
+ librarySort.value=librarySortPresetForStack(libraryView.sortStack);
+ renderSongSortSummary();
  for(const button of libraryModeButtons){
   const selected=button.dataset.libraryMode===libraryView.mode;
   button.setAttribute("aria-pressed",String(selected));
@@ -1423,12 +1467,12 @@ function renderTrackChoices(){
        <thead>
         <tr>
          ${selectable?'<th class="select-cell">✓</th>':""}
-         <th class="song-title-cell">Title</th>
-         <th class="col-added">Added</th>
-         <th class="col-artist">Artist</th>
-         <th class="col-album">Album</th>
-         <th class="col-genre">Genre</th>
-         <th class="col-duration">Time</th>
+         <th class="song-title-cell">${songSortHeader("title","Title")}</th>
+         <th class="col-added">${songSortHeader("added","Added")}</th>
+         <th class="col-artist">${songSortHeader("artist","Artist")}</th>
+         <th class="col-album">${songSortHeader("album","Album")}</th>
+         <th class="col-genre">${songSortHeader("genre","Genre")}</th>
+         <th class="col-duration">${songSortHeader("duration","Time")}</th>
          <th class="col-actions"></th>
         </tr>
        </thead>
@@ -1693,9 +1737,21 @@ libraryGenre.addEventListener("change",()=>{
 });
 
 librarySort.addEventListener("change",()=>{
+ if(librarySort.value==="custom")return;
  libraryView=Object.freeze({
   ...libraryView,
-  sort:librarySort.value
+  sort:librarySort.value,
+  sortStack:librarySortStackForPreset(librarySort.value)
+ });
+ renderTrackChoices();
+});
+
+songSortSummary.addEventListener("click",event=>{
+ if(!event.target.closest("[data-song-sort-reset]"))return;
+ libraryView=Object.freeze({
+  ...libraryView,
+  sort:"title",
+  sortStack:resetLibrarySortStack()
  });
  renderTrackChoices();
 });
@@ -1934,6 +1990,21 @@ bulkTrashSelected.addEventListener("click",()=>void guarded(async()=>{
 }));
 
 trackChoices.addEventListener("click",event=>{
+ const sortAction=event.target.closest("[data-song-sort]");
+ if(sortAction){
+  const next=activateLibrarySortStack(
+   libraryView.sortStack,
+   sortAction.dataset.songSort
+  );
+  libraryView=Object.freeze({
+   ...libraryView,
+   sort:librarySortPresetForStack(next),
+   sortStack:next
+  });
+  renderTrackChoices();
+  return;
+ }
+
  const groupAction=event.target.closest("[data-library-group-action]");
  const groupCard=event.target.closest("[data-library-group]");
  if(groupAction&&groupCard){

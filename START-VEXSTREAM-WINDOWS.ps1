@@ -12,28 +12,88 @@ $Repository = 'vgong24/VexstreamMusic'
 $GoVersion = '1.23.2'
 $GoArchive = "go$GoVersion.windows-amd64.zip"
 $GoArchiveSha256 = 'bc28fe3002cd65cec65d0e4f6000584dacb8c71bfaff8801dfb532855ca42513'
+$GoArchiveBytes = 81923109
 $Headers = @{ 'User-Agent' = 'VexStream-Music-human-launcher' }
 
-function Invoke-QuietDownload {
+function Format-ByteSize {
+  param([long]$Bytes)
+  if ($Bytes -ge 1GB) { return ('{0:N1} GiB' -f ($Bytes / 1GB)) }
+  if ($Bytes -ge 1MB) { return ('{0:N1} MiB' -f ($Bytes / 1MB)) }
+  if ($Bytes -ge 1KB) { return ('{0:N1} KiB' -f ($Bytes / 1KB)) }
+  return "$Bytes bytes"
+}
+
+function Invoke-ProgressDownload {
   param(
     [Parameter(Mandatory=$true)][string]$Uri,
     [Parameter(Mandatory=$true)][string]$OutFile,
+    [Parameter(Mandatory=$true)][string]$Label,
+    [long]$ExpectedBytes = 0,
     [hashtable]$RequestHeaders = @{}
   )
-  $priorProgress = $ProgressPreference
+
+  Add-Type -AssemblyName System.Net.Http
+  $handler = New-Object System.Net.Http.HttpClientHandler
+  $handler.AllowAutoRedirect = $true
+  $client = New-Object System.Net.Http.HttpClient($handler)
+  $response = $null
+  $stream = $null
+  $file = $null
+  [long]$written = 0
   try {
-    # PowerShell's default web progress shows a context-free byte counter that
-    # can look alarming. The human-facing stage text around this call explains
-    # exactly what is being downloaded and why.
-    $ProgressPreference = 'SilentlyContinue'
-    if ($RequestHeaders.Count -gt 0) {
-      Invoke-WebRequest -UseBasicParsing -Headers $RequestHeaders -Uri $Uri -OutFile $OutFile
-    } else {
-      Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $OutFile
+    $request = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Get, $Uri)
+    [void]$request.Headers.TryAddWithoutValidation('User-Agent', 'VexStream-Music-human-launcher')
+    foreach ($key in $RequestHeaders.Keys) {
+      if ($key -ieq 'User-Agent') { continue }
+      [void]$request.Headers.TryAddWithoutValidation($key, [string]$RequestHeaders[$key])
     }
+
+    $response = $client.SendAsync(
+      $request,
+      [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead
+    ).GetAwaiter().GetResult()
+    [void]$response.EnsureSuccessStatusCode()
+
+    [long]$reportedBytes = 0
+    if ($response.Content.Headers.ContentLength.HasValue) {
+      $reportedBytes = [long]$response.Content.Headers.ContentLength.Value
+    }
+    [long]$totalBytes = if ($ExpectedBytes -gt 0) { $ExpectedBytes } else { $reportedBytes }
+
+    $stream = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
+    $file = New-Object System.IO.FileStream(
+      $OutFile,
+      [System.IO.FileMode]::Create,
+      [System.IO.FileAccess]::Write,
+      [System.IO.FileShare]::None
+    )
+    $buffer = New-Object byte[] (1024 * 1024)
+
+    while (($read = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+      $file.Write($buffer, 0, $read)
+      $written += $read
+
+      if ($totalBytes -gt 0) {
+        $percent = [Math]::Min(100, [Math]::Floor(($written * 100.0) / $totalBytes))
+        $status = "$(Format-ByteSize $written) / $(Format-ByteSize $totalBytes)  ($percent%)"
+        Write-Progress -Activity "Downloading $Label" -Status $status -PercentComplete $percent
+      } else {
+        Write-Progress -Activity "Downloading $Label" -Status "$(Format-ByteSize $written) downloaded" -PercentComplete -1
+      }
+    }
+    Write-Progress -Activity "Downloading $Label" -Completed
   } finally {
-    $ProgressPreference = $priorProgress
+    if ($file) { $file.Dispose() }
+    if ($stream) { $stream.Dispose() }
+    if ($response) { $response.Dispose() }
+    if ($client) { $client.Dispose() }
+    if ($handler) { $handler.Dispose() }
   }
+
+  if ($ExpectedBytes -gt 0 -and $written -ne $ExpectedBytes) {
+    throw "$Label download size mismatch: expected $ExpectedBytes bytes, received $written bytes"
+  }
+  return $written
 }
 
 function Invoke-Native {
@@ -102,11 +162,15 @@ function Ensure-Go {
     Write-Host '[2/5] Preparing the local build tool'
     Write-Host "      Download: Go $GoVersion for Windows"
     Write-Host '      Source:   https://go.dev (official Go project)'
+    Write-Host "      Size:     $(Format-ByteSize $GoArchiveBytes) ($GoArchiveBytes bytes)"
     Write-Host "      Storage:  $goRoot"
-    Write-Host '      Why:      VexStream is built locally from its source code.'
-    Write-Host '      This is a one-time download and may take a minute.'
-    Invoke-QuietDownload -Uri "https://go.dev/dl/$GoArchive" -OutFile $archive
-    Write-Host '      Download complete. Verifying the trusted checksum...'
+    Write-Host '      Why:      VexStream is open source. This tool compiles that source into your local app.'
+    Write-Host '      Safety:   This download does not scan or upload your personal files.'
+    Write-Host '      Frequency: one-time for this build-tool version.'
+    Write-Host ''
+    [void](Invoke-ProgressDownload -Uri "https://go.dev/dl/$GoArchive" -OutFile $archive -Label "Go $GoVersion build tool" -ExpectedBytes $GoArchiveBytes)
+    Write-Host "      Download complete: $(Format-ByteSize $GoArchiveBytes)."
+    Write-Host '      Verifying the trusted checksum...'
     $observed = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($observed -ne $GoArchiveSha256) {
       throw "Go archive digest mismatch: $observed"
@@ -123,6 +187,9 @@ function Ensure-Go {
     }
     New-Item -ItemType Directory -Path $goRoot | Out-Null
     Move-Item -LiteralPath (Join-Path $expanded 'go') -Destination $goRoot
+    $sizeMeasure = Get-ChildItem -LiteralPath (Join-Path $goRoot 'go') -File -Recurse | Measure-Object -Property Length -Sum
+    [long]$installedBytes = $sizeMeasure.Sum
+    Write-Host "      Local build tool ready: $(Format-ByteSize $installedBytes) on disk."
   } finally {
     Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue
   }
@@ -178,9 +245,11 @@ try {
   Write-Host '[3/5] Downloading the exact VexStream source'
   Write-Host "      Source: https://github.com/$Repository"
   Write-Host "      Commit: $commit"
-  Write-Host '      This source archive is temporary and is removed after the build.'
-  Invoke-QuietDownload -RequestHeaders $Headers -Uri "https://github.com/$Repository/archive/$commit.zip" -OutFile $sourceZip
-  Write-Host '      Download complete.'
+  Write-Host '      Why:    these are the exact files used to build your VexStream app.'
+  Write-Host '      Storage: temporary; the source archive and extracted build copy are removed afterward.'
+  Write-Host ''
+  $sourceBytes = Invoke-ProgressDownload -RequestHeaders $Headers -Uri "https://github.com/$Repository/archive/$commit.zip" -OutFile $sourceZip -Label 'VexStream source'
+  Write-Host "      Download complete: $(Format-ByteSize $sourceBytes)."
   $expanded = Join-Path $work 'source'
   Expand-Archive -LiteralPath $sourceZip -DestinationPath $expanded -Force
   $sourceRoot = Get-ChildItem -LiteralPath $expanded -Directory | Select-Object -First 1
@@ -235,6 +304,7 @@ try {
   ) -WorkingDirectory $sourceRoot -Environment $buildEnv
 
   Move-Item -LiteralPath $temporaryExe -Destination $exe -Force
+  $exeBytes = (Get-Item -LiteralPath $exe).Length
   $exeSha = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
   [ordered]@{
     schemaVersion = 'vexstream.human-source-build/v1'
@@ -253,6 +323,7 @@ Write-Host ''
 Write-Host '[5/5] VexStream is ready — launching now'
 Write-Host "      Source: $commit"
 Write-Host "      App:    $exe"
+Write-Host "      Size:   $(Format-ByteSize $exeBytes)"
 Write-Host ''
 Write-Host 'The browser should open automatically. Your existing VexStream library should remain available.'
 Start-Process -FilePath $exe

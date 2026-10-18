@@ -2446,12 +2446,43 @@ trackChoices.addEventListener("click",event=>{
    return;
   }
  }
- handleTrackAction(event);
+ if(handleTrackAction(event))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:currentLibraryView().map(item=>item.ref),
+  selectionAware:true
+ });
+});
+trackChoices.addEventListener("keydown",event=>{
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:currentLibraryView().map(item=>item.ref),
+  selectionAware:true
+ });
 });
 
 libraryGroupTracks.addEventListener("click",event=>{
  const group=currentLibraryDetailGroup();
- handleTrackAction(event,{
+ if(handleTrackAction(event,{
+  playbackRefs:group?.refs??libraryPlaybackRefs()
+ }))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:group?.refs??libraryPlaybackRefs()
+ });
+});
+libraryGroupTracks.addEventListener("keydown",event=>{
+ const group=currentLibraryDetailGroup();
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
   playbackRefs:group?.refs??libraryPlaybackRefs()
  });
 });

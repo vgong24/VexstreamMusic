@@ -6,7 +6,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestReusableRequiresExactVersionAndBuildRef(t *testing.T) {
@@ -99,5 +101,84 @@ func TestCurrentLiveClaimDistinguishesLiveProtectedDesktopFromStaleFile(t *testi
 	}
 	if claim, ok := CurrentLiveClaim(path); ok {
 		t.Fatalf("stale protected claim treated as live: %+v", claim)
+	}
+}
+
+
+func TestGracefulExitWaitsForServerAndClaimRelease(t *testing.T) {
+	var exiting atomic.Bool
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			r *http.Request,
+		) {
+			switch r.URL.Path {
+			case "/health":
+				if exiting.Load() {
+					http.Error(w, "exiting", http.StatusServiceUnavailable)
+					return
+				}
+				_ = json.NewEncoder(w).Encode(
+					Identity{
+						OK:       true,
+						Version:  "3.0.0",
+						BuildRef: "protected-v3",
+					},
+				)
+
+			case "/api/system/exit":
+				if r.Method != http.MethodPost {
+					http.Error(w, "POST required", http.StatusMethodNotAllowed)
+					return
+				}
+				var request struct {
+					Confirm string `json:"confirm"`
+				}
+				if json.NewDecoder(r.Body).Decode(&request) != nil ||
+					request.Confirm != "EXIT_VEXSTREAM" {
+					http.Error(w, "confirmation required", http.StatusBadRequest)
+					return
+				}
+				exiting.Store(true)
+				w.WriteHeader(http.StatusOK)
+
+			default:
+				http.NotFound(w, r)
+			}
+		}),
+	)
+	defer server.Close()
+
+	currentURLPath := filepath.Join(t.TempDir(), "current-url.txt")
+	if err := os.WriteFile(
+		currentURLPath,
+		[]byte(server.URL+"\n"),
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := RequestExit(server.URL); err != nil {
+		t.Fatal(err)
+	}
+	if !WaitUntilUnavailable(server.URL, time.Second) {
+		t.Fatal("exiting server never became unavailable")
+	}
+	if WaitUntilClaimReleased(
+		currentURLPath,
+		server.URL,
+		150*time.Millisecond,
+	) {
+		t.Fatal("claim released before owning process removed it")
+	}
+	if err := os.Remove(currentURLPath); err != nil {
+		t.Fatal(err)
+	}
+	if !WaitUntilClaimReleased(
+		currentURLPath,
+		server.URL,
+		time.Second,
+	) {
+		t.Fatal("removed protected claim was not observed")
 	}
 }

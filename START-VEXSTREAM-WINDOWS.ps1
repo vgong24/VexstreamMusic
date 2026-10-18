@@ -15,6 +15,17 @@ $GoArchiveSha256 = 'bc28fe3002cd65cec65d0e4f6000584dacb8c71bfaff8801dfb532855ca4
 $GoArchiveBytes = 81923109
 $Headers = @{ 'User-Agent' = 'VexStream-Music-human-launcher' }
 
+trap {
+  Write-Progress -Activity 'VexStream setup' -Completed -ErrorAction SilentlyContinue
+  Write-Host ''
+  Write-Host 'VexStream setup stopped safely.' -ForegroundColor Red
+  Write-Host "Reason: $($_.Exception.Message)"
+  Write-Host ''
+  Write-Host 'Your existing VexStream library and any previously verified app build were left in place.'
+  Write-Host 'No setup step intentionally uploads your music or personal files.'
+  exit 1
+}
+
 function Format-ByteSize {
   param([long]$Bytes)
   if ($Bytes -ge 1GB) { return ('{0:N1} GiB' -f ($Bytes / 1GB)) }
@@ -148,11 +159,41 @@ function Ensure-Go {
   $toolchains = Join-Path $env:LOCALAPPDATA 'VexStreamMusic\toolchains'
   $goRoot = Join-Path $toolchains "go$GoVersion-windows-amd64"
   $goExe = Join-Path $goRoot 'go\bin\go.exe'
-  if (Test-Path -LiteralPath $goExe -PathType Leaf) {
+  $toolchainReceipt = Join-Path $goRoot 'TOOLCHAIN-INFO.json'
+  if ((Test-Path -LiteralPath $goExe -PathType Leaf) -and (Test-Path -LiteralPath $toolchainReceipt -PathType Leaf)) {
+    try {
+      $toolInfo = Get-Content -LiteralPath $toolchainReceipt -Raw | ConvertFrom-Json
+      $goExeSha = (Get-FileHash -LiteralPath $goExe -Algorithm SHA256).Hash.ToLowerInvariant()
+      $priorPreference = $ErrorActionPreference
+      try {
+        $ErrorActionPreference = 'Continue'
+        $goVersionOutput = (& $goExe version 2>&1 | Out-String).Trim()
+        $goVersionCode = $LASTEXITCODE
+      } finally {
+        $ErrorActionPreference = $priorPreference
+      }
+      if (
+        $goVersionCode -eq 0 -and
+        $goVersionOutput -match 'go1\.23\.2\s+windows/amd64' -and
+        [string]$toolInfo.goArchiveSha256 -eq $GoArchiveSha256 -and
+        [string]$toolInfo.goExeSha256 -eq $goExeSha
+      ) {
+        Write-Host ''
+        Write-Host '[2/5] Local build tool is already prepared'
+        Write-Host "      Go $GoVersion: verified cached copy"
+        Write-Host "      Storage: $goRoot"
+        return $goExe
+      }
+    } catch {
+      # Fall through to a checksum-bound refresh below.
+    }
     Write-Host ''
-    Write-Host '[2/5] Local build tool is already prepared'
-    Write-Host "      Go $GoVersion: $goExe"
-    return $goExe
+    Write-Host '[2/5] Refreshing the local build tool'
+    Write-Host '      The cached build tool could not be re-verified, so VexStream will replace only that tool.'
+  } elseif (Test-Path -LiteralPath $goExe -PathType Leaf) {
+    Write-Host ''
+    Write-Host '[2/5] Refreshing the local build tool'
+    Write-Host '      An older cached tool has no verification receipt; it will be replaced safely.'
   }
 
   New-Item -ItemType Directory -Path $toolchains -Force | Out-Null
@@ -191,6 +232,16 @@ function Ensure-Go {
     Move-Item -LiteralPath (Join-Path $expanded 'go') -Destination $goRoot
     $sizeMeasure = Get-ChildItem -LiteralPath (Join-Path $goRoot 'go') -File -Recurse | Measure-Object -Property Length -Sum
     [long]$installedBytes = $sizeMeasure.Sum
+    $goExeSha = (Get-FileHash -LiteralPath $goExe -Algorithm SHA256).Hash.ToLowerInvariant()
+    [ordered]@{
+      schemaVersion = 'vexstream.local-toolchain/v1'
+      goVersion = $GoVersion
+      platform = 'windows-amd64'
+      goArchiveSha256 = $GoArchiveSha256
+      goArchiveBytes = $GoArchiveBytes
+      goExeSha256 = $goExeSha
+      installedBytes = $installedBytes
+    } | ConvertTo-Json | Set-Content -LiteralPath $toolchainReceipt -Encoding UTF8
     Write-Host "      Local build tool ready: $(Format-ByteSize $installedBytes) on disk."
   } finally {
     Remove-Item -LiteralPath $temp -Recurse -Force -ErrorAction SilentlyContinue
@@ -202,17 +253,36 @@ function Ensure-Go {
 }
 
 Write-Host ''
-Write-Host 'VexStream Music 4.0 — first-time source setup'
-Write-Host 'This process downloads only from GitHub and go.dev, builds VexStream locally,'
-Write-Host 'and stores its private build files under your VexStream app-data folder.'
+Write-Host 'VexStream Music 4.0 — local source launcher'
+Write-Host 'This launcher uses GitHub and go.dev only for the setup files described below.'
+Write-Host 'Your music library remains local to VexStream.'
 Write-Host ''
-Write-Host '[1/5] Locking the exact VexStream source version'
+Write-Host '[1/5] Checking which VexStream source you asked for'
 $commit = Get-ExactCommit -Ref $SourceRef
 Write-Host "      Source:  https://github.com/$Repository"
+Write-Host "      Ref:     $SourceRef"
 Write-Host "      Commit:  $commit"
-$installRoot = Join-Path $env:LOCALAPPDATA "VexStreamMusic\source-builds\$commit"
+$buildRoot = Join-Path $env:LOCALAPPDATA 'VexStreamMusic\source-builds'
+$installRoot = Join-Path $buildRoot $commit
 $exe = Join-Path $installRoot 'VexStreamMusic-4.0.0.exe'
 $receipt = Join-Path $installRoot 'BUILD-INFO.json'
+
+$previousBuilds = @()
+if (Test-Path -LiteralPath $buildRoot -PathType Container) {
+  $previousBuilds = @(
+    Get-ChildItem -LiteralPath $buildRoot -Filter 'BUILD-INFO.json' -File -Recurse -ErrorAction SilentlyContinue |
+      Where-Object { $_.FullName -ne $receipt }
+  )
+}
+if ($previousBuilds.Count -gt 0) {
+  Write-Host ''
+  Write-Host '      Update path detected.'
+  Write-Host '      A previous local VexStream build is present and will be kept as a rollback copy.'
+  Write-Host '      The new build will not overwrite your music library.'
+} else {
+  Write-Host ''
+  Write-Host '      First local VexStream source build on this computer.'
+}
 
 if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $receipt -PathType Leaf)) {
   try {
@@ -221,8 +291,8 @@ if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $r
       $observed = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
       if ($observed -eq [string]$info.exeSha256) {
         Write-Host ''
-        Write-Host '      A verified VexStream build is already cached.'
-        Write-Host '      Setup steps 2-4 are already complete for this exact source.'
+        Write-Host '      Already installed and verified for this exact source.'
+        Write-Host '      No downloads or rebuild are needed.'
         Write-Host ''
         Write-Host '[5/5] Launching VexStream'
         Write-Host "      App: $exe"
@@ -231,8 +301,10 @@ if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $r
       }
     }
   } catch {
-    Write-Host 'VexStream: cached build receipt is not reusable; rebuilding.'
+    Write-Host '      The cached app receipt could not be verified; rebuilding this source safely.'
   }
+} elseif (Test-Path -LiteralPath $exe -PathType Leaf) {
+  Write-Host '      An unverified cached app was found for this source; rebuilding it before launch.'
 }
 
 $go = Ensure-Go

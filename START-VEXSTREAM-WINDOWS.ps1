@@ -40,6 +40,7 @@ function Invoke-ProgressDownload {
     [Parameter(Mandatory=$true)][string]$OutFile,
     [Parameter(Mandatory=$true)][string]$Label,
     [long]$ExpectedBytes = 0,
+    [long]$MaxBytes = 0,
     [hashtable]$RequestHeaders = @{}
   )
 
@@ -74,6 +75,9 @@ function Invoke-ProgressDownload {
     [long]$totalBytes = if ($ExpectedBytes -gt 0) { $ExpectedBytes } else { $reportedBytes }
     if ($totalBytes -gt 0) {
       Write-Host "      Expected transfer: $(Format-ByteSize $totalBytes) ($totalBytes bytes)"
+    } elseif ($MaxBytes -gt 0) {
+      Write-Host "      Expected transfer: server did not provide a total size."
+      Write-Host "      Safety limit: VexStream will stop before more than $(Format-ByteSize $MaxBytes) is downloaded."
     } else {
       Write-Host '      Expected transfer: server did not provide a total size; downloaded bytes will still be shown.'
     }
@@ -91,10 +95,16 @@ function Invoke-ProgressDownload {
       $file.Write($buffer, 0, $read)
       $written += $read
 
+      if ($MaxBytes -gt 0 -and $written -gt $MaxBytes) {
+        throw "$Label exceeded the VexStream download safety limit of $(Format-ByteSize $MaxBytes)"
+      }
+
       if ($totalBytes -gt 0) {
         $percent = [Math]::Min(100, [Math]::Floor(($written * 100.0) / $totalBytes))
         $status = "$(Format-ByteSize $written) / $(Format-ByteSize $totalBytes)  ($percent%)"
         Write-Progress -Activity "Downloading $Label" -Status $status -PercentComplete $percent
+      } elseif ($MaxBytes -gt 0) {
+        Write-Progress -Activity "Downloading $Label" -Status "$(Format-ByteSize $written) downloaded; safety limit $(Format-ByteSize $MaxBytes)" -PercentComplete -1
       } else {
         Write-Progress -Activity "Downloading $Label" -Status "$(Format-ByteSize $written) downloaded" -PercentComplete -1
       }
@@ -405,7 +415,7 @@ try {
   Write-Host '      Why:    these are the exact files used to build your VexStream app.'
   Write-Host '      Storage: temporary; the source archive and extracted build copy are removed afterward.'
   Write-Host ''
-  $sourceBytes = Invoke-ProgressDownload -RequestHeaders $Headers -Uri "https://github.com/$Repository/archive/$commit.zip" -OutFile $sourceZip -Label 'VexStream source'
+  $sourceBytes = Invoke-ProgressDownload -RequestHeaders $Headers -Uri "https://github.com/$Repository/archive/$commit.zip" -OutFile $sourceZip -Label 'VexStream source' -MaxBytes (100MB)
   Write-Host "      Download complete: $(Format-ByteSize $sourceBytes)."
   $expanded = Join-Path $work 'source'
   Expand-Archive -LiteralPath $sourceZip -DestinationPath $expanded -Force

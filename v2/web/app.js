@@ -501,19 +501,20 @@ function syncActiveSongRows(){
 
 function homeRecentRowHTML(item){
  const secondary=String(item?.sourceTitle??item?.channel??"").trim();
- return `<tr tabindex="0" aria-label="Play ${escapeHTML(trackTitle(item))}" data-home-track-ref="${escapeHTML(item.ref)}">
+ const playing=player.currentItem?.ref===item.ref;
+ return `<tr class="${playing?"playing":""}" tabindex="0" aria-label="Play ${escapeHTML(trackTitle(item))}" data-home-track-ref="${escapeHTML(item.ref)}">
    <td class="song-title-cell">
     <div class="song-main">
      ${trackArtworkHTML(item)}
      <div class="song-copy">
-      <strong>${escapeHTML(trackTitle(item))}</strong>
-      ${secondary?`<small>${escapeHTML(secondary)}</small>`:""}
+      ${marqueeTextHTML(trackTitle(item),{tag:"strong"})}
+      ${secondary?marqueeTextHTML(secondary,{tag:"small"}):""}
      </div>
     </div>
    </td>
    <td class="col-added"><span class="small">${escapeHTML(formatLibraryAdded(item.addedAt))}</span></td>
-   <td class="col-artist"><span class="clip2">${escapeHTML(trackArtist(item))}</span></td>
-   <td class="col-album"><span class="clip2">${escapeHTML(String(item?.album??"").trim()||"Unknown album")}</span></td>
+   <td class="col-artist">${marqueeTextHTML(trackArtist(item),{className:"clip2"})}</td>
+   <td class="col-album">${marqueeTextHTML(String(item?.album??"").trim()||"Unknown album",{className:"clip2"})}</td>
    <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
    <td class="col-actions">
     <div class="song-actions">
@@ -1390,15 +1391,15 @@ function songRowHTML(item,{selectable=false}={}){
     <div class="song-main">
      ${trackArtworkHTML(item)}
      <div class="song-copy">
-      <strong>${escapeHTML(trackTitle(item))}</strong>
-      ${secondary?`<small>${escapeHTML(secondary)}</small>`:""}
+      ${marqueeTextHTML(trackTitle(item),{tag:"strong"})}
+      ${secondary?marqueeTextHTML(secondary,{tag:"small"}):""}
      </div>
     </div>
    </td>
    <td class="col-added"><span class="small">${escapeHTML(formatLibraryAdded(item.addedAt))}</span></td>
-   <td class="col-artist"><span class="clip2">${escapeHTML(trackArtist(item))}</span></td>
-   <td class="col-album"><span class="clip2">${escapeHTML(String(item?.album??"").trim()||"Unknown album")}</span></td>
-   <td class="col-genre">${escapeHTML(String(item?.genre??"").trim()||"—")}</td>
+   <td class="col-artist">${marqueeTextHTML(trackArtist(item),{className:"clip2"})}</td>
+   <td class="col-album">${marqueeTextHTML(String(item?.album??"").trim()||"Unknown album",{className:"clip2"})}</td>
+   <td class="col-genre">${marqueeTextHTML(String(item?.genre??"").trim()||"—")}</td>
    <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
    <td class="col-actions">
     <div class="song-actions">

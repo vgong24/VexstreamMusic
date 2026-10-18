@@ -505,5 +505,8 @@ Write-Host "      Source: $commit"
 Write-Host "      App:    $exe"
 Write-Host "      Size:   $(Format-ByteSize $exeBytes)"
 Write-Host ''
-Write-Host 'The browser should open automatically. Your existing VexStream library should remain available.'
+Write-Host 'A reusable Windows app was created from this exact source.'
+Write-Host 'File Explorer will open with that .exe selected so you know where it lives.'
+Write-Host 'The browser should also open automatically with your existing VexStream library.'
+Start-Process -FilePath explorer.exe -ArgumentList @('/select,', $exe)
 Start-Process -FilePath $exe

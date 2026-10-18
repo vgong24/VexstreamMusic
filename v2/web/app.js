@@ -150,8 +150,6 @@ const songLayoutButton=document.querySelector("#songLayoutButton");
 const songLayoutPanel=document.querySelector("#songLayoutPanel");
 const songLayoutDone=document.querySelector("#songLayoutDone");
 const songLayoutReset=document.querySelector("#songLayoutReset");
-const songTitleWidth=document.querySelector("#songTitleWidth");
-const songTitleWidthValue=document.querySelector("#songTitleWidthValue");
 const songLayoutFieldInputs=[...document.querySelectorAll("[data-song-layout-field]")];
 const selectSongs=document.querySelector("#selectSongs");
 const librarySelectionBar=document.querySelector("#librarySelectionBar");
@@ -337,8 +335,38 @@ let playlists=Object.freeze([]);
 let resolvedPlaylists=Object.freeze([]);
 let playlistSelectionTargetID="";
 let currentEditingTrackRef="";
-const defaultSongLayout=Object.freeze({artist:true,album:true,added:true,duration:true,genre:false,titleWidth:46});
-let songLayout=Object.freeze({...defaultSongLayout});
+const songColumnRules=Object.freeze({
+ title:Object.freeze({defaultWidth:420,minWidth:110,maxWidth:1200}),
+ added:Object.freeze({defaultWidth:94,minWidth:52,maxWidth:360}),
+ artist:Object.freeze({defaultWidth:160,minWidth:32,maxWidth:900}),
+ album:Object.freeze({defaultWidth:180,minWidth:32,maxWidth:1100}),
+ genre:Object.freeze({defaultWidth:100,minWidth:32,maxWidth:700}),
+ duration:Object.freeze({defaultWidth:70,minWidth:52,maxWidth:220})
+});
+function defaultSongWidths(){
+ return Object.freeze(Object.fromEntries(
+  Object.entries(songColumnRules).map(([key,rule])=>[key,rule.defaultWidth])
+ ));
+}
+const defaultSongLayout=Object.freeze({
+ artist:true,
+ album:true,
+ added:true,
+ duration:true,
+ genre:false,
+ widths:defaultSongWidths()
+});
+function freshDefaultSongLayout(){
+ return Object.freeze({
+  artist:defaultSongLayout.artist,
+  album:defaultSongLayout.album,
+  added:defaultSongLayout.added,
+  duration:defaultSongLayout.duration,
+  genre:defaultSongLayout.genre,
+  widths:defaultSongWidths()
+ });
+}
+let songLayout=freshDefaultSongLayout();
 let bulkDisplayRefs=Object.freeze([]);
 let artistDetailIdentity="";
 let artistAlbumsExpanded=false;
@@ -1582,16 +1610,99 @@ function sharedDisplayValue(rows,key){
  return values.length===1?values[0]:"";
 }
 
+function clampSongColumnWidth(key,value){
+ const rule=songColumnRules[key];
+ if(!rule)return 0;
+ return Math.round(Math.max(
+  rule.minWidth,
+  Math.min(rule.maxWidth,Number(value)||rule.defaultWidth)
+ ));
+}
+
+function visibleSongColumnKeys({home=false}={}){
+ const keys=["title","added","artist","album","genre","duration"];
+ return keys.filter(key=>
+  key==="title"||
+  (key==="genre"&&!home&&songLayout.genre)||
+  (key!=="genre"&&Boolean(songLayout[key]))
+ );
+}
+
 function applySongLayoutProjection(){
- document.documentElement.style.setProperty("--song-title-width",songLayout.titleWidth+"%");
+ for(const key of Object.keys(songColumnRules)){
+  const width=clampSongColumnWidth(key,songLayout.widths[key]);
+  document.documentElement.style.setProperty("--song-col-"+key,width+"px");
+ }
+ const songsMin=visibleSongColumnKeys().reduce(
+  (sum,key)=>sum+clampSongColumnWidth(key,songLayout.widths[key]),
+  112
+ );
+ const homeMin=visibleSongColumnKeys({home:true}).reduce(
+  (sum,key)=>sum+clampSongColumnWidth(key,songLayout.widths[key]),
+  82
+ );
+ document.documentElement.style.setProperty("--song-table-min-width",songsMin+"px");
+ document.documentElement.style.setProperty("--song-home-table-min-width",homeMin+"px");
  for(const key of ["artist","album","added","duration","genre"]){
   document.body.dataset["songField"+key[0].toUpperCase()+key.slice(1)]=String(Boolean(songLayout[key]));
  }
  for(const input of songLayoutFieldInputs){
   input.checked=Boolean(songLayout[input.dataset.songLayoutField]);
  }
- songTitleWidth.value=String(songLayout.titleWidth);
- songTitleWidthValue.textContent=songLayout.titleWidth+"%";
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics());
+}
+
+function setSongColumnWidth(key,value){
+ if(!songColumnRules[key])return;
+ songLayout=Object.freeze({
+  ...songLayout,
+  widths:Object.freeze({
+   ...songLayout.widths,
+   [key]:clampSongColumnWidth(key,value)
+  })
+ });
+ applySongLayoutProjection();
+}
+
+let activeSongColumnResize=null;
+
+function beginSongColumnResize(event){
+ const handle=event.target.closest("[data-song-resize]");
+ if(!handle)return false;
+ const key=handle.dataset.songResize;
+ const cell=handle.closest("th");
+ if(!songColumnRules[key]||!cell)return false;
+ activeSongColumnResize={
+  key,
+  startX:event.clientX,
+  startWidth:cell.getBoundingClientRect().width
+ };
+ document.body.classList.add("song-column-resizing");
+ handle.setPointerCapture?.(event.pointerId);
+ event.preventDefault();
+ event.stopPropagation();
+ return true;
+}
+
+function moveSongColumnResize(event){
+ if(!activeSongColumnResize)return;
+ const delta=event.clientX-activeSongColumnResize.startX;
+ setSongColumnWidth(
+  activeSongColumnResize.key,
+  activeSongColumnResize.startWidth+delta
+ );
+}
+
+function finishSongColumnResize(){
+ if(!activeSongColumnResize)return;
+ activeSongColumnResize=null;
+ document.body.classList.remove("song-column-resizing");
+ refreshSongMarqueeMetrics();
+}
+
+function resetSongColumnWidth(key){
+ if(!songColumnRules[key])return;
+ setSongColumnWidth(key,songColumnRules[key].defaultWidth);
 }
 
 function closeBulkDisplayEditor(){
@@ -2304,7 +2415,10 @@ playAllSongs.addEventListener("click",()=>void guarded(async()=>{
 
 songLayoutButton.addEventListener("click",()=>{songLayoutPanel.hidden=false;});
 songLayoutDone.addEventListener("click",()=>{songLayoutPanel.hidden=true;});
-songLayoutReset.addEventListener("click",()=>{songLayout=Object.freeze({...defaultSongLayout});applySongLayoutProjection();});
+songLayoutReset.addEventListener("click",()=>{
+ songLayout=freshDefaultSongLayout();
+ applySongLayoutProjection();
+});
 for(const input of songLayoutFieldInputs){
  input.addEventListener("change",()=>{
   const key=input.dataset.songLayoutField;
@@ -2312,10 +2426,15 @@ for(const input of songLayoutFieldInputs){
   applySongLayoutProjection();
  });
 }
-songTitleWidth.addEventListener("input",()=>{
- const value=Math.max(34,Math.min(62,Number(songTitleWidth.value)||46));
- songLayout=Object.freeze({...songLayout,titleWidth:value});
- applySongLayoutProjection();
+document.addEventListener("pointermove",moveSongColumnResize);
+document.addEventListener("pointerup",finishSongColumnResize);
+document.addEventListener("pointercancel",finishSongColumnResize);
+document.addEventListener("dblclick",event=>{
+ const handle=event.target.closest("[data-song-resize]");
+ if(!handle)return;
+ event.preventDefault();
+ event.stopPropagation();
+ resetSongColumnWidth(handle.dataset.songResize);
 });
 
 selectSongs.addEventListener("click",()=>{

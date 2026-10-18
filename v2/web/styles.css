@@ -680,6 +680,7 @@ body[data-shell-current-view="discover"] .discover-workspace{
 .song-table{
  width:100%;
  min-width:760px;
+ table-layout:fixed;
  border-collapse:collapse;
  color:#2b2e2f;
 }
@@ -704,12 +705,20 @@ body[data-shell-current-view="discover"] .discover-workspace{
  font-size:13px;
 }
 .song-table tbody tr:last-child td{border-bottom:0}
+.song-table tbody tr[data-track-ref],
+.home-recent-table tbody tr[data-home-track-ref]{cursor:pointer}
 .song-table tbody tr:hover{background:#faf7f2}
+.song-table tbody tr:focus-visible{
+ outline:2px solid #d6a58f;
+ outline-offset:-2px;
+ background:#fffaf6;
+}
+.song-table tbody tr.playing{background:#fff0e6}
 .song-table tbody tr.selected{background:#fff1e7}
 .song-table .select-cell{width:36px;text-align:center}
 .song-select{display:grid;place-items:center}
 .song-select input{width:17px;height:17px}
-.song-title-cell{min-width:230px}
+.song-title-cell{min-width:0}
 .song-main{display:flex;align-items:center;gap:9px;min-width:0}
 .song-art{
  width:38px;
@@ -730,11 +739,11 @@ body[data-shell-current-view="discover"] .discover-workspace{
  white-space:nowrap;
 }
 .song-copy small{color:#858b8c}
-.song-table .col-added{width:76px}
-.song-table .col-artist{min-width:120px}
-.song-table .col-album{min-width:130px}
-.song-table .col-genre{width:90px}
-.song-table .col-duration{width:62px;text-align:right;font-variant-numeric:tabular-nums}
+.song-table .col-added{width:94px}
+.song-table .col-artist{width:16%}
+.song-table .col-album{width:16%}
+.song-table .col-genre{width:92px}
+.song-table .col-duration{width:70px;text-align:right;font-variant-numeric:tabular-nums}
 .song-table .col-actions{width:112px;text-align:right}
 .song-actions{display:flex;align-items:center;justify-content:flex-end;gap:4px}
 .song-actions>button,.song-more summary{
@@ -860,7 +869,7 @@ button.danger:hover{background:#fff0ec}
 .song-layout-grid label span{display:grid;gap:2px}.song-layout-grid small{color:#777d7e}
 .song-title-width{display:grid;grid-template-columns:auto minmax(160px,320px) auto;align-items:center;gap:10px}
 .song-title-width input{width:100%;accent-color:#c65f39}.song-layout-actions{display:flex;justify-content:flex-end}
-.song-table .song-title-cell{width:var(--song-title-width);min-width:230px}
+.song-table .song-title-cell{width:var(--song-title-width);min-width:0}
 body[data-song-field-added="false"] .song-table .col-added,
 body[data-song-field-artist="false"] .song-table .col-artist,
 body[data-song-field-album="false"] .song-table .col-album,

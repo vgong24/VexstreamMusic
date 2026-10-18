@@ -170,6 +170,26 @@ function Get-ExactCommit {
   return [string]$value.sha
 }
 
+function Get-RunningV4 {
+  $currentUrlPath = Join-Path $env:LOCALAPPDATA 'VexStreamMusic\v4\current-url.txt'
+  if (-not (Test-Path -LiteralPath $currentUrlPath -PathType Leaf)) {
+    return $null
+  }
+  try {
+    $url = (Get-Content -LiteralPath $currentUrlPath -Raw).Trim()
+    if ([string]::IsNullOrWhiteSpace($url)) { return $null }
+    $health = Invoke-RestMethod -UseBasicParsing -Uri ($url.TrimEnd('/') + '/health') -TimeoutSec 2
+    if ($health.ok -ne $true -or [string]$health.version -ne '4.0.0') { return $null }
+    return [pscustomobject]@{
+      Url = $url
+      Version = [string]$health.version
+      BuildRef = [string]$health.buildRef
+    }
+  } catch {
+    return $null
+  }
+}
+
 function Ensure-Go {
   $toolchains = Join-Path $env:LOCALAPPDATA 'VexStreamMusic\toolchains'
   $goRoot = Join-Path $toolchains "go$GoVersion-windows-amd64"
@@ -297,6 +317,14 @@ if ($previousBuilds.Count -gt 0) {
 } else {
   Write-Host ''
   Write-Host '      First local VexStream source build on this computer.'
+}
+
+$runningV4 = Get-RunningV4
+if ($null -ne $runningV4) {
+  Write-Host ''
+  Write-Host '      VexStream 4.0 is currently running.'
+  Write-Host '      It can stay open while this source is prepared.'
+  Write-Host '      If this produces a different build, VexStream will ask before switching.'
 }
 
 if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $receipt -PathType Leaf)) {

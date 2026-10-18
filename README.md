@@ -79,6 +79,60 @@ The reusable Windows executable is cached below:
 
 After that build exists, you may launch that exact `.exe` normally.
 
+#### Windows install / update behavior
+
+The launcher is intended to be safe to run more than once:
+
+```text
+first run
+-> prepare verified build tool
+-> download exact source
+-> build + cache VexStream
+-> launch
+
+same exact source already installed
+-> verify cached executable digest
+-> no download
+-> no rebuild
+-> launch
+
+newer/different source requested
+-> keep the previous cached build as a rollback copy
+-> prepare the new build without replacing your music library
+-> if another V4 is running, leave it running during preparation
+-> at final launch ask whether to switch
+   Yes -> clean exit old V4 -> wait for ownership release -> launch new V4
+   No  -> keep old V4 -> reopen its browser
+
+older V3 still running
+-> visible handoff prompt before V4 becomes the shared-state writer
+
+cached app receipt missing/corrupt
+-> do not trust it silently
+-> rebuild that exact source
+
+cached Go tool from an older VexStream launcher
+-> verify expected Go version/platform in VexStream's managed toolchain folder
+-> adopt it without another 78.1 MiB download
+-> write the current local integrity receipt
+
+download interrupted / checksum mismatch / source check failure
+-> stop safely
+-> remove temporary setup files
+-> keep the existing library and any previously verified app build
+```
+
+The ordinary human command follows `main`, so rerunning it naturally follows the repository's current
+accepted source once changes have merged.
+
+An explicit `-SourceRef <commit-or-branch>` is an advanced testing/pinning control. The launcher does
+not silently replace an explicit source with something newer.
+
+"Deprecated" is intentionally **not guessed from age**. A future release/support policy may explicitly
+classify old versions as deprecated or unsupported; until such a source exists, the launcher only
+claims what it can prove: current `main`, exact requested source, cached local builds, and running
+process identity.
+
 ### macOS
 
 The V4 source can also reconstruct and run a native Mac binary without Git or a preinstalled Go

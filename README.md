@@ -27,7 +27,7 @@ When a signed/published release asset exists, downloading that `.exe` is the pre
 The repository also owns a reconstructible fallback. Paste this into **PowerShell**:
 
 ```powershell
-$P=Join-Path $env:TEMP 'START-VEXSTREAM-WINDOWS.ps1'; $Q=$ProgressPreference; $ProgressPreference='SilentlyContinue'; try{Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/vgong24/VexstreamMusic/main/START-VEXSTREAM-WINDOWS.ps1' -OutFile $P}finally{$ProgressPreference=$Q}; $T=$null; $E=$null; [void][System.Management.Automation.Language.Parser]::ParseFile($P,[ref]$T,[ref]$E); if($E.Count){throw ('VexStream launcher self-check failed: '+(($E|ForEach-Object Message)-join '; '))}; powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $P
+$P=Join-Path $env:TEMP 'START-VEXSTREAM-WINDOWS.ps1'; $Q=$ProgressPreference; $ProgressPreference='SilentlyContinue'; try{Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/vgong24/VexstreamMusic/main/START-VEXSTREAM-WINDOWS.ps1' -OutFile $P}finally{$ProgressPreference=$Q}; try{$T=$null; $E=$null; [void][System.Management.Automation.Language.Parser]::ParseFile($P,[ref]$T,[ref]$E); if($E.Count){throw ('VexStream launcher self-check failed: '+(($E|ForEach-Object Message)-join '; '))}; powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $P; $C=$LASTEXITCODE}finally{Remove-Item -LiteralPath $P -Force -ErrorAction SilentlyContinue}; if($C -ne 0){exit $C}
 ```
 
 The launcher:
@@ -78,7 +78,41 @@ The reusable Windows executable is cached below:
 %LOCALAPPDATA%\VexStreamMusic\source-builds\<exact-source-commit>\VexStreamMusic-4.0.0.exe
 ```
 
+After a new build finishes, Windows File Explorer opens with that exact `.exe` selected so a non-technical user can see the reusable desktop app they now own locally. Rerunning the same source later launches the verified cached executable immediately and does not reopen Explorer unnecessarily.
+
 After that build exists, you may launch that exact `.exe` normally.
+
+#### What VexStream keeps locally
+
+The source launcher intentionally retains only the pieces that make later launches fast or preserve rollback:
+
+```text
+%LOCALAPPDATA%\VexStreamMusic\toolchains\
+  -> the verified private Go build tool
+  -> approximately 232 MiB on the Windows host observed during qualification
+
+%LOCALAPPDATA%\VexStreamMusic\source-builds\<commit>\
+  -> VexStreamMusic-4.0.0.exe
+  -> BUILD-INFO.json
+  -> older exact-source builds may remain as rollback copies
+
+%LOCALAPPDATA%\VexStreamMusic\
+  -> VexStream's actual application/library state
+  -> this is product data, not disposable build residue
+```
+
+Temporary source archives, extracted build workspaces, and temporary Go-download workspaces live under
+`%TEMP%` and are removed by the launcher in `finally` blocks. The one-line README bootstrap also
+removes its temporary downloaded launcher script after the child PowerShell process exits.
+
+If Windows, PowerShell, or the computer is forcibly terminated mid-run, a `vexstream-v4-source-*`,
+`vexstream-go-*`, or historical Relay `vexstream-v4-*-relay-*` directory can theoretically remain
+under `%TEMP%`. Those directories are build/bootstrap residue, not Library truth, and may be deleted
+when no VexStream setup/Relay task is running.
+
+Historical Relay formation ZIPs or candidate executables that a person explicitly downloaded remain
+in their Downloads folder until that person deletes them. They are not required by the current
+source-launcher path.
 
 #### Windows install / update behavior
 

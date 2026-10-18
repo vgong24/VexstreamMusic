@@ -858,7 +858,6 @@ button.danger:hover{background:#fff0ec}
 }
 
 /* V3-recognizable Songs layout + shared-display terrain over V4 Library owners. */
-:root{--song-title-width:46%}
 #songLayoutButton{padding:8px 10px}
 .song-layout-panel{display:grid;gap:12px;margin:10px 0;padding:12px;border:1px solid #ded8cf;border-radius:12px;background:#fff}
 .song-layout-panel[hidden],.bulk-display-editor[hidden]{display:none}
@@ -867,9 +866,7 @@ button.danger:hover{background:#fff0ec}
 .song-layout-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .song-layout-grid label,.bulk-display-field{display:flex;align-items:flex-start;gap:8px;padding:8px;border:1px solid #e6e0d7;border-radius:9px;background:#faf8f4}
 .song-layout-grid label span{display:grid;gap:2px}.song-layout-grid small{color:#777d7e}
-.song-title-width{display:grid;grid-template-columns:auto minmax(160px,320px) auto;align-items:center;gap:10px}
-.song-title-width input{width:100%;accent-color:#c65f39}.song-layout-actions{display:flex;justify-content:flex-end}
-.song-table .song-title-cell{width:var(--song-title-width);min-width:0}
+.song-layout-actions{display:flex;justify-content:flex-end}
 body[data-song-field-added="false"] .song-table .col-added,
 body[data-song-field-artist="false"] .song-table .col-artist,
 body[data-song-field-album="false"] .song-table .col-album,

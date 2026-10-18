@@ -137,19 +137,26 @@ try {
   }
   $sourceRoot = $sourceRoot.FullName
 
-  $goFiles = Get-ChildItem -LiteralPath (Join-Path $sourceRoot 'v2') -Filter '*.go' -Recurse -File | ForEach-Object { $_.FullName }
-  $priorPreference = $ErrorActionPreference
-  try {
-    $ErrorActionPreference = 'Continue'
-    $formatDelta = & $goFmt -d @goFiles 2>&1 | Out-String
-    $formatCode = $LASTEXITCODE
-  } finally {
-    $ErrorActionPreference = $priorPreference
+  $goFiles = Get-ChildItem -LiteralPath (Join-Path $sourceRoot 'v2') -Filter '*.go' -Recurse -File | Sort-Object FullName
+  $formatProblems = New-Object System.Collections.Generic.List[string]
+  foreach ($goFile in $goFiles) {
+    $priorPreference = $ErrorActionPreference
+    try {
+      $ErrorActionPreference = 'Continue'
+      $delta = & $goFmt -d $goFile.FullName 2>&1 | Out-String
+      $formatCode = $LASTEXITCODE
+    } finally {
+      $ErrorActionPreference = $priorPreference
+    }
+    if ($formatCode -ne 0) {
+      throw "gofmt failed for $($goFile.FullName) with exit $formatCode"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($delta)) {
+      [void]$formatProblems.Add($delta)
+    }
   }
-  if ($formatCode -ne 0) {
-    throw "gofmt failed with exit $formatCode"
-  }
-  if (-not [string]::IsNullOrWhiteSpace($formatDelta)) {
+  if ($formatProblems.Count -gt 0) {
+    $formatProblems | ForEach-Object { [Console]::Error.WriteLine($_) }
     throw "V4 source is not gofmt-clean and will not be built by the human launcher."
   }
 

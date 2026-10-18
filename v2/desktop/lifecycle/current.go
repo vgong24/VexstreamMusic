@@ -101,6 +101,44 @@ func WaitUntilUnavailable(
 	}
 }
 
+func WaitUntilClaimReleased(
+	currentURLPath string,
+	url string,
+	timeout time.Duration,
+) bool {
+	currentURLPath = strings.TrimSpace(currentURLPath)
+	url = strings.TrimSpace(url)
+	if currentURLPath == "" || url == "" {
+		return false
+	}
+
+	released := func() bool {
+		data, err := os.ReadFile(currentURLPath)
+		if os.IsNotExist(err) {
+			return true
+		}
+		if err != nil {
+			return false
+		}
+		return strings.TrimSpace(string(data)) != url
+	}
+
+	if timeout <= 0 {
+		return released()
+	}
+
+	deadline := time.Now().Add(timeout)
+	for {
+		if released() {
+			return true
+		}
+		if time.Now().After(deadline) {
+			return false
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
 func CurrentLiveClaim(currentURLPath string) (LiveClaim, bool) {
 	data, err := os.ReadFile(currentURLPath)
 	if err != nil {

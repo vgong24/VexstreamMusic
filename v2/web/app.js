@@ -1291,6 +1291,7 @@ function render(){
  renderImportReview();
  renderImportJobs();
  renderSystemStatus();
+ syncActiveSongRows();
 
  queueList.innerHTML=qp.state.kind==="empty"?"":qp.state.items.map((ref,index)=>{
   const item=byRef.get(ref);
@@ -2464,6 +2465,9 @@ for(const input of songLayoutFieldInputs){
   applySongLayoutProjection();
  });
 }
+for(const host of [recentSongs,trackChoices,artistSongTable]){
+ host.addEventListener("pointerdown",beginSongColumnResize);
+}
 document.addEventListener("pointermove",moveSongColumnResize);
 document.addEventListener("pointerup",finishSongColumnResize);
 document.addEventListener("pointercancel",finishSongColumnResize);
@@ -3273,6 +3277,10 @@ async function initialize(){
   controls:Object.freeze({PlaybackControl,QueueControl})
  });
 }
+
+window.addEventListener("resize",()=>{
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics());
+});
 
 void initialize().catch(failure=>{
  error.textContent=failure?.message??String(failure);

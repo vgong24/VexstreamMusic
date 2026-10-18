@@ -14,6 +14,28 @@ $GoArchive = "go$GoVersion.windows-amd64.zip"
 $GoArchiveSha256 = 'bc28fe3002cd65cec65d0e4f6000584dacb8c71bfaff8801dfb532855ca42513'
 $Headers = @{ 'User-Agent' = 'VexStream-Music-human-launcher' }
 
+function Invoke-QuietDownload {
+  param(
+    [Parameter(Mandatory=$true)][string]$Uri,
+    [Parameter(Mandatory=$true)][string]$OutFile,
+    [hashtable]$RequestHeaders = @{}
+  )
+  $priorProgress = $ProgressPreference
+  try {
+    # PowerShell's default web progress shows a context-free byte counter that
+    # can look alarming. The human-facing stage text around this call explains
+    # exactly what is being downloaded and why.
+    $ProgressPreference = 'SilentlyContinue'
+    if ($RequestHeaders.Count -gt 0) {
+      Invoke-WebRequest -UseBasicParsing -Headers $RequestHeaders -Uri $Uri -OutFile $OutFile
+    } else {
+      Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $OutFile
+    }
+  } finally {
+    $ProgressPreference = $priorProgress
+  }
+}
+
 function Invoke-Native {
   param(
     [Parameter(Mandatory=$true)][string]$FilePath,
@@ -73,12 +95,21 @@ function Ensure-Go {
   New-Item -ItemType Directory -Path $temp | Out-Null
   try {
     $archive = Join-Path $temp $GoArchive
-    Write-Host "VexStream: obtaining private Go $GoVersion build tool..."
-    Invoke-WebRequest -UseBasicParsing -Uri "https://go.dev/dl/$GoArchive" -OutFile $archive
+    Write-Host ''
+    Write-Host '[2/5] Preparing the local build tool'
+    Write-Host "      Download: Go $GoVersion for Windows"
+    Write-Host '      Source:   https://go.dev (official Go project)'
+    Write-Host "      Storage:  $goRoot"
+    Write-Host '      Why:      VexStream is built locally from its source code.'
+    Write-Host '      This is a one-time download and may take a minute.'
+    Invoke-QuietDownload -Uri "https://go.dev/dl/$GoArchive" -OutFile $archive
+    Write-Host '      Download complete. Verifying the trusted checksum...'
     $observed = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($observed -ne $GoArchiveSha256) {
       throw "Go archive digest mismatch: $observed"
     }
+    Write-Host '      Verification passed.'
+    Write-Host '      Unpacking the local build tool...'
     $expanded = Join-Path $temp 'expanded'
     Expand-Archive -LiteralPath $archive -DestinationPath $expanded -Force
     if (-not (Test-Path -LiteralPath (Join-Path $expanded 'go\bin\go.exe') -PathType Leaf)) {
@@ -98,7 +129,15 @@ function Ensure-Go {
   return $goExe
 }
 
+Write-Host ''
+Write-Host 'VexStream Music 4.0 — first-time source setup'
+Write-Host 'This process downloads only from GitHub and go.dev, builds VexStream locally,'
+Write-Host 'and stores its private build files under your VexStream app-data folder.'
+Write-Host ''
+Write-Host '[1/5] Locking the exact VexStream source version'
 $commit = Get-ExactCommit -Ref $SourceRef
+Write-Host "      Source:  https://github.com/$Repository"
+Write-Host "      Commit:  $commit"
 $installRoot = Join-Path $env:LOCALAPPDATA "VexStreamMusic\source-builds\$commit"
 $exe = Join-Path $installRoot 'VexStreamMusic-4.0.0.exe'
 $receipt = Join-Path $installRoot 'BUILD-INFO.json'
@@ -109,7 +148,9 @@ if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $r
     if ($info.sourceCommit -eq $commit -and $info.exeSha256) {
       $observed = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
       if ($observed -eq [string]$info.exeSha256) {
-        Write-Host "VexStream: launching cached V4 build from $commit"
+        Write-Host ''
+        Write-Host '[2/2] Launching the already-verified local VexStream build'
+        Write-Host "      App: $exe"
         Start-Process -FilePath $exe
         exit 0
       }
@@ -127,8 +168,13 @@ New-Item -ItemType Directory -Path $work | Out-Null
 
 try {
   $sourceZip = Join-Path $work 'source.zip'
-  Write-Host "VexStream: downloading exact source $commit..."
-  Invoke-WebRequest -UseBasicParsing -Headers $Headers -Uri "https://github.com/$Repository/archive/$commit.zip" -OutFile $sourceZip
+  Write-Host ''
+  Write-Host '[3/5] Downloading the exact VexStream source'
+  Write-Host "      Source: https://github.com/$Repository"
+  Write-Host "      Commit: $commit"
+  Write-Host '      This source archive is temporary and is removed after the build.'
+  Invoke-QuietDownload -Headers $Headers -Uri "https://github.com/$Repository/archive/$commit.zip" -OutFile $sourceZip
+  Write-Host '      Download complete.'
   $expanded = Join-Path $work 'source'
   Expand-Archive -LiteralPath $sourceZip -DestinationPath $expanded -Force
   $sourceRoot = Get-ChildItem -LiteralPath $expanded -Directory | Select-Object -First 1
@@ -160,7 +206,9 @@ try {
     throw "V4 source is not gofmt-clean and will not be built by the human launcher."
   }
 
-  Write-Host 'VexStream: checking V4 source...'
+  Write-Host ''
+  Write-Host '[4/5] Checking and building VexStream'
+  Write-Host '      Checking the source before creating the app...'
   Invoke-Native -FilePath $go -ArgumentList @('test','./v2/...') -WorkingDirectory $sourceRoot
 
   $buildEnv = @{ GOOS='windows'; GOARCH='amd64'; CGO_ENABLED='0' }
@@ -170,7 +218,8 @@ try {
   $temporaryExe = Join-Path $installRoot 'VexStreamMusic-4.0.0.forming.exe'
   Remove-Item -LiteralPath $temporaryExe -Force -ErrorAction SilentlyContinue
 
-  Write-Host 'VexStream: building the Windows app...'
+  Write-Host '      Source checks passed.'
+  Write-Host '      Building VexStreamMusic-4.0.0.exe...'
   Invoke-Native -FilePath $go -ArgumentList @(
     'build',
     '-trimpath',
@@ -194,7 +243,10 @@ try {
   Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-Write-Host "VexStream: ready."
-Write-Host "Source: $commit"
-Write-Host "App:    $exe"
+Write-Host ''
+Write-Host '[5/5] VexStream is ready — launching now'
+Write-Host "      Source: $commit"
+Write-Host "      App:    $exe"
+Write-Host ''
+Write-Host 'The browser should open automatically. Your existing VexStream library should remain available.'
 Start-Process -FilePath $exe

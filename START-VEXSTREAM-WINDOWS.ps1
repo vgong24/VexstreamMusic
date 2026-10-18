@@ -508,5 +508,6 @@ Write-Host ''
 Write-Host 'A reusable Windows app was created from this exact source.'
 Write-Host 'File Explorer will open with that .exe selected so you know where it lives.'
 Write-Host 'The browser should also open automatically with your existing VexStream library.'
-Start-Process -FilePath explorer.exe -ArgumentList @('/select,', $exe)
+$explorerSelect = '/select,"' + $exe.Replace('"','""') + '"'
+Start-Process -FilePath explorer.exe -ArgumentList $explorerSelect
 Start-Process -FilePath $exe

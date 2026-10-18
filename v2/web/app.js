@@ -1678,6 +1678,12 @@ function applySongLayoutProjection(){
  for(const input of songLayoutFieldInputs){
   input.checked=Boolean(songLayout[input.dataset.songLayoutField]);
  }
+ for(const handle of document.querySelectorAll("[data-song-resize]")){
+  const key=handle.dataset.songResize;
+  if(songColumnRules[key]){
+   handle.setAttribute("aria-valuenow",String(clampSongColumnWidth(key,songLayout.widths[key])));
+  }
+ }
  requestAnimationFrame(()=>refreshSongMarqueeMetrics());
 }
 
@@ -1822,9 +1828,11 @@ function songColumnHeader(key,label,className,{sortable=true}={}){
  const head=sortable
   ?songSortHeader(key,label)
   :`<span class="song-static-head">${escapeHTML(label)}</span>`;
+ const rule=songColumnRules[key];
+ const width=clampSongColumnWidth(key,songLayout.widths[key]);
  return `<th class="${className}" data-song-column="${escapeHTML(key)}">
    ${head}
-   <span class="song-column-resizer" data-song-resize="${escapeHTML(key)}" role="separator" aria-orientation="vertical" aria-label="Resize ${escapeHTML(label)} column" title="Drag to resize · Double-click to reset"></span>
+   <span class="song-column-resizer" data-song-resize="${escapeHTML(key)}" role="separator" tabindex="0" aria-orientation="vertical" aria-valuemin="${rule.minWidth}" aria-valuemax="${rule.maxWidth}" aria-valuenow="${width}" aria-label="Resize ${escapeHTML(label)} column" title="Drag to resize · Arrow keys resize · Double-click to reset"></span>
   </th>`;
 }
 
@@ -2468,6 +2476,23 @@ for(const input of songLayoutFieldInputs){
 for(const host of [recentSongs,trackChoices,artistSongTable]){
  host.addEventListener("pointerdown",beginSongColumnResize);
 }
+document.addEventListener("keydown",event=>{
+ const handle=event.target.closest("[data-song-resize]");
+ if(!handle)return;
+ const key=handle.dataset.songResize;
+ const rule=songColumnRules[key];
+ if(!rule)return;
+ let next=null;
+ const step=event.shiftKey?32:8;
+ if(event.key==="ArrowLeft")next=clampSongColumnWidth(key,songLayout.widths[key]-step);
+ if(event.key==="ArrowRight")next=clampSongColumnWidth(key,songLayout.widths[key]+step);
+ if(event.key==="Home")next=rule.minWidth;
+ if(event.key==="End")next=rule.maxWidth;
+ if(next==null)return;
+ event.preventDefault();
+ event.stopPropagation();
+ setSongColumnWidth(key,next);
+});
 document.addEventListener("pointermove",moveSongColumnResize);
 document.addEventListener("pointerup",finishSongColumnResize);
 document.addEventListener("pointercancel",finishSongColumnResize);

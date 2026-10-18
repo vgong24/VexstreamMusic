@@ -1103,7 +1103,7 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
  --song-col-album:180px;
  --song-col-genre:100px;
  --song-col-duration:70px;
- --song-table-min-width:1036px;
+ --song-table-min-width:1136px;
  --song-home-table-min-width:1006px;
 }
 .song-table{min-width:var(--song-table-min-width)}

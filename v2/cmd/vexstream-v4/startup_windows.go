@@ -30,6 +30,78 @@ var (
 	messageBoxWProc = user32DLL.NewProc("MessageBoxW")
 )
 
+func handoffDifferentV4(
+	currentURLPath string,
+	claim lifecycle.LiveClaim,
+	requestedBuildRef string,
+) (bool, error) {
+	message :=
+		"Another VexStream 4.0 build is already running.\r\n\r\n" +
+			"The VexStream you just prepared is a different build. " +
+			"Only one VexStream can safely use your shared music-library state at a time.\r\n\r\n" +
+			"Switch to the newly prepared VexStream now?\r\n\r\n" +
+			"Yes — exit the running VexStream cleanly and continue.\r\n" +
+			"No — keep the current VexStream running and reopen its browser.\r\n\r\n" +
+			"Your music files are not deleted or moved by this switch."
+
+	choice, err := windowsMessageBox(
+		message,
+		"VexStream Music 4.0 — Update ready",
+		messageBoxYesNo|
+			messageBoxIconQuestion|
+			messageBoxSetForeground,
+	)
+	if err != nil {
+		return false, fmt.Errorf(
+			"show VexStream 4.0 update handoff: %w",
+			err,
+		)
+	}
+
+	switch choice {
+	case messageBoxResultNo:
+		if err := lifecycle.OpenBrowser(claim.URL); err != nil {
+			return false, fmt.Errorf(
+				"keep the running VexStream 4.0, but could not reopen its browser: %w",
+				err,
+			)
+		}
+		return false, nil
+
+	case messageBoxResultYes:
+		if err := lifecycle.RequestExit(claim.URL); err != nil {
+			return false, fmt.Errorf(
+				"ask the running VexStream 4.0 to exit cleanly: %w",
+				err,
+			)
+		}
+		if !lifecycle.WaitUntilUnavailable(
+			claim.URL,
+			5*time.Second,
+		) {
+			return false, errors.New(
+				"the running VexStream 4.0 did not stop after the update handoff request",
+			)
+		}
+		if !lifecycle.WaitUntilClaimReleased(
+			currentURLPath,
+			claim.URL,
+			5*time.Second,
+		) {
+			return false, errors.New(
+				"the running VexStream 4.0 stopped serving but did not release shared-library ownership",
+			)
+		}
+		return true, nil
+
+	default:
+		return false, fmt.Errorf(
+			"unexpected Windows update handoff response: %d",
+			choice,
+		)
+	}
+}
+
 func handoffProtectedDesktop(
 	currentURLPath string,
 	claim lifecycle.LiveClaim,

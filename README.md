@@ -35,7 +35,7 @@ The launcher:
 ```text
 resolves the exact current main commit
 -> downloads that exact source archive
--> obtains a private, checksum-verified Go 1.23.2 toolchain when needed
+-> obtains a local, checksum-verified Go 1.23.2 toolchain when needed
 -> runs the V4 source tests and Windows vet
 -> builds VexStreamMusic-4.0.0.exe
 -> records the exact source commit + executable SHA-256
@@ -43,6 +43,23 @@ resolves the exact current main commit
 ```
 
 It does **not** require Git, Python, or a global Go installation.
+
+On the first run, the PowerShell window presents five named stages so a person can see what is
+happening and know the process is finite. The only setup downloads are:
+
+```text
+Go 1.23.2 build tool
+  from https://go.dev
+  -> checksum verified before use
+
+exact VexStream source
+  from https://github.com/vgong24/VexstreamMusic
+  -> exact commit selected before build
+```
+
+PowerShell's default context-free web byte counter is intentionally suppressed. Setup does not upload
+your music or personal files. After the exact-source executable has been built and its digest recorded,
+later launches can reuse that verified cached executable instead of repeating setup.
 
 The reusable Windows executable is cached below:
 

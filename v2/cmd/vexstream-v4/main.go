@@ -47,12 +47,23 @@ func run() error {
 		return lifecycle.OpenBrowser(url)
 	}
 
-	// A stale V4 current-url file is replaceable, but a live non-matching V4 is
-	// another writer. Exact reuse above is the only multi-launch shortcut.
+	// A stale V4 current-url file is replaceable. A live non-matching V4 is
+	// another writer, so the human must explicitly choose whether to keep it
+	// or hand shared-library ownership to this newly prepared build.
 	if claim, ok := lifecycle.CurrentLiveClaim(
 		layout.CurrentURL,
 	); ok {
-		return differentV4BuildConflict(claim, ref)
+		proceed, err := handoffDifferentV4(
+			layout.CurrentURL,
+			claim,
+			ref,
+		)
+		if err != nil {
+			return err
+		}
+		if !proceed {
+			return nil
+		}
 	}
 
 	if claim, ok := lifecycle.CurrentLiveClaim(

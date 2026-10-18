@@ -219,7 +219,7 @@ function Ensure-Go {
       ) {
         Write-Host ''
         Write-Host '[2/5] Local build tool is already prepared'
-        Write-Host "      Go $GoVersion: verified cached copy"
+        Write-Host "      Go ${GoVersion}: verified cached copy"
         Write-Host "      Storage: $goRoot"
         return $goExe
       }

@@ -59,6 +59,7 @@ exact VexStream source
   from https://github.com/vgong24/VexstreamMusic
   -> exact commit selected before build
   -> live progress shows the source download
+  -> if GitHub omits a total size, the launcher enforces a 100 MiB safety limit
   -> temporary source/build copy is removed afterward
 ```
 

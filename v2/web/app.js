@@ -1817,6 +1817,16 @@ function songSortHeader(key,label){
   </button>`;
 }
 
+function songColumnHeader(key,label,className,{sortable=true}={}){
+ const head=sortable
+  ?songSortHeader(key,label)
+  :`<span class="song-static-head">${escapeHTML(label)}</span>`;
+ return `<th class="${className}" data-song-column="${escapeHTML(key)}">
+   ${head}
+   <span class="song-column-resizer" data-song-resize="${escapeHTML(key)}" role="separator" aria-orientation="vertical" aria-label="Resize ${escapeHTML(label)} column" title="Drag to resize · Double-click to reset"></span>
+  </th>`;
+}
+
 function renderSongSortSummary(){
  const songs=libraryView.mode==="songs";
  songSortSummary.hidden=!songs;

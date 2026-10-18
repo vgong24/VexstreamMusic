@@ -64,4 +64,3 @@ func TestDifferentV4BuildConflictExplainsExactSingleWriterRequirement(t *testing
 		t.Fatalf("different V4 build conflict message drift: %v", err)
 	}
 }
-

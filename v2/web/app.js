@@ -2538,7 +2538,23 @@ artistSongTable.addEventListener("click",event=>{
  }
  const group=currentLibraryDetailGroup();
  const visible=group?artistDetailVisibleTracks(group):[];
- handleTrackAction(event,{
+ if(handleTrackAction(event,{
+  playbackRefs:visible.map(item=>item.ref)
+ }))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:visible.map(item=>item.ref)
+ });
+});
+artistSongTable.addEventListener("keydown",event=>{
+ const group=currentLibraryDetailGroup();
+ const visible=group?artistDetailVisibleTracks(group):[];
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
   playbackRefs:visible.map(item=>item.ref)
  });
 });

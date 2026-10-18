@@ -114,7 +114,8 @@ function Invoke-Native {
     [Parameter(Mandatory=$true)][string]$FilePath,
     [Parameter(Mandatory=$true)][string[]]$ArgumentList,
     [Parameter(Mandatory=$true)][string]$WorkingDirectory,
-    [hashtable]$Environment = @{}
+    [hashtable]$Environment = @{},
+    [switch]$Quiet
   )
 
   $priorPreference = $ErrorActionPreference
@@ -129,7 +130,12 @@ function Invoke-Native {
     $ErrorActionPreference = 'Continue'
     Push-Location $WorkingDirectory
     try {
-      & $FilePath @ArgumentList
+      if ($Quiet) {
+        $nativeOutput = (& $FilePath @ArgumentList 2>&1 | Out-String)
+      } else {
+        & $FilePath @ArgumentList
+        $nativeOutput = ''
+      }
       $code = $LASTEXITCODE
     } finally {
       Pop-Location
@@ -141,7 +147,16 @@ function Invoke-Native {
     }
   }
   if ($null -eq $code -or $code -ne 0) {
-    throw "$FilePath exited with code $code"
+    $detail = if ($Quiet -and -not [string]::IsNullOrWhiteSpace($nativeOutput)) {
+      $text = $nativeOutput.Trim()
+      if ($text.Length -gt 4000) { $text.Substring($text.Length - 4000) } else { $text }
+    } else {
+      ''
+    }
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "$FilePath exited with code $code"
+    }
+    throw ("$FilePath exited with code $code." + [Environment]::NewLine + $detail)
   }
 }
 
@@ -357,11 +372,11 @@ try {
 
   Write-Host ''
   Write-Host '[4/5] Checking and building VexStream'
-  Write-Host '      Checking the source before creating the app...'
-  Invoke-Native -FilePath $go -ArgumentList @('test','./v2/...') -WorkingDirectory $sourceRoot
+  Write-Host '      Running source safety checks...'
+  Invoke-Native -FilePath $go -ArgumentList @('test','./v2/...') -WorkingDirectory $sourceRoot -Quiet
 
   $buildEnv = @{ GOOS='windows'; GOARCH='amd64'; CGO_ENABLED='0' }
-  Invoke-Native -FilePath $go -ArgumentList @('vet','./v2/...') -WorkingDirectory $sourceRoot -Environment $buildEnv
+  Invoke-Native -FilePath $go -ArgumentList @('vet','./v2/...') -WorkingDirectory $sourceRoot -Environment $buildEnv -Quiet
 
   New-Item -ItemType Directory -Path $installRoot -Force | Out-Null
   $temporaryExe = Join-Path $installRoot 'VexStreamMusic-4.0.0.forming.exe'
@@ -375,8 +390,9 @@ try {
     '-ldflags', "-H=windowsgui -s -w -X main.buildRef=$commit",
     '-o', $temporaryExe,
     './v2/cmd/vexstream-v4'
-  ) -WorkingDirectory $sourceRoot -Environment $buildEnv
+  ) -WorkingDirectory $sourceRoot -Environment $buildEnv -Quiet
 
+  Write-Host '      Build complete.'
   Move-Item -LiteralPath $temporaryExe -Destination $exe -Force
   $exeBytes = (Get-Item -LiteralPath $exe).Length
   $exeSha = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()

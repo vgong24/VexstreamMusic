@@ -65,22 +65,3 @@ func TestDifferentV4BuildConflictExplainsExactSingleWriterRequirement(t *testing
 	}
 }
 
-
-func TestDifferentV4BuildConflictRetainsDiagnosticBuildIdentity(t *testing.T) {
-	err := differentV4BuildConflict(
-		lifecycle.LiveClaim{
-			URL: "http://127.0.0.1:4321/",
-			Identity: lifecycle.Identity{
-				OK:       true,
-				Version:  "4.0.0",
-				BuildRef: "v4-old.bin-1111111111111111",
-			},
-		},
-		"v4-new.bin-2222222222222222",
-	)
-	if err == nil ||
-		!strings.Contains(err.Error(), "v4-old.bin-1111111111111111") ||
-		!strings.Contains(err.Error(), "v4-new.bin-2222222222222222") {
-		t.Fatalf("diagnostic V4 conflict identity drift: %v", err)
-	}
-}

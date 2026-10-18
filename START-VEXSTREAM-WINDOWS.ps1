@@ -87,6 +87,9 @@ function Ensure-Go {
   $goRoot = Join-Path $toolchains "go$GoVersion-windows-amd64"
   $goExe = Join-Path $goRoot 'go\bin\go.exe'
   if (Test-Path -LiteralPath $goExe -PathType Leaf) {
+    Write-Host ''
+    Write-Host '[2/5] Local build tool is already prepared'
+    Write-Host "      Go $GoVersion: $goExe"
     return $goExe
   }
 
@@ -149,7 +152,10 @@ if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $r
       $observed = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
       if ($observed -eq [string]$info.exeSha256) {
         Write-Host ''
-        Write-Host '[2/2] Launching the already-verified local VexStream build'
+        Write-Host '      A verified VexStream build is already cached.'
+        Write-Host '      Setup steps 2-4 are already complete for this exact source.'
+        Write-Host ''
+        Write-Host '[5/5] Launching VexStream'
         Write-Host "      App: $exe"
         Start-Process -FilePath $exe
         exit 0
@@ -173,7 +179,7 @@ try {
   Write-Host "      Source: https://github.com/$Repository"
   Write-Host "      Commit: $commit"
   Write-Host '      This source archive is temporary and is removed after the build.'
-  Invoke-QuietDownload -Headers $Headers -Uri "https://github.com/$Repository/archive/$commit.zip" -OutFile $sourceZip
+  Invoke-QuietDownload -RequestHeaders $Headers -Uri "https://github.com/$Repository/archive/$commit.zip" -OutFile $sourceZip
   Write-Host '      Download complete.'
   $expanded = Join-Path $work 'source'
   Expand-Archive -LiteralPath $sourceZip -DestinationPath $expanded -Force

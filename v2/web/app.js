@@ -472,6 +472,33 @@ function renderNowPlaying(item){
  nowMeta.innerHTML=nowLibraryRelationsHTML(item);
 }
 
+function marqueeTextHTML(value,{tag="span",className=""}={}){
+ const text=String(value??"");
+ const classes=["song-marquee",className].filter(Boolean).join(" ");
+ return `<${tag} class="${classes}" title="${escapeHTML(text)}"><span class="song-marquee-text">${escapeHTML(text)}</span></${tag}>`;
+}
+
+function refreshSongMarqueeMetrics(root=document){
+ for(const outer of root.querySelectorAll(".song-marquee")){
+  const inner=outer.querySelector(".song-marquee-text");
+  if(!inner)continue;
+  const shift=Math.max(0,inner.scrollWidth-outer.clientWidth);
+  outer.style.setProperty("--song-marquee-shift",shift+"px");
+  outer.classList.toggle("overflowing",shift>3);
+ }
+}
+
+function syncActiveSongRows(){
+ const current=player.currentItem?.ref??"";
+ for(const row of document.querySelectorAll("[data-track-ref]")){
+  row.classList.toggle("playing",Boolean(current)&&row.dataset.trackRef===current);
+ }
+ for(const row of document.querySelectorAll("[data-home-track-ref]")){
+  row.classList.toggle("playing",Boolean(current)&&row.dataset.homeTrackRef===current);
+ }
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics());
+}
+
 function homeRecentRowHTML(item){
  const secondary=String(item?.sourceTitle??item?.channel??"").trim();
  return `<tr tabindex="0" aria-label="Play ${escapeHTML(trackTitle(item))}" data-home-track-ref="${escapeHTML(item.ref)}">

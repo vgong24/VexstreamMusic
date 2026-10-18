@@ -27,7 +27,7 @@ var buildRef = ""
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "VexStream Desktop V4:", err)
+		reportStartupFailure(err)
 		os.Exit(1)
 	}
 }
@@ -58,7 +58,13 @@ func run() error {
 	if claim, ok := lifecycle.CurrentLiveClaim(
 		layout.ProtectedCurrentURL,
 	); ok {
-		return protectedDesktopConflict(claim)
+		proceed, err := handoffProtectedDesktop(claim)
+		if err != nil {
+			return err
+		}
+		if !proceed {
+			return nil
+		}
 	}
 
 	home, _ := os.UserHomeDir()

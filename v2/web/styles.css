@@ -1094,14 +1094,14 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
 
 /* Human-controlled song density: direct column resize + bounded overflow reveal. */
 :root{
- --song-col-title:420px;
- --song-col-added:94px;
- --song-col-artist:160px;
- --song-col-album:180px;
- --song-col-genre:100px;
- --song-col-duration:70px;
- --song-table-min-width:1136px;
- --song-home-table-min-width:1006px;
+ --song-col-title:300px;
+ --song-col-added:80px;
+ --song-col-artist:120px;
+ --song-col-album:140px;
+ --song-col-genre:90px;
+ --song-col-duration:60px;
+ --song-table-min-width:902px;
+ --song-home-table-min-width:782px;
 }
 .song-table{min-width:var(--song-table-min-width)}
 .home-recent-table{min-width:var(--song-home-table-min-width)}

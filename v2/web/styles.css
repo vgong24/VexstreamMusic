@@ -1138,9 +1138,14 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
  transition:opacity .12s ease,background .12s ease;
 }
 .song-table th[data-song-column]:hover .song-column-resizer::after,
-.song-column-resizer:hover::after{
+.song-column-resizer:hover::after,
+.song-column-resizer:focus-visible::after{
  opacity:1;
  background:#9d765f;
+}
+.song-column-resizer:focus-visible{
+ outline:2px solid #d6a58f;
+ outline-offset:-2px;
 }
 body.song-column-resizing,
 body.song-column-resizing *{cursor:col-resize!important;user-select:none!important}

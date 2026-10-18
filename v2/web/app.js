@@ -336,12 +336,12 @@ let resolvedPlaylists=Object.freeze([]);
 let playlistSelectionTargetID="";
 let currentEditingTrackRef="";
 const songColumnRules=Object.freeze({
- title:Object.freeze({defaultWidth:420,minWidth:110,maxWidth:1200}),
- added:Object.freeze({defaultWidth:94,minWidth:52,maxWidth:360}),
- artist:Object.freeze({defaultWidth:160,minWidth:32,maxWidth:900}),
- album:Object.freeze({defaultWidth:180,minWidth:32,maxWidth:1100}),
- genre:Object.freeze({defaultWidth:100,minWidth:32,maxWidth:700}),
- duration:Object.freeze({defaultWidth:70,minWidth:52,maxWidth:220})
+ title:Object.freeze({defaultWidth:300,minWidth:110,maxWidth:1200}),
+ added:Object.freeze({defaultWidth:80,minWidth:52,maxWidth:360}),
+ artist:Object.freeze({defaultWidth:120,minWidth:32,maxWidth:900}),
+ album:Object.freeze({defaultWidth:140,minWidth:32,maxWidth:1100}),
+ genre:Object.freeze({defaultWidth:90,minWidth:32,maxWidth:700}),
+ duration:Object.freeze({defaultWidth:60,minWidth:52,maxWidth:220})
 });
 function defaultSongWidths(){
  return Object.freeze(Object.fromEntries(

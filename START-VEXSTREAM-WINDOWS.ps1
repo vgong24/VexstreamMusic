@@ -207,10 +207,14 @@ function Ensure-Go {
       } finally {
         $ErrorActionPreference = $priorPreference
       }
+      $receiptIdentityMatches = (
+        ([string]$toolInfo.goArchiveSha256 -eq $GoArchiveSha256) -or
+        ([string]$toolInfo.acquisition -eq 'EXISTING_MANAGED_PATH_VERSION_QUALIFIED')
+      )
       if (
         $goVersionCode -eq 0 -and
         $goVersionOutput -match 'go1\.23\.2\s+windows/amd64' -and
-        [string]$toolInfo.goArchiveSha256 -eq $GoArchiveSha256 -and
+        $receiptIdentityMatches -and
         [string]$toolInfo.goExeSha256 -eq $goExeSha
       ) {
         Write-Host ''
@@ -301,6 +305,7 @@ function Ensure-Go {
       schemaVersion = 'vexstream.local-toolchain/v1'
       goVersion = $GoVersion
       platform = 'windows-amd64'
+      acquisition = 'CHECKSUM_VERIFIED_GO_ARCHIVE'
       goArchiveSha256 = $GoArchiveSha256
       goArchiveBytes = $GoArchiveBytes
       goExeSha256 = $goExeSha

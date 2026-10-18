@@ -44,7 +44,6 @@ func TestProtectedDesktopConflictExplainsSingleWriterRequirement(t *testing.T) {
 	}
 }
 
-
 func TestDifferentV4BuildConflictExplainsExactSingleWriterRequirement(t *testing.T) {
 	err := differentV4BuildConflict(
 		lifecycle.LiveClaim{

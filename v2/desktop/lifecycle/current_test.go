@@ -104,7 +104,6 @@ func TestCurrentLiveClaimDistinguishesLiveProtectedDesktopFromStaleFile(t *testi
 	}
 }
 
-
 func TestGracefulExitWaitsForServerAndClaimRelease(t *testing.T) {
 	var exiting atomic.Bool
 	server := httptest.NewServer(

@@ -82,6 +82,34 @@ After a new build finishes, Windows File Explorer opens with that exact `.exe` s
 
 After that build exists, you may launch that exact `.exe` normally.
 
+#### Can I move or rename the Windows `.exe`?
+
+Yes. The V4 executable is self-contained: its browser UI and provider bridge are embedded into the
+binary, while durable VexStream configuration/library state lives under
+`%LOCALAPPDATA%\VexStreamMusic\`. Moving or renaming the executable does not move, duplicate, or
+disconnect that Library state.
+
+For example, copying the exact executable to Desktop and launching that copy still opens the same
+VexStream library.
+
+There is one management distinction:
+
+```text
+the VexStream app can run from another folder
+!=
+the source launcher tracks arbitrary file moves
+```
+
+The source launcher owns the canonical exact-build location under
+`%LOCALAPPDATA%\VexStreamMusic\source-builds\<commit>\`. If that canonical executable is moved
+away rather than copied, a later run of the source launcher will see its managed copy is missing and
+reconstruct it there again. A moved copy is not automatically rewritten when a newer source commit is
+built; it remains the exact older executable bytes that were moved.
+
+For normal convenience, prefer a Windows shortcut to the managed executable rather than moving the
+only managed copy. A future packaged/release installation may provide a stable application/Start Menu
+shortcut while retaining exact versioned builds separately for provenance and rollback.
+
 #### What VexStream keeps locally
 
 The source launcher intentionally retains only the pieces that make later launches fast or preserve rollback:

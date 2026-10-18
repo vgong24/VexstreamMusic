@@ -1100,7 +1100,7 @@ body[data-song-field-duration="false"] .song-table .col-duration{display:none}
  --song-col-album:140px;
  --song-col-genre:90px;
  --song-col-duration:60px;
- --song-table-min-width:902px;
+ --song-table-min-width:812px;
  --song-home-table-min-width:782px;
 }
 .song-table{min-width:var(--song-table-min-width)}
@@ -1170,7 +1170,7 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
 }
 @keyframes song-overflow-reveal{
  0%,10%{transform:translateX(0)}
- 90%,100%{transform:translateX(calc(-1 * var(--song-marquee-shift,0px)))}
+ 90%,100%{transform:translateX(calc(0px - var(--song-marquee-shift,0px)))}
 }
 @media(prefers-reduced-motion:reduce){
  .song-marquee-text{animation:none!important;transform:none!important}

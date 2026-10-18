@@ -2,8 +2,10 @@
 package lifecycle
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -42,6 +44,61 @@ func Probe(url string) Identity {
 		return Identity{}
 	}
 	return identity
+}
+
+func RequestExit(url string) error {
+	url = strings.TrimSpace(url)
+	if url == "" {
+		return errors.New("VexStream exit URL required")
+	}
+
+	request, err := http.NewRequest(
+		http.MethodPost,
+		strings.TrimRight(url, "/")+"/api/system/exit",
+		bytes.NewBufferString(`{"confirm":"EXIT_VEXSTREAM"}`),
+	)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Content-Type", "application/json")
+
+	client := http.Client{Timeout: 2 * time.Second}
+	response, err := client.Do(request)
+	if err != nil {
+		return fmt.Errorf("request VexStream exit: %w", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf(
+			"VexStream exit returned HTTP %d",
+			response.StatusCode,
+		)
+	}
+	return nil
+}
+
+func WaitUntilUnavailable(
+	url string,
+	timeout time.Duration,
+) bool {
+	url = strings.TrimSpace(url)
+	if url == "" {
+		return true
+	}
+	if timeout <= 0 {
+		return !Probe(url).OK
+	}
+
+	deadline := time.Now().Add(timeout)
+	for {
+		if !Probe(url).OK {
+			return true
+		}
+		if time.Now().After(deadline) {
+			return false
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 func CurrentLiveClaim(currentURLPath string) (LiveClaim, bool) {

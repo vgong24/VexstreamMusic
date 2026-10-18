@@ -50,16 +50,26 @@ happening and know the process is finite. The only setup downloads are:
 ```text
 Go 1.23.2 build tool
   from https://go.dev
-  -> checksum verified before use
+  Windows download = 78.1 MiB (81,923,109 bytes)
+  -> live progress shows downloaded / total + percentage
+  -> exact size + SHA-256 verified before use
+  -> final unpacked disk usage is reported after setup
 
 exact VexStream source
   from https://github.com/vgong24/VexstreamMusic
   -> exact commit selected before build
+  -> live progress shows the source download
+  -> temporary source/build copy is removed afterward
 ```
 
-PowerShell's default context-free web byte counter is intentionally suppressed. Setup does not upload
-your music or personal files. After the exact-source executable has been built and its digest recorded,
-later launches can reuse that verified cached executable instead of repeating setup.
+PowerShell's default context-free web byte counter is replaced with VexStream-owned bounded progress.
+For example, a first-run Windows setup shows `50.9 MiB / 78.1 MiB (65%)` rather than an unexplained
+ever-growing byte count. Each download says what it is, why it is needed, where it comes from, whether
+it is temporary or retained, and what happens next.
+
+Setup does not upload your music or personal files. After the exact-source executable has been built
+and its digest recorded, later launches can reuse that verified cached executable instead of repeating
+setup.
 
 The reusable Windows executable is cached below:
 
@@ -82,7 +92,9 @@ P="${TMPDIR:-/tmp}/START-VEXSTREAM-MAC.command"; /usr/bin/curl -fL 'https://raw.
 
 The Mac launcher detects Apple Silicon vs Intel, obtains the matching checksum-verified Go 1.23.2
 toolchain when needed, builds the exact current source, caches the binary, removes download
-quarantine from that locally reconstructed binary, and runs VexStream.
+quarantine from that locally reconstructed binary, and runs VexStream. First-run toolchain downloads
+are approximately 68.3 MiB on Apple Silicon and 71.5 MiB on Intel Macs; the Terminal progress bar is
+bounded and the final unpacked disk usage is reported after setup.
 
 Current Mac distribution is **not code-signed or notarized**. That is why the Terminal launcher is
 the supported human fallback instead of pretending the raw binary has the same double-click

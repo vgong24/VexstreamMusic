@@ -1713,7 +1713,7 @@ function beginSongColumnResize(event){
   startWidth:cell.getBoundingClientRect().width
  };
  document.body.classList.add("song-column-resizing");
- handle.setPointerCapture?.(event.pointerId);
+ try{handle.setPointerCapture?.(event.pointerId);}catch{}
  event.preventDefault();
  event.stopPropagation();
  return true;

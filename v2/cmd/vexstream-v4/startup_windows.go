@@ -33,7 +33,7 @@ var (
 func handoffDifferentV4(
 	currentURLPath string,
 	claim lifecycle.LiveClaim,
-	requestedBuildRef string,
+	_ string,
 ) (bool, error) {
 	message :=
 		"Another VexStream 4.0 build is already running.\r\n\r\n" +

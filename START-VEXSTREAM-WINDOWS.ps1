@@ -1,4 +1,4 @@
-# VexStream Music V4 — human-first Windows source launcher
+# VexStream Music V4 - human-first Windows source launcher
 # No Git, Python, or preinstalled Go is required.
 [CmdletBinding()]
 param(
@@ -67,10 +67,16 @@ function Invoke-ProgressDownload {
     [void]$response.EnsureSuccessStatusCode()
 
     [long]$reportedBytes = 0
-    if ($response.Content.Headers.ContentLength.HasValue) {
-      $reportedBytes = [long]$response.Content.Headers.ContentLength.Value
+    $contentLength = $response.Content.Headers.ContentLength
+    if ($null -ne $contentLength) {
+      $reportedBytes = [long]$contentLength
     }
     [long]$totalBytes = if ($ExpectedBytes -gt 0) { $ExpectedBytes } else { $reportedBytes }
+    if ($totalBytes -gt 0) {
+      Write-Host "      Expected transfer: $(Format-ByteSize $totalBytes) ($totalBytes bytes)"
+    } else {
+      Write-Host '      Expected transfer: server did not provide a total size; downloaded bytes will still be shown.'
+    }
 
     $stream = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
     $file = [System.IO.File]::Open(
@@ -322,7 +328,7 @@ function Ensure-Go {
 }
 
 Write-Host ''
-Write-Host 'VexStream Music 4.0 — local source launcher'
+Write-Host 'VexStream Music 4.0 - local source launcher'
 Write-Host 'This launcher uses GitHub and go.dev only for the setup files described below.'
 Write-Host 'Your music library remains local to VexStream.'
 Write-Host ''
@@ -472,7 +478,7 @@ try {
 }
 
 Write-Host ''
-Write-Host '[5/5] VexStream is ready — launching now'
+Write-Host '[5/5] VexStream is ready - launching now'
 Write-Host "      Source: $commit"
 Write-Host "      App:    $exe"
 Write-Host "      Size:   $(Format-ByteSize $exeBytes)"

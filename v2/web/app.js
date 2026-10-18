@@ -536,11 +536,11 @@ function renderHome(){
      <table class="song-table home-recent-table">
       <thead>
        <tr>
-        <th class="song-title-cell">Title</th>
-        <th class="col-added">Added</th>
-        <th class="col-artist">Artist</th>
-        <th class="col-album">Album</th>
-        <th class="col-duration">Time</th>
+        ${songColumnHeader("title","Title","song-title-cell",{sortable:false})}
+        ${songColumnHeader("added","Added","col-added",{sortable:false})}
+        ${songColumnHeader("artist","Artist","col-artist",{sortable:false})}
+        ${songColumnHeader("album","Album","col-album",{sortable:false})}
+        ${songColumnHeader("duration","Time","col-duration",{sortable:false})}
         <th class="col-actions"></th>
        </tr>
       </thead>
@@ -1531,12 +1531,12 @@ function renderArtistDetailTerrain(group,detail){
   ?`<div class="song-table-wrap">
      <table class="song-table artist-song-table">
       <thead><tr>
-       <th class="song-title-cell">${songSortHeader("title","Title")}</th>
-       <th class="col-added">${songSortHeader("added","Added")}</th>
+       ${songColumnHeader("title","Title","song-title-cell")}
+       ${songColumnHeader("added","Added","col-added")}
        <th class="col-artist">Artist</th>
-       <th class="col-album">${songSortHeader("album","Album")}</th>
-       <th class="col-genre">${songSortHeader("genre","Genre")}</th>
-       <th class="col-duration">${songSortHeader("duration","Time")}</th>
+       ${songColumnHeader("album","Album","col-album")}
+       ${songColumnHeader("genre","Genre","col-genre")}
+       ${songColumnHeader("duration","Time","col-duration")}
        <th class="col-actions"></th>
       </tr></thead>
       <tbody>${visible.map(item=>songRowHTML(item)).join("")}</tbody>
@@ -1880,12 +1880,12 @@ function renderTrackChoices(){
        <thead>
         <tr>
          ${selectable?'<th class="select-cell">✓</th>':""}
-         <th class="song-title-cell">${songSortHeader("title","Title")}</th>
-         <th class="col-added">${songSortHeader("added","Added")}</th>
-         <th class="col-artist">${songSortHeader("artist","Artist")}</th>
-         <th class="col-album">${songSortHeader("album","Album")}</th>
-         <th class="col-genre">${songSortHeader("genre","Genre")}</th>
-         <th class="col-duration">${songSortHeader("duration","Time")}</th>
+         ${songColumnHeader("title","Title","song-title-cell")}
+         ${songColumnHeader("added","Added","col-added")}
+         ${songColumnHeader("artist","Artist","col-artist")}
+         ${songColumnHeader("album","Album","col-album")}
+         ${songColumnHeader("genre","Genre","col-genre")}
+         ${songColumnHeader("duration","Time","col-duration")}
          <th class="col-actions"></th>
         </tr>
        </thead>

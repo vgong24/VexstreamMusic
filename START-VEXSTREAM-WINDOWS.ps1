@@ -33,15 +33,16 @@ function Invoke-ProgressDownload {
   )
 
   Add-Type -AssemblyName System.Net.Http
-  $handler = New-Object System.Net.Http.HttpClientHandler
+  $handler = [System.Net.Http.HttpClientHandler]::new()
   $handler.AllowAutoRedirect = $true
-  $client = New-Object System.Net.Http.HttpClient($handler)
+  $client = [System.Net.Http.HttpClient]::new($handler)
+  $request = $null
   $response = $null
   $stream = $null
   $file = $null
   [long]$written = 0
   try {
-    $request = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Get, $Uri)
+    $request = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Get, $Uri)
     [void]$request.Headers.TryAddWithoutValidation('User-Agent', 'VexStream-Music-human-launcher')
     foreach ($key in $RequestHeaders.Keys) {
       if ($key -ieq 'User-Agent') { continue }
@@ -61,7 +62,7 @@ function Invoke-ProgressDownload {
     [long]$totalBytes = if ($ExpectedBytes -gt 0) { $ExpectedBytes } else { $reportedBytes }
 
     $stream = $response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()
-    $file = New-Object System.IO.FileStream(
+    $file = [System.IO.File]::Open(
       $OutFile,
       [System.IO.FileMode]::Create,
       [System.IO.FileAccess]::Write,
@@ -86,6 +87,7 @@ function Invoke-ProgressDownload {
     if ($file) { $file.Dispose() }
     if ($stream) { $stream.Dispose() }
     if ($response) { $response.Dispose() }
+    if ($request) { $request.Dispose() }
     if ($client) { $client.Dispose() }
     if ($handler) { $handler.Dispose() }
   }

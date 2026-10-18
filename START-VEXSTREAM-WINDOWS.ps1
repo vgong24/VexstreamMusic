@@ -17,6 +17,7 @@ $Headers = @{ 'User-Agent' = 'VexStream-Music-human-launcher' }
 
 trap {
   Write-Progress -Activity 'VexStream setup' -Completed -ErrorAction SilentlyContinue
+  Write-Progress -Id 4 -Activity 'VexStream setup [4/5]' -Completed -ErrorAction SilentlyContinue
   Write-Host ''
   Write-Host 'VexStream setup stopped safely.' -ForegroundColor Red
   Write-Host "Reason: $($_.Exception.Message)"
@@ -425,9 +426,18 @@ try {
   }
   $sourceRoot = $sourceRoot.FullName
 
-  $goFiles = Get-ChildItem -LiteralPath (Join-Path $sourceRoot 'v2') -Filter '*.go' -Recurse -File | Sort-Object FullName
+  Write-Host ''
+  Write-Host '[4/5] Checking and building VexStream'
+  Write-Host '      The current task will update in place below.'
+
+  $goFiles = @(Get-ChildItem -LiteralPath (Join-Path $sourceRoot 'v2') -Filter '*.go' -Recurse -File | Sort-Object FullName)
   $formatProblems = New-Object System.Collections.Generic.List[string]
+  $goFileCount = [Math]::Max(1, $goFiles.Count)
+  $goFileIndex = 0
   foreach ($goFile in $goFiles) {
+    $goFileIndex += 1
+    $formatPercent = 5 + [Math]::Floor(($goFileIndex * 20.0) / $goFileCount)
+    Write-Progress -Id 4 -Activity 'VexStream setup [4/5]' -Status "Checking source format ($goFileIndex of $goFileCount)" -PercentComplete $formatPercent
     $priorPreference = $ErrorActionPreference
     try {
       $ErrorActionPreference = 'Continue'
@@ -444,24 +454,23 @@ try {
     }
   }
   if ($formatProblems.Count -gt 0) {
+    Write-Progress -Id 4 -Activity 'VexStream setup [4/5]' -Completed
     $formatProblems | ForEach-Object { [Console]::Error.WriteLine($_) }
     throw "V4 source is not gofmt-clean and will not be built by the human launcher."
   }
 
-  Write-Host ''
-  Write-Host '[4/5] Checking and building VexStream'
-  Write-Host '      Running source safety checks...'
+  Write-Progress -Id 4 -Activity 'VexStream setup [4/5]' -Status 'Running VexStream source safety tests...' -PercentComplete 35
   Invoke-Native -FilePath $go -ArgumentList @('test','./v2/...') -WorkingDirectory $sourceRoot -Quiet
 
   $buildEnv = @{ GOOS='windows'; GOARCH='amd64'; CGO_ENABLED='0' }
+  Write-Progress -Id 4 -Activity 'VexStream setup [4/5]' -Status 'Checking Windows build compatibility...' -PercentComplete 60
   Invoke-Native -FilePath $go -ArgumentList @('vet','./v2/...') -WorkingDirectory $sourceRoot -Environment $buildEnv -Quiet
 
   New-Item -ItemType Directory -Path $installRoot -Force | Out-Null
   $temporaryExe = Join-Path $installRoot 'VexStreamMusic-4.0.0.forming.exe'
   Remove-Item -LiteralPath $temporaryExe -Force -ErrorAction SilentlyContinue
 
-  Write-Host '      Source checks passed.'
-  Write-Host '      Building VexStreamMusic-4.0.0.exe...'
+  Write-Progress -Id 4 -Activity 'VexStream setup [4/5]' -Status 'Building the local VexStream app...' -PercentComplete 80
   Invoke-Native -FilePath $go -ArgumentList @(
     'build',
     '-trimpath',
@@ -470,7 +479,7 @@ try {
     './v2/cmd/vexstream-v4'
   ) -WorkingDirectory $sourceRoot -Environment $buildEnv -Quiet
 
-  Write-Host '      Build complete.'
+  Write-Progress -Id 4 -Activity 'VexStream setup [4/5]' -Status 'Recording the verified local build...' -PercentComplete 95
   Move-Item -LiteralPath $temporaryExe -Destination $exe -Force
   $exeBytes = (Get-Item -LiteralPath $exe).Length
   $exeSha = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -483,6 +492,9 @@ try {
     platform = 'windows-amd64'
     exeSha256 = $exeSha
   } | ConvertTo-Json | Set-Content -LiteralPath $receipt -Encoding UTF8
+  Write-Progress -Id 4 -Activity 'VexStream setup [4/5]' -Completed
+  Write-Host '      Source checks passed.'
+  Write-Host '      Build complete.'
 } finally {
   Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
 }

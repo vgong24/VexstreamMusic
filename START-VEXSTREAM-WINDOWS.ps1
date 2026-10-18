@@ -226,9 +226,38 @@ function Ensure-Go {
     Write-Host '[2/5] Refreshing the local build tool'
     Write-Host '      The cached build tool could not be re-verified, so VexStream will replace only that tool.'
   } elseif (Test-Path -LiteralPath $goExe -PathType Leaf) {
+    $priorPreference = $ErrorActionPreference
+    try {
+      $ErrorActionPreference = 'Continue'
+      $legacyVersionOutput = (& $goExe version 2>&1 | Out-String).Trim()
+      $legacyVersionCode = $LASTEXITCODE
+    } finally {
+      $ErrorActionPreference = $priorPreference
+    }
+    if ($legacyVersionCode -eq 0 -and $legacyVersionOutput -match 'go1\.23\.2\s+windows/amd64') {
+      $goExeSha = (Get-FileHash -LiteralPath $goExe -Algorithm SHA256).Hash.ToLowerInvariant()
+      $sizeMeasure = Get-ChildItem -LiteralPath (Join-Path $goRoot 'go') -File -Recurse | Measure-Object -Property Length -Sum
+      [long]$installedBytes = $sizeMeasure.Sum
+      [ordered]@{
+        schemaVersion = 'vexstream.local-toolchain/v1'
+        goVersion = $GoVersion
+        platform = 'windows-amd64'
+        acquisition = 'EXISTING_MANAGED_PATH_VERSION_QUALIFIED'
+        goArchiveSha256 = $null
+        goArchiveBytes = $null
+        goExeSha256 = $goExeSha
+        installedBytes = $installedBytes
+      } | ConvertTo-Json | Set-Content -LiteralPath $toolchainReceipt -Encoding UTF8
+      Write-Host ''
+      Write-Host '[2/5] Existing local build tool found'
+      Write-Host "      Go $GoVersion is already present in VexStream's managed toolchain folder."
+      Write-Host '      Version/platform check passed; no repeat download is needed.'
+      Write-Host "      Local size: $(Format-ByteSize $installedBytes)"
+      return $goExe
+    }
     Write-Host ''
     Write-Host '[2/5] Refreshing the local build tool'
-    Write-Host '      An older cached tool has no verification receipt; it will be replaced safely.'
+    Write-Host '      An older cached tool could not prove the expected Go version/platform.'
   }
 
   New-Item -ItemType Directory -Path $toolchains -Force | Out-Null

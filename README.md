@@ -27,7 +27,7 @@ When a signed/published release asset exists, downloading that `.exe` is the pre
 The repository also owns a reconstructible fallback. Paste this into **PowerShell**:
 
 ```powershell
-$P=Join-Path $env:TEMP 'START-VEXSTREAM-WINDOWS.ps1'; $Q=$ProgressPreference; $ProgressPreference='SilentlyContinue'; try{Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/vgong24/VexstreamMusic/main/START-VEXSTREAM-WINDOWS.ps1' -OutFile $P}finally{$ProgressPreference=$Q}; powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $P
+$P=Join-Path $env:TEMP 'START-VEXSTREAM-WINDOWS.ps1'; $Q=$ProgressPreference; $ProgressPreference='SilentlyContinue'; try{Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/vgong24/VexstreamMusic/main/START-VEXSTREAM-WINDOWS.ps1' -OutFile $P}finally{$ProgressPreference=$Q}; $T=$null; $E=$null; [void][System.Management.Automation.Language.Parser]::ParseFile($P,[ref]$T,[ref]$E); if($E.Count){throw ('VexStream launcher self-check failed: '+(($E|ForEach-Object Message)-join '; '))}; powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $P
 ```
 
 The launcher:

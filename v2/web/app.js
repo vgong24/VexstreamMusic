@@ -446,7 +446,7 @@ function renderNowPlaying(item){
 
 function homeRecentRowHTML(item){
  const secondary=String(item?.sourceTitle??item?.channel??"").trim();
- return `<tr data-home-track-ref="${escapeHTML(item.ref)}">
+ return `<tr tabindex="0" aria-label="Play ${escapeHTML(trackTitle(item))}" data-home-track-ref="${escapeHTML(item.ref)}">
    <td class="song-title-cell">
     <div class="song-main">
      ${trackArtworkHTML(item)}
@@ -1319,8 +1319,10 @@ function trackArtworkHTML(item){
 
 function songRowHTML(item,{selectable=false}={}){
  const selected=selectable&&librarySelection.isSelected(item.ref);
+ const playing=player.currentItem?.ref===item.ref;
+ const rowIntent=selectable?"Select":"Play";
  const secondary=String(item?.sourceTitle??item?.channel??"").trim();
- return `<tr class="${selected?"selected":""}" data-track-ref="${escapeHTML(item.ref)}">
+ return `<tr class="${playing?"playing ":""}${selected?"selected":""}" tabindex="0" aria-label="${rowIntent} ${escapeHTML(trackTitle(item))}" data-track-ref="${escapeHTML(item.ref)}">
    ${selectable
     ?`<td class="select-cell">
        <label class="song-select">
@@ -2179,21 +2181,58 @@ nowPlaying.addEventListener("click",event=>{
  }
 });
 
+function rowTargetOwnsInteraction(target){
+ return Boolean(target.closest(
+  "button,input,select,option,summary,details,label,a,[role='button']"
+ ));
+}
+
+function activateTrackRow(
+ event,
+ {row,ref,playbackRefs=libraryPlaybackRefs(),selectionAware=false}={}
+){
+ if(!row||!ref||rowTargetOwnsInteraction(event.target))return false;
+ if(event.type==="keydown"){
+  if(event.key!=="Enter"&&event.key!==" ")return false;
+  event.preventDefault();
+ }
+ if(selectionAware&&librarySelection.currentProjection.active){
+  librarySelection.toggle(ref,!librarySelection.isSelected(ref));
+  return true;
+ }
+ void guarded(()=>player.playTrack(ref,playbackRefs));
+ return true;
+}
+
 recentSongs.addEventListener("click",event=>{
  const action=event.target.closest("[data-home-track-action]");
  const row=event.target.closest("[data-home-track-ref]");
- if(!action||!row)return;
- if(action.dataset.homeTrackAction==="play"){
+ if(!row)return;
+ if(action?.dataset.homeTrackAction==="play"){
   void guarded(()=>player.playTrack(
    row.dataset.homeTrackRef,
    libraryPlaybackRefs()
   ));
   return;
  }
- if(action.dataset.homeTrackAction==="append"){
+ if(action?.dataset.homeTrackAction==="append"){
   player.append([row.dataset.homeTrackRef]);
   render();
+  return;
  }
+ activateTrackRow(event,{
+  row,
+  ref:row.dataset.homeTrackRef,
+  playbackRefs:libraryPlaybackRefs()
+ });
+});
+recentSongs.addEventListener("keydown",event=>{
+ const row=event.target.closest("[data-home-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.homeTrackRef,
+  playbackRefs:libraryPlaybackRefs()
+ });
 });
 
 function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){

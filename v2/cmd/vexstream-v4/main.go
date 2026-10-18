@@ -58,7 +58,7 @@ func run() error {
 	if claim, ok := lifecycle.CurrentLiveClaim(
 		layout.ProtectedCurrentURL,
 	); ok {
-		proceed, err := handoffProtectedDesktop(claim)
+		proceed, err := handoffProtectedDesktop(\n\t\t\tlayout.ProtectedCurrentURL,\n\t\t\tclaim,\n\t\t)
 		if err != nil {
 			return err
 		}

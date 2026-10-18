@@ -25,9 +25,8 @@ case "$(/usr/bin/uname -m)" in
 esac
 
 API_REF="$(printf '%s' "$SOURCE_REF" | /usr/bin/sed 's#/#%2F#g')"
-COMMIT="$(/usr/bin/curl -fsSL -H 'User-Agent: VexStream-Music-human-launcher' "https://api.github.com/repos/${REPOSITORY}/commits/${API_REF}" \
-  | /usr/bin/sed -n 's/^[[:space:]]*"sha":[[:space:]]*"\([0-9a-f][0-9a-f]*\)".*/\1/p' \
-  | /usr/bin/head -n 1)"
+COMMIT_JSON="$(/usr/bin/curl -fsSL -H 'User-Agent: VexStream-Music-human-launcher' "https://api.github.com/repos/${REPOSITORY}/commits/${API_REF}")"
+COMMIT="$(printf '%s' "$COMMIT_JSON" | /usr/bin/plutil -extract sha raw -o - - 2>/dev/null || true)"
 if ! printf '%s' "$COMMIT" | /usr/bin/grep -Eq '^[0-9a-f]{40}$'; then
   printf "GitHub did not return an exact commit for '%s'.\n" "$SOURCE_REF" >&2
   exit 3
@@ -87,11 +86,13 @@ if [ -z "$SOURCE_ROOT" ]; then
   exit 6
 fi
 
-FORMAT_LIST="$WORK/gofmt-files.txt"
-/usr/bin/find "$SOURCE_ROOT/v2" -type f -name '*.go' -print > "$FORMAT_LIST"
-FORMAT_DELTA="$("$GOFMT" -d $(/bin/cat "$FORMAT_LIST"))"
-if [ -n "$FORMAT_DELTA" ]; then
-  printf '%s\n' "$FORMAT_DELTA" >&2
+FORMAT_DELTA="$WORK/gofmt-delta.txt"
+: > "$FORMAT_DELTA"
+while IFS= read -r -d '' go_file; do
+  "$GOFMT" -d "$go_file" >> "$FORMAT_DELTA"
+done < <(/usr/bin/find "$SOURCE_ROOT/v2" -type f -name '*.go' -print0)
+if [ -s "$FORMAT_DELTA" ]; then
+  /bin/cat "$FORMAT_DELTA" >&2
   printf 'V4 source is not gofmt-clean and will not be built by the human launcher.\n' >&2
   exit 7
 fi

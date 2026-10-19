@@ -79,7 +79,9 @@ import {
 } from "./features/imports/review.js";
 import {
   exitVexStream,
+  loadSessionRetirePlan,
   loadSystemIdentity,
+  retireSessions,
 } from "./features/system/client.js";
 import { projectSystemStatus } from "./features/system/status.js";
 import {
@@ -134,6 +136,8 @@ const systemTrashStatus=document.querySelector("#systemTrashStatus");
 const systemSessionStatus=document.querySelector("#systemSessionStatus");
 const systemImportStatus=document.querySelector("#systemImportStatus");
 const systemAttention=document.querySelector("#systemAttention");
+const reviewOldSessions=document.querySelector("#reviewOldSessions");
+const oldSessionPlan=document.querySelector("#oldSessionPlan");
 const exitVexStreamButton=document.querySelector("#exitVexStream");
 const status=document.querySelector("#status");
 const semanticState=document.querySelector("#semanticState");
@@ -1599,6 +1603,62 @@ function renderSystemStatus(){
   :`<span class="muted">${escapeHTML(resolveText(locale,"system.status.no-warnings"))}</span>`;
 }
 
+function sessionIdentityText(session){
+ const version=String(session?.version??"").trim();
+ const build=String(session?.buildRef??"").trim();
+ const pid=Number(session?.pid??0);
+ return [
+  version?`VexStream ${version}`:"VexStream",
+  build?build.slice(0,12):"",
+  pid>0?`PID ${pid}`:""
+ ].filter(Boolean).join(" · ");
+}
+
+function renderOldSessionPlan(plan){
+ if(!oldSessionPlan)return;
+ oldSessionPlan.hidden=false;
+ if(plan?.scanError){
+  oldSessionPlan.innerHTML=`<div class="system-session-error">${escapeHTML(plan.scanError)}</div>`;
+  return;
+ }
+ const others=(plan?.sessions??[]).filter(session=>!session.current);
+ if(!others.length){
+  oldSessionPlan.innerHTML=`<div class="muted">${escapeHTML(resolveText(locale,"system.sessions.none"))}</div>`;
+  return;
+ }
+ const eligible=plan?.eligible??[];
+ const held=plan?.held??[];
+ const eligibleHTML=eligible.length
+  ?`<div class="system-session-group">
+      <strong>${escapeHTML(resolveText(locale,"system.sessions.eligible"))}</strong>
+      ${eligible.map(session=>`<label class="system-session-row eligible">
+       <input type="checkbox" data-old-session-pid="${session.pid}">
+       <span><b>${escapeHTML(sessionIdentityText(session))}</b><small>${escapeHTML(session.reason)}</small></span>
+      </label>`).join("")}
+     </div>`
+  :"";
+ const heldHTML=held.length
+  ?`<div class="system-session-group">
+      <strong>${escapeHTML(resolveText(locale,"system.sessions.held"))}</strong>
+      ${held.map(session=>`<div class="system-session-row held">
+       <span aria-hidden="true">🛡</span>
+       <span><b>${escapeHTML(sessionIdentityText(session))}</b><small>${escapeHTML(session.reason)}</small></span>
+      </div>`).join("")}
+     </div>`
+  :"";
+ oldSessionPlan.innerHTML=`
+  ${eligibleHTML}
+  ${heldHTML}
+  <div class="muted system-session-warning">${escapeHTML(plan.warning??"")}</div>
+  ${eligible.length?`<button id="retireOldSessions" type="button" disabled>${escapeHTML(resolveText(locale,"system.sessions.retire"))}</button>`:""}`;
+}
+
+function updateOldSessionRetireButton(){
+ const button=oldSessionPlan?.querySelector("#retireOldSessions");
+ if(!button)return;
+ button.disabled=!oldSessionPlan.querySelector("[data-old-session-pid]:checked");
+}
+
 function renderPlaybackTimeline(
  projection=timeline.currentProjection
 ){
@@ -2614,6 +2674,33 @@ systemAttention.addEventListener("click",event=>{
   });
   playerSessionPersistenceEnabled=true;
   render();
+ });
+});
+
+reviewOldSessions.addEventListener("click",()=>void guarded(async()=>{
+ reviewOldSessions.disabled=true;
+ try{
+  renderOldSessionPlan(await loadSessionRetirePlan());
+ }finally{
+  reviewOldSessions.disabled=false;
+ }
+}));
+
+oldSessionPlan.addEventListener("change",event=>{
+ if(!event.target.closest("[data-old-session-pid]"))return;
+ updateOldSessionRetireButton();
+});
+
+oldSessionPlan.addEventListener("click",event=>{
+ if(!event.target.closest("#retireOldSessions"))return;
+ const pids=[...oldSessionPlan.querySelectorAll("[data-old-session-pid]:checked")]
+  .map(input=>Number(input.dataset.oldSessionPid))
+  .filter(Number.isInteger);
+ if(!pids.length)return;
+ if(!globalThis.confirm(resolveText(locale,"system.sessions.confirm")))return;
+ void guarded(async()=>{
+  await retireSessions(pids);
+  renderOldSessionPlan(await loadSessionRetirePlan());
  });
 });
 

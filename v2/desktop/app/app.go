@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"net/http"
 	"os"
@@ -38,6 +39,7 @@ import (
 	libraryservice "github.com/vgong24/VexstreamMusic/v2/desktop/library/service"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/library/trash"
 	trashhttp "github.com/vgong24/VexstreamMusic/v2/desktop/library/trash/httpapi"
+	"github.com/vgong24/VexstreamMusic/v2/desktop/lifecycle"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/mobile"
 	playersession "github.com/vgong24/VexstreamMusic/v2/desktop/player/session"
 	playersessionhttp "github.com/vgong24/VexstreamMusic/v2/desktop/player/session/httpapi"
@@ -56,14 +58,15 @@ type Options struct {
 }
 
 type Application struct {
-	version  string
-	buildRef string
-	layout   appdata.Layout
-	mux      *http.ServeMux
-	jobs     *importjobs.Manager
-	mobile   *mobile.Service
-	exit     chan struct{}
-	exitOnce sync.Once
+	version     string
+	buildRef    string
+	layout      appdata.Layout
+	mux         *http.ServeMux
+	jobs        *importjobs.Manager
+	mobile      *mobile.Service
+	sessionPlan func() lifecycle.SessionPlan
+	exit        chan struct{}
+	exitOnce    sync.Once
 
 	warningsMu sync.RWMutex
 	warnings   []string
@@ -248,6 +251,16 @@ func Open(options Options) (*Application, error) {
 	)
 	playerSessionOwner := playersession.New(options.Layout.PlayerSession)
 	playerSessionHTTP := playersessionhttp.New(playerSessionOwner)
+	application.sessionPlan = func() lifecycle.SessionPlan {
+		projection := librarySnapshot()
+		refs := make([]string, 0, len(projection.Tracks))
+		for _, track := range projection.Tracks {
+			if strings.TrimSpace(track.ID) != "" {
+				refs = append(refs, track.ID)
+			}
+		}
+		return lifecycle.ReviewSessions(os.Getpid(), refs)
+	}
 
 	runtimeHTTP := runtimehttp.NewWith(
 		options.Layout.SharedRuntime,
@@ -336,6 +349,8 @@ func Open(options Options) (*Application, error) {
 	})
 
 	mux.HandleFunc("/health", application.health)
+	mux.HandleFunc("/api/system/sessions/retire-plan", application.sessionRetirePlanHandler)
+	mux.HandleFunc("/api/system/sessions/retire", application.sessionRetireHandler)
 	mux.HandleFunc("/api/system/exit", application.exitHandler)
 	mux.Handle("/", http.FileServer(http.FS(web)))
 
@@ -395,6 +410,70 @@ func (a *Application) health(
 		"buildRef": a.buildRef,
 		"pid":      os.Getpid(),
 		"warnings": a.StartupWarnings(),
+	})
+}
+
+func (a *Application) sessionRetirePlanHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		jsonOut(w, http.StatusMethodNotAllowed, map[string]string{
+			"error": "GET required",
+		})
+		return
+	}
+	if a.sessionPlan == nil {
+		jsonOut(w, http.StatusServiceUnavailable, map[string]string{
+			"error": "VexStream session review is unavailable",
+		})
+		return
+	}
+	jsonOut(w, http.StatusOK, a.sessionPlan())
+}
+
+func (a *Application) sessionRetireHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		jsonOut(w, http.StatusMethodNotAllowed, map[string]string{
+			"error": "POST required",
+		})
+		return
+	}
+	var request struct {
+		Confirm string `json:"confirm"`
+		PIDs    []int  `json:"pids"`
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&request); err != nil ||
+		request.Confirm != "RETIRE_OLD_IDLE_SESSIONS" {
+		jsonOut(w, http.StatusBadRequest, map[string]string{
+			"error": "explicit old-session retirement confirmation is missing",
+		})
+		return
+	}
+	if a.sessionPlan == nil {
+		jsonOut(w, http.StatusServiceUnavailable, map[string]string{
+			"error": "VexStream session review is unavailable",
+		})
+		return
+	}
+
+	plan := a.sessionPlan()
+	retired, failed := lifecycle.RetireEligibleSessions(
+		os.Getpid(),
+		request.PIDs,
+		plan,
+	)
+	jsonOut(w, http.StatusOK, map[string]any{
+		"retired": retired,
+		"failed":  failed,
+		"message":  fmt.Sprintf("Retired %d older VexStream session(s).", len(retired)),
 	})
 }
 

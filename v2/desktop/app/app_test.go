@@ -39,7 +39,8 @@ func TestOpenFormsLocalDesktopCompositionWithRecoveredPhoneAdministration(t *tes
 	}
 	if response.StatusCode != http.StatusOK ||
 		health["version"] != "4.0.0" ||
-		health["buildRef"] != "test-build" {
+		health["buildRef"] != "test-build" ||
+		health["pid"] != float64(os.Getpid()) {
 		t.Fatalf("health identity drift: code=%d body=%+v", response.StatusCode, health)
 	}
 

@@ -9,6 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { canonicalGoCheckoutText } from "./verify-local-support.mjs";
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
 const V2=path.resolve(HERE,"..");
@@ -48,27 +49,33 @@ function checkGoFmt(){
  process.stdout.write("\n== gofmt ==\n");
  const dirty=[];
  for(const file of goFiles(V2).sort()){
-  const result=spawnSync("gofmt",["-d",file],{
+  const source=canonicalGoCheckoutText(fs.readFileSync(file,"utf8"));
+  const result=spawnSync("gofmt",[],{
    cwd:ROOT,
    env:process.env,
+   input:source,
    encoding:"utf8",
-   stdio:["ignore","pipe","pipe"],
+   stdio:["pipe","pipe","pipe"],
   });
   if(result.error)throw result.error;
   if(result.status!==0){
    if(result.stderr)process.stderr.write(result.stderr);
    throw new Error("gofmt failed for "+path.relative(ROOT,file));
   }
-  if(String(result.stdout||"").trim()){
+  const formatted=canonicalGoCheckoutText(result.stdout||"");
+  if(formatted!==source){
    dirty.push({
     file:path.relative(ROOT,file),
-    diff:result.stdout,
+    formatted,
    });
   }
  }
  if(dirty.length){
   for(const row of dirty){
-   process.stderr.write("\n"+row.file+"\n"+row.diff);
+   process.stderr.write(
+    "\n"+row.file+
+    "\nGo source differs from gofmt after checkout EOL normalization.\n"
+   );
   }
   throw new Error("V4 Go source is not gofmt-clean");
  }

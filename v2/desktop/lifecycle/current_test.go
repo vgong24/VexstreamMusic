@@ -181,3 +181,43 @@ func TestGracefulExitWaitsForServerAndClaimRelease(t *testing.T) {
 		t.Fatal("removed protected claim was not observed")
 	}
 }
+
+
+func TestRecoverStoppedClaimRejectsLiveOwnerThenClearsLegacyStaleClaim(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(
+		w http.ResponseWriter,
+		r *http.Request,
+	) {
+		if r.URL.Path != "/health" {
+			http.NotFound(w, r)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(Identity{
+			OK:       true,
+			Version:  "4.0.0",
+			BuildRef: "legacy-build",
+		})
+	}))
+
+	path := filepath.Join(t.TempDir(), "v4", "current-url.txt")
+	if err := Claim(path, server.URL); err != nil {
+		server.Close()
+		t.Fatal(err)
+	}
+	if err := RecoverStoppedClaim(path, server.URL); err == nil {
+		server.Close()
+		t.Fatal("live VexStream ownership was recoverable")
+	}
+	if _, err := os.Stat(path); err != nil {
+		server.Close()
+		t.Fatalf("live ownership claim was changed: %v", err)
+	}
+
+	server.Close()
+	if err := RecoverStoppedClaim(path, server.URL); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatalf("stopped legacy claim remains: %v", err)
+	}
+}

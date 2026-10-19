@@ -68,8 +68,8 @@ type Application struct {
 	exit        chan struct{}
 	exitOnce    sync.Once
 
-	warningsMu sync.RWMutex
-	warnings   []string
+	warningsMu  sync.RWMutex
+	warnings    []string
 }
 
 func Open(options Options) (*Application, error) {
@@ -473,7 +473,7 @@ func (a *Application) sessionRetireHandler(
 	jsonOut(w, http.StatusOK, map[string]any{
 		"retired": retired,
 		"failed":  failed,
-		"message":  fmt.Sprintf("Retired %d older VexStream session(s).", len(retired)),
+		"message": fmt.Sprintf("Retired %d older VexStream session(s).", len(retired)),
 	})
 }
 

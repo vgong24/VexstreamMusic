@@ -681,6 +681,27 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
 .system-attention-list li{line-height:1.4}
 .system-attention-list li>span{display:block}
 .system-attention-list button{margin-top:6px}
+.system-session-review>p{margin:0;line-height:1.4}
+#reviewOldSessions{justify-self:start}
+#oldSessionPlan{display:grid;gap:10px}
+#oldSessionPlan[hidden]{display:none}
+.system-session-group{display:grid;gap:6px}
+.system-session-row{
+ display:grid;
+ grid-template-columns:auto minmax(0,1fr);
+ align-items:start;
+ gap:8px;
+ padding:8px;
+ border:1px solid #e1ddd5;
+ border-radius:9px;
+ background:#faf9f6;
+}
+.system-session-row>span{display:grid;gap:2px}
+.system-session-row small{color:#73797a;line-height:1.35}
+.system-session-row.held{background:#f4f2ed}
+.system-session-warning{line-height:1.4}
+.system-session-error{color:#9a3f2a}
+#retireOldSessions{justify-self:start}
 .system-drawer-actions{display:flex;justify-content:flex-end;padding-top:4px}
 #exitVexStream{background:#fff;color:#2c3031;border-color:#d9d3ca}
 @media(max-width:600px){.system-status-grid{grid-template-columns:1fr}.system-panel{width:100%}}

@@ -199,7 +199,6 @@ func TestPlayerSessionUsesV4OnlyLayoutThroughComposition(t *testing.T) {
 	}
 }
 
-
 func TestOldSessionRoutesExposePlanAndHoldUnsafeRetirement(t *testing.T) {
 	root := t.TempDir()
 	application, err := Open(Options{
@@ -295,7 +294,7 @@ func TestOldSessionRoutesExposePlanAndHoldUnsafeRetirement(t *testing.T) {
 		t.Fatalf("held retirement response=%d body=%s", held.Code, held.Body.String())
 	}
 	var result struct {
-		Retired []int                    `json:"retired"`
+		Retired []int                     `json:"retired"`
 		Failed  []lifecycle.RetireFailure `json:"failed"`
 	}
 	if err := json.NewDecoder(held.Body).Decode(&result); err != nil {

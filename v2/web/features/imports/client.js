@@ -123,6 +123,9 @@ export async function startImport(
 
   const payload = {
     sourceTitle: stringValue(plan.sourceTitle),
+    sourceCreator: stringValue(plan.sourceCreator),
+    thumbnail: stringValue(plan.thumbnail),
+    sourceDuration: finiteNonNegative(plan.sourceDuration),
     destination,
     url,
     mode: stringValue(plan.mode),

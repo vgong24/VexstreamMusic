@@ -426,7 +426,7 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
  color:#2c3031;
  border-color:#d9d3ca;
 }
-.library-editor,.import-review{
+.library-editor{
  grid-area:main;
  z-index:15;
  align-self:start;
@@ -1180,3 +1180,39 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
 @media(prefers-reduced-motion:reduce){
  .song-marquee-text{animation:none!important;transform:none!important}
 }
+
+
+/* V3 YouTube review is an in-place Discover step over the V4 Import owners. */
+.youtube-import .import-review{
+ grid-area:auto;
+ z-index:auto;
+ align-self:stretch;
+ justify-self:stretch;
+ width:100%;
+ max-height:none;
+ overflow:visible;
+ margin:0;
+ background:#fff;
+ color:#2c3031;
+ border:1px solid #ded8cf;
+ box-shadow:none;
+}
+.import-runtime-status{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:10px;
+ flex-wrap:wrap;
+ padding:11px 13px;
+ border:1px solid #ded8cf;
+ border-radius:12px;
+ background:#fff;
+ color:#4e5657;
+ font-size:13px;
+}
+.import-runtime-status strong{color:#2c3031}
+.import-runtime-status[data-ready="true"]{
+ border-color:#c9d9c8;
+ background:#f5faf4;
+}
+.import-runtime-status button{padding:7px 9px;font-size:12px}

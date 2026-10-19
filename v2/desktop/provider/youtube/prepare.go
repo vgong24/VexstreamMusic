@@ -235,6 +235,7 @@ func (b *Bridge) runStreamingProcess(
 	}
 
 	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
+	cmd.SysProcAttr = hiddenProcAttr()
 	if len(b.Env) > 0 {
 		cmd.Env = append([]string(nil), b.Env...)
 	}

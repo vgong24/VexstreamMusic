@@ -17,6 +17,7 @@ type Identity struct {
 	OK       bool   `json:"ok"`
 	Version  string `json:"version"`
 	BuildRef string `json:"buildRef"`
+	PID      int    `json:"pid,omitempty"`
 }
 
 type LiveClaim struct {
@@ -213,4 +214,53 @@ func ClearIfOwned(currentURLPath, url string) error {
 		return err
 	}
 	return nil
+}
+
+
+/*
+RecoverStoppedClaim removes only the exact stale URL claim left by a desktop
+that has already stopped serving. It exists for compatibility with older V4
+builds that did not expose a process id and could leave current-url.txt behind
+after an admitted update handoff.
+
+A live owner is never cleared here. A changed claim is also preserved because
+ClearIfOwned compares the exact expected URL before deletion.
+*/
+func RecoverStoppedClaim(
+	currentURLPath string,
+	url string,
+) error {
+	currentURLPath = strings.TrimSpace(currentURLPath)
+	url = strings.TrimSpace(url)
+	if currentURLPath == "" || url == "" {
+		return errors.New("current URL path and URL required")
+	}
+	if Probe(url).OK {
+		return errors.New("cannot recover a claim while its VexStream owner is still serving")
+	}
+
+	deadline := time.Now().Add(2 * time.Second)
+	var lastErr error
+	for {
+		if err := ClearIfOwned(currentURLPath, url); err != nil {
+			lastErr = err
+		} else {
+			data, err := os.ReadFile(currentURLPath)
+			switch {
+			case os.IsNotExist(err):
+				return nil
+			case err != nil:
+				lastErr = err
+			case strings.TrimSpace(string(data)) != url:
+				return nil
+			default:
+				lastErr = errors.New("stale VexStream claim is still present")
+			}
+		}
+
+		if time.Now().After(deadline) {
+			return fmt.Errorf("recover stopped VexStream ownership: %w", lastErr)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 }

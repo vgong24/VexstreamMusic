@@ -1216,3 +1216,233 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
  background:#f5faf4;
 }
 .import-runtime-status button{padding:7px 9px;font-size:12px}
+
+
+/* Import lived path: preserve source identity from review through Library completion. */
+.youtube-import-entry[hidden]{display:none}
+.import-review-source{
+ display:grid;
+ grid-template-columns:152px minmax(0,1fr);
+ gap:14px;
+ align-items:center;
+ padding:12px;
+ border:1px solid #e1dcd3;
+ border-radius:12px;
+ background:#fbfaf7;
+}
+.import-review-thumbnail{
+ width:152px;
+ aspect-ratio:16/9;
+ object-fit:cover;
+ border-radius:9px;
+ background:#ebe7df;
+}
+.import-review-thumbnail.fallback{
+ display:grid;
+ place-items:center;
+ color:#858b8c;
+ font-size:28px;
+}
+.import-review-thumbnail[hidden]{display:none}
+.import-review-source-copy{
+ min-width:0;
+ display:grid;
+ gap:4px;
+}
+.import-review-source-copy strong{
+ font-size:16px;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+}
+#importJobs{
+ display:grid;
+ gap:12px;
+ margin-top:10px;
+}
+.import-activity-summary{
+ padding:9px 11px;
+ border-radius:10px;
+ background:#f3efe8;
+ color:#5f6667;
+ font-size:12px;
+}
+.import-activity-group{
+ display:grid;
+ gap:8px;
+}
+.import-activity-group+.import-activity-group{
+ padding-top:12px;
+ border-top:1px solid #e1dcd3;
+}
+.import-activity-group-head{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:12px;
+ color:#2c3031;
+}
+.import-activity-group-head>div{
+ display:grid;
+ gap:2px;
+}
+.import-activity-group-head span{
+ color:#858b8c;
+ font-size:12px;
+}
+.import-activity-count{
+ min-width:25px;
+ height:25px;
+ padding:0 7px;
+ display:grid;
+ place-items:center;
+ border-radius:999px;
+ background:#ece7de;
+ color:#333839!important;
+ font-weight:750;
+}
+.import-activity-list{
+ display:grid;
+ gap:8px;
+}
+.import-activity-empty{
+ padding:13px;
+ border:1px dashed #d9d3ca;
+ border-radius:11px;
+ color:#858b8c;
+ background:#fff;
+}
+.import-job{
+ display:grid;
+ grid-template-columns:112px minmax(0,1fr) auto;
+ gap:12px;
+ align-items:center;
+ padding:11px 12px;
+ border:1px solid #e1dcd3;
+ border-radius:12px;
+ background:#fff;
+ color:#2d3031;
+}
+.import-job-thumbnail{
+ width:112px;
+ aspect-ratio:16/9;
+ object-fit:cover;
+ border-radius:9px;
+ background:#ebe7df;
+}
+.import-job-thumbnail.fallback{
+ display:grid;
+ place-items:center;
+ color:#858b8c;
+ font-size:22px;
+}
+.import-job-main{
+ min-width:0;
+ display:grid;
+ gap:3px;
+}
+.import-job-title-row{
+ display:flex;
+ align-items:center;
+ gap:7px;
+ min-width:0;
+}
+.import-job-title-row>strong{
+ min-width:0;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+}
+.import-job-status{
+ flex:0 0 auto;
+ padding:2px 7px;
+ border-radius:999px;
+ background:#eeeae3;
+ color:#5b6263;
+ font-size:10px;
+ font-weight:750;
+}
+.import-job-status.status-running,
+.import-job-status.status-queued,
+.import-job-status.status-committing{
+ background:#e9f2ed;
+ color:#355d4e;
+}
+.import-job-status.status-ready{
+ background:#fff3d8;
+ color:#72561c;
+}
+.import-job-status.status-done{
+ background:#e8f3eb;
+ color:#2f6040;
+}
+.import-job-status.status-failed,
+.import-job-status.status-cancelled{
+ background:#fae8e5;
+ color:#7b3c34;
+}
+.import-job-creator,
+.import-job-detail,
+.import-job-time{
+ color:#858b8c;
+ font-size:11px;
+}
+.import-job-stage{
+ color:#646b6c;
+ font-size:12px;
+}
+.import-progress-row{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) auto;
+ gap:9px;
+ align-items:center;
+ margin-top:5px;
+}
+.import-progress-track{
+ height:7px;
+ overflow:hidden;
+ border-radius:999px;
+ background:#ece8e1;
+}
+.import-progress-fill{
+ height:100%;
+ min-width:2px;
+ border-radius:999px;
+ background:#bb5731;
+ transition:width .22s ease;
+}
+.import-progress-value{
+ min-width:38px;
+ text-align:right;
+ font-size:11px;
+ font-variant-numeric:tabular-nums;
+}
+.import-job-side{
+ display:grid;
+ justify-items:end;
+ gap:5px;
+ min-width:104px;
+}
+.import-job-actions{
+ display:flex;
+ justify-content:flex-end;
+ gap:6px;
+ flex-wrap:wrap;
+}
+.import-job-actions button{
+ padding:7px 9px;
+ font-size:11px;
+}
+@media(max-width:720px){
+ .import-review-source{grid-template-columns:104px minmax(0,1fr)}
+ .import-review-thumbnail{width:104px}
+ .import-job{grid-template-columns:88px minmax(0,1fr)}
+ .import-job-thumbnail{width:88px}
+ .import-job-side{
+  grid-column:1/-1;
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+ }
+}

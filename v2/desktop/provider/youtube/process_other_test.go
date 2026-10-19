@@ -2,10 +2,17 @@
 
 package youtube
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestProviderSubprocessDoesNotInventPlatformAttributes(t *testing.T) {
-	if attr := hiddenProcAttr(); attr != nil {
+	cmd := providerCommand(
+		context.Background(),
+		[]string{"sh", "-c", "true"},
+	)
+	if attr := cmd.SysProcAttr; attr != nil {
 		t.Fatalf("unexpected non-Windows provider process attributes: %+v", attr)
 	}
 }

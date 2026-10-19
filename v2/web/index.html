@@ -81,54 +81,56 @@
       </section>
     </section>
 
-    <div id="nowPlaying" class="now">
-      <button id="nowArtButton" class="now-art-button" type="button" title="Open current track actions" aria-label="Open current track actions" disabled>
-        <div id="nowArt" class="art" aria-hidden="true">♫</div>
-      </button>
-      <div class="track-copy">
-        <div class="now-title-row">
-          <button id="nowTitleButton" class="now-title-button" type="button" title="Open current track actions" disabled>
-            <strong id="trackTitle">Nothing playing</strong>
-          </button>
-          <details id="nowDetails" class="now-details" hidden>
-            <summary class="now-details-toggle" aria-label="Current track actions" title="Current track actions">⋯</summary>
-            <div class="song-more-menu now-details-menu">
-              <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">Play next</button>
-              <button data-track-action="append" data-vex-action="vexstream.player.add-queue">Add to queue</button>
-              <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">Explore</button>
-              <button data-track-action="edit">Edit</button>
-              <button data-track-action="trash">Move to Deleted music</button>
-            </div>
-          </details>
-        </div>
-        <div id="nowMeta" class="now-meta">Choose something from your local library</div>
-      </div>
-    </div>
-
-    <div class="transport" aria-label="Playback and queue controls">
-      <div class="transport-controls">
-        <button id="previous" type="button" data-vex-control="vexstream.queue.previous" data-text-ref="queue.previous">Previous</button>
-        <button id="playPause" type="button" class="primary" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
-        <button id="next" type="button" data-vex-control="vexstream.queue.next" data-text-ref="queue.next">Next</button>
-        <button id="shuffle" type="button" data-vex-control="vexstream.queue.shuffle" data-text-ref="queue.shuffle" aria-pressed="false">Shuffle</button>
-        <button id="repeat" type="button" data-vex-control="vexstream.queue.repeat" data-text-ref="queue.repeat" aria-pressed="false">Repeat</button>
-      </div>
-      <div class="timeline small" aria-label="Playback position">
-        <span id="curTime">0:00</span>
-        <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek" disabled>
-        <span id="durTime">0:00</span>
-      </div>
-      <div class="player-aux">
-        <label class="volume-control">
-          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
-          <span>Volume</span>
-        </label>
-        <button id="queueMiniBtn" class="queue-mini" type="button" aria-controls="queueDrawer" aria-expanded="false" title="Open Queue">
-          <span aria-hidden="true">☰</span>
-          <span id="queueMiniCount">0</span>
+    <footer class="player-footer">
+      <div id="nowPlaying" class="now">
+        <button id="nowArtButton" class="now-art-button" type="button" title="Open current track actions" aria-label="Open current track actions" disabled>
+          <div id="nowArt" class="art" aria-hidden="true">♫</div>
         </button>
+        <div class="track-copy">
+          <div class="now-title-row">
+            <button id="nowTitleButton" class="now-title-button" type="button" title="Open current track actions" disabled>
+              <strong id="trackTitle">Nothing playing</strong>
+            </button>
+            <details id="nowDetails" class="now-details" hidden>
+              <summary class="now-details-toggle" aria-label="Current track actions" title="Current track actions">⋯</summary>
+              <div class="song-more-menu now-details-menu">
+                <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">Play next</button>
+                <button data-track-action="append" data-vex-action="vexstream.player.add-queue">Add to queue</button>
+                <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">Explore</button>
+                <button data-track-action="edit">Edit</button>
+                <button data-track-action="trash">Move to Deleted music</button>
+              </div>
+            </details>
+          </div>
+          <div id="nowMeta" class="now-meta">Choose something from your local library</div>
+        </div>
       </div>
-    </div>
+
+      <div class="transport" aria-label="Playback and queue controls">
+        <div class="transport-controls">
+          <button id="previous" type="button" data-vex-control="vexstream.queue.previous" data-text-ref="queue.previous">Previous</button>
+          <button id="playPause" type="button" class="primary" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
+          <button id="next" type="button" data-vex-control="vexstream.queue.next" data-text-ref="queue.next">Next</button>
+          <button id="shuffle" type="button" data-vex-control="vexstream.queue.shuffle" data-text-ref="queue.shuffle" aria-pressed="false">Shuffle</button>
+          <button id="repeat" type="button" data-vex-control="vexstream.queue.repeat" data-text-ref="queue.repeat" aria-pressed="false">Repeat</button>
+        </div>
+        <div class="timeline small" aria-label="Playback position">
+          <span id="curTime">0:00</span>
+          <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek" disabled>
+          <span id="durTime">0:00</span>
+        </div>
+        <div class="player-aux">
+          <label class="volume-control">
+            <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
+            <span>Volume</span>
+          </label>
+          <button id="queueMiniBtn" class="queue-mini" type="button" aria-controls="queueDrawer" aria-expanded="false" title="Open Queue">
+            <span aria-hidden="true">☰</span>
+            <span id="queueMiniCount">0</span>
+          </button>
+        </div>
+      </div>
+    </footer>
 
     <section class="library" data-shell-panel="library" aria-labelledby="libraryTitle" hidden>
       <div class="section-heading">

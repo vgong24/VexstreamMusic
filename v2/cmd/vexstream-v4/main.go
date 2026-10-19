@@ -91,7 +91,25 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	defer application.Close()
+	claimedURL := ""
+	defer func() {
+		// Shared-Library ownership is released only after feature-owned
+		// background work has stopped. A successor must never infer writer
+		// release merely because the local HTTP listener closed first.
+		application.Close()
+		if claimedURL != "" {
+			if err := lifecycle.ClearIfOwned(
+				layout.CurrentURL,
+				claimedURL,
+			); err != nil {
+				fmt.Fprintln(
+					os.Stderr,
+					"VexStream V4 ownership cleanup:",
+					err,
+				)
+			}
+		}
+	}()
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -103,9 +121,7 @@ func run() error {
 	if err := lifecycle.Claim(layout.CurrentURL, url); err != nil {
 		return err
 	}
-	defer func() {
-		_ = lifecycle.ClearIfOwned(layout.CurrentURL, url)
-	}()
+	claimedURL = url
 
 	for _, warning := range application.StartupWarnings() {
 		fmt.Fprintln(os.Stderr, "VexStream V4 warning:", warning)

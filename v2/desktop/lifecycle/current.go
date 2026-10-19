@@ -216,7 +216,6 @@ func ClearIfOwned(currentURLPath, url string) error {
 	return nil
 }
 
-
 /*
 RecoverStoppedClaim removes only the exact stale URL claim left by a desktop
 that has already stopped serving. It exists for compatibility with older V4

@@ -7,7 +7,9 @@
     "test:lived": "node tests/lived-shell-browser-smoke.mjs",
     "test:browser": "python3 tests/player-browser-regression.py",
     "test:imports": "node --test tests/import-client.test.mjs tests/import-review.test.mjs",
-    "verify:imports": "npm run test:imports && npm run test:lived",
-    "verify:local": "npm test && npm run test:lived"
+    "verify:imports": "npm run test:imports:go && npm run test:imports && npm run test:lived",
+    "verify:local": "node tests/verify-local.mjs",
+    "test:go": "go test ./...",
+    "test:imports:go": "go test ./desktop/imports/... ./desktop/provider/youtube/... ./desktop/app"
   }
 }

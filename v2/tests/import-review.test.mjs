@@ -28,7 +28,14 @@ test("review preserves V3 human editing defaults without starting acquisition", 
       items: [
         {
           kind: "whole",
-          matches: [{ trackId: "track-a", score: 90 }],
+          matches: [{
+            trackId: "track-a",
+            title: "Existing Source",
+            relation: "SAME_SOURCE",
+            confidence: "very likely",
+            reasons: ["same provider item"],
+            score: 100,
+          }],
         },
       ],
       advisory: true,
@@ -45,6 +52,12 @@ test("review preserves V3 human editing defaults without starting acquisition", 
   assert.equal(review.genre, "Dream Pop");
   assert.deepEqual(review.destinations, ["/music", "/archive"]);
   assert.equal(review.duplicateItemCount, 1);
+  assert.equal(review.duplicateItems[0].matches[0].relation, "SAME_SOURCE");
+  assert.equal(review.duplicateItems[0].matches[0].title, "Existing Source");
+  assert.deepEqual(
+    review.duplicateItems[0].matches[0].reasons,
+    ["same provider item"],
+  );
   assert.equal(review.advisory, true);
 });
 

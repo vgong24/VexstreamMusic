@@ -309,7 +309,8 @@ proof surface, just as Android Journey/device proof remains distinct from JVM/so
 
 The V4 proof stack is strong enough to catch **feature disappearance inside the browser product**:
 the lived-shell journey executes the actual embedded V4 HTML/JS in Chromium and asserts Library,
-Playback/Queue, Playlists, Trash, Discover/Explore/YouTube Import, player-session and Exit behavior.
+Playback/Queue, Home track actions, Playlists, Trash, Discover/Explore/YouTube Import, player-session,
+actionable System recovery (including held-session and safe old-session review), and Exit behavior.
 
 It is not yet one literal process-to-provider E2E:
 

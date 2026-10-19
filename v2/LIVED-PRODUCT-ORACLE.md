@@ -96,6 +96,67 @@ intent of:
 
 Preservation is semantic and interaction-level, not a demand to keep one 200 KB HTML file forever.
 
+## Player, Queue, Home, and System lived contract
+
+Recent V4 lived review exposed a specific class of regressions that source-level Player/Queue
+correctness alone cannot catch. The product must preserve the human's ability to answer four
+ordinary questions without guessing:
+
+```text
+What is playing right now?
+What will play next, and what exactly is the current Queue item?
+What can I do with this song from the place where I found it?
+What does this System attention signal mean, and what safe action resolves it?
+```
+
+Unless Victor explicitly admits a different UX, preserve these V3-visible outcomes:
+
+- the fixed player gives current-track title and artist/collection enough horizontal room to remain
+  recognizable; Volume must not consume that identity budget merely because it is a horizontal
+  slider;
+- overflowing title text moves at a readable **distance-derived velocity**. A longer title receives
+  proportionally more time; it must not accelerate merely to finish inside one fixed duration;
+- the expanded Queue keeps the current item human- and accessibility-identifiable through title,
+  artist, album/collection, available description/source detail, and current/played/up-next state;
+- Home song rows expose the same normal track-action vocabulary as Songs: Play, Add to queue, and the
+  contextual actions such as Play next, Explore, Edit, Deleted music, and Playlist;
+- a held listening-session badge explains what is held and exposes a bounded reset/adopt-current
+  action instead of presenting an unexplained count;
+- System Status can review parallel VexStream server sessions. Retirement remains explicit and
+  fail-safe: the current process is never eligible; sessions with active imports, unverified state,
+  or live track IDs not covered by the current Library remain held; retiring an eligible old server
+  never deletes Library folders or media.
+
+The proof ownership for this slice is intentionally layered:
+
+```text
+web/foundation/marquee.js
+  overflow distance -> readable duration
+    -> tests/marquee-foundation.test.mjs
+
+desktop/lifecycle/sessions*.go
+  Windows process discovery + old-session safety classification/retirement
+    -> desktop/lifecycle/sessions_test.go
+
+web/features/system/client.js
+  explicit review/retire browser contract
+    -> tests/system-client.test.mjs
+
+actual V4 HTML/JS + deterministic API/media fixture
+  current-player geometry
+  Home action parity
+  Queue identity
+  held-session recovery
+  old-session review/retire interaction
+    -> tests/lived-shell-browser-smoke.mjs
+
+exact Windows lived run
+  real process discovery/retirement boundary + actual product feel
+```
+
+A green Queue reducer test does not prove the listener can read the current track. Likewise, a visible
+System badge is not complete merely because its underlying state is technically accurate.
+
 ## What V4 work remains valid
 
 Do not throw away the V4 extraction merely because the practicum shell failed lived acceptance.

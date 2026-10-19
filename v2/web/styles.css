@@ -297,6 +297,12 @@ body[data-sidebar-open="false"] .player.v3-product-shell{
  font-size:12px;
  line-height:1.25;
 }
+.queue-description{
+ color:#5f6667;
+ font-size:12px;
+ line-height:1.35;
+ overflow-wrap:anywhere;
+}
 .queue-drawer-body #queueList li.current .queue-title strong,
 .queue-drawer-body #queueList li.current .queue-meta{
  overflow:visible;
@@ -538,7 +544,7 @@ body.exited .v3-product-shell>*:not(.product-header){opacity:.45;pointer-events:
  }
  .volume-control{height:56px}
  .volume-control input[type="range"]{width:18px;height:44px}
- .queue-drawer{bottom:164px}
+ body .queue-drawer{bottom:164px}
  .library-utility-bar{grid-template-columns:1fr;padding:7px 12px}
  .toolbar-group{justify-content:space-between}
  .toolbar-group label{flex:1}

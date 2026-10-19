@@ -3,6 +3,13 @@
 Continuity: `[VXG RealForever]`  
 Process version: `vexstream.release-qualification/v1`
 
+> **V4 currentness note:** the historical commands later in this document still target the protected
+> V3/root product; `tests/run_qualification.py` currently reports `appVersion: 3.0.0` and exercises
+> `ui/index.html`. Do not treat that harness as V4 acceptance. Current V4 developer/source proof is
+> entered through `cd v2 && npm run verify:local`, while exact Windows/macOS artifact qualification
+> and lived acceptance remain separate host proofs. The durable V4 product oracle and proof map live
+> under `v2/` until this release process is deliberately superseded for V4.
+
 ## Why this exists
 
 A release is not qualified because the page renders, JavaScript parses, or a new feature appears in one screenshot. Playback is an interaction graph: activating a song must load it, start it, preserve a useful queue, allow mid-stream switching, keep transport controls reachable, and preserve non-destructive crop behavior.

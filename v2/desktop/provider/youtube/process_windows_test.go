@@ -2,10 +2,17 @@
 
 package youtube
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestProviderSubprocessStaysHiddenOnWindows(t *testing.T) {
-	attr := hiddenProcAttr()
+	cmd := providerCommand(
+		context.Background(),
+		[]string{"cmd.exe", "/c", "exit", "0"},
+	)
+	attr := cmd.SysProcAttr
 	if attr == nil || !attr.HideWindow {
 		t.Fatalf("provider subprocess is not hidden: %+v", attr)
 	}

@@ -68,8 +68,8 @@ type Application struct {
 	exit        chan struct{}
 	exitOnce    sync.Once
 
-	warningsMu  sync.RWMutex
-	warnings    []string
+	warningsMu sync.RWMutex
+	warnings   []string
 }
 
 func Open(options Options) (*Application, error) {

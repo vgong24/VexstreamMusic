@@ -246,6 +246,58 @@ Library view/admin + Playlist CRUD + Trash lifecycle
 + Playback/Queue + Explore/Import + player-session + source-management walk
 ```
 
+### Current proof topology — source meaning through lived browser
+
+V4 uses the same proof principle as the accepted VexLife Android test foundation without copying
+Gradle/Android mechanics:
+
+```text
+feature/domain semantics
+  -> focused Go / Node tests at the owning transformation
+
+browser presentation contract
+  -> deterministic DOM/API/media fixtures
+
+human interaction walk
+  -> dependency-free Chromium DevTools lived-shell smoke
+
+broader browser regression
+  -> Playwright qualification when that environment is available
+
+real Windows/macOS product feel
+  -> exact built artifact + lived acceptance
+```
+
+These layers do not replace one another. A duplicate-scoring Go PASS does not prove that the browser
+shows the duplicate to the listener, and a browser PASS does not prove that Windows provider
+subprocesses stay hidden on a real host.
+
+Repository-owned V4 entries are:
+
+```bash
+cd v2
+
+# all current Node semantic/model tests
+npm test
+
+# focused Import planning/request semantics
+npm run test:imports
+
+# Import semantics + the real integrated browser walk
+npm run verify:imports
+
+# full Node semantic/model suite + integrated browser walk
+npm run verify:local
+```
+
+`test:lived` uses the repository's dependency-free CDP runner and discovers common Chromium-family
+browsers on Windows (Chrome, Edge, Brave), Linux and macOS. An explicit browser path remains available
+for unusual installations.
+
+The human no-Git Windows source launcher intentionally does not acquire Node merely to run browser
+automation. It continues to own its Go/source/Windows build gate. Browser proof is a developer/source
+proof surface, just as Android Journey/device proof remains distinct from JVM/source proof.
+
 ### Protected V3 compatibility
 
 The pairing-store rollback incident established a release law:

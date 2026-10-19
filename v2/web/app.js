@@ -1132,7 +1132,7 @@ function stopImportDuplicatePreview({resume=true}={}){
  importDuplicatePreviewAudio.onerror=null;
  for(const button of importDuplicateDetails.querySelectorAll("[data-import-duplicate-preview]")){
   button.classList.remove("previewing");
-  button.textContent="Preview existing";
+  button.textContent="Preview 12s";
  }
  if(resume&&resumeAfterImportDuplicatePreview){
   audio.play().catch(()=>{});
@@ -1179,7 +1179,7 @@ function importDuplicateReviewHTML(review){
   const quality=match.qualityComparison?.summary||
    "Not enough format data to compare audio quality before download.";
   const preview=match.trackId&&byRef.has(match.trackId)
-   ?`<button type="button" data-import-duplicate-preview="${escapeHTML(match.trackId)}">Preview existing</button>`
+   ?`<button type="button" data-import-duplicate-preview="${escapeHTML(match.trackId)}">Preview 12s</button>`
    :"";
   return `<section class="import-duplicate-item ${sameSource?"same-source":""}">
     <div class="import-duplicate-heading">

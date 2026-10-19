@@ -42,6 +42,9 @@ type AfterCommit func(importcommit.Result) error
 type Request struct {
 	ID             string
 	Title          string
+	Creator        string
+	Thumbnail      string
+	SourceDuration float64
 	Destination    string
 	URL            string
 	Mode           string
@@ -155,14 +158,18 @@ func (s Service) Run(
 	}
 
 	job := importmodel.Job{
-		ID:          id,
-		Title:       title,
-		Status:      importmodel.StatusQueued,
-		Stage:       "Waiting for preparation",
-		Progress:    0,
-		Detail:      "Queued — media will remain in reversible staging until Library commit.",
-		StartedAt:   now().UTC().Format(time.RFC3339Nano),
-		Destination: request.Destination,
+		ID:             id,
+		Title:          title,
+		Creator:        strings.TrimSpace(request.Creator),
+		Thumbnail:      strings.TrimSpace(request.Thumbnail),
+		SourceURL:      request.URL,
+		SourceDuration: request.SourceDuration,
+		Status:         importmodel.StatusQueued,
+		Stage:          "Waiting for preparation",
+		Progress:       0,
+		Detail:         "Queued — media will remain in reversible staging until Library commit.",
+		StartedAt:      now().UTC().Format(time.RFC3339Nano),
+		Destination:    request.Destination,
 	}
 	if err := persist(stage, job); err != nil {
 		_ = os.RemoveAll(stage)

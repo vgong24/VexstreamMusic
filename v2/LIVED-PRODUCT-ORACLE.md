@@ -130,6 +130,62 @@ preserve V3 lived product
 -> move old monolithic browser/backend logic behind those boundaries slice by slice
 ```
 
+## YouTube Import lived contract
+
+The YouTube path is one cause-and-effect journey, not a bag of individually green endpoints.
+
+Unless Victor explicitly admits a UX change, preserve:
+
+```text
+paste/link or Explore candidate
+-> Review gives immediate in-app "Inspecting source…" feedback
+   -> provider subprocess remains background implementation
+   -> no acquisition has begun
+-> Source review keeps the chosen media recognizable
+   -> artwork / title / creator / duration
+   -> destination / track layout / metadata edits
+-> current Library is checked before acquisition
+   -> no match: say so
+   -> same/likely/possible match: show the actual existing track + reasons
+   -> SAME_SOURCE: make "Already in your Library" explicit
+   -> Preview 12s reads the existing local media only
+   -> duplicate evidence remains advisory for deliberate alternate edits/copies
+-> Download & add is the acquisition boundary
+-> active Import keeps the same source identity visible
+   -> provider stage + real bounded download progress
+   -> cancellation while active
+-> preparation / Library commit remains recoverable
+-> completion visibly becomes Added to Library
+-> committed track is reachable through View in Library
+```
+
+The proof map intentionally follows the same claim layering used by the Android VexStream feature:
+
+```text
+desktop/imports/duplicates/review_test.go
+    duplicate scoring / SAME_SOURCE / different-edit / quality meaning
+
+desktop/imports/review/service_test.go
+    provider inspection + current Library composition
+
+web/features/imports review/client tests
+    reviewed evidence + typed acquisition request
+
+desktop/provider/youtube process tests
+    provider subprocess platform behavior
+
+tests/lived-shell-browser-smoke.mjs
+    integrated human browser journey over deterministic API/media fixtures
+
+tests/player-browser-regression.py
+    broader browser interaction regression
+
+exact Windows build + Victor lived review
+    native host/process behavior and product feel
+```
+
+A lower layer going green never authorizes retiring a higher-layer product behavior.
+
 ## Current acceptance state
 
 Exact Windows qualification remains valid evidence for the candidate that was actually tested:

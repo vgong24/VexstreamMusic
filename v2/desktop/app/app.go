@@ -393,6 +393,7 @@ func (a *Application) health(
 		"ok":       true,
 		"version":  a.version,
 		"buildRef": a.buildRef,
+		"pid":      os.Getpid(),
 		"warnings": a.StartupWarnings(),
 	})
 }

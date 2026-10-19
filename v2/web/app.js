@@ -298,7 +298,11 @@ const importReviewSourceCreator=document.querySelector("#importReviewSourceCreat
 const importReviewDuration=document.querySelector("#importReviewDuration");
 const importReviewThumbnail=document.querySelector("#importReviewThumbnail");
 const importReviewThumbnailFallback=document.querySelector("#importReviewThumbnailFallback");
+const importReviewLoading=document.querySelector("#importReviewLoading");
+const importReviewLoadingDetail=document.querySelector("#importReviewLoadingDetail");
+const importReviewContent=document.querySelector("#importReviewContent");
 const importDuplicateSummary=document.querySelector("#importDuplicateSummary");
+const importDuplicateDetails=document.querySelector("#importDuplicateDetails");
 const importDestination=document.querySelector("#importDestination");
 const importMode=document.querySelector("#importMode");
 const importCollection=document.querySelector("#importCollection");
@@ -398,6 +402,11 @@ let playerSessionSaveTimer=null;
 let pendingPlayerSessionState=null;
 let playerSessionSaveChain=Promise.resolve();
 let currentImportReview=null;
+let importReviewLoadingState=false;
+let importReviewLoadingURL="";
+const importDuplicatePreviewAudio=new Audio();
+let importDuplicatePreviewTimer=null;
+let resumeAfterImportDuplicatePreview=false;
 let importRuntimeState=null;
 let importRefreshTimer=null;
 let observedImportCompletionKey="";
@@ -1111,13 +1120,166 @@ function scheduleImportJobRefresh(delay=700){
  },delay);
 }
 
+function stopImportDuplicatePreview({resume=true}={}){
+ if(importDuplicatePreviewTimer!==null){
+  clearTimeout(importDuplicatePreviewTimer);
+  importDuplicatePreviewTimer=null;
+ }
+ importDuplicatePreviewAudio.pause();
+ importDuplicatePreviewAudio.removeAttribute("src");
+ importDuplicatePreviewAudio.load();
+ importDuplicatePreviewAudio.onloadedmetadata=null;
+ importDuplicatePreviewAudio.onerror=null;
+ for(const button of importDuplicateDetails.querySelectorAll("[data-import-duplicate-preview]")){
+  button.classList.remove("previewing");
+  button.textContent="Preview existing";
+ }
+ if(resume&&resumeAfterImportDuplicatePreview){
+  audio.play().catch(()=>{});
+ }
+ resumeAfterImportDuplicatePreview=false;
+}
+
+function importDuplicateRelationLabel(value){
+ return ({
+  SAME_SOURCE:"Same source",
+  LIKELY_SAME_RECORDING:"Likely same recording",
+  SAME_SONG_DIFFERENT_EDIT_POSSIBLE:"Likely same song · different edit possible",
+  SAME_SONG_POSSIBLE:"Same song possible",
+  POSSIBLE_MATCH:"Possible match"
+ })[value]||"Possible match";
+}
+
+function importQualityLabel(value){
+ if(!value)return "Unknown";
+ const bits=[];
+ if(value.codec)bits.push(String(value.codec).toUpperCase());
+ if(Number(value.bitrateKbps)>0)bits.push(`~${Math.round(Number(value.bitrateKbps))} kbps`);
+ if(Number(value.sampleRateHz)>0)bits.push(`${Math.round(Number(value.sampleRateHz)/100)/10} kHz`);
+ return bits.join(" · ")||"Unknown";
+}
+
+function importDuplicateReviewHTML(review){
+ const items=review?.duplicateItems??[];
+ if(!items.length)return "";
+ const rows=items.map(item=>{
+  const match=item.matches?.[0];
+  if(!match)return "";
+  const incoming=item.kind==="section"
+   ? `Track section ${item.index}: ${item.title}`
+   : `Incoming source: ${item.title}`;
+  const sameSource=match.relation==="SAME_SOURCE";
+  const heading=sameSource
+   ?"Already in your Library — same source"
+   :"Possible duplicate already in your Library";
+  const artwork=match.thumbnailUrl
+   ?`<img class="import-duplicate-art" src="${escapeHTML(match.thumbnailUrl)}" alt="">`
+   :'<div class="import-duplicate-art fallback">♫</div>';
+  const reasons=(match.reasons??[]).slice(0,4).join(" · ");
+  const quality=match.qualityComparison?.summary||
+   "Not enough format data to compare audio quality before download.";
+  const preview=match.trackId&&byRef.has(match.trackId)
+   ?`<button type="button" data-import-duplicate-preview="${escapeHTML(match.trackId)}">Preview existing</button>`
+   :"";
+  return `<section class="import-duplicate-item ${sameSource?"same-source":""}">
+    <div class="import-duplicate-heading">
+     <strong>${escapeHTML(heading)}</strong>
+     <span>${escapeHTML(incoming)}</span>
+    </div>
+    <div class="import-duplicate-match">
+     ${artwork}
+     <div class="import-duplicate-copy">
+      <div><strong>${escapeHTML(match.title||"Existing Library track")}</strong>
+       <span class="import-duplicate-relation">${escapeHTML(importDuplicateRelationLabel(match.relation))}</span>
+      </div>
+      <div>${escapeHTML(match.artist||"Unknown artist")} · ${escapeHTML(match.album||"Unknown album")} · ${formatSeconds(match.duration)}</div>
+      <div>${escapeHTML(match.confidence||"possible")} match${reasons?` · ${escapeHTML(reasons)}`:""}</div>
+      <div><strong>Existing:</strong> ${escapeHTML(importQualityLabel(match.localQuality))}
+       &nbsp; <strong>Source:</strong> ${escapeHTML(importQualityLabel(item.sourceQuality))}</div>
+      <div><strong>Quality check:</strong> ${escapeHTML(quality)}</div>
+     </div>
+     ${preview}
+    </div>
+   </section>`;
+ }).filter(Boolean).join("");
+ if(!rows)return "";
+ return `<div class="import-duplicate-review">
+   ${rows}
+   <div class="import-duplicate-advisory">
+    Duplicate matching is advisory. Compare the existing Library track before downloading another copy; different edits, remixes, live versions, or intentionally different-quality copies may still be valid.
+   </div>
+  </div>`;
+}
+
+function previewImportDuplicate(ref,button){
+ const track=byRef.get(ref);
+ if(!track)return;
+ stopImportDuplicatePreview({resume:false});
+ resumeAfterImportDuplicatePreview=!audio.paused;
+ if(resumeAfterImportDuplicatePreview)audio.pause();
+ button.classList.add("previewing");
+ button.textContent="Playing…";
+ importDuplicatePreviewAudio.src="/media/"+encodeURIComponent(ref);
+ importDuplicatePreviewAudio.onloadedmetadata=()=>{
+  const duration=Number.isFinite(importDuplicatePreviewAudio.duration)
+   ?importDuplicatePreviewAudio.duration
+   :Number(track.durationSeconds)||0;
+  importDuplicatePreviewAudio.currentTime=duration>60?Math.min(30,duration*.2):0;
+  importDuplicatePreviewAudio.play().catch(()=>{});
+  importDuplicatePreviewTimer=setTimeout(
+   ()=>stopImportDuplicatePreview(),
+   12000
+  );
+ };
+ importDuplicatePreviewAudio.onerror=()=>stopImportDuplicatePreview();
+}
+
+async function loadImportReview(url,{selectYouTube=false}={}){
+ const value=String(url??"").trim();
+ if(!value)throw new Error("Paste a YouTube link to review");
+ stopImportDuplicatePreview();
+ if(selectYouTube)discoverNavigation.select(DiscoverMode.YOUTUBE);
+ youtubeImportURL.value=value;
+ currentImportReview=null;
+ importReviewLoadingState=true;
+ importReviewLoadingURL=value;
+ renderImportReview();
+ try{
+  const [reviewed,destinations]=await Promise.all([
+   inspectImport(value),
+   loadImportDestinations()
+  ]);
+  currentImportReview=formImportReview(reviewed,destinations);
+  return currentImportReview;
+ }finally{
+  importReviewLoadingState=false;
+  importReviewLoadingURL="";
+ }
+}
+
 function renderImportReview(){
+ if(importReviewLoadingState){
+  youtubeImportEntry.hidden=true;
+  importReviewPanel.hidden=false;
+  importReviewClose.hidden=true;
+  importReviewLoading.hidden=false;
+  importReviewContent.hidden=true;
+  importReviewLoadingDetail.textContent=
+   "Fetching title, artwork, track layout, and duplicate matches from your current Library. Nothing is downloading yet.";
+  importReviewPanel.dataset.reviewState="loading";
+  return;
+ }
+ importReviewClose.hidden=false;
+ importReviewLoading.hidden=true;
+ importReviewContent.hidden=false;
+ importReviewPanel.dataset.reviewState=currentImportReview?"ready":"idle";
  if(!currentImportReview){
   importReviewPanel.hidden=true;
   youtubeImportEntry.hidden=false;
   importReviewThumbnail.hidden=true;
   importReviewThumbnail.removeAttribute("src");
   importReviewThumbnailFallback.hidden=false;
+  importDuplicateDetails.innerHTML="";
   return;
  }
  youtubeImportEntry.hidden=true;
@@ -1141,6 +1303,7 @@ function renderImportReview(){
       count:currentImportReview.duplicateItemCount
     })
   : resolveText(locale,"import.duplicates.none");
+ importDuplicateDetails.innerHTML=importDuplicateReviewHTML(currentImportReview);
 
  importDestination.innerHTML=currentImportReview.destinations.length
   ? currentImportReview.destinations.map(value=>
@@ -2480,12 +2643,7 @@ for(const button of discoverModeButtons){
 }
 
 youtubeInspect.addEventListener("click",()=>void guarded(async()=>{
- const url=youtubeImportURL.value.trim();
- const [reviewed,destinations]=await Promise.all([
-  inspectImport(url),
-  loadImportDestinations()
- ]);
- currentImportReview=formImportReview(reviewed,destinations);
+ await loadImportReview(youtubeImportURL.value);
 }));
 
 youtubeImportURL.addEventListener("keydown",event=>{
@@ -3229,12 +3387,7 @@ exploreCandidates.addEventListener("click",event=>{
    if(!candidate?.url){
     throw new Error(resolveText(locale,"import.source.unavailable"));
    }
-   const [reviewed,destinations]=await Promise.all([
-    inspectImport(candidate.url),
-    loadImportDestinations()
-   ]);
-   currentImportReview=formImportReview(reviewed,destinations);
-   discoverNavigation.select(DiscoverMode.YOUTUBE);
+   await loadImportReview(candidate.url,{selectYouTube:true});
   });
  }
 });
@@ -3252,8 +3405,17 @@ exploreClear.addEventListener("click",()=>void guarded(async()=>{
 }));
 
 importReviewClose.addEventListener("click",()=>{
+ stopImportDuplicatePreview();
+ importReviewLoadingState=false;
+ importReviewLoadingURL="";
  currentImportReview=null;
  renderImportReview();
+});
+
+importDuplicateDetails.addEventListener("click",event=>{
+ const button=event.target.closest("[data-import-duplicate-preview]");
+ if(!button)return;
+ previewImportDuplicate(button.dataset.importDuplicatePreview,button);
 });
 
 importStart.addEventListener("click",()=>void guarded(async()=>{
@@ -3268,6 +3430,7 @@ importStart.addEventListener("click",()=>void guarded(async()=>{
  });
  await ensureImportRuntimeReady();
  await startImport(plan);
+ stopImportDuplicatePreview();
  currentImportReview=null;
  youtubeImportURL.value="";
  await refreshImportJobs();

@@ -340,7 +340,7 @@
           <span>Review a provider link before VexStream downloads anything.</span>
         </div>
       </div>
-      <div class="youtube-import-entry">
+      <div class="youtube-import-entry" id="youtubeImportEntry">
         <label for="youtubeImportURL">YouTube link</label>
         <div class="youtube-import-row">
           <input id="youtubeImportURL" type="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
@@ -360,13 +360,18 @@
         <button id="importReviewClose" type="button">Back</button>
       </div>
 
-      <div class="import-review-grid">
-        <div>
+      <div class="import-review-source">
+        <img id="importReviewThumbnail" class="import-review-thumbnail" alt="" hidden>
+        <div id="importReviewThumbnailFallback" class="import-review-thumbnail fallback">♫</div>
+        <div class="import-review-source-copy">
           <strong id="importReviewSourceTitle">Source</strong>
           <div id="importReviewSourceCreator" class="muted"></div>
+          <div id="importReviewDuration" class="muted"></div>
           <div id="importDuplicateSummary" class="import-note"></div>
         </div>
+      </div>
 
+      <div class="import-review-grid">
         <label>
           <span>Save to</span>
           <select id="importDestination"></select>

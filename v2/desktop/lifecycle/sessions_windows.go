@@ -16,7 +16,7 @@ func discoverCandidatePorts() ([]sessionPort, error) {
 	const script = `$ErrorActionPreference='Stop';$procs=@(Get-CimInstance Win32_Process | Where-Object {$_.Name -like 'VexStreamMusic*.exe'});$rows=@();foreach($p in $procs){$started='';if($p.CreationDate){$started=$p.CreationDate.ToString('yyyy-MM-ddTHH:mm:ssK')};$ls=@(Get-NetTCPConnection -State Listen -OwningProcess $p.ProcessId -ErrorAction SilentlyContinue);foreach($l in $ls){$rows += [PSCustomObject]@{pid=[int]$p.ProcessId;port=[int]$l.LocalPort;startedAt=$started}}};if($rows.Count -eq 0){'[]'}else{$rows | ConvertTo-Json -Compress}`
 	command := exec.Command("powershell.exe", "-NoProfile", "-Command", script)
 	command.SysProcAttr = &syscall.SysProcAttr{
-		HideWindow:     true,
+		HideWindow:    true,
 		CreationFlags: 0x08000000,
 	}
 	output, err := command.Output()
@@ -70,7 +70,7 @@ func stopSessionPID(pid int) error {
 	)
 	command := exec.Command("powershell.exe", "-NoProfile", "-Command", script)
 	command.SysProcAttr = &syscall.SysProcAttr{
-		HideWindow:     true,
+		HideWindow:    true,
 		CreationFlags: 0x08000000,
 	}
 	if err := command.Run(); err != nil {

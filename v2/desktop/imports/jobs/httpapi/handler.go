@@ -105,6 +105,9 @@ func (h *Handler) jobs(w http.ResponseWriter, r *http.Request) {
 
 type startRequest struct {
 	Title          string           `json:"sourceTitle"`
+	Creator        string           `json:"sourceCreator,omitempty"`
+	Thumbnail      string           `json:"thumbnail,omitempty"`
+	SourceDuration float64          `json:"sourceDuration,omitempty"`
 	Destination    string           `json:"destination"`
 	URL            string           `json:"url"`
 	Mode           string           `json:"mode,omitempty"`
@@ -156,6 +159,9 @@ func (h *Handler) start(w http.ResponseWriter, r *http.Request) {
 
 	job, err := h.manager.Start(workflow.Request{
 		Title:          strings.TrimSpace(input.Title),
+		Creator:        strings.TrimSpace(input.Creator),
+		Thumbnail:      strings.TrimSpace(input.Thumbnail),
+		SourceDuration: input.SourceDuration,
 		Destination:    strings.TrimSpace(input.Destination),
 		URL:            strings.TrimSpace(input.URL),
 		Mode:           strings.TrimSpace(input.Mode),

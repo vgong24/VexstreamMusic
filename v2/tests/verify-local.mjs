@@ -9,7 +9,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { canonicalGoCheckoutText } from "./verify-local-support.mjs";
+import {
+ canonicalGoCheckoutText,
+ physicalLocalCommand,
+} from "./verify-local-support.mjs";
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
 const V2=path.resolve(HERE,"..");
@@ -31,7 +34,8 @@ function goFiles(root){
 
 function run(name,command,args,cwd){
  process.stdout.write("\n== "+name+" ==\n");
- const result=spawnSync(command,args,{
+ const physical=physicalLocalCommand(command,args);
+ const result=spawnSync(physical.command,physical.args,{
   cwd,
   env:process.env,
   encoding:"utf8",

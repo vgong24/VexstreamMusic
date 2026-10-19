@@ -228,6 +228,7 @@ const discoverModeButtons=[...document.querySelectorAll("[data-discover-mode]")]
 const discoverPanels=[...document.querySelectorAll("[data-discover-panel]")];
 const youtubeImportURL=document.querySelector("#youtubeImportURL");
 const youtubeInspect=document.querySelector("#youtubeInspect");
+const youtubeImportEntry=document.querySelector("#youtubeImportEntry");
 const importRuntimeNotice=document.querySelector("#importRuntimeStatus");
 const sourceSummary=document.querySelector("#sourceSummary");
 const sourceAdd=document.querySelector("#sourceAdd");
@@ -294,6 +295,9 @@ const importReviewPanel=document.querySelector("#importReview");
 const importReviewClose=document.querySelector("#importReviewClose");
 const importReviewSourceTitle=document.querySelector("#importReviewSourceTitle");
 const importReviewSourceCreator=document.querySelector("#importReviewSourceCreator");
+const importReviewDuration=document.querySelector("#importReviewDuration");
+const importReviewThumbnail=document.querySelector("#importReviewThumbnail");
+const importReviewThumbnailFallback=document.querySelector("#importReviewThumbnailFallback");
 const importDuplicateSummary=document.querySelector("#importDuplicateSummary");
 const importDestination=document.querySelector("#importDestination");
 const importMode=document.querySelector("#importMode");
@@ -1110,11 +1114,28 @@ function scheduleImportJobRefresh(delay=700){
 function renderImportReview(){
  if(!currentImportReview){
   importReviewPanel.hidden=true;
+  youtubeImportEntry.hidden=false;
+  importReviewThumbnail.hidden=true;
+  importReviewThumbnail.removeAttribute("src");
+  importReviewThumbnailFallback.hidden=false;
   return;
  }
+ youtubeImportEntry.hidden=true;
  importReviewPanel.hidden=false;
  importReviewSourceTitle.textContent=currentImportReview.title;
- importReviewSourceCreator.textContent=currentImportReview.creator;
+ importReviewSourceCreator.textContent=currentImportReview.creator||"Unknown creator";
+ importReviewDuration.textContent=currentImportReview.durationSeconds
+  ? `${formatSeconds(currentImportReview.durationSeconds)} source duration`
+  : "";
+ if(currentImportReview.thumbnail){
+  importReviewThumbnail.src=currentImportReview.thumbnail;
+  importReviewThumbnail.hidden=false;
+  importReviewThumbnailFallback.hidden=true;
+ }else{
+  importReviewThumbnail.hidden=true;
+  importReviewThumbnail.removeAttribute("src");
+  importReviewThumbnailFallback.hidden=false;
+ }
  importDuplicateSummary.textContent=currentImportReview.duplicateItemCount
   ? resolveText(locale,"import.duplicates.present",{
       count:currentImportReview.duplicateItemCount
@@ -1152,44 +1173,118 @@ function renderImportReview(){
   : resolveText(locale,"import.hint.whole");
 }
 
+function importJobTime(value){
+ if(!value)return "";
+ const date=new Date(value);
+ if(Number.isNaN(date.getTime()))return "";
+ return date.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+}
+
+function importJobStatusLabel(job){
+ if(job.status==="done")return "Added";
+ if(job.status==="committing")return "Adding";
+ if(job.status==="ready")return "Needs attention";
+ if(job.status==="running")return "Downloading";
+ if(job.status==="queued")return "Queued";
+ if(job.status==="cancelling")return "Cancelling";
+ if(job.status==="cancelled")return "Cancelled";
+ if(job.status==="discarded")return "Discarded";
+ if(job.status==="failed")return "Failed";
+ return job.status||"Import";
+}
+
+function importJobCard(job,group){
+ const recovery=currentImportJobs.recovery[job.id]??"";
+ const problem=job.problem?.title||job.problem?.message||"";
+ const actions=[];
+ if(["queued","running","cancelling"].includes(job.status)){
+  actions.push(`<button data-import-job-action="cancel">${escapeHTML(resolveText(locale,"import.cancel"))}</button>`);
+ }
+ if(job.status==="ready"){
+  actions.push(`<button class="primary" data-import-job-action="retry">${escapeHTML(resolveText(locale,"import.retry"))}</button>`);
+  actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
+ }
+ if(job.status==="failed"){
+  actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
+ }
+ if(recovery==="COMMIT_UNCERTAIN"){
+  actions.push(`<button class="primary" data-import-job-action="recover">${escapeHTML(resolveText(locale,"import.recover"))}</button>`);
+ }
+ if(job.status==="done"&&(job.trackIds??[]).some(ref=>byRef.has(ref))){
+  actions.push('<button data-import-job-action="view">View in Library</button>');
+ }
+
+ const pct=Math.max(0,Math.min(100,Number(job.progress)||0));
+ const thumbnail=job.thumbnail
+  ? `<img class="import-job-thumbnail" src="${escapeHTML(job.thumbnail)}" alt="">`
+  : '<div class="import-job-thumbnail fallback">♫</div>';
+ const creator=job.creator
+  ? `<div class="import-job-creator">${escapeHTML(job.creator)}</div>`
+  : "";
+ const stage=job.stage||importJobStatusLabel(job);
+ const detail=(job.detail||problem||"").trim();
+ const detailHTML=detail&&detail!==stage
+  ? `<div class="import-job-detail">${escapeHTML(detail)}</div>`
+  : "";
+ const activeProgress=group==="active"
+  ? `<div class="import-progress-row">
+      <div class="import-progress-track" role="progressbar" aria-label="${escapeHTML(stage)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
+       <div class="import-progress-fill" style="width:${pct}%"></div>
+      </div>
+      <strong class="import-progress-value">${pct}%</strong>
+    </div>`
+  : "";
+ const when=importJobTime(group==="completed"?job.completedAt:job.startedAt);
+
+ return `<article class="import-job import-job-${escapeHTML(group)}" data-import-job-id="${escapeHTML(job.id)}">
+   ${thumbnail}
+   <div class="import-job-main">
+    <div class="import-job-title-row">
+     <strong>${escapeHTML(job.title||resolveText(locale,"import.untitled"))}</strong>
+     <span class="import-job-status status-${escapeHTML(job.status||"unknown")}">${escapeHTML(importJobStatusLabel(job))}</span>
+    </div>
+    ${creator}
+    <div class="import-job-stage">${escapeHTML(stage)}</div>
+    ${detailHTML}
+    ${activeProgress}
+   </div>
+   <div class="import-job-side">
+    <div class="import-job-actions">${actions.join("")}</div>
+    ${when?`<time class="import-job-time">${escapeHTML(when)}</time>`:""}
+   </div>
+  </article>`;
+}
+
+function importJobSection(title,summary,jobs,group){
+ if(!jobs.length)return "";
+ return `<section class="import-activity-group import-activity-${escapeHTML(group)}">
+   <div class="import-activity-group-head">
+    <div><strong>${escapeHTML(title)}</strong><span>${escapeHTML(summary)}</span></div>
+    <span class="import-activity-count">${jobs.length}</span>
+   </div>
+   <div class="import-activity-list">${jobs.map(job=>importJobCard(job,group)).join("")}</div>
+  </section>`;
+}
+
 function renderImportJobs(){
- const rows=[
-  ...currentImportJobs.active,
-  ...currentImportJobs.ready,
-  ...currentImportJobs.completed
- ];
- if(!rows.length){
-  importJobs.innerHTML=`<div class="muted">${escapeHTML(resolveText(locale,"import.jobs.empty"))}</div>`;
+ const active=currentImportJobs.active??[];
+ const ready=currentImportJobs.ready??[];
+ const completed=currentImportJobs.completed??[];
+ if(!active.length&&!ready.length&&!completed.length){
+  importJobs.innerHTML=`<div class="import-activity-empty">${escapeHTML(resolveText(locale,"import.jobs.empty"))}</div>`;
   return;
  }
 
- importJobs.innerHTML=rows.map(job=>{
-  const recovery=currentImportJobs.recovery[job.id]??"";
-  const problem=job.problem?.title||job.problem?.message||"";
-  const actions=[];
-  if(["queued","running","cancelling"].includes(job.status)){
-   actions.push(`<button data-import-job-action="cancel">${escapeHTML(resolveText(locale,"import.cancel"))}</button>`);
-  }
-  if(job.status==="ready"){
-   actions.push(`<button data-import-job-action="retry">${escapeHTML(resolveText(locale,"import.retry"))}</button>`);
-   actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
-  }
-  if(job.status==="failed"){
-   actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
-  }
-  if(recovery==="COMMIT_UNCERTAIN"){
-   actions.push(`<button data-import-job-action="recover">${escapeHTML(resolveText(locale,"import.recover"))}</button>`);
-  }
-  return `<article class="import-job" data-import-job-id="${escapeHTML(job.id)}">
-    <div class="import-job-copy">
-      <strong>${escapeHTML(job.title||resolveText(locale,"import.untitled"))}</strong>
-      <span>${escapeHTML(job.stage||job.status||"")}</span>
-      <small>${escapeHTML(job.detail||problem)}</small>
-    </div>
-    <div class="import-job-progress">${Number(job.progress||0)}%</div>
-    <div class="import-job-actions">${actions.join("")}</div>
-  </article>`;
- }).join("");
+ const summary=active.length
+  ? `${active.length} import${active.length===1?"":"s"} in progress · VexStream will add finished media to the Library automatically.`
+  : ready.length
+    ? `${ready.length} import${ready.length===1?"":"s"} need attention before the Library add can finish.`
+    : `${completed.length} recent import event${completed.length===1?"":"s"}.`;
+
+ importJobs.innerHTML=`<div class="import-activity-summary">${escapeHTML(summary)}</div>
+  ${importJobSection("In progress","Download and preparation are happening now.",active,"active")}
+  ${importJobSection("Needs attention","Prepared media is still safe in temporary staging.",ready,"ready")}
+  ${importJobSection("Recent","Completed, cancelled, discarded, or failed imports.",completed,"completed")}`;
 }
 
 function formatSeconds(value){
@@ -3199,6 +3294,9 @@ importJobs.addEventListener("click",event=>{
   case "discard":
    await discardImport(id);
    break;
+  case "view":
+   shellNavigation.select(ShellView.SONGS);
+   return;
   }
   await refreshImportJobs();
  });

@@ -485,10 +485,14 @@ function renderNowPlaying(item){
  nowTitleButton.disabled=!active;
  nowDetails.hidden=!active;
  if(!active)nowDetails.open=false;
- title.textContent=active
+ const visibleTitle=active
   ?trackTitle(item)
   :resolveText(locale,"player.nothing.title");
+ title.classList.add("song-marquee");
+ title.title=visibleTitle;
+ title.innerHTML=`<span class="song-marquee-text">${escapeHTML(visibleTitle)}</span>`;
  nowMeta.innerHTML=nowLibraryRelationsHTML(item);
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics(nowPlaying));
 }
 
 function marqueeTextHTML(value,{tag="span",className=""}={}){
@@ -497,12 +501,26 @@ function marqueeTextHTML(value,{tag="span",className=""}={}){
  return `<${tag} class="${classes}" title="${escapeHTML(text)}"><span class="song-marquee-text">${escapeHTML(text)}</span></${tag}>`;
 }
 
+const readableMarqueePixelsPerSecond=24;
+const marqueeTravelFraction=.8;
+
 function refreshSongMarqueeMetrics(root=document){
  for(const outer of root.querySelectorAll(".song-marquee")){
   const inner=outer.querySelector(".song-marquee-text");
   if(!inner)continue;
   const shift=Math.max(0,inner.scrollWidth-outer.clientWidth);
   outer.style.setProperty("--song-marquee-shift",shift+"px");
+  if(shift>3){
+   // Long text travels farther, so it receives proportionally more time instead
+   // of accelerating merely to finish inside one fixed animation duration.
+   const duration=Math.max(
+    6.5,
+    shift/(readableMarqueePixelsPerSecond*marqueeTravelFraction)
+   );
+   outer.style.setProperty("--song-marquee-duration",duration.toFixed(2)+"s");
+  }else{
+   outer.style.removeProperty("--song-marquee-duration");
+  }
   outer.classList.toggle("overflowing",shift>3);
  }
 }
@@ -521,7 +539,7 @@ function syncActiveSongRows(){
 function homeRecentRowHTML(item){
  const secondary=String(item?.sourceTitle??item?.channel??"").trim();
  const playing=player.currentItem?.ref===item.ref;
- return `<tr class="${playing?"playing":""}" tabindex="0" aria-label="Play ${escapeHTML(trackTitle(item))}" data-home-track-ref="${escapeHTML(item.ref)}">
+ return `<tr class="${playing?"playing":""}" tabindex="0" aria-label="Play ${escapeHTML(trackTitle(item))}" data-home-track-ref="${escapeHTML(item.ref)}" data-track-ref="${escapeHTML(item.ref)}">
    <td class="song-title-cell">
     <div class="song-main">
      ${trackArtworkHTML(item)}
@@ -537,8 +555,18 @@ function homeRecentRowHTML(item){
    <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
    <td class="col-actions">
     <div class="song-actions">
-     <button data-home-track-action="play" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
-     <button data-home-track-action="append" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
+     <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+     <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
+     <details class="song-more">
+      <summary aria-label="Track actions" title="Track actions">⋯</summary>
+      <div class="song-more-menu">
+       <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
+       <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+       <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
+       <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
+       ${trackPlaylistActionHTML()}
+      </div>
+     </details>
     </div>
    </td>
   </tr>`;
@@ -1537,21 +1565,37 @@ function renderSystemStatus(){
   attention:importAttention
  });
  const attentionRows=[
-  ...projection.warnings.map(warning=>
-   resolveText(locale,"system.status.startup-warning",{warning})
-  ),
+  ...projection.warnings.map(warning=>({
+   message:resolveText(locale,"system.status.startup-warning",{warning})
+  })),
   ...(projection.sessionHeld
-   ?[resolveText(locale,"system.status.session-held")]
+   ?[{
+      message:resolveText(
+       locale,
+       currentSessionRestoration?.kind==="held-current-unavailable"
+        ?"system.status.session-held-current"
+        :currentSessionRestoration?.kind==="held-schema"
+          ?"system.status.session-held-schema"
+          :"system.status.session-save-held"
+      ),
+      action:["held-current-unavailable","held-schema"].includes(
+       currentSessionRestoration?.kind
+      )
+       ?`<button type="button" data-system-action="reset-listening-session">${escapeHTML(resolveText(locale,"system.status.session-reset"))}</button>`
+       :""
+    }]
    :[]),
   ...(importAttention
-   ?[resolveText(locale,"system.status.import-attention")]
+   ?[{message:resolveText(locale,"system.status.import-attention")}]
    :[]),
   ...(projection.pendingPurge
-   ?[resolveText(locale,"system.status.trash-recovery")]
+   ?[{message:resolveText(locale,"system.status.trash-recovery")}]
    :[])
  ];
  systemAttention.innerHTML=attentionRows.length
-  ?`<ul>${attentionRows.map(row=>`<li>${escapeHTML(row)}</li>`).join("")}</ul>`
+  ?`<ul class="system-attention-list">${attentionRows.map(row=>
+      `<li><span>${escapeHTML(row.message)}</span>${row.action??""}</li>`
+     ).join("")}</ul>`
   :`<span class="muted">${escapeHTML(resolveText(locale,"system.status.no-warnings"))}</span>`;
 }
 
@@ -1653,12 +1697,25 @@ function render(){
      ? "queue.item.current"
      : "queue.item.up-next";
   const stateLabel=resolveText(locale,stateTextRef);
+  const titleText=trackTitle(item);
+  const album=String(item?.album??"").trim()||"Unknown album";
+  const sourceDetail=String(item?.sourceTitle??item?.channel??"").trim();
+  const metadata=[
+   trackArtist(item),
+   album,
+   ...(sourceDetail&&sourceDetail!==titleText?[sourceDetail]:[])
+  ];
+  const accessibleIdentity=[stateLabel,titleText,...metadata].join(". ");
   const upDisabled=isCurrent||index===0;
   const downDisabled=isCurrent||index===qp.state.items.length-1;
-  return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-queue-index="${index}">
+  return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-queue-index="${index}" aria-label="${escapeHTML(accessibleIdentity)}">
     <span class="queue-index">${index+1}</span>
-    <span class="queue-title"><strong>${escapeHTML(trackTitle(item))}</strong><span class="queue-state">${escapeHTML(stateLabel)}</span></span>
-    <span class="queue-state">${isCurrent?"●":" "}</span>
+    <span class="queue-title">
+      ${marqueeTextHTML(titleText,{tag:"strong"})}
+      <span class="queue-meta" title="${escapeHTML(metadata.join(" · "))}">${escapeHTML(metadata.join(" · "))}</span>
+      <span class="queue-state">${escapeHTML(stateLabel)}</span>
+    </span>
+    <span class="queue-state" aria-hidden="true">${isCurrent?"●":" "}</span>
     <span class="queue-actions">
       <button data-queue-action="play" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"playback.play"))}</button>
       <button data-queue-action="up" ${upDisabled?"disabled":""}>↑</button>
@@ -1667,6 +1724,7 @@ function render(){
     </span>
   </li>`;
  }).join("");
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics(queueList));
 }
 
 function trackPlaylistActionHTML(){
@@ -2542,6 +2600,21 @@ systemDrawerClose.addEventListener("click",()=>{
  systemStatusButton.setAttribute("aria-expanded","false");
 });
 
+systemAttention.addEventListener("click",event=>{
+ if(!event.target.closest('[data-system-action="reset-listening-session"]'))return;
+ void guarded(async()=>{
+  await savePlayerSession(queue.currentProjection.state);
+  currentSessionRestoration=Object.freeze({
+   kind:"empty",
+   queue:null,
+   droppedRefs:Object.freeze([]),
+   currentRef:""
+  });
+  playerSessionPersistenceEnabled=true;
+  render();
+ });
+});
+
 exitVexStreamButton.addEventListener("click",()=>void guarded(async()=>{
  exitVexStreamButton.disabled=true;
  exitVexStreamButton.textContent=resolveText(locale,"system.exit.exiting");
@@ -2714,21 +2787,9 @@ function activateTrackRow(
 }
 
 recentSongs.addEventListener("click",event=>{
- const action=event.target.closest("[data-home-track-action]");
+ if(handleTrackAction(event,{playbackRefs:libraryPlaybackRefs()}))return;
  const row=event.target.closest("[data-home-track-ref]");
  if(!row)return;
- if(action?.dataset.homeTrackAction==="play"){
-  void guarded(()=>player.playTrack(
-   row.dataset.homeTrackRef,
-   libraryPlaybackRefs()
-  ));
-  return;
- }
- if(action?.dataset.homeTrackAction==="append"){
-  player.append([row.dataset.homeTrackRef]);
-  render();
-  return;
- }
  activateTrackRow(event,{
   row,
   ref:row.dataset.homeTrackRef,

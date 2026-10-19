@@ -49,18 +49,22 @@ const (
 )
 
 type Job struct {
-	ID          string         `json:"id"`
-	Title       string         `json:"title"`
-	Status      Status         `json:"status"`
-	Stage       string         `json:"stage,omitempty"`
-	Progress    int            `json:"progress,omitempty"`
-	Detail      string         `json:"detail,omitempty"`
-	StartedAt   string         `json:"startedAt,omitempty"`
-	CompletedAt string         `json:"completedAt,omitempty"`
-	Destination string         `json:"destination,omitempty"`
-	OutputCount int            `json:"outputCount,omitempty"`
-	TrackRefs   []string       `json:"trackIds,omitempty"`
-	Problem     map[string]any `json:"problem,omitempty"`
+	ID             string         `json:"id"`
+	Title          string         `json:"title"`
+	Creator        string         `json:"creator,omitempty"`
+	Thumbnail      string         `json:"thumbnail,omitempty"`
+	SourceURL      string         `json:"sourceUrl,omitempty"`
+	SourceDuration float64        `json:"sourceDuration,omitempty"`
+	Status         Status         `json:"status"`
+	Stage          string         `json:"stage,omitempty"`
+	Progress       int            `json:"progress,omitempty"`
+	Detail         string         `json:"detail,omitempty"`
+	StartedAt      string         `json:"startedAt,omitempty"`
+	CompletedAt    string         `json:"completedAt,omitempty"`
+	Destination    string         `json:"destination,omitempty"`
+	OutputCount    int            `json:"outputCount,omitempty"`
+	TrackRefs      []string       `json:"trackIds,omitempty"`
+	Problem        map[string]any `json:"problem,omitempty"`
 }
 
 type Groups struct {

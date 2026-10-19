@@ -67,8 +67,10 @@ import {
   inspectImport,
   loadImportDestinations,
   loadImportJobs,
+  loadImportRuntimeStatus,
   recoverImportCommit,
   retryImportCommit,
+  setupImportRuntime,
   startImport,
 } from "./features/imports/client.js";
 import {
@@ -226,6 +228,7 @@ const discoverModeButtons=[...document.querySelectorAll("[data-discover-mode]")]
 const discoverPanels=[...document.querySelectorAll("[data-discover-panel]")];
 const youtubeImportURL=document.querySelector("#youtubeImportURL");
 const youtubeInspect=document.querySelector("#youtubeInspect");
+const importRuntimeNotice=document.querySelector("#importRuntimeStatus");
 const sourceSummary=document.querySelector("#sourceSummary");
 const sourceAdd=document.querySelector("#sourceAdd");
 const sourceDiscover=document.querySelector("#sourceDiscover");
@@ -391,6 +394,9 @@ let playerSessionSaveTimer=null;
 let pendingPlayerSessionState=null;
 let playerSessionSaveChain=Promise.resolve();
 let currentImportReview=null;
+let importRuntimeState=null;
+let importRefreshTimer=null;
+let observedImportCompletionKey="";
 let currentImportJobs=Object.freeze({
  active:Object.freeze([]),
  ready:Object.freeze([]),
@@ -1033,6 +1039,74 @@ function renderExplore(){
  }).join("");
 }
 
+function renderImportRuntimeStatus(){
+ if(!importRuntimeNotice)return;
+ if(!importRuntimeState){
+  importRuntimeNotice.dataset.ready="unknown";
+  importRuntimeNotice.textContent="Checking YouTube import tools…";
+  return;
+ }
+ const detail=importRuntimeState.detail
+  ? ` <span>${escapeHTML(importRuntimeState.detail)}</span>`
+  : "";
+ let title="YouTube import needs one-time setup.";
+ let action=`<button type="button" class="primary" data-import-runtime-action="setup">Set up import tools</button>`;
+ if(importRuntimeState.importReady){
+  title="YouTube import is ready.";
+  action="";
+ }else if(importRuntimeState.searchReady){
+  title="YouTube search is ready; MP3 download still needs FFmpeg.";
+  action=`<button type="button" class="primary" data-import-runtime-action="setup">Finish import setup</button>`;
+ }
+ importRuntimeNotice.dataset.ready=String(importRuntimeState.importReady);
+ importRuntimeNotice.innerHTML=`<div><strong>${escapeHTML(title)}</strong>${detail}</div>${action}`;
+}
+
+async function refreshImportRuntime(){
+ importRuntimeState=await loadImportRuntimeStatus();
+ renderImportRuntimeStatus();
+ return importRuntimeState;
+}
+
+async function prepareImportRuntime(){
+ importRuntimeNotice.dataset.ready="false";
+ importRuntimeNotice.innerHTML="<div><strong>Setting up YouTube import tools…</strong></div>";
+ importRuntimeState=await setupImportRuntime();
+ renderImportRuntimeStatus();
+ return importRuntimeState;
+}
+
+async function ensureImportRuntimeReady(){
+ let runtime=await refreshImportRuntime();
+ if(runtime.importReady)return runtime;
+ runtime=await prepareImportRuntime();
+ if(runtime.importReady)return runtime;
+ throw new Error(
+  runtime.detail||
+  "YouTube search can still work, but MP3 download needs FFmpeg before this import can start."
+ );
+}
+
+function importCompletionKey(snapshot=currentImportJobs){
+ return (snapshot?.completed??[])
+  .filter(job=>job.status==="done")
+  .map(job=>`${job.id}:${job.completedAt??""}:${(job.trackIds??[]).join(",")}`)
+  .sort()
+  .join("|");
+}
+
+function scheduleImportJobRefresh(delay=700){
+ if(importRefreshTimer!==null){
+  clearTimeout(importRefreshTimer);
+  importRefreshTimer=null;
+ }
+ if((currentImportJobs?.active?.length??0)===0)return;
+ importRefreshTimer=setTimeout(()=>{
+  importRefreshTimer=null;
+  void guarded(()=>refreshImportJobs());
+ },delay);
+}
+
 function renderImportReview(){
  if(!currentImportReview){
   importReviewPanel.hidden=true;
@@ -1135,9 +1209,26 @@ function importSectionEdits(){
 }
 
 async function refreshImportJobs(){
- currentImportJobs=await loadImportJobs();
- renderImportJobs();
- return currentImportJobs;
+ if(importRefreshTimer!==null){
+  clearTimeout(importRefreshTimer);
+  importRefreshTimer=null;
+ }
+ try{
+  const nextJobs=await loadImportJobs();
+  const nextCompletionKey=importCompletionKey(nextJobs);
+  const libraryChanged=
+   nextCompletionKey!==""&&
+   nextCompletionKey!==observedImportCompletionKey;
+  currentImportJobs=nextJobs;
+  renderImportJobs();
+  if(libraryChanged){
+   await refreshCatalog();
+  }
+  observedImportCompletionKey=nextCompletionKey;
+  return currentImportJobs;
+ }finally{
+  scheduleImportJobRefresh();
+ }
 }
 
 function renderSystemStatus(){
@@ -1288,6 +1379,7 @@ function render(){
     });
 
  renderExplore();
+ renderImportRuntimeStatus();
  renderImportReview();
  renderImportJobs();
  renderSystemStatus();
@@ -2307,6 +2399,12 @@ youtubeImportURL.addEventListener("keydown",event=>{
  youtubeInspect.click();
 });
 
+importRuntimeNotice.addEventListener("click",event=>{
+ const action=event.target.closest("[data-import-runtime-action=\"setup\"]");
+ if(!action)return;
+ void guarded(()=>prepareImportRuntime());
+});
+
 libraryNavToggle.addEventListener("click",()=>{shellNavigation.toggleSidebar();});
 goDiscoverAdd.addEventListener("click",()=>{
  shellNavigation.select(ShellView.DISCOVER);
@@ -3073,14 +3171,11 @@ importStart.addEventListener("click",()=>void guarded(async()=>{
   genre:importGenre.value,
   sections:importSectionEdits()
  });
- const started=await startImport(plan);
+ await ensureImportRuntimeReady();
+ await startImport(plan);
  currentImportReview=null;
+ youtubeImportURL.value="";
  await refreshImportJobs();
- if(started?.jobId){
-  importReviewHint.textContent=resolveText(locale,"import.started",{
-   id:started.jobId
-  });
- }
 }));
 
 importRefresh.addEventListener("click",()=>void guarded(()=>refreshImportJobs()));
@@ -3244,6 +3339,8 @@ async function initialize(){
  trashSnapshot=nextTrash;
  applyCatalog(nextCatalog);
  currentImportJobs=nextImportJobs;
+ observedImportCompletionKey=importCompletionKey(currentImportJobs);
+ scheduleImportJobRefresh();
 
  if(loadedPlayerSession?.failure){
   currentSessionRestoration=Object.freeze({
@@ -3298,8 +3395,18 @@ async function initialize(){
   explore,
   get importReview(){return currentImportReview;},
   get importJobs(){return currentImportJobs;},
+  get importRuntime(){return importRuntimeState;},
   get sessionRestoration(){return currentSessionRestoration;},
   controls:Object.freeze({PlaybackControl,QueueControl})
+ });
+ void refreshImportRuntime().catch(failure=>{
+  importRuntimeState=Object.freeze({
+   searchReady:false,
+   ffmpegReady:false,
+   importReady:false,
+   detail:failure?.message??String(failure)
+  });
+  renderImportRuntimeStatus();
  });
 }
 

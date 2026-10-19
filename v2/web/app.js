@@ -1760,12 +1760,18 @@ function render(){
   const titleText=trackTitle(item);
   const album=String(item?.album??"").trim()||"Unknown album";
   const sourceDetail=String(item?.sourceTitle??item?.channel??"").trim();
+  const description=String(item?.description??"").trim();
   const metadata=[
    trackArtist(item),
    album,
    ...(sourceDetail&&sourceDetail!==titleText?[sourceDetail]:[])
   ];
-  const accessibleIdentity=[stateLabel,titleText,...metadata].join(". ");
+  const accessibleIdentity=[
+   stateLabel,
+   titleText,
+   ...metadata,
+   ...(description?[description]:[])
+  ].join(". ");
   const upDisabled=isCurrent||index===0;
   const downDisabled=isCurrent||index===qp.state.items.length-1;
   return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-queue-index="${index}" aria-label="${escapeHTML(accessibleIdentity)}">
@@ -1773,6 +1779,7 @@ function render(){
     <span class="queue-title">
       ${marqueeTextHTML(titleText,{tag:"strong"})}
       <span class="queue-meta" title="${escapeHTML(metadata.join(" · "))}">${escapeHTML(metadata.join(" · "))}</span>
+      ${isCurrent&&description?`<span class="queue-description">${escapeHTML(description)}</span>`:""}
       <span class="queue-state">${escapeHTML(stateLabel)}</span>
     </span>
     <span class="queue-state" aria-hidden="true">${isCurrent?"●":" "}</span>

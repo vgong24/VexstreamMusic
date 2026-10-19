@@ -360,6 +360,15 @@
         <button id="importReviewClose" type="button">Back</button>
       </div>
 
+      <div id="importReviewLoading" class="import-review-loading" role="status" aria-live="polite" hidden>
+        <span class="import-review-spinner" aria-hidden="true"></span>
+        <div>
+          <strong>Inspecting source…</strong>
+          <div id="importReviewLoadingDetail">Fetching provider details and checking your Library for existing matches. Nothing is downloading yet.</div>
+        </div>
+      </div>
+
+      <div id="importReviewContent">
       <div class="import-review-source">
         <img id="importReviewThumbnail" class="import-review-thumbnail" alt="" hidden>
         <div id="importReviewThumbnailFallback" class="import-review-thumbnail fallback">♫</div>
@@ -370,6 +379,8 @@
           <div id="importDuplicateSummary" class="import-note"></div>
         </div>
       </div>
+
+      <div id="importDuplicateDetails"></div>
 
       <div class="import-review-grid">
         <label>
@@ -407,6 +418,7 @@
       <div class="import-actions">
         <button id="importStart" type="button" class="primary">Download &amp; add</button>
         <span id="importReviewHint">Temporary staging protects the library until commit completes.</span>
+      </div>
       </div>
     </section>
 

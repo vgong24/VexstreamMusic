@@ -10,8 +10,25 @@ func TestEmbeddedV4AssetsCarryBrowserAndProviderBridge(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(index), "VexStream Music") {
-		t.Fatal("embedded V4 browser entry missing")
+	app, err := Assets.ReadFile("web/app.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	styles, err := Assets.ReadFile("web/styles.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	indexText := string(index)
+	appText := string(app)
+	styleText := string(styles)
+	if !strings.Contains(indexText, "VexStream Music") ||
+		!strings.Contains(indexText, `id="importReviewLoading"`) ||
+		!strings.Contains(indexText, `id="importDuplicateDetails"`) ||
+		!strings.Contains(appText, "async function loadImportReview") ||
+		!strings.Contains(appText, "function importDuplicateReviewHTML") ||
+		!strings.Contains(styleText, ".import-review-spinner") ||
+		!strings.Contains(styleText, ".import-duplicate-review") {
+		t.Fatal("embedded V4 browser/import product contract drift")
 	}
 	bridge, err := MediaBridgeBytes()
 	if err != nil {

@@ -288,7 +288,7 @@ func RetireEligibleSessions(
 		}
 		if _, ok := allowed[pid]; !ok {
 			failed = append(failed, RetireFailure{
-				PID: pid,
+				PID:   pid,
 				Error: "session is no longer eligible or is held for safety",
 			})
 			continue

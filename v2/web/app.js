@@ -2603,12 +2603,14 @@ systemDrawerClose.addEventListener("click",()=>{
 systemAttention.addEventListener("click",event=>{
  if(!event.target.closest('[data-system-action="reset-listening-session"]'))return;
  void guarded(async()=>{
-  await savePlayerSession(queue.currentProjection.state);
+  const state=queue.currentProjection.state;
+  await savePlayerSession(state);
+  const adoptedRef=currentQueueRef(state)??"";
   currentSessionRestoration=Object.freeze({
-   kind:"empty",
+   kind:state.kind==="empty"?"empty":"restored",
    queue:null,
    droppedRefs:Object.freeze([]),
-   currentRef:""
+   currentRef:adoptedRef
   });
   playerSessionPersistenceEnabled=true;
   render();

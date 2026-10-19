@@ -93,6 +93,9 @@ test("start maps the reviewed plan without inventing selected=false defaults", a
   await startImport(
     {
       sourceTitle: " Song ",
+      sourceCreator: " Uploader ",
+      thumbnail: " https://example/song.jpg ",
+      sourceDuration: 123.5,
       destination: " /music ",
       url: " https://example/song ",
       mode: "both",
@@ -110,6 +113,9 @@ test("start maps the reviewed plan without inventing selected=false defaults", a
   );
 
   assert.equal(body.sourceTitle, "Song");
+  assert.equal(body.sourceCreator, "Uploader");
+  assert.equal(body.thumbnail, "https://example/song.jpg");
+  assert.equal(body.sourceDuration, 123.5);
   assert.equal(body.destination, "/music");
   assert.equal(body.url, "https://example/song");
   assert.equal(body.sections[0].selected, true);

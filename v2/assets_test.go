@@ -19,7 +19,9 @@ func TestEmbeddedV4AssetsCarryBrowserAndProviderBridge(t *testing.T) {
 	}
 	text := string(bridge)
 	if !strings.Contains(text, `VERSION = "4.0.0"`) ||
-		!strings.Contains(text, "vexstream.provider-problem/v1") {
-		t.Fatal("embedded V4 provider bridge identity drift")
+		!strings.Contains(text, "vexstream.provider-problem/v1") ||
+		!strings.Contains(text, "progress=10+int(ratio*30)") ||
+		!strings.Contains(text, "Download complete — preparing audio") {
+		t.Fatal("embedded V4 provider bridge identity/progress drift")
 	}
 }

@@ -83,10 +83,13 @@ func TestRunPersistsLifecycleAndCommitsPreparedOutput(t *testing.T) {
 	outcome, err := service.Run(
 		context.Background(),
 		Request{
-			Title:       "Song",
-			Destination: "/music",
-			URL:         "https://example/song",
-			Mode:        "whole",
+			Title:          "Song",
+			Creator:        "Uploader",
+			Thumbnail:      "https://example/song.jpg",
+			SourceDuration: 123,
+			Destination:    "/music",
+			URL:            "https://example/song",
+			Mode:           "whole",
 		},
 		func(job importmodel.Job) {
 			seen = append(seen, job.Status)
@@ -96,6 +99,10 @@ func TestRunPersistsLifecycleAndCommitsPreparedOutput(t *testing.T) {
 		t.Fatal(err)
 	}
 	if outcome.Job.Status != importmodel.StatusDone ||
+		outcome.Job.Creator != "Uploader" ||
+		outcome.Job.Thumbnail != "https://example/song.jpg" ||
+		outcome.Job.SourceURL != "https://example/song" ||
+		outcome.Job.SourceDuration != 123 ||
 		outcome.Job.OutputCount != 1 ||
 		!reflect.DeepEqual(outcome.Job.TrackRefs, []string{"track-a"}) ||
 		outcome.Commit == nil ||

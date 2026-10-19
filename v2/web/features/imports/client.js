@@ -22,6 +22,56 @@ export async function inspectImport(
   );
 }
 
+export async function loadImportRuntimeStatus(
+  { request = globalThis.fetch } = {},
+) {
+  const payload = await requestJSON(
+    "/api/import/status",
+    {
+      method: "GET",
+      headers: { Accept: "application/json" },
+    },
+    request,
+    "Import runtime status",
+  );
+  return projectImportRuntimeStatus(payload);
+}
+
+export async function setupImportRuntime(
+  { request = globalThis.fetch } = {},
+) {
+  const payload = await requestJSON(
+    "/api/import/setup",
+    {
+      method: "POST",
+      headers: jsonHeaders(),
+      body: "{}",
+    },
+    request,
+    "Import runtime setup",
+  );
+  return projectImportRuntimeStatus(payload?.status ?? payload);
+}
+
+export function projectImportRuntimeStatus(payload) {
+  const searchReady =
+    payload?.searchReady === undefined
+      ? payload?.ready === true
+      : payload.searchReady === true;
+  const ffmpegReady = payload?.ffmpegReady === true;
+  const importReady =
+    payload?.importReady === undefined
+      ? searchReady && payload?.ffmpegReady !== false
+      : payload.importReady === true;
+
+  return Object.freeze({
+    searchReady,
+    ffmpegReady,
+    importReady,
+    detail: stringValue(payload?.detail),
+  });
+}
+
 export async function loadImportDestinations(
   { request = globalThis.fetch } = {},
 ) {

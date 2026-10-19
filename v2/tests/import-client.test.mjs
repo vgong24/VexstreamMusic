@@ -6,9 +6,12 @@ import {
   discardImport,
   inspectImport,
   loadImportJobs,
+  loadImportRuntimeStatus,
+  projectImportRuntimeStatus,
   projectJobSnapshot,
   recoverImportCommit,
   retryImportCommit,
+  setupImportRuntime,
   startImport,
 } from "../web/features/imports/client.js";
 
@@ -40,6 +43,49 @@ test("inspection posts one provider URL without starting acquisition", async () 
     url: "https://example/song",
   });
   assert.equal(result.advisory, true);
+});
+
+test("runtime status and one-time setup preserve V3 import readiness semantics", async () => {
+  const seen = [];
+  const request = async (url, options) => {
+    seen.push([url, options.method]);
+    if (url === "/api/import/status") {
+      return okJSON({
+        searchReady: true,
+        ffmpegReady: false,
+        importReady: false,
+        detail: "FFmpeg is still required.",
+      });
+    }
+    return okJSON({
+      message: "ready",
+      status: {
+        searchReady: true,
+        ffmpegReady: true,
+        importReady: true,
+        detail: "YouTube import is ready.",
+      },
+    });
+  };
+
+  const before = await loadImportRuntimeStatus({ request });
+  assert.equal(before.searchReady, true);
+  assert.equal(before.importReady, false);
+  assert.equal(before.detail, "FFmpeg is still required.");
+
+  const after = await setupImportRuntime({ request });
+  assert.equal(after.importReady, true);
+  assert.equal(after.ffmpegReady, true);
+  assert.deepEqual(seen, [
+    ["/api/import/status", "GET"],
+    ["/api/import/setup", "POST"],
+  ]);
+
+  const legacy = projectImportRuntimeStatus({
+    ready: true,
+    ffmpegReady: true,
+  });
+  assert.equal(legacy.importReady, true);
 });
 
 test("start maps the reviewed plan without inventing selected=false defaults", async () => {

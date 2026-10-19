@@ -626,9 +626,15 @@
       </section>
     </div>
     <section id="systemAttention" class="system-status-card"></section>
+    <section class="system-status-card system-session-review">
+      <h3 data-text-ref="system.sessions.title">Live VexStream sessions</h3>
+      <p class="muted" data-text-ref="system.sessions.detail">Review parallel VexStream servers before stopping any older process. Active imports, unverified state, and unique live tracks are held automatically.</p>
+      <button id="reviewOldSessions" type="button" data-text-ref="system.sessions.review">Review old sessions</button>
+      <div id="oldSessionPlan" hidden></div>
+    </section>
     <section class="system-status-card system-status-boundary">
-      <h3 data-text-ref="system.status.capability-boundary">Not migrated yet</h3>
-      <p data-text-ref="system.status.capability-detail">V3 diagnostics exports and reviewable safe-repair controls are not yet owned by Desktop V4. This status surface does not pretend those capabilities exist.</p>
+      <h3 data-text-ref="system.status.capability-boundary">Still not migrated</h3>
+      <p data-text-ref="system.status.capability-detail">V3 diagnostic exports and broader reviewable safe-repair controls are not yet owned by Desktop V4. Old-session review is restored separately above.</p>
     </section>
     <div class="system-drawer-actions">
       <button id="exitVexStream" type="button" data-vex-action="vexstream.system.exit">Exit VexStream</button>

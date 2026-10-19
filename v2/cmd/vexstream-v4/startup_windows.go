@@ -83,14 +83,12 @@ func handoffDifferentV4(
 				"the running VexStream 4.0 did not stop after the update handoff request",
 			)
 		}
-		if !lifecycle.WaitUntilClaimReleased(
+		if err := completeWindowsOwnershipHandoff(
 			currentURLPath,
-			claim.URL,
-			5*time.Second,
-		) {
-			return false, errors.New(
-				"the running VexStream 4.0 stopped serving but did not release shared-library ownership",
-			)
+			claim,
+			"the running VexStream 4.0",
+		); err != nil {
+			return false, err
 		}
 		return true, nil
 
@@ -160,15 +158,12 @@ func handoffProtectedDesktop(
 				version,
 			)
 		}
-		if !lifecycle.WaitUntilClaimReleased(
+		if err := completeWindowsOwnershipHandoff(
 			currentURLPath,
-			claim.URL,
-			5*time.Second,
-		) {
-			return false, fmt.Errorf(
-				"VexStream %s stopped serving but did not release ownership of the shared library",
-				version,
-			)
+			claim,
+			"VexStream "+version,
+		); err != nil {
+			return false, err
 		}
 		return true, nil
 
@@ -178,6 +173,69 @@ func handoffProtectedDesktop(
 			choice,
 		)
 	}
+}
+
+func completeWindowsOwnershipHandoff(
+	currentURLPath string,
+	claim lifecycle.LiveClaim,
+	ownerLabel string,
+) error {
+	// Current V4 builds retain their claim until feature-owned background
+	// services have actually closed. Give them a bounded clean shutdown window.
+	if lifecycle.WaitUntilClaimReleased(
+		currentURLPath,
+		claim.URL,
+		10*time.Second,
+	) {
+		if next, ok := lifecycle.CurrentLiveClaim(currentURLPath); ok {
+			return fmt.Errorf(
+				"another VexStream became active at %s while %s was handing off ownership",
+				next.URL,
+				ownerLabel,
+			)
+		}
+		return nil
+	}
+
+	// Builds predating PID-bearing health used the older cleanup order. If
+	// such a build has definitely stopped serving but left only its exact URL
+	// claim behind, recover that stale pointer rather than forcing the human
+	// to hunt processes or delete state by hand.
+	if claim.Identity.PID == 0 {
+		if err := lifecycle.RecoverStoppedClaim(
+			currentURLPath,
+			claim.URL,
+		); err != nil {
+			return fmt.Errorf(
+				"%s stopped serving, but its legacy ownership claim could not be recovered: %w",
+				ownerLabel,
+				err,
+			)
+		}
+		if !lifecycle.WaitUntilClaimReleased(
+			currentURLPath,
+			claim.URL,
+			time.Second,
+		) {
+			return fmt.Errorf(
+				"%s stopped serving but its recovered ownership claim is still present",
+				ownerLabel,
+			)
+		}
+		if next, ok := lifecycle.CurrentLiveClaim(currentURLPath); ok {
+			return fmt.Errorf(
+				"another VexStream became active at %s during the ownership handoff",
+				next.URL,
+			)
+		}
+		return nil
+	}
+
+	return fmt.Errorf(
+		"%s stopped serving but process %d has not finished releasing shared-library ownership",
+		ownerLabel,
+		claim.Identity.PID,
+	)
 }
 
 func reportStartupFailure(

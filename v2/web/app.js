@@ -101,6 +101,7 @@ import {
   createDiscoverNavigation,
 } from "./features/discover/navigation.js";
 import { escapeHTML } from "./foundation/html.js";
+import { marqueeDurationSeconds } from "./foundation/marquee.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
 
@@ -505,9 +506,6 @@ function marqueeTextHTML(value,{tag="span",className=""}={}){
  return `<${tag} class="${classes}" title="${escapeHTML(text)}"><span class="song-marquee-text">${escapeHTML(text)}</span></${tag}>`;
 }
 
-const readableMarqueePixelsPerSecond=24;
-const marqueeTravelFraction=.8;
-
 function refreshSongMarqueeMetrics(root=document){
  for(const outer of root.querySelectorAll(".song-marquee")){
   const inner=outer.querySelector(".song-marquee-text");
@@ -517,10 +515,7 @@ function refreshSongMarqueeMetrics(root=document){
   if(shift>3){
    // Long text travels farther, so it receives proportionally more time instead
    // of accelerating merely to finish inside one fixed animation duration.
-   const duration=Math.max(
-    6.5,
-    shift/(readableMarqueePixelsPerSecond*marqueeTravelFraction)
-   );
+   const duration=marqueeDurationSeconds(shift);
    outer.style.setProperty("--song-marquee-duration",duration.toFixed(2)+"s");
   }else{
    outer.style.removeProperty("--song-marquee-duration");

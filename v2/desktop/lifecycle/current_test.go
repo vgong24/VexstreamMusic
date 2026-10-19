@@ -182,7 +182,6 @@ func TestGracefulExitWaitsForServerAndClaimRelease(t *testing.T) {
 	}
 }
 
-
 func TestRecoverStoppedClaimRejectsLiveOwnerThenClearsLegacyStaleClaim(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(
 		w http.ResponseWriter,

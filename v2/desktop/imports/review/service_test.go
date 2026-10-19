@@ -61,7 +61,8 @@ func TestInspectAndReviewComposesProviderAndCurrentLibrary(t *testing.T) {
 		got.MatchCount != 1 ||
 		len(got.Items) != 1 ||
 		len(got.Items[0].Matches) != 1 ||
-		got.Items[0].Matches[0].TrackRef != "track-a" {
+		got.Items[0].Matches[0].TrackRef != "track-a" ||
+		got.Items[0].Matches[0].Relation != "SAME_SOURCE" {
 		t.Fatalf("review composition drift: %+v", got)
 	}
 }

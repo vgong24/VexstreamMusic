@@ -18,13 +18,16 @@ start VexStream
 
 You should not need to know Git to use the application.
 
-## Start here — no Git required
+## Install / update VexStream — no Git required
 
-### Windows
+### Windows — one PowerShell command
 
-When a signed/published release asset exists, downloading that `.exe` is the preferred path.
+Paste this into **PowerShell**. It installs or updates VexStream from the repository's accepted
+`main`, creates or refreshes a **VexStream Music** shortcut on your Windows Desktop, and launches
+the app. You do not need Git, Python, a global Go installation, or administrator access.
 
-The repository also owns a reconstructible fallback. Paste this into **PowerShell**:
+When a signed/published release asset exists, that packaged artifact can also be used. The command
+below remains the repository-owned reconstructible install/update path:
 
 ```powershell
 $P=Join-Path $env:TEMP 'START-VEXSTREAM-WINDOWS.ps1'; $Q=$ProgressPreference; $ProgressPreference='SilentlyContinue'; try{Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/vgong24/VexstreamMusic/main/START-VEXSTREAM-WINDOWS.ps1' -OutFile $P}finally{$ProgressPreference=$Q}; try{$T=$null; $E=$null; [void][System.Management.Automation.Language.Parser]::ParseFile($P,[ref]$T,[ref]$E); if($E.Count){throw ('VexStream launcher self-check failed: '+(($E|ForEach-Object Message)-join '; '))}; powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $P; $C=$LASTEXITCODE}finally{Remove-Item -LiteralPath $P -Force -ErrorAction SilentlyContinue}; if($C -ne 0){exit $C}
@@ -39,6 +42,7 @@ resolves the exact current main commit
 -> runs the V4 source tests and Windows vet
 -> builds VexStreamMusic-4.0.0.exe
 -> records the exact source commit + executable SHA-256
+-> creates/refreshes a Desktop shortcut to that verified managed build
 -> launches VexStream
 ```
 
@@ -78,9 +82,19 @@ The reusable Windows executable is cached below:
 %LOCALAPPDATA%\VexStreamMusic\source-builds\<exact-source-commit>\VexStreamMusic-4.0.0.exe
 ```
 
-After a new build finishes, Windows File Explorer opens with that exact `.exe` selected so a non-technical user can see the reusable desktop app they now own locally. Rerunning the same source later launches the verified cached executable immediately and does not reopen Explorer unnecessarily.
+After a successful install/update, the launcher creates or refreshes:
 
-After that build exists, you may launch that exact `.exe` normally.
+```text
+Desktop\VexStream Music.lnk
+  -> exact verified managed VexStream executable
+```
+
+That shortcut is the stable human front door: when a later repository update produces a new exact
+managed build, rerunning the same PowerShell command repoints the shortcut to the newly verified
+executable. A newly built executable is also revealed once in File Explorer so the person can see
+where the managed app lives; reusing the same already-verified build does not reopen Explorer.
+
+You may also launch the exact managed `.exe` directly.
 
 #### Can I move or rename the Windows `.exe`?
 
@@ -106,9 +120,10 @@ away rather than copied, a later run of the source launcher will see its managed
 reconstruct it there again. A moved copy is not automatically rewritten when a newer source commit is
 built; it remains the exact older executable bytes that were moved.
 
-For normal convenience, prefer a Windows shortcut to the managed executable rather than moving the
-only managed copy. A future packaged/release installation may provide a stable application/Start Menu
-shortcut while retaining exact versioned builds separately for provenance and rollback.
+For normal convenience, use the **VexStream Music** Desktop shortcut created by the repository
+installer rather than moving the only managed executable. The launcher updates that shortcut when a
+new exact source build is accepted locally, while retaining prior exact builds separately for
+provenance and rollback.
 
 #### What VexStream keeps locally
 

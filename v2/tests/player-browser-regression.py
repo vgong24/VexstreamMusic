@@ -2323,15 +2323,12 @@ def main() -> int:
         page.locator(
             '[data-track-ref="media.vexstream.test-tone.3"] '
             '[data-track-action="play-next"]'
-        ).click()        page.locator(
-            '[data-track-ref="media.vexstream.test-tone.3"] '
-            '[data-track-action="play-next"]'
         ).click()
         page.wait_for_function(
-            "window.vexV4.queue.currentProjection.state.items.length===4"
+            "window.vexV4.queue.currentProjection.state.items.length===3"
         )
         checked(
-            "play-next-inserts-directly-after-current",
+            "play-next-relocates-existing-track-without-duplicating-it",
             lambda: require(
                 page.evaluate(
                     "window.vexV4.queue.currentProjection.state.items"
@@ -2340,35 +2337,43 @@ def main() -> int:
                 == (
                     "media.vexstream.test-tone.1,"
                     "media.vexstream.test-tone.3,"
-                    "media.vexstream.test-tone.2,"
-                    "media.vexstream.test-tone.3"
-                ),
-                "play-next payload drift",
+                    "media.vexstream.test-tone.2"
+                )
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 0,
+                "Play next duplicated or replaced Queue context",
             ),
         )
 
         page.locator(
-            '[data-track-ref="media.vexstream.test-tone.2"] '
+            '[data-track-ref="media.vexstream.test-tone.1"] '
             '[data-track-action="append"]'
         ).click()
         page.wait_for_function(
-            "window.vexV4.queue.currentProjection.state.items.length===5"
+            "window.vexV4.queue.currentProjection.state.items.length===4"
         )
         checked(
-            "add-to-queue-appends-without-changing-current",
+            "add-to-queue-remains-the-explicit-duplicate-operation",
             lambda: require(
                 page.evaluate("window.vexV4.player.currentItem.ref")
                 == "media.vexstream.test-tone.1"
                 and page.evaluate(
-                    "window.vexV4.queue.currentProjection.state.items.at(-1)"
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
                 )
-                == "media.vexstream.test-tone.2",
-                "append payload drift",
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.2,"
+                    "media.vexstream.test-tone.1"
+                ),
+                "Add to queue no longer preserved explicit append semantics",
             ),
         )
 
         page.locator(
-            '#queueList li[data-queue-index="4"] '
+            '#queueList li[data-queue-index="3"] '
             '[data-queue-action="up"]'
         ).click()
         checked(
@@ -2383,9 +2388,8 @@ def main() -> int:
                 == (
                     "media.vexstream.test-tone.1,"
                     "media.vexstream.test-tone.3,"
-                    "media.vexstream.test-tone.2,"
-                    "media.vexstream.test-tone.2,"
-                    "media.vexstream.test-tone.3"
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.2"
                 ),
                 "reorder/current preservation drift",
             ),
@@ -2400,7 +2404,7 @@ def main() -> int:
             "==='media.vexstream.test-tone.3'"
         )
         checked(
-            "queue-play-button-promotes-without-rebuilding-queue",
+            "queue-play-button-relocates-without-duplicating",
             lambda: require(
                 page.evaluate("window.vexV4.media.paused") is False
                 and page.evaluate(
@@ -2409,15 +2413,14 @@ def main() -> int:
                 == (
                     "media.vexstream.test-tone.1,"
                     "media.vexstream.test-tone.3,"
-                    "media.vexstream.test-tone.2,"
-                    "media.vexstream.test-tone.2,"
-                    "media.vexstream.test-tone.3"
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.2"
                 )
                 and page.evaluate(
                     "window.vexV4.queue.currentProjection.state.currentIndex"
                 )
                 == 1,
-                "Queue-row Play replaced or reshuffled the established Queue",
+                "Queue-row Play duplicated, replaced, or reshuffled Queue",
             ),
         )
 

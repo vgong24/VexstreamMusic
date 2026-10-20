@@ -120,7 +120,7 @@ test("Play Track composes context selection with Playback instead of hiding it i
   assert.equal(h.media.paused,false);
 });
 
-test("Play now injects selected media after current without replacing shuffled Queue", async()=>{
+test("Play now relocates selected media after current without replacing shuffled Queue", async()=>{
   const h=harness();
   await h.player.activatePlayPause();
   h.player.toggleShuffle();
@@ -145,6 +145,27 @@ test("Play now on the already-playing item does not toggle it to Pause", async()
   await h.player.playNow("a",["a","b","c"]);
   assert.equal(h.media.paused,false);
   assert.equal(h.media.playCalls,before);
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"a");
+});
+
+test("Play now moves a history occurrence instead of creating a duplicate", async()=>{
+  const h=harness();
+  await h.player.playContext(["a","b","c"],2);
+  await h.player.playNow("a",["a","b","c"]);
+  assert.deepEqual(h.queue.currentProjection.state.items,["b","c","a"]);
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"a");
+  assert.equal(h.queue.currentProjection.state.currentIndex,2);
+  h.media.currentTime=0;
+  await h.player.previous();
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"c");
+});
+
+test("Play next relocates an existing future occurrence without increasing Queue length", async()=>{
+  const h=harness();
+  await h.player.playContext(["a","b","c"],0);
+  await h.player.playNext(["c"]);
+  assert.deepEqual(h.queue.currentProjection.state.items,["a","c","b"]);
+  assert.equal(h.queue.currentProjection.state.items.length,3);
   assert.equal(currentQueueRef(h.queue.currentProjection.state),"a");
 });
 

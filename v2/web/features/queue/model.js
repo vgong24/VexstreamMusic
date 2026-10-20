@@ -63,54 +63,86 @@ export function appendQueueRefs(current, refs) {
   });
 }
 
-export function insertNextQueueRefs(current, refs) {
-  const additions = uniqueRefs(refs);
-  if (!additions.length) return current;
-  if (current.kind === "empty") {
-    return QueueState.positioned({
-      items: additions,
-      currentIndex: 0,
-      shuffle: current.shuffle,
-      repeat: current.repeat,
+function distinctRefs(refs) {
+  return [...new Set(uniqueRefs(refs))];
+}
+
+function relocateRefsAfterCurrent(current, refs) {
+  const requested=distinctRefs(refs);
+  if(!requested.length)return Object.freeze({
+    state:current,
+    inserted:Object.freeze([])
+  });
+  if(current.kind==="empty"){
+    return Object.freeze({
+      state:QueueState.positioned({
+        items:requested,
+        currentIndex:0,
+        shuffle:current.shuffle,
+        repeat:current.repeat,
+      }),
+      inserted:Object.freeze([...requested])
     });
   }
-  return QueueState.positioned({
-    ...current,
-    items: [
-      ...current.items.slice(0, current.currentIndex + 1),
-      ...additions,
-      ...current.items.slice(current.currentIndex + 1),
-    ],
+
+  const currentRef=current.items[current.currentIndex];
+  const requestedSet=new Set(requested);
+  const entries=current.items
+    .map((ref,index)=>({
+      ref,
+      current:index===current.currentIndex
+    }))
+    .filter(entry=>
+      entry.current ||
+      !requestedSet.has(entry.ref)
+    );
+
+  const nextCurrentIndex=entries.findIndex(entry=>entry.current);
+  const inserted=requested.filter(ref=>ref!==currentRef);
+  entries.splice(
+    nextCurrentIndex+1,
+    0,
+    ...inserted.map(ref=>({ref,current:false}))
+  );
+
+  return Object.freeze({
+    state:QueueState.positioned({
+      ...current,
+      items:entries.map(entry=>entry.ref),
+      currentIndex:nextCurrentIndex,
+    }),
+    inserted:Object.freeze(inserted)
   });
+}
+
+export function insertNextQueueRefs(current, refs) {
+  return relocateRefsAfterCurrent(current,refs).state;
 }
 
 export function playNowQueueRef(current, ref) {
   const wanted=String(ref??"").trim();
   if(!wanted)return current;
-  if(current.kind==="empty"){
-    return QueueState.positioned({
-      items:[wanted],
-      currentIndex:0,
-      shuffle:current.shuffle,
-      repeat:current.repeat,
-    });
+  const relocated=relocateRefsAfterCurrent(current,[wanted]);
+  const next=relocated.state;
+  if(next.kind==="empty")return next;
+
+  const currentRef=current.kind==="positioned"
+    ?current.items[current.currentIndex]
+    :"";
+  if(currentRef===wanted){
+    return next;
   }
 
-  const currentRef=current.items[current.currentIndex];
-  if(currentRef===wanted)return current;
-
-  const items=[...current.items];
-  const futureIndex=items.indexOf(wanted,current.currentIndex+1);
-  if(futureIndex>=0){
-    items.splice(futureIndex,1);
-  }
-  const insertIndex=current.currentIndex+1;
-  items.splice(insertIndex,0,wanted);
-  return QueueState.positioned({
-    ...current,
-    items,
-    currentIndex:insertIndex,
-  });
+  const index=next.items.indexOf(
+    wanted,
+    next.currentIndex+1
+  );
+  return index>=0
+    ?QueueState.positioned({
+      ...next,
+      currentIndex:index,
+    })
+    :next;
 }
 
 export function selectQueueIndex(current, index) {

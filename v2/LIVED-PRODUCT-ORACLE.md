@@ -146,15 +146,19 @@ Unless Victor explicitly admits a different UX, preserve these V3-visible outcom
   Queue rows rather than rendering underneath the next song or being clipped by row paint containment;
 - ordinary single-track **Play** (including the Queue-row Play button) and song-row
   **double-click** are play-now intentions once a Queue already exists. They must not replace the
-  Queue or re-run Shuffle. If the selected track already
-  exists in the upcoming suffix, promote that occurrence directly after current and select it; if it
-  exists only in played history, inject a new replay occurrence directly after current. The prior
-  current remains immediately behind it so Previous returns there, and the untouched future continues
-  after the promoted song. Whole-context Play / Shuffle actions remain the explicit ways to replace
-  listening context;
+  Queue or re-run Shuffle. Play-now **relocates** the selected Queue ref directly after the prior
+  current and makes that relocated occurrence current; it removes any other Queue occurrences of
+  that same ref rather than manufacturing a duplicate. If the selected ref was in played history,
+  that occurrence moves forward instead of being copied. The prior current remains immediately
+  behind it so Previous returns there, and the untouched non-selected items keep their relative
+  order. Whole-context Play / Shuffle actions remain the explicit ways to replace listening context;
 - a normal song-row single click does not auto-start playback. It remains available for selection/
   navigation affordances; double-click and the explicit Play button carry the immediate play-now
   intention;
+- **Play next** follows the same relocation rule without changing current Playback: existing
+  occurrences of the requested ref(s) are removed from their old positions and reinserted exactly
+  once immediately after current. **Add to queue** remains the explicit operation that may append
+  another occurrence intentionally;
 - V3 density is part of lived parity: the product shell is based on 14px text, normal-weight
   8px/11px button padding, ~18px section headings, a normal-size Now Playing title, and ~38px
   transport controls. Refactor scaffolding must not leak its larger/bolder practicum defaults into

@@ -149,7 +149,10 @@ const queueDrawerHandle=document.querySelector("#queueDrawerHandle");
 const queueDrawerCount=document.querySelector("#queueDrawerCount");
 const queueDrawerNextCount=document.querySelector("#queueDrawerNextCount");
 const queueSummary=document.querySelector("#queueSummary");
+const queueCurrentPane=document.querySelector("#queueCurrentPane");
+const queueTimelinePane=document.querySelector("#queueTimelinePane");
 const queueList=document.querySelector("#queueList");
+const queueDropEnd=document.querySelector("#queueDropEnd");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
 const playAllSongs=document.querySelector("#playAllSongs");
@@ -403,6 +406,7 @@ let currentSessionRestoration=Object.freeze({
 });
 let playerSessionPersistenceEnabled=false;
 let queueDrawerOpen=false;
+let queueDragIndex=-1;
 let playerSessionSaveTimer=null;
 let pendingPlayerSessionState=null;
 let playerSessionSaveChain=Promise.resolve();
@@ -1680,6 +1684,77 @@ function toggleQueueDrawer(){
  setQueueDrawerOpen(!queueDrawerOpen);
 }
 
+
+function renderQueueCurrentPane(state){
+ const ref=currentQueueRef(state);
+ const item=ref?byRef.get(ref):null;
+ if(!item){
+  queueCurrentPane.removeAttribute("data-track-ref");
+  queueCurrentPane.innerHTML=
+   '<div class="queue-current-empty"><strong>'+
+   escapeHTML(resolveText(locale,"player.nothing.title"))+
+   '</strong><span>'+
+   escapeHTML(resolveText(locale,"player.nothing.artist"))+
+   '</span></div>';
+  return;
+ }
+
+ const titleText=trackTitle(item);
+ const album=String(item?.album??"").trim()||"Unknown album";
+ const sourceDetail=String(item?.sourceTitle??item?.channel??"").trim();
+ const description=String(item?.description??"").trim();
+ const artwork=String(item?.thumbnailURL??"").trim();
+ const duration=Number(item?.durationSeconds)||0;
+ const genre=String(item?.genre??"").trim();
+ const facts=[
+  [resolveText(locale,"queue.current.artist"),trackArtist(item)],
+  [resolveText(locale,"queue.current.album"),album],
+  duration>0?[resolveText(locale,"queue.current.time"),formatSeconds(duration)]:null,
+  sourceDetail&&sourceDetail!==titleText
+   ?[resolveText(locale,"queue.current.source"),sourceDetail]
+   :null,
+  genre?[resolveText(locale,"queue.current.genre"),genre]:null
+ ].filter(Boolean);
+
+ queueCurrentPane.dataset.trackRef=ref;
+ queueCurrentPane.innerHTML=
+  '<div class="queue-current-art'+(artwork?' has-art':'')+'">'+
+   (artwork
+    ?'<img src="'+escapeHTML(artwork)+'" alt="">'
+    :'<span aria-hidden="true">♫</span>')+
+  '</div>'+
+  '<div class="eyebrow">'+
+   escapeHTML(resolveText(locale,"queue.current.eyebrow"))+
+  '</div>'+
+  marqueeTextHTML(titleText,{tag:"h2",className:"queue-current-title"})+
+  '<dl class="queue-current-facts">'+
+   facts.map(([label,value])=>
+    '<div class="queue-current-fact"><dt>'+
+     escapeHTML(label)+
+    '</dt><dd>'+
+     escapeHTML(value)+
+    '</dd></div>'
+   ).join("")+
+  '</dl>'+
+  (description
+   ?'<p class="queue-current-description">'+escapeHTML(description)+'</p>'
+   :"")+
+  '<details class="queue-current-actions"><summary>'+
+   escapeHTML(resolveText(locale,"queue.current.actions"))+
+  '</summary><div class="queue-current-action-menu">'+
+   '<button data-track-action="explore" data-vex-action="vexstream.explore.from-track">'+
+    escapeHTML(resolveText(locale,"explore.open"))+
+   '</button>'+
+   '<button data-track-action="edit">'+
+    escapeHTML(resolveText(locale,"library.edit"))+
+   '</button>'+
+   '<button data-track-action="trash">'+
+    escapeHTML(resolveText(locale,"trash.move"))+
+   '</button>'+
+   trackPlaylistActionHTML()+
+  '</div></details>';
+}
+
 function render(){
  const pp=player.playPausePresentation;
  const qp=queue.currentProjection;
@@ -1734,6 +1809,9 @@ function render(){
       count:qp.state.items.length,
       position:qp.state.currentIndex+1
     });
+ renderQueueCurrentPane(qp.state);
+ queueDropEnd.hidden=qp.state.kind==="empty";
+ queueDropEnd.textContent=resolveText(locale,"queue.drop-end");
 
  renderExplore();
  renderImportRuntimeStatus();
@@ -1758,35 +1836,34 @@ function render(){
   const description=String(item?.description??"").trim();
   const metadata=[
    trackArtist(item),
-   album,
-   ...(sourceDetail&&sourceDetail!==titleText?[sourceDetail]:[])
+   album
   ];
   const accessibleIdentity=[
    stateLabel,
    titleText,
    ...metadata,
+   ...(sourceDetail&&sourceDetail!==titleText?[sourceDetail]:[]),
    ...(description?[description]:[])
   ].join(". ");
-  const upDisabled=isCurrent||index===0;
-  const downDisabled=isCurrent||index===qp.state.items.length-1;
-  return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-queue-index="${index}" aria-label="${escapeHTML(accessibleIdentity)}">
+  const upDisabled=index===0;
+  const downDisabled=index===qp.state.items.length-1;
+  return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-queue-index="${index}" draggable="true" aria-label="${escapeHTML(accessibleIdentity)}">
     <span class="queue-index">${index+1}</span>
     <span class="queue-title">
       ${marqueeTextHTML(titleText,{tag:"strong"})}
       <span class="queue-meta" title="${escapeHTML(metadata.join(" · "))}">${escapeHTML(metadata.join(" · "))}</span>
-      ${isCurrent&&description?`<span class="queue-description">${escapeHTML(description)}</span>`:""}
       <span class="queue-state">${escapeHTML(stateLabel)}</span>
     </span>
     <span class="queue-state" aria-hidden="true">${isCurrent?"●":" "}</span>
     <span class="queue-actions">
       <button data-queue-action="play" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"playback.play"))}</button>
-      <button data-queue-action="up" ${upDisabled?"disabled":""}>↑</button>
-      <button data-queue-action="down" ${downDisabled?"disabled":""}>↓</button>
+      <button data-queue-action="up" title="${escapeHTML(resolveText(locale,"queue.move-up"))}" aria-label="${escapeHTML(resolveText(locale,"queue.move-up"))}" ${upDisabled?"disabled":""}>↑</button>
+      <button data-queue-action="down" title="${escapeHTML(resolveText(locale,"queue.move-down"))}" aria-label="${escapeHTML(resolveText(locale,"queue.move-down"))}" ${downDisabled?"disabled":""}>↓</button>
       <button data-queue-action="remove" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"queue.remove"))}</button>
     </span>
   </li>`;
  }).join("");
- requestAnimationFrame(()=>refreshSongMarqueeMetrics(queueList));
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics(queueDrawer));
 }
 
 function trackPlaylistActionHTML(){
@@ -3692,6 +3769,10 @@ recoverTrashPurgeButton.addEventListener("click",()=>void guarded(async()=>{
  await refreshTrash();
 }));
 
+queueCurrentPane.addEventListener("click",event=>{
+ handleTrackAction(event);
+});
+
 queueList.addEventListener("click",event=>{
  const action=event.target.closest("[data-queue-action]");
  const row=event.target.closest("[data-queue-index]");
@@ -3715,6 +3796,72 @@ queueList.addEventListener("click",event=>{
   player.removeQueue(index);
   render();
  }
+});
+
+function clearQueueDragState(){
+ queueDragIndex=-1;
+ for(const row of queueList.querySelectorAll(".dragging,.drop-target")){
+  row.classList.remove("dragging","drop-target");
+ }
+ queueDropEnd.classList.remove("drop-target");
+}
+
+queueList.addEventListener("dragstart",event=>{
+ const row=event.target.closest("[data-queue-index]");
+ if(!row||!event.dataTransfer)return;
+ queueDragIndex=Number(row.dataset.queueIndex);
+ event.dataTransfer.effectAllowed="move";
+ event.dataTransfer.setData("text/plain",String(queueDragIndex));
+ row.classList.add("dragging");
+});
+
+queueList.addEventListener("dragover",event=>{
+ const row=event.target.closest("[data-queue-index]");
+ if(!row)return;
+ event.preventDefault();
+ if(event.dataTransfer)event.dataTransfer.dropEffect="move";
+ for(const candidate of queueList.querySelectorAll(".drop-target")){
+  candidate.classList.remove("drop-target");
+ }
+ row.classList.add("drop-target");
+});
+
+queueList.addEventListener("drop",event=>{
+ const row=event.target.closest("[data-queue-index]");
+ if(!row)return;
+ event.preventDefault();
+ const from=queueDragIndex>=0
+  ?queueDragIndex
+  :Number(event.dataTransfer?.getData("text/plain"));
+ const to=Number(row.dataset.queueIndex);
+ clearQueueDragState();
+ if(!Number.isInteger(from)||!Number.isInteger(to)||from===to)return;
+ player.moveQueue(from,to);
+ render();
+});
+
+queueList.addEventListener("dragend",clearQueueDragState);
+
+queueDropEnd.addEventListener("dragover",event=>{
+ event.preventDefault();
+ if(event.dataTransfer)event.dataTransfer.dropEffect="move";
+ queueDropEnd.classList.add("drop-target");
+});
+
+queueDropEnd.addEventListener("dragleave",()=>{
+ queueDropEnd.classList.remove("drop-target");
+});
+
+queueDropEnd.addEventListener("drop",event=>{
+ event.preventDefault();
+ const from=queueDragIndex>=0
+  ?queueDragIndex
+  :Number(event.dataTransfer?.getData("text/plain"));
+ const state=queue.currentProjection.state;
+ clearQueueDragState();
+ if(state.kind!=="positioned"||!Number.isInteger(from))return;
+ player.moveQueue(from,state.items.length);
+ render();
 });
 
 queue.subscribe(projection=>{

@@ -49,10 +49,11 @@ test("disabling shuffle does not reconstruct the old order", () => {
   assert.equal(next.shuffle,false);
 });
 
-test("set context with shuffle enabled keeps selected item and shuffles only its future", () => {
+test("fresh shuffled context keeps selected current and makes every other item upcoming", () => {
   const flags=QueueState.empty({shuffle:true});
   const next=replaceQueueContext(flags,["a","b","c","d"],1,reverse);
-  assert.deepEqual(next.items,["a","b","d","c"]);
+  assert.deepEqual(next.items,["b","d","c","a"]);
+  assert.equal(next.currentIndex,0);
   assert.equal(currentQueueRef(next),"b");
 });
 
@@ -69,13 +70,18 @@ test("play-next insertion is directly after the current item", () => {
   assert.equal(next.currentIndex,0);
 });
 
-test("reorder cannot move current item and preserves current identity when peers move", () => {
+test("reorder can move current or adjacent items while preserving current identity", () => {
   const state=QueueState.positioned({items:["a","b","c","d"],currentIndex:2});
-  assert.equal(moveQueueItem(state,2,0),state);
-  const next=moveQueueItem(state,0,4);
-  assert.deepEqual(next.items,["b","c","d","a"]);
-  assert.equal(currentQueueRef(next),"c");
-  assert.equal(next.currentIndex,1);
+
+  const movedCurrent=moveQueueItem(state,2,0);
+  assert.deepEqual(movedCurrent.items,["c","a","b","d"]);
+  assert.equal(currentQueueRef(movedCurrent),"c");
+  assert.equal(movedCurrent.currentIndex,0);
+
+  const movedAdjacent=moveQueueItem(state,3,2);
+  assert.deepEqual(movedAdjacent.items,["a","b","d","c"]);
+  assert.equal(currentQueueRef(movedAdjacent),"c");
+  assert.equal(movedAdjacent.currentIndex,3);
 });
 
 test("removing an item before current adjusts index without changing current identity", () => {

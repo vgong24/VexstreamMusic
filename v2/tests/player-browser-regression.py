@@ -2049,6 +2049,33 @@ def main() -> int:
             ),
         )
 
+        page.locator("#queueMiniBtn").click()
+        page.wait_for_function(
+            "document.querySelector('#queueDrawer').classList.contains('open')"
+        )
+        checked(
+            "expanded-queue-keeps-rich-current-detail-left-and-timeline-right",
+            lambda: require(
+                page.locator("#queueCurrentPane").get_attribute("data-track-ref")
+                == "media.vexstream.test-tone.2"
+                and "A deliberately descriptive current-track fixture"
+                in page.locator("#queueCurrentPane").inner_text()
+                and "A deliberately descriptive current-track fixture"
+                not in page.locator("#queueList li.current").inner_text()
+                and page.evaluate(
+                    """() => {
+                      const left=document.querySelector('#queueCurrentPane')
+                        .getBoundingClientRect().width;
+                      const right=document.querySelector('#queueTimelinePane')
+                        .getBoundingClientRect().width;
+                      return left>0 && right>=left*2;
+                    }"""
+                ),
+                "expanded Queue lost its Now Playing/timeline split",
+            ),
+        )
+        page.locator("#queueMiniBtn").click()
+
         page.evaluate("window.vexV4.media.currentTime=0")
         prev.click()
         page.wait_for_function(
@@ -2098,14 +2125,43 @@ def main() -> int:
             ),
         )
 
-        page.locator(
+        third_track_play=page.locator(
             '[data-track-ref="media.vexstream.test-tone.3"] '
             '[data-track-action="play"]'
-        ).click()
+        )
+        third_track_play.click()
         page.wait_for_function(
             "window.vexV4.player.currentItem.ref"
             "==='media.vexstream.test-tone.3'"
         )
+        checked(
+            "fresh-shuffled-context-makes-the-whole-library-upcoming",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 0
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.2,"
+                    "media.vexstream.test-tone.1"
+                )
+                and page.locator("#queueDrawerNextCount").inner_text()
+                == "2 next",
+                "fresh shuffled context retained a false sorted-history prefix",
+            ),
+        )
+
+        shuf.click()
+        third_track_play.click()
+        page.wait_for_function(
+            "window.vexV4.queue.currentProjection.state.currentIndex===2"
+            " && window.vexV4.queue.currentProjection.state.shuffle===false"
+        )
+        shuf.click()
         nxt.click()
         page.wait_for_function(
             "window.vexV4.player.currentItem.ref"
@@ -2231,8 +2287,9 @@ def main() -> int:
                 "queue current projection drift",
             ),
         )
+        current_before=page.evaluate("window.vexV4.player.currentItem.ref")
         checked(
-            "current-queue-item-cannot-be-removed-or-reordered",
+            "current-queue-item-can-be-repositioned-but-not-removed",
             lambda: require(
                 page.locator(
                     "#queueList li.current "
@@ -2241,8 +2298,27 @@ def main() -> int:
                 and page.locator(
                     "#queueList li.current "
                     "[data-queue-action='up']"
-                ).is_disabled(),
-                "current item mutation guard drift",
+                ).is_enabled()
+                and page.locator("#queueList li.current").get_attribute(
+                    "draggable"
+                )
+                == "true",
+                "current Queue row did not expose reorder while retaining remove guard",
+            ),
+        )
+        page.locator(
+            "#queueList li.current [data-queue-action='up']"
+        ).click()
+        checked(
+            "moving-current-queue-item-preserves-playing-identity",
+            lambda: require(
+                page.evaluate("window.vexV4.player.currentItem.ref")
+                == current_before
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 0,
+                "moving current Queue row changed Playback identity",
             ),
         )
         page.locator(

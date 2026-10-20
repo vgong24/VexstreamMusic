@@ -13,21 +13,31 @@ export function shuffleUpcomingRefs(items, currentIndex, shuffleFn) {
   ];
 }
 
+export function shuffleFreshContextRefs(items, currentIndex, shuffleFn) {
+  const selected = items[currentIndex];
+  return [
+    selected,
+    ...shuffleFn([
+      ...items.slice(0, currentIndex),
+      ...items.slice(currentIndex + 1),
+    ]),
+  ];
+}
+
 export function replaceQueueContext(current, refs, startIndex = 0, shuffleFn = value => value) {
   const items = uniqueRefs(refs);
   if (!items.length) return QueueState.empty(current);
   const bounded = Math.max(0, Math.min(Number(startIndex) || 0, items.length - 1));
   const ordered = current.shuffle
-    ? shuffleUpcomingRefs(items, bounded, shuffleFn)
+    ? shuffleFreshContextRefs(items, bounded, shuffleFn)
     : items;
   return QueueState.positioned({
     items: ordered,
-    currentIndex: bounded,
+    currentIndex: current.shuffle ? 0 : bounded,
     shuffle: current.shuffle,
     repeat: current.repeat,
   });
 }
-
 export function appendQueueRefs(current, refs) {
   const additions = uniqueRefs(refs);
   if (!additions.length) return current;
@@ -76,24 +86,25 @@ export function selectQueueIndex(current, index) {
 export function moveQueueItem(current, from, to) {
   if (current.kind === "empty") return current;
   if (!Number.isInteger(from) || from < 0 || from >= current.items.length) return current;
-  if (from === current.currentIndex) return current;
 
   let target = Math.max(0, Math.min(Number(to) || 0, current.items.length));
   if (from === target || from + 1 === target) return current;
 
-  const items = [...current.items];
-  const [item] = items.splice(from, 1);
+  const entries = current.items.map((ref, index) => ({
+    ref,
+    current: index === current.currentIndex,
+  }));
+  const [entry] = entries.splice(from, 1);
   if (from < target) target -= 1;
-  target = Math.max(0, Math.min(target, items.length));
+  target = Math.max(0, Math.min(target, entries.length));
+  entries.splice(target, 0, entry);
 
-  let nextCurrent = current.currentIndex;
-  if (from < nextCurrent) nextCurrent -= 1;
-  if (target <= nextCurrent) nextCurrent += 1;
-
-  items.splice(target, 0, item);
-  return QueueState.positioned({ ...current, items, currentIndex: nextCurrent });
+  return QueueState.positioned({
+    ...current,
+    items: entries.map(value => value.ref),
+    currentIndex: entries.findIndex(value => value.current),
+  });
 }
-
 export function removeQueueItem(current, index) {
   if (current.kind === "empty") return current;
   if (!Number.isInteger(index) || index < 0 || index >= current.items.length) return current;

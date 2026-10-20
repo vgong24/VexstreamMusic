@@ -116,8 +116,19 @@ Unless Victor explicitly admits a different UX, preserve these V3-visible outcom
   slider;
 - overflowing title text moves at a readable **distance-derived velocity**. A longer title receives
   proportionally more time; it must not accelerate merely to finish inside one fixed duration;
+- when Shuffle is already enabled and a person starts a **fresh** listening context from any item,
+  that chosen item becomes the current item at position 1 and every other item in that context
+  remains eligible as upcoming; preserving history applies to reshuffling an already-lived Queue,
+  not to manufacturing a false history prefix from the source list's sort position;
 - the expanded Queue keeps the current item human- and accessibility-identifiable through title,
   artist, album/collection, available description/source detail, and current/played/up-next state;
+  on desktop, rich current-track detail belongs in a dedicated left Now Playing pane beside the
+  Queue timeline at roughly a 25% / 75% information ratio, rather than inflating one timeline row;
+- Queue reorder preserves the identity of whatever is actually playing even when the current row
+  itself moves; current or neighboring rows may be repositioned by the visible reorder affordances,
+  while removing the actively playing row remains held;
+- drag reorder remains a first-class Queue affordance, not an implementation accident of the old
+  monolith;
 - Home song rows expose the same normal track-action vocabulary as Songs: Play, Add to queue, and the
   contextual actions such as Play next, Explore, Edit, Deleted music, and Playlist;
 - a held listening-session badge explains what is held and exposes a bounded reset/adopt-current

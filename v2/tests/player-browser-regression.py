@@ -2421,8 +2421,6 @@ def main() -> int:
         )
         page.locator(
             '#librarySidebar [data-shell-view="playlists"]'
-        ).click()        page.locator(
-            '#librarySidebar [data-shell-view="playlists"]'
         ).click()
         page.wait_for_function(
             "window.vexV4.shellNavigation.currentProjection.view==='playlists'"

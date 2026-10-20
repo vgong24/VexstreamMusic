@@ -1743,7 +1743,7 @@ function renderQueueCurrentPane(state){
   '</div></details>';
 }
 
-function render(){function render(){
+function render(){
  const pp=player.playPausePresentation;
  const qp=queue.currentProjection;
  setControl(playPause,pp);
@@ -1864,7 +1864,7 @@ function render(){function render(){
  requestAnimationFrame(()=>refreshSongMarqueeMetrics(queueDrawer));
 }
 
-function trackPlaylistActionHTML(){function trackPlaylistActionHTML(){
+function trackPlaylistActionHTML(){
  return playlists.length
   ? `<select data-track-playlist-target>${playlists.map(playlist=>
       `<option value="${escapeHTML(playlist.id)}">${escapeHTML(playlist.name)}</option>`
@@ -3893,7 +3893,7 @@ queueList.addEventListener("drop",event=>{
 
 queueList.addEventListener("dragend",clearQueueDragState);
 
-queue.subscribe(projection=>{queue.subscribe(projection=>{
+queue.subscribe(projection=>{
  render();
  schedulePlayerSessionSave(projection.state);
 });

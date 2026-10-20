@@ -246,6 +246,94 @@ Library view/admin + Playlist CRUD + Trash lifecycle
 + Playback/Queue + Explore/Import + player-session + source-management walk
 ```
 
+### Current proof topology — source meaning through lived browser
+
+V4 uses the same proof principle as the accepted VexLife Android test foundation without copying
+Gradle/Android mechanics:
+
+```text
+feature/domain semantics
+  -> focused Go / Node tests at the owning transformation
+
+browser presentation contract
+  -> deterministic DOM/API/media fixtures
+
+human interaction walk
+  -> dependency-free Chromium DevTools lived-shell smoke
+
+broader browser regression
+  -> Playwright qualification when that environment is available
+
+real Windows/macOS product feel
+  -> exact built artifact + lived acceptance
+```
+
+These layers do not replace one another. A duplicate-scoring Go PASS does not prove that the browser
+shows the duplicate to the listener, and a browser PASS does not prove that Windows provider
+subprocesses stay hidden on a real host.
+
+Repository-owned V4 entries are:
+
+```bash
+cd v2
+
+# all current Node semantic/model tests
+npm test
+
+# focused Import planning/request semantics
+npm run test:imports
+
+# Import semantics + the real integrated browser walk
+npm run verify:imports
+
+# aggregate local V4 source verification
+# gofmt -> Go tests -> native-host vet -> Node semantic/model suite -> lived Chromium walk
+npm run verify:local
+```
+
+`test:lived` uses the repository's dependency-free CDP runner and discovers common Chromium-family
+browsers on Windows (Chrome, Edge, Brave), Linux and macOS. An explicit browser path remains available
+for unusual installations.
+
+`verify:local` is the canonical developer/source entry, analogous in purpose to Android's
+`vexVerifyLocal`: CI, VexRelay, or a developer terminal should call this source-owned command rather
+than restating the sequence in another workflow. It records its own proof limits: native-host vet is
+not cross-platform release qualification, deterministic browser fixtures are not a live YouTube
+provider, and automated PASS is not human product acceptance.
+
+The human no-Git Windows source launcher intentionally does not acquire Node merely to run browser
+automation. It continues to own its Go/source/Windows build gate. Browser proof is a developer/source
+proof surface, just as Android Journey/device proof remains distinct from JVM/source proof.
+
+### Current E2E boundary
+
+The V4 proof stack is strong enough to catch **feature disappearance inside the browser product**:
+the lived-shell journey executes the actual embedded V4 HTML/JS in Chromium and asserts Library,
+Playback/Queue, Home track actions, Playlists, Trash, Discover/Explore/YouTube Import, player-session,
+actionable System recovery (including held-session and safe old-session review), and Exit behavior.
+
+It is not yet one literal process-to-provider E2E:
+
+```text
+current test:lived
+  actual Chromium + actual V4 browser source
+  + deterministic API/media fixtures
+
+Go tests
+  actual V4 service / HTTP / persistence / provider-adapter source
+
+exact Windows lived run
+  actual V4 process + actual provider runtime + human perception
+```
+
+The remaining integration seam worth closing is a **server-backed browser journey**: launch an
+isolated real V4 local server/composition with deterministic provider fixtures, then drive that server
+through the same Chromium journey. That would prove browser -> real V4 HTTP handlers -> persistence /
+media composition without making live YouTube/network availability a test dependency.
+
+Do not replace the deterministic lived-shell test with that future seam; keep both. The fixture-backed
+journey is faster and diagnoses product behavior, while server-backed proof owns composition.
+
 ### Protected V3 compatibility
 
 The pairing-store rollback incident established a release law:

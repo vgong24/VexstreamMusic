@@ -455,9 +455,28 @@ def cmd_import(plan_path: Path):
     with tempfile.TemporaryDirectory(prefix="source-",dir=staging) as td:
         td=Path(td)
         outtmpl=str(td/"source.%(ext)s")
-        emit("progress",stage="Downloading source once",progress=10)
-        def progress_hook(_):
+        emit("progress",stage="Downloading source",progress=10)
+        last_download_progress=10
+        def progress_hook(status):
+            nonlocal last_download_progress
             check_cancel(cancel_path)
+            state=status.get("status")
+            if state=="finished":
+                if last_download_progress<40:
+                    last_download_progress=40
+                    emit("progress",stage="Download complete — preparing audio",progress=40)
+                return
+            if state!="downloading":
+                return
+            downloaded=float(status.get("downloaded_bytes") or 0)
+            total=float(status.get("total_bytes") or status.get("total_bytes_estimate") or 0)
+            if total<=0:
+                return
+            ratio=max(0.0,min(1.0,downloaded/total))
+            progress=10+int(ratio*30)
+            if progress>=last_download_progress+2 or progress>=40:
+                last_download_progress=progress
+                emit("progress",stage="Downloading source",progress=progress)
         opts=provider_opts(
             noplaylist=True,
             format="bestaudio/best",

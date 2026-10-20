@@ -27,7 +27,7 @@ var buildRef = ""
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "VexStream Desktop V4:", err)
+		reportStartupFailure(err)
 		os.Exit(1)
 	}
 }
@@ -47,18 +47,38 @@ func run() error {
 		return lifecycle.OpenBrowser(url)
 	}
 
-	// A stale V4 current-url file is replaceable, but a live non-matching V4 is
-	// another writer. Exact reuse above is the only multi-launch shortcut.
+	// A stale V4 current-url file is replaceable. A live non-matching V4 is
+	// another writer, so the human must explicitly choose whether to keep it
+	// or hand shared-library ownership to this newly prepared build.
 	if claim, ok := lifecycle.CurrentLiveClaim(
 		layout.CurrentURL,
 	); ok {
-		return differentV4BuildConflict(claim, ref)
+		proceed, err := handoffDifferentV4(
+			layout.CurrentURL,
+			claim,
+			ref,
+		)
+		if err != nil {
+			return err
+		}
+		if !proceed {
+			return nil
+		}
 	}
 
 	if claim, ok := lifecycle.CurrentLiveClaim(
 		layout.ProtectedCurrentURL,
 	); ok {
-		return protectedDesktopConflict(claim)
+		proceed, err := handoffProtectedDesktop(
+			layout.ProtectedCurrentURL,
+			claim,
+		)
+		if err != nil {
+			return err
+		}
+		if !proceed {
+			return nil
+		}
 	}
 
 	home, _ := os.UserHomeDir()
@@ -71,7 +91,25 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	defer application.Close()
+	claimedURL := ""
+	defer func() {
+		// Shared-Library ownership is released only after feature-owned
+		// background work has stopped. A successor must never infer writer
+		// release merely because the local HTTP listener closed first.
+		application.Close()
+		if claimedURL != "" {
+			if err := lifecycle.ClearIfOwned(
+				layout.CurrentURL,
+				claimedURL,
+			); err != nil {
+				fmt.Fprintln(
+					os.Stderr,
+					"VexStream V4 ownership cleanup:",
+					err,
+				)
+			}
+		}
+	}()
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -83,9 +121,7 @@ func run() error {
 	if err := lifecycle.Claim(layout.CurrentURL, url); err != nil {
 		return err
 	}
-	defer func() {
-		_ = lifecycle.ClearIfOwned(layout.CurrentURL, url)
-	}()
+	claimedURL = url
 
 	for _, warning := range application.StartupWarnings() {
 		fmt.Fprintln(os.Stderr, "VexStream V4 warning:", warning)

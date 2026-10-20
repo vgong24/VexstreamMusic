@@ -226,11 +226,20 @@ func (b *Bridge) runProcess(
 	if len(command) < 2 {
 		return nil, errors.New("YouTube bridge command is incomplete")
 	}
-	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
+	cmd := providerCommand(ctx, command)
 	if len(b.Env) > 0 {
 		cmd.Env = append([]string(nil), b.Env...)
 	}
 	return cmd.CombinedOutput()
+}
+
+func providerCommand(
+	ctx context.Context,
+	command []string,
+) *exec.Cmd {
+	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
+	cmd.SysProcAttr = hiddenProcAttr()
+	return cmd
 }
 
 func parseProblem(output []byte, stage string) Problem {

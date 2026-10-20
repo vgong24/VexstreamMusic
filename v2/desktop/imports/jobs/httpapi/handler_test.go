@@ -111,6 +111,9 @@ func TestStartMapsTypedPlanAndDefaultsSectionSelection(t *testing.T) {
 			"/api/import/start",
 			strings.NewReader(`{
 			  "sourceTitle":" Song ",
+			  "sourceCreator":" Uploader ",
+			  "thumbnail":" https://example/song.jpg ",
+			  "sourceDuration":123.5,
 			  "destination":" /music ",
 			  "url":" https://example/song ",
 			  "mode":"both",
@@ -127,6 +130,9 @@ func TestStartMapsTypedPlanAndDefaultsSectionSelection(t *testing.T) {
 		t.Fatalf("start response drift: %d %s", response.Code, response.Body.String())
 	}
 	if manager.startReq.Title != "Song" ||
+		manager.startReq.Creator != "Uploader" ||
+		manager.startReq.Thumbnail != "https://example/song.jpg" ||
+		manager.startReq.SourceDuration != 123.5 ||
 		manager.startReq.Destination != "/music" ||
 		manager.startReq.URL != "https://example/song" ||
 		len(manager.startReq.Sections) != 2 ||

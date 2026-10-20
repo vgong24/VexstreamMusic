@@ -1,137 +1,329 @@
-# VexStream Music 3.0.0 — VexLife mobile bridge + 🌐 Explore
+# VexStream Music
 
 `[VXG RealForever]`
 
-VexStream Music 3.0.0 promotes the VexLife phone connection to a first-class local product capability while preserving the source-native 2.2.0 playback/import/Explore baseline.
+VexStream Music is a local-first desktop music library and player. It opens its interface in your
+browser, keeps ordinary desktop administration local to the computer, and can expose a bounded
+same-Wi-Fi music surface to VexLife Android for streaming and verified offline copies.
 
-## 🌐 Explore from this song
-
-The human-facing language is now **Explore** rather than a second use of “Discover” or a queue-shaped “Radio”.
-
-From a local track's `⋯` menu choose:
+The human expectation is simple:
 
 ```text
-🌐 Explore from this song
+start VexStream
+-> browser opens
+-> your existing VexStream music folders/library are still there
+-> play music normally
+-> optionally pair VexLife on the same Wi-Fi
 ```
 
-VexStream forms a temporary metadata map without changing the ordinary library queue.
+You should not need to know Git to use the application.
 
-## Multi-axis candidate map
+## Start here — no Git required
 
-2.1.0 fetched two seed-heavy searches in sequence. The first successful artist-centric query could fill most of the frame before another direction was represented.
+### Windows
 
-The preserved 2.2.0 Explore base forms factual search axes and balances them:
+When a signed/published release asset exists, downloading that `.exe` is the preferred path.
+
+The repository also owns a reconstructible fallback. Paste this into **PowerShell**:
+
+```powershell
+$P=Join-Path $env:TEMP 'START-VEXSTREAM-WINDOWS.ps1'; $Q=$ProgressPreference; $ProgressPreference='SilentlyContinue'; try{Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/vgong24/VexstreamMusic/main/START-VEXSTREAM-WINDOWS.ps1' -OutFile $P}finally{$ProgressPreference=$Q}; try{$T=$null; $E=$null; [void][System.Management.Automation.Language.Parser]::ParseFile($P,[ref]$T,[ref]$E); if($E.Count){throw ('VexStream launcher self-check failed: '+(($E|ForEach-Object Message)-join '; '))}; powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File $P; $C=$LASTEXITCODE}finally{Remove-Item -LiteralPath $P -Force -ErrorAction SilentlyContinue}; if($C -ne 0){exit $C}
+```
+
+The launcher:
 
 ```text
-Closer        artist / album depth
-Neighborhood  genre breadth
-Same era      year + genre breadth when available
-Versions      cover / remix / live interpretations
+resolves the exact current main commit
+-> downloads that exact source archive
+-> obtains a local, checksum-verified Go 1.23.2 toolchain when needed
+-> runs the V4 source tests and Windows vet
+-> builds VexStreamMusic-4.0.0.exe
+-> records the exact source commit + executable SHA-256
+-> launches VexStream
 ```
 
-Each axis gets its own candidate pool. VexStream projects the final frame round-robin and caps one creator/channel at two candidates per frame.
+It does **not** require Git, Python, or a global Go installation.
+
+On the first run, the PowerShell window presents five named stages so a person can see what is
+happening and know the process is finite. The only setup downloads are:
 
 ```text
-provider=youtube
-method=SEARCH_DERIVED_MULTI_AXIS
-selection=ROUND_ROBIN
-creatorCap=2
+Go 1.23.2 build tool
+  from https://go.dev
+  Windows download = 78.1 MiB (81,923,109 bytes)
+  -> live progress shows downloaded / total + percentage
+  -> exact size + SHA-256 verified before use
+  -> final unpacked disk usage is reported after setup
+
+exact VexStream source
+  from https://github.com/vgong24/VexstreamMusic
+  -> exact commit selected before build
+  -> live progress shows the source download
+  -> if GitHub omits a total size, the launcher enforces a 100 MiB safety limit
+  -> temporary source/build copy is removed afterward
 ```
 
-This is still search-derived exploration, not a claim that YouTube exposed its consumer recommendation graph.
+PowerShell's default context-free web byte counter is replaced with VexStream-owned bounded progress.
+For example, a first-run Windows setup shows `50.9 MiB / 78.1 MiB (65%)` rather than an unexplained
+ever-growing byte count. Each download says what it is, why it is needed, where it comes from, whether
+it is temporary or retained, and what happens next.
 
-## Candidate actions
+Setup does not upload your music or personal files. After the exact-source executable has been built
+and its digest recorded, later launches can reuse that verified cached executable instead of repeating
+setup.
 
-- **Preview** — one visible YouTube embedded player; does not enter the VexStream queue.
-- **Play local** — used when the candidate is the same known source as a local track.
-- **Add to library…** — existing inspect → duplicate review → import flow.
-- **🌐 Explore from here** — branches a child exploration frame.
-- **Back** — reuses the prior metadata frame without another provider call.
-- **Clear discovery** — destroys the temporary session.
-
-## Boundaries
+The reusable Windows executable is cached below:
 
 ```text
-EXPLORE_SESSION != LIBRARY_QUEUE
-PREVIEWED != DOWNLOADED
-PROVIDER_RESULT != AI_RECOMMENDATION
-AI_RANKING != PROVIDER_RANKING
+%LOCALAPPDATA%\VexStreamMusic\source-builds\<exact-source-commit>\VexStreamMusic-4.0.0.exe
 ```
 
-The map is metadata-first; media is requested only for the candidate the human elects to preview.
+After a new build finishes, Windows File Explorer opens with that exact `.exe` selected so a non-technical user can see the reusable desktop app they now own locally. Rerunning the same source later launches the verified cached executable immediately and does not reopen Explorer unnecessarily.
 
-## Preserved behavior
+After that build exists, you may launch that exact `.exe` normally.
 
-- Songs filtering remains a display lens; playback uses the full sorted library.
-- Queue actions remain explicitly intent-scoped.
-- Windows import setup keeps search readiness separate from FFmpeg/import readiness.
-- Real `/media/<track>` full/range-byte regression remains in qualification.
-- Explore remains in-memory and does not persist across app/page exit.
+#### Can I move or rename the Windows `.exe`?
 
-## Qualification
+Yes. The V4 executable is self-contained: its browser UI and provider bridge are embedded into the
+binary, while durable VexStream configuration/library state lives under
+`%LOCALAPPDATA%\VexStreamMusic\`. Moving or renaming the executable does not move, duplicate, or
+disconnect that Library state.
+
+For example, copying the exact executable to Desktop and launching that copy still opens the same
+VexStream library.
+
+There is one management distinction:
+
+```text
+the VexStream app can run from another folder
+!=
+the source launcher tracks arbitrary file moves
+```
+
+The source launcher owns the canonical exact-build location under
+`%LOCALAPPDATA%\VexStreamMusic\source-builds\<commit>\`. If that canonical executable is moved
+away rather than copied, a later run of the source launcher will see its managed copy is missing and
+reconstruct it there again. A moved copy is not automatically rewritten when a newer source commit is
+built; it remains the exact older executable bytes that were moved.
+
+For normal convenience, prefer a Windows shortcut to the managed executable rather than moving the
+only managed copy. A future packaged/release installation may provide a stable application/Start Menu
+shortcut while retaining exact versioned builds separately for provenance and rollback.
+
+#### What VexStream keeps locally
+
+The source launcher intentionally retains only the pieces that make later launches fast or preserve rollback:
+
+```text
+%LOCALAPPDATA%\VexStreamMusic\toolchains\
+  -> the verified private Go build tool
+  -> approximately 232 MiB on the Windows host observed during qualification
+
+%LOCALAPPDATA%\VexStreamMusic\source-builds\<commit>\
+  -> VexStreamMusic-4.0.0.exe
+  -> BUILD-INFO.json
+  -> older exact-source builds may remain as rollback copies
+
+%LOCALAPPDATA%\VexStreamMusic\
+  -> VexStream's actual application/library state
+  -> this is product data, not disposable build residue
+```
+
+Temporary source archives, extracted build workspaces, and temporary Go-download workspaces live under
+`%TEMP%` and are removed by the launcher in `finally` blocks. The one-line README bootstrap also
+removes its temporary downloaded launcher script after the child PowerShell process exits.
+
+If Windows, PowerShell, or the computer is forcibly terminated mid-run, a `vexstream-v4-source-*`,
+`vexstream-go-*`, or historical Relay `vexstream-v4-*-relay-*` directory can theoretically remain
+under `%TEMP%`. Those directories are build/bootstrap residue, not Library truth, and may be deleted
+when no VexStream setup/Relay task is running.
+
+Historical Relay formation ZIPs or candidate executables that a person explicitly downloaded remain
+in their Downloads folder until that person deletes them. They are not required by the current
+source-launcher path.
+
+#### Windows install / update behavior
+
+The launcher is intended to be safe to run more than once:
+
+```text
+first run
+-> prepare verified build tool
+-> download exact source
+-> build + cache VexStream
+-> launch
+
+same exact source already installed
+-> verify cached executable digest
+-> no download
+-> no rebuild
+-> launch
+
+newer/different source requested
+-> keep the previous cached build as a rollback copy
+-> prepare the new build without replacing your music library
+-> if another V4 is running, leave it running during preparation
+-> at final launch ask whether to switch
+   Yes -> clean exit old V4 -> wait for ownership release -> launch new V4
+   No  -> keep old V4 -> reopen its browser
+
+older V3 still running
+-> visible handoff prompt before V4 becomes the shared-state writer
+
+cached app receipt missing/corrupt
+-> do not trust it silently
+-> rebuild that exact source
+
+cached Go tool from an older VexStream launcher
+-> verify expected Go version/platform in VexStream's managed toolchain folder
+-> adopt it without another 78.1 MiB download
+-> write the current local integrity receipt
+
+download interrupted / checksum mismatch / source check failure
+-> stop safely
+-> remove temporary setup files
+-> keep the existing library and any previously verified app build
+```
+
+The ordinary human command follows `main`, so rerunning it naturally follows the repository's current
+accepted source once changes have merged.
+
+An explicit `-SourceRef <commit-or-branch>` is an advanced testing/pinning control. The launcher does
+not silently replace an explicit source with something newer.
+
+"Deprecated" is intentionally **not guessed from age**. A future release/support policy may explicitly
+classify old versions as deprecated or unsupported; until such a source exists, the launcher only
+claims what it can prove: current `main`, exact requested source, cached local builds, and running
+process identity.
+
+### macOS
+
+The V4 source can also reconstruct and run a native Mac binary without Git or a preinstalled Go
+toolchain.
+
+Paste this into **Terminal**:
 
 ```bash
-python3 tests/run_qualification.py --root . --browser-executable /path/to/chromium
+P="${TMPDIR:-/tmp}/START-VEXSTREAM-MAC.command"; /usr/bin/curl -fL 'https://raw.githubusercontent.com/vgong24/VexstreamMusic/main/START-VEXSTREAM-MAC.command' -o "$P" && /bin/bash "$P"
 ```
 
-Current source proof includes static/source checks, Chromium interaction checks, real source-built media delivery, Go exploration/duplicate/import regressions, and Python bridge checks.
+The Mac launcher detects Apple Silicon vs Intel, obtains the matching checksum-verified Go 1.23.2
+toolchain when needed, builds the exact current source, caches the binary, removes download
+quarantine from that locally reconstructed binary, and runs VexStream. First-run toolchain downloads
+are approximately 68.3 MiB on Apple Silicon and 71.5 MiB on Intel Macs; the Terminal progress bar is
+bounded and the final unpacked disk usage is reported after setup.
 
-Build Windows:
+Current Mac distribution is **not code-signed or notarized**. That is why the Terminal launcher is
+the supported human fallback instead of pretending the raw binary has the same double-click
+distribution properties as a notarized Mac app.
 
-```bash
-python3 tests/build_windows.py --root . --output ../VexStreamMusic-3.0.0.exe
-```
+Keep that Terminal window open while VexStream is running and exit through VexStream's in-app
+**System status -> Exit VexStream** control.
 
-See `docs/architecture/EXPLORE-SESSION-V1.md` and `RELEASE-MANIFEST.json`.
-## VexLife mobile connection
+### If you are testing an unmerged candidate
 
-VexStream 3.0.0 adds a dedicated mobile surface for taking the canonical desktop library onto a
-VexLife Android phone.
+A candidate branch is **not a tag and not main**. It is a development line whose exact head commit is
+the immutable build identity being tested.
 
-The ordinary desktop UI/admin server remains loopback-only. Phone access uses a separate bounded
-HTTPS surface with only pairing, sanitized catalog, and range-capable media.
+The normal commands above intentionally follow `main`. During candidate testing, pass the candidate
+branch explicitly to the downloaded launcher instead of treating the candidate as already released.
 
-Human path:
+After the accepted candidate merges, `main` becomes the ordinary reconstruction source. A later
+release/tag may additionally bind accepted source to permanently downloadable release artifacts.
+
+## What should happen when VexStream starts?
+
+V4 intentionally reuses the established VexStream application-data location rather than asking you to
+recreate your music library for every version.
+
+Shared V3/V4 state includes the source-folder configuration and compatible Library, playlist,
+overlay, playback-window, Trash, and related durable stores.
 
 ```text
-Windows VexStream
--> click the phone icon
--> VexStream becomes discoverable on the same Wi-Fi for five minutes
--> six-digit confirmation code
-
-VexLife Android
--> Home -> VexStream Music -> Find VexStream
--> select the computer
--> compare the same six-digit code
--> Request access
-
-Windows
--> Allow
-
-VexLife
--> stream on the phone
--> optionally Download for verified offline playback
+VERSION_UPGRADE != REBUILD_MY_LIBRARY_FROM_SCRATCH
 ```
 
-The remembered relationship uses the desktop certificate identity rather than a temporary LAN
-address. Android pins that certificate, stores its bearer token encrypted with Android Keystore, and
-can rediscover the same computer after a route/DHCP change.
+V3 and V4 must not write those shared stores simultaneously. A current Windows V4 startup candidate
+therefore makes an older live VexStream conflict visible rather than silently disappearing or
+starting a second writer.
 
-The prior ADB-reverse transport remains only as a developer/recovery path.
+Closing the browser tab is not the same as exiting VexStream. Use the in-app **Exit VexStream**
+control to stop the desktop process cleanly.
+
+## What does Android "Download" mean?
+
+The GitHub repository, source ZIP, and desktop executable are distribution/build surfaces. Your phone
+does **not** download songs from GitHub.
+
+Once VexStream is running on your computer, the intended local flow is:
 
 ```text
-LOCAL_VEXSTREAM_PAIRING
-!= VEXHOME_MEMBERSHIP
-!= CANONICAL_HOME_AUTHENTICATION
-!= CAPABILITY_LEASE
-!= REMOTE_ACCESS_AUTHORITY
+your configured music folder
+-> VexStream Desktop catalog/media producer
+-> VexLife Android on the same Wi-Fi
+-> Download
+-> exact media bytes received
+-> expected digest + byte length verified
+-> app-private local copy completed
+-> durable offline index
+-> local/offline playback
 ```
 
-VexStream 3.0.0 also has an explicit **Exit VexStream** control in System status. Closing a browser
-window is not treated as process shutdown.
+Permanent distinction:
 
-The matching Android consumer is in `vgong24/VexLife-Android`, PR #13 /
-`VXG-101126-vexstream-mobile-stream-offline`.
+```text
+BROWSER_OR_NETWORK_CACHE != DOWNLOADED
+DOWNLOADED = VERIFIED_BYTES + DURABLE_INDEX
+```
 
-The historical 2.2.0 release manifest remains evidence for the preserved Explore base; current 3.0.0
-mobile-candidate proof is produced by the branch qualification/build workflow.
+The current local mobile producer is a same-Wi-Fi capability. Android contains remote/direct+relay
+architecture, but the current Desktop V4 producer does not yet complete the off-home/cellular
+producer side. Do not treat local pairing as remote-access authority.
+
+## Reconstructible source vs downloadable release
+
+Both are valuable, but they answer different questions:
+
+```text
+source + pinned builder
+-> can reconstruct the application
+
+release asset + digest + source binding
+-> can re-download the exact accepted application bytes
+```
+
+The human launchers above provide the first property even when no release asset is available.
+
+The preferred long-term distribution model is:
+
+```text
+accepted source commit/tag
+-> qualified Windows + Mac artifacts
+-> recorded SHA-256 values
+-> durable GitHub Release assets
+-> simple human download
+```
+
+Rebuilding with a different source commit or toolchain may produce a valid application with different
+bytes. Lived acceptance of one executable therefore does not automatically transfer to every later
+rebuild.
+
+## Development and architecture
+
+V4 is implemented under `v2/`. Start here if you are changing the product rather than simply using
+it:
+
+1. [V4 architecture/workspace entry](v2/README.md)
+2. [Lived product oracle](v2/LIVED-PRODUCT-ORACLE.md)
+3. [V4 completion plan](v2/COMPLETION-PLAN.md)
+4. [Architecture map](v2/architecture/README.md)
+5. [Release qualification contract](docs/process/RELEASE-QUALIFICATION.md)
+
+Repository engineering proof and human acceptance remain distinct:
+
+```text
+SOURCE/BUILD PROOF != REAL WINDOWS/MAC LISTENING ACCEPTANCE
+AUTOMATED ANDROID PROOF != HUMAN-WITNESSED DESKTOP -> PHONE EXPERIENCE
+```
+
+<!-- [VXG RealForever][VEXSTREAM][HUMAN-ENTRY][DESKTOP-V4] -->

@@ -142,6 +142,9 @@ export function buildImportPlan(
 
   return Object.freeze({
     sourceTitle: review.title,
+    sourceCreator: review.creator,
+    thumbnail: review.thumbnail,
+    sourceDuration: review.durationSeconds,
     destination,
     url: review.url,
     mode,

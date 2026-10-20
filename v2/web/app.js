@@ -67,8 +67,10 @@ import {
   inspectImport,
   loadImportDestinations,
   loadImportJobs,
+  loadImportRuntimeStatus,
   recoverImportCommit,
   retryImportCommit,
+  setupImportRuntime,
   startImport,
 } from "./features/imports/client.js";
 import {
@@ -77,7 +79,9 @@ import {
 } from "./features/imports/review.js";
 import {
   exitVexStream,
+  loadSessionRetirePlan,
   loadSystemIdentity,
+  retireSessions,
 } from "./features/system/client.js";
 import { projectSystemStatus } from "./features/system/status.js";
 import {
@@ -97,6 +101,7 @@ import {
   createDiscoverNavigation,
 } from "./features/discover/navigation.js";
 import { escapeHTML } from "./foundation/html.js";
+import { marqueeDurationSeconds } from "./foundation/marquee.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
 
@@ -132,6 +137,8 @@ const systemTrashStatus=document.querySelector("#systemTrashStatus");
 const systemSessionStatus=document.querySelector("#systemSessionStatus");
 const systemImportStatus=document.querySelector("#systemImportStatus");
 const systemAttention=document.querySelector("#systemAttention");
+const reviewOldSessions=document.querySelector("#reviewOldSessions");
+const oldSessionPlan=document.querySelector("#oldSessionPlan");
 const exitVexStreamButton=document.querySelector("#exitVexStream");
 const status=document.querySelector("#status");
 const semanticState=document.querySelector("#semanticState");
@@ -150,8 +157,6 @@ const songLayoutButton=document.querySelector("#songLayoutButton");
 const songLayoutPanel=document.querySelector("#songLayoutPanel");
 const songLayoutDone=document.querySelector("#songLayoutDone");
 const songLayoutReset=document.querySelector("#songLayoutReset");
-const songTitleWidth=document.querySelector("#songTitleWidth");
-const songTitleWidthValue=document.querySelector("#songTitleWidthValue");
 const songLayoutFieldInputs=[...document.querySelectorAll("[data-song-layout-field]")];
 const selectSongs=document.querySelector("#selectSongs");
 const librarySelectionBar=document.querySelector("#librarySelectionBar");
@@ -228,6 +233,8 @@ const discoverModeButtons=[...document.querySelectorAll("[data-discover-mode]")]
 const discoverPanels=[...document.querySelectorAll("[data-discover-panel]")];
 const youtubeImportURL=document.querySelector("#youtubeImportURL");
 const youtubeInspect=document.querySelector("#youtubeInspect");
+const youtubeImportEntry=document.querySelector("#youtubeImportEntry");
+const importRuntimeNotice=document.querySelector("#importRuntimeStatus");
 const sourceSummary=document.querySelector("#sourceSummary");
 const sourceAdd=document.querySelector("#sourceAdd");
 const sourceDiscover=document.querySelector("#sourceDiscover");
@@ -293,7 +300,14 @@ const importReviewPanel=document.querySelector("#importReview");
 const importReviewClose=document.querySelector("#importReviewClose");
 const importReviewSourceTitle=document.querySelector("#importReviewSourceTitle");
 const importReviewSourceCreator=document.querySelector("#importReviewSourceCreator");
+const importReviewDuration=document.querySelector("#importReviewDuration");
+const importReviewThumbnail=document.querySelector("#importReviewThumbnail");
+const importReviewThumbnailFallback=document.querySelector("#importReviewThumbnailFallback");
+const importReviewLoading=document.querySelector("#importReviewLoading");
+const importReviewLoadingDetail=document.querySelector("#importReviewLoadingDetail");
+const importReviewContent=document.querySelector("#importReviewContent");
 const importDuplicateSummary=document.querySelector("#importDuplicateSummary");
+const importDuplicateDetails=document.querySelector("#importDuplicateDetails");
 const importDestination=document.querySelector("#importDestination");
 const importMode=document.querySelector("#importMode");
 const importCollection=document.querySelector("#importCollection");
@@ -337,8 +351,38 @@ let playlists=Object.freeze([]);
 let resolvedPlaylists=Object.freeze([]);
 let playlistSelectionTargetID="";
 let currentEditingTrackRef="";
-const defaultSongLayout=Object.freeze({artist:true,album:true,added:true,duration:true,genre:false,titleWidth:46});
-let songLayout=Object.freeze({...defaultSongLayout});
+const songColumnRules=Object.freeze({
+ title:Object.freeze({defaultWidth:300,minWidth:110,maxWidth:1200}),
+ added:Object.freeze({defaultWidth:80,minWidth:52,maxWidth:360}),
+ artist:Object.freeze({defaultWidth:120,minWidth:32,maxWidth:900}),
+ album:Object.freeze({defaultWidth:140,minWidth:32,maxWidth:1100}),
+ genre:Object.freeze({defaultWidth:90,minWidth:32,maxWidth:700}),
+ duration:Object.freeze({defaultWidth:60,minWidth:52,maxWidth:220})
+});
+function defaultSongWidths(){
+ return Object.freeze(Object.fromEntries(
+  Object.entries(songColumnRules).map(([key,rule])=>[key,rule.defaultWidth])
+ ));
+}
+const defaultSongLayout=Object.freeze({
+ artist:true,
+ album:true,
+ added:true,
+ duration:true,
+ genre:false,
+ widths:defaultSongWidths()
+});
+function freshDefaultSongLayout(){
+ return Object.freeze({
+  artist:defaultSongLayout.artist,
+  album:defaultSongLayout.album,
+  added:defaultSongLayout.added,
+  duration:defaultSongLayout.duration,
+  genre:defaultSongLayout.genre,
+  widths:defaultSongWidths()
+ });
+}
+let songLayout=freshDefaultSongLayout();
 let bulkDisplayRefs=Object.freeze([]);
 let artistDetailIdentity="";
 let artistAlbumsExpanded=false;
@@ -363,6 +407,14 @@ let playerSessionSaveTimer=null;
 let pendingPlayerSessionState=null;
 let playerSessionSaveChain=Promise.resolve();
 let currentImportReview=null;
+let importReviewLoadingState=false;
+let importReviewLoadingURL="";
+const importDuplicatePreviewAudio=new Audio();
+let importDuplicatePreviewTimer=null;
+let resumeAfterImportDuplicatePreview=false;
+let importRuntimeState=null;
+let importRefreshTimer=null;
+let observedImportCompletionKey="";
 let currentImportJobs=Object.freeze({
  active:Object.freeze([]),
  ready:Object.freeze([]),
@@ -438,32 +490,82 @@ function renderNowPlaying(item){
  nowTitleButton.disabled=!active;
  nowDetails.hidden=!active;
  if(!active)nowDetails.open=false;
- title.textContent=active
+ const visibleTitle=active
   ?trackTitle(item)
   :resolveText(locale,"player.nothing.title");
+ title.classList.add("song-marquee");
+ title.title=visibleTitle;
+ title.innerHTML=`<span class="song-marquee-text">${escapeHTML(visibleTitle)}</span>`;
  nowMeta.innerHTML=nowLibraryRelationsHTML(item);
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics(nowPlaying));
+}
+
+function marqueeTextHTML(value,{tag="span",className=""}={}){
+ const text=String(value??"");
+ const classes=["song-marquee",className].filter(Boolean).join(" ");
+ return `<${tag} class="${classes}" title="${escapeHTML(text)}"><span class="song-marquee-text">${escapeHTML(text)}</span></${tag}>`;
+}
+
+function refreshSongMarqueeMetrics(root=document){
+ for(const outer of root.querySelectorAll(".song-marquee")){
+  const inner=outer.querySelector(".song-marquee-text");
+  if(!inner)continue;
+  const shift=Math.max(0,inner.scrollWidth-outer.clientWidth);
+  outer.style.setProperty("--song-marquee-shift",shift+"px");
+  if(shift>3){
+   // Long text travels farther, so it receives proportionally more time instead
+   // of accelerating merely to finish inside one fixed animation duration.
+   const duration=marqueeDurationSeconds(shift);
+   outer.style.setProperty("--song-marquee-duration",duration.toFixed(2)+"s");
+  }else{
+   outer.style.removeProperty("--song-marquee-duration");
+  }
+  outer.classList.toggle("overflowing",shift>3);
+ }
+}
+
+function syncActiveSongRows(){
+ const current=player.currentItem?.ref??"";
+ for(const row of document.querySelectorAll("[data-track-ref]")){
+  row.classList.toggle("playing",Boolean(current)&&row.dataset.trackRef===current);
+ }
+ for(const row of document.querySelectorAll("[data-home-track-ref]")){
+  row.classList.toggle("playing",Boolean(current)&&row.dataset.homeTrackRef===current);
+ }
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics());
 }
 
 function homeRecentRowHTML(item){
  const secondary=String(item?.sourceTitle??item?.channel??"").trim();
- return `<tr data-home-track-ref="${escapeHTML(item.ref)}">
+ const playing=player.currentItem?.ref===item.ref;
+ return `<tr class="${playing?"playing":""}" tabindex="0" aria-label="Play ${escapeHTML(trackTitle(item))}" data-home-track-ref="${escapeHTML(item.ref)}" data-track-ref="${escapeHTML(item.ref)}">
    <td class="song-title-cell">
     <div class="song-main">
      ${trackArtworkHTML(item)}
      <div class="song-copy">
-      <strong>${escapeHTML(trackTitle(item))}</strong>
-      ${secondary?`<small>${escapeHTML(secondary)}</small>`:""}
+      ${marqueeTextHTML(trackTitle(item),{tag:"strong"})}
+      ${secondary?marqueeTextHTML(secondary,{tag:"small"}):""}
      </div>
     </div>
    </td>
    <td class="col-added"><span class="small">${escapeHTML(formatLibraryAdded(item.addedAt))}</span></td>
-   <td class="col-artist"><span class="clip2">${escapeHTML(trackArtist(item))}</span></td>
-   <td class="col-album"><span class="clip2">${escapeHTML(String(item?.album??"").trim()||"Unknown album")}</span></td>
+   <td class="col-artist">${marqueeTextHTML(trackArtist(item),{className:"clip2"})}</td>
+   <td class="col-album">${marqueeTextHTML(String(item?.album??"").trim()||"Unknown album",{className:"clip2"})}</td>
    <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
    <td class="col-actions">
     <div class="song-actions">
-     <button data-home-track-action="play" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
-     <button data-home-track-action="append" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
+     <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+     <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
+     <details class="song-more">
+      <summary aria-label="Track actions" title="Track actions">⋯</summary>
+      <div class="song-more-menu">
+       <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
+       <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+       <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
+       <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
+       ${trackPlaylistActionHTML()}
+      </div>
+     </details>
     </div>
    </td>
   </tr>`;
@@ -480,11 +582,11 @@ function renderHome(){
      <table class="song-table home-recent-table">
       <thead>
        <tr>
-        <th class="song-title-cell">Title</th>
-        <th class="col-added">Added</th>
-        <th class="col-artist">Artist</th>
-        <th class="col-album">Album</th>
-        <th class="col-duration">Time</th>
+        ${songColumnHeader("title","Title","song-title-cell",{sortable:false})}
+        ${songColumnHeader("added","Added","col-added",{sortable:false})}
+        ${songColumnHeader("artist","Artist","col-artist",{sortable:false})}
+        ${songColumnHeader("album","Album","col-album",{sortable:false})}
+        ${songColumnHeader("duration","Time","col-duration",{sortable:false})}
         <th class="col-actions"></th>
        </tr>
       </thead>
@@ -977,19 +1079,258 @@ function renderExplore(){
  }).join("");
 }
 
-function renderImportReview(){
- if(!currentImportReview){
-  importReviewPanel.hidden=true;
+function renderImportRuntimeStatus(){
+ if(!importRuntimeNotice)return;
+ if(!importRuntimeState){
+  importRuntimeNotice.dataset.ready="unknown";
+  importRuntimeNotice.textContent="Checking YouTube import tools…";
   return;
  }
+ const detail=importRuntimeState.detail
+  ? ` <span>${escapeHTML(importRuntimeState.detail)}</span>`
+  : "";
+ let title="YouTube import needs one-time setup.";
+ let action=`<button type="button" class="primary" data-import-runtime-action="setup">Set up import tools</button>`;
+ if(importRuntimeState.importReady){
+  title="YouTube import is ready.";
+  action="";
+ }else if(importRuntimeState.searchReady){
+  title="YouTube search is ready; MP3 download still needs FFmpeg.";
+  action=`<button type="button" class="primary" data-import-runtime-action="setup">Finish import setup</button>`;
+ }
+ importRuntimeNotice.dataset.ready=String(importRuntimeState.importReady);
+ importRuntimeNotice.innerHTML=`<div><strong>${escapeHTML(title)}</strong>${detail}</div>${action}`;
+}
+
+async function refreshImportRuntime(){
+ importRuntimeState=await loadImportRuntimeStatus();
+ renderImportRuntimeStatus();
+ return importRuntimeState;
+}
+
+async function prepareImportRuntime(){
+ importRuntimeNotice.dataset.ready="false";
+ importRuntimeNotice.innerHTML="<div><strong>Setting up YouTube import tools…</strong></div>";
+ importRuntimeState=await setupImportRuntime();
+ renderImportRuntimeStatus();
+ return importRuntimeState;
+}
+
+async function ensureImportRuntimeReady(){
+ let runtime=await refreshImportRuntime();
+ if(runtime.importReady)return runtime;
+ runtime=await prepareImportRuntime();
+ if(runtime.importReady)return runtime;
+ throw new Error(
+  runtime.detail||
+  "YouTube search can still work, but MP3 download needs FFmpeg before this import can start."
+ );
+}
+
+function importCompletionKey(snapshot=currentImportJobs){
+ return (snapshot?.completed??[])
+  .filter(job=>job.status==="done")
+  .map(job=>`${job.id}:${job.completedAt??""}:${(job.trackIds??[]).join(",")}`)
+  .sort()
+  .join("|");
+}
+
+function scheduleImportJobRefresh(delay=700){
+ if(importRefreshTimer!==null){
+  clearTimeout(importRefreshTimer);
+  importRefreshTimer=null;
+ }
+ if((currentImportJobs?.active?.length??0)===0)return;
+ importRefreshTimer=setTimeout(()=>{
+  importRefreshTimer=null;
+  void guarded(()=>refreshImportJobs());
+ },delay);
+}
+
+function stopImportDuplicatePreview({resume=true}={}){
+ if(importDuplicatePreviewTimer!==null){
+  clearTimeout(importDuplicatePreviewTimer);
+  importDuplicatePreviewTimer=null;
+ }
+ importDuplicatePreviewAudio.pause();
+ importDuplicatePreviewAudio.removeAttribute("src");
+ importDuplicatePreviewAudio.load();
+ importDuplicatePreviewAudio.onloadedmetadata=null;
+ importDuplicatePreviewAudio.onerror=null;
+ for(const button of importDuplicateDetails.querySelectorAll("[data-import-duplicate-preview]")){
+  button.classList.remove("previewing");
+  button.textContent="Preview 12s";
+ }
+ if(resume&&resumeAfterImportDuplicatePreview){
+  audio.play().catch(()=>{});
+ }
+ resumeAfterImportDuplicatePreview=false;
+}
+
+function importDuplicateRelationLabel(value){
+ return ({
+  SAME_SOURCE:"Same source",
+  LIKELY_SAME_RECORDING:"Likely same recording",
+  SAME_SONG_DIFFERENT_EDIT_POSSIBLE:"Likely same song · different edit possible",
+  SAME_SONG_POSSIBLE:"Same song possible",
+  POSSIBLE_MATCH:"Possible match"
+ })[value]||"Possible match";
+}
+
+function importQualityLabel(value){
+ if(!value)return "Unknown";
+ const bits=[];
+ if(value.codec)bits.push(String(value.codec).toUpperCase());
+ if(Number(value.bitrateKbps)>0)bits.push(`~${Math.round(Number(value.bitrateKbps))} kbps`);
+ if(Number(value.sampleRateHz)>0)bits.push(`${Math.round(Number(value.sampleRateHz)/100)/10} kHz`);
+ return bits.join(" · ")||"Unknown";
+}
+
+function importDuplicateReviewHTML(review){
+ const items=review?.duplicateItems??[];
+ if(!items.length)return "";
+ const rows=items.map(item=>{
+  const match=item.matches?.[0];
+  if(!match)return "";
+  const incoming=item.kind==="section"
+   ? `Track section ${item.index}: ${item.title}`
+   : `Incoming source: ${item.title}`;
+  const sameSource=match.relation==="SAME_SOURCE";
+  const heading=sameSource
+   ?"Already in your Library — same source"
+   :"Possible duplicate already in your Library";
+  const artwork=match.thumbnailUrl
+   ?`<img class="import-duplicate-art" src="${escapeHTML(match.thumbnailUrl)}" alt="">`
+   :'<div class="import-duplicate-art fallback">♫</div>';
+  const reasons=(match.reasons??[]).slice(0,4).join(" · ");
+  const quality=match.qualityComparison?.summary||
+   "Not enough format data to compare audio quality before download.";
+  const preview=match.trackId&&byRef.has(match.trackId)
+   ?`<button type="button" data-import-duplicate-preview="${escapeHTML(match.trackId)}">Preview 12s</button>`
+   :"";
+  return `<section class="import-duplicate-item ${sameSource?"same-source":""}">
+    <div class="import-duplicate-heading">
+     <strong>${escapeHTML(heading)}</strong>
+     <span>${escapeHTML(incoming)}</span>
+    </div>
+    <div class="import-duplicate-match">
+     ${artwork}
+     <div class="import-duplicate-copy">
+      <div><strong>${escapeHTML(match.title||"Existing Library track")}</strong>
+       <span class="import-duplicate-relation">${escapeHTML(importDuplicateRelationLabel(match.relation))}</span>
+      </div>
+      <div>${escapeHTML(match.artist||"Unknown artist")} · ${escapeHTML(match.album||"Unknown album")} · ${formatSeconds(match.duration)}</div>
+      <div>${escapeHTML(match.confidence||"possible")} match${reasons?` · ${escapeHTML(reasons)}`:""}</div>
+      <div><strong>Existing:</strong> ${escapeHTML(importQualityLabel(match.localQuality))}
+       &nbsp; <strong>Source:</strong> ${escapeHTML(importQualityLabel(item.sourceQuality))}</div>
+      <div><strong>Quality check:</strong> ${escapeHTML(quality)}</div>
+     </div>
+     ${preview}
+    </div>
+   </section>`;
+ }).filter(Boolean).join("");
+ if(!rows)return "";
+ return `<div class="import-duplicate-review">
+   ${rows}
+   <div class="import-duplicate-advisory">
+    Duplicate matching is advisory. Compare the existing Library track before downloading another copy; different edits, remixes, live versions, or intentionally different-quality copies may still be valid.
+   </div>
+  </div>`;
+}
+
+function previewImportDuplicate(ref,button){
+ const track=byRef.get(ref);
+ if(!track)return;
+ stopImportDuplicatePreview({resume:false});
+ resumeAfterImportDuplicatePreview=!audio.paused;
+ if(resumeAfterImportDuplicatePreview)audio.pause();
+ button.classList.add("previewing");
+ button.textContent="Playing…";
+ importDuplicatePreviewAudio.src="/media/"+encodeURIComponent(ref);
+ importDuplicatePreviewAudio.onloadedmetadata=()=>{
+  const duration=Number.isFinite(importDuplicatePreviewAudio.duration)
+   ?importDuplicatePreviewAudio.duration
+   :Number(track.durationSeconds)||0;
+  importDuplicatePreviewAudio.currentTime=duration>60?Math.min(30,duration*.2):0;
+  importDuplicatePreviewAudio.play().catch(()=>{});
+  importDuplicatePreviewTimer=setTimeout(
+   ()=>stopImportDuplicatePreview(),
+   12000
+  );
+ };
+ importDuplicatePreviewAudio.onerror=()=>stopImportDuplicatePreview();
+}
+
+async function loadImportReview(url,{selectYouTube=false}={}){
+ const value=String(url??"").trim();
+ if(!value)throw new Error("Paste a YouTube link to review");
+ stopImportDuplicatePreview();
+ if(selectYouTube)discoverNavigation.select(DiscoverMode.YOUTUBE);
+ youtubeImportURL.value=value;
+ currentImportReview=null;
+ importReviewLoadingState=true;
+ importReviewLoadingURL=value;
+ renderImportReview();
+ try{
+  const [reviewed,destinations]=await Promise.all([
+   inspectImport(value),
+   loadImportDestinations()
+  ]);
+  currentImportReview=formImportReview(reviewed,destinations);
+  return currentImportReview;
+ }finally{
+  importReviewLoadingState=false;
+  importReviewLoadingURL="";
+ }
+}
+
+function renderImportReview(){
+ if(importReviewLoadingState){
+  youtubeImportEntry.hidden=true;
+  importReviewPanel.hidden=false;
+  importReviewClose.hidden=true;
+  importReviewLoading.hidden=false;
+  importReviewContent.hidden=true;
+  importReviewLoadingDetail.textContent=
+   "Fetching title, artwork, track layout, and duplicate matches from your current Library. Nothing is downloading yet.";
+  importReviewPanel.dataset.reviewState="loading";
+  return;
+ }
+ importReviewClose.hidden=false;
+ importReviewLoading.hidden=true;
+ importReviewContent.hidden=false;
+ importReviewPanel.dataset.reviewState=currentImportReview?"ready":"idle";
+ if(!currentImportReview){
+  importReviewPanel.hidden=true;
+  youtubeImportEntry.hidden=false;
+  importReviewThumbnail.hidden=true;
+  importReviewThumbnail.removeAttribute("src");
+  importReviewThumbnailFallback.hidden=false;
+  importDuplicateDetails.innerHTML="";
+  return;
+ }
+ youtubeImportEntry.hidden=true;
  importReviewPanel.hidden=false;
  importReviewSourceTitle.textContent=currentImportReview.title;
- importReviewSourceCreator.textContent=currentImportReview.creator;
+ importReviewSourceCreator.textContent=currentImportReview.creator||"Unknown creator";
+ importReviewDuration.textContent=currentImportReview.durationSeconds
+  ? `${formatSeconds(currentImportReview.durationSeconds)} source duration`
+  : "";
+ if(currentImportReview.thumbnail){
+  importReviewThumbnail.src=currentImportReview.thumbnail;
+  importReviewThumbnail.hidden=false;
+  importReviewThumbnailFallback.hidden=true;
+ }else{
+  importReviewThumbnail.hidden=true;
+  importReviewThumbnail.removeAttribute("src");
+  importReviewThumbnailFallback.hidden=false;
+ }
  importDuplicateSummary.textContent=currentImportReview.duplicateItemCount
   ? resolveText(locale,"import.duplicates.present",{
       count:currentImportReview.duplicateItemCount
     })
   : resolveText(locale,"import.duplicates.none");
+ importDuplicateDetails.innerHTML=importDuplicateReviewHTML(currentImportReview);
 
  importDestination.innerHTML=currentImportReview.destinations.length
   ? currentImportReview.destinations.map(value=>
@@ -1022,44 +1363,118 @@ function renderImportReview(){
   : resolveText(locale,"import.hint.whole");
 }
 
+function importJobTime(value){
+ if(!value)return "";
+ const date=new Date(value);
+ if(Number.isNaN(date.getTime()))return "";
+ return date.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+}
+
+function importJobStatusLabel(job){
+ if(job.status==="done")return "Added";
+ if(job.status==="committing")return "Adding";
+ if(job.status==="ready")return "Needs attention";
+ if(job.status==="running")return "Downloading";
+ if(job.status==="queued")return "Queued";
+ if(job.status==="cancelling")return "Cancelling";
+ if(job.status==="cancelled")return "Cancelled";
+ if(job.status==="discarded")return "Discarded";
+ if(job.status==="failed")return "Failed";
+ return job.status||"Import";
+}
+
+function importJobCard(job,group){
+ const recovery=currentImportJobs.recovery[job.id]??"";
+ const problem=job.problem?.title||job.problem?.message||"";
+ const actions=[];
+ if(["queued","running","cancelling"].includes(job.status)){
+  actions.push(`<button data-import-job-action="cancel">${escapeHTML(resolveText(locale,"import.cancel"))}</button>`);
+ }
+ if(job.status==="ready"){
+  actions.push(`<button class="primary" data-import-job-action="retry">${escapeHTML(resolveText(locale,"import.retry"))}</button>`);
+  actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
+ }
+ if(job.status==="failed"){
+  actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
+ }
+ if(recovery==="COMMIT_UNCERTAIN"){
+  actions.push(`<button class="primary" data-import-job-action="recover">${escapeHTML(resolveText(locale,"import.recover"))}</button>`);
+ }
+ if(job.status==="done"&&(job.trackIds??[]).some(ref=>byRef.has(ref))){
+  actions.push('<button data-import-job-action="view">View in Library</button>');
+ }
+
+ const pct=Math.max(0,Math.min(100,Number(job.progress)||0));
+ const thumbnail=job.thumbnail
+  ? `<img class="import-job-thumbnail" src="${escapeHTML(job.thumbnail)}" alt="">`
+  : '<div class="import-job-thumbnail fallback">♫</div>';
+ const creator=job.creator
+  ? `<div class="import-job-creator">${escapeHTML(job.creator)}</div>`
+  : "";
+ const stage=job.stage||importJobStatusLabel(job);
+ const detail=(job.detail||problem||"").trim();
+ const detailHTML=detail&&detail!==stage
+  ? `<div class="import-job-detail">${escapeHTML(detail)}</div>`
+  : "";
+ const activeProgress=group==="active"
+  ? `<div class="import-progress-row">
+      <div class="import-progress-track" role="progressbar" aria-label="${escapeHTML(stage)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}">
+       <div class="import-progress-fill" style="width:${pct}%"></div>
+      </div>
+      <strong class="import-progress-value">${pct}%</strong>
+    </div>`
+  : "";
+ const when=importJobTime(group==="completed"?job.completedAt:job.startedAt);
+
+ return `<article class="import-job import-job-${escapeHTML(group)}" data-import-job-id="${escapeHTML(job.id)}">
+   ${thumbnail}
+   <div class="import-job-main">
+    <div class="import-job-title-row">
+     <strong>${escapeHTML(job.title||resolveText(locale,"import.untitled"))}</strong>
+     <span class="import-job-status status-${escapeHTML(job.status||"unknown")}">${escapeHTML(importJobStatusLabel(job))}</span>
+    </div>
+    ${creator}
+    <div class="import-job-stage">${escapeHTML(stage)}</div>
+    ${detailHTML}
+    ${activeProgress}
+   </div>
+   <div class="import-job-side">
+    <div class="import-job-actions">${actions.join("")}</div>
+    ${when?`<time class="import-job-time">${escapeHTML(when)}</time>`:""}
+   </div>
+  </article>`;
+}
+
+function importJobSection(title,summary,jobs,group){
+ if(!jobs.length)return "";
+ return `<section class="import-activity-group import-activity-${escapeHTML(group)}">
+   <div class="import-activity-group-head">
+    <div><strong>${escapeHTML(title)}</strong><span>${escapeHTML(summary)}</span></div>
+    <span class="import-activity-count">${jobs.length}</span>
+   </div>
+   <div class="import-activity-list">${jobs.map(job=>importJobCard(job,group)).join("")}</div>
+  </section>`;
+}
+
 function renderImportJobs(){
- const rows=[
-  ...currentImportJobs.active,
-  ...currentImportJobs.ready,
-  ...currentImportJobs.completed
- ];
- if(!rows.length){
-  importJobs.innerHTML=`<div class="muted">${escapeHTML(resolveText(locale,"import.jobs.empty"))}</div>`;
+ const active=currentImportJobs.active??[];
+ const ready=currentImportJobs.ready??[];
+ const completed=currentImportJobs.completed??[];
+ if(!active.length&&!ready.length&&!completed.length){
+  importJobs.innerHTML=`<div class="import-activity-empty">${escapeHTML(resolveText(locale,"import.jobs.empty"))}</div>`;
   return;
  }
 
- importJobs.innerHTML=rows.map(job=>{
-  const recovery=currentImportJobs.recovery[job.id]??"";
-  const problem=job.problem?.title||job.problem?.message||"";
-  const actions=[];
-  if(["queued","running","cancelling"].includes(job.status)){
-   actions.push(`<button data-import-job-action="cancel">${escapeHTML(resolveText(locale,"import.cancel"))}</button>`);
-  }
-  if(job.status==="ready"){
-   actions.push(`<button data-import-job-action="retry">${escapeHTML(resolveText(locale,"import.retry"))}</button>`);
-   actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
-  }
-  if(job.status==="failed"){
-   actions.push(`<button data-import-job-action="discard">${escapeHTML(resolveText(locale,"import.discard"))}</button>`);
-  }
-  if(recovery==="COMMIT_UNCERTAIN"){
-   actions.push(`<button data-import-job-action="recover">${escapeHTML(resolveText(locale,"import.recover"))}</button>`);
-  }
-  return `<article class="import-job" data-import-job-id="${escapeHTML(job.id)}">
-    <div class="import-job-copy">
-      <strong>${escapeHTML(job.title||resolveText(locale,"import.untitled"))}</strong>
-      <span>${escapeHTML(job.stage||job.status||"")}</span>
-      <small>${escapeHTML(job.detail||problem)}</small>
-    </div>
-    <div class="import-job-progress">${Number(job.progress||0)}%</div>
-    <div class="import-job-actions">${actions.join("")}</div>
-  </article>`;
- }).join("");
+ const summary=active.length
+  ? `${active.length} import${active.length===1?"":"s"} in progress · VexStream will add finished media to the Library automatically.`
+  : ready.length
+    ? `${ready.length} import${ready.length===1?"":"s"} need attention before the Library add can finish.`
+    : `${completed.length} recent import event${completed.length===1?"":"s"}.`;
+
+ importJobs.innerHTML=`<div class="import-activity-summary">${escapeHTML(summary)}</div>
+  ${importJobSection("In progress","Download and preparation are happening now.",active,"active")}
+  ${importJobSection("Needs attention","Prepared media is still safe in temporary staging.",ready,"ready")}
+  ${importJobSection("Recent","Completed, cancelled, discarded, or failed imports.",completed,"completed")}`;
 }
 
 function formatSeconds(value){
@@ -1079,9 +1494,26 @@ function importSectionEdits(){
 }
 
 async function refreshImportJobs(){
- currentImportJobs=await loadImportJobs();
- renderImportJobs();
- return currentImportJobs;
+ if(importRefreshTimer!==null){
+  clearTimeout(importRefreshTimer);
+  importRefreshTimer=null;
+ }
+ try{
+  const nextJobs=await loadImportJobs();
+  const nextCompletionKey=importCompletionKey(nextJobs);
+  const libraryChanged=
+   nextCompletionKey!==""&&
+   nextCompletionKey!==observedImportCompletionKey;
+  currentImportJobs=nextJobs;
+  renderImportJobs();
+  if(libraryChanged){
+   await refreshCatalog();
+  }
+  observedImportCompletionKey=nextCompletionKey;
+  return currentImportJobs;
+ }finally{
+  scheduleImportJobRefresh();
+ }
 }
 
 function renderSystemStatus(){
@@ -1132,22 +1564,94 @@ function renderSystemStatus(){
   attention:importAttention
  });
  const attentionRows=[
-  ...projection.warnings.map(warning=>
-   resolveText(locale,"system.status.startup-warning",{warning})
-  ),
+  ...projection.warnings.map(warning=>({
+   message:resolveText(locale,"system.status.startup-warning",{warning})
+  })),
   ...(projection.sessionHeld
-   ?[resolveText(locale,"system.status.session-held")]
+   ?[{
+      message:resolveText(
+       locale,
+       currentSessionRestoration?.kind==="held-current-unavailable"
+        ?"system.status.session-held-current"
+        :currentSessionRestoration?.kind==="held-schema"
+          ?"system.status.session-held-schema"
+          :"system.status.session-save-held"
+      ),
+      action:["held-current-unavailable","held-schema"].includes(
+       currentSessionRestoration?.kind
+      )
+       ?`<button type="button" data-system-action="reset-listening-session">${escapeHTML(resolveText(locale,"system.status.session-reset"))}</button>`
+       :""
+    }]
    :[]),
   ...(importAttention
-   ?[resolveText(locale,"system.status.import-attention")]
+   ?[{message:resolveText(locale,"system.status.import-attention")}]
    :[]),
   ...(projection.pendingPurge
-   ?[resolveText(locale,"system.status.trash-recovery")]
+   ?[{message:resolveText(locale,"system.status.trash-recovery")}]
    :[])
  ];
  systemAttention.innerHTML=attentionRows.length
-  ?`<ul>${attentionRows.map(row=>`<li>${escapeHTML(row)}</li>`).join("")}</ul>`
+  ?`<ul class="system-attention-list">${attentionRows.map(row=>
+      `<li><span>${escapeHTML(row.message)}</span>${row.action??""}</li>`
+     ).join("")}</ul>`
   :`<span class="muted">${escapeHTML(resolveText(locale,"system.status.no-warnings"))}</span>`;
+}
+
+function sessionIdentityText(session){
+ const version=String(session?.version??"").trim();
+ const build=String(session?.buildRef??"").trim();
+ const pid=Number(session?.pid??0);
+ return [
+  version?`VexStream ${version}`:"VexStream",
+  build?build.slice(0,12):"",
+  pid>0?`PID ${pid}`:""
+ ].filter(Boolean).join(" · ");
+}
+
+function renderOldSessionPlan(plan){
+ if(!oldSessionPlan)return;
+ oldSessionPlan.hidden=false;
+ if(plan?.scanError){
+  oldSessionPlan.innerHTML=`<div class="system-session-error">${escapeHTML(plan.scanError)}</div>`;
+  return;
+ }
+ const others=(plan?.sessions??[]).filter(session=>!session.current);
+ if(!others.length){
+  oldSessionPlan.innerHTML=`<div class="muted">${escapeHTML(resolveText(locale,"system.sessions.none"))}</div>`;
+  return;
+ }
+ const eligible=plan?.eligible??[];
+ const held=plan?.held??[];
+ const eligibleHTML=eligible.length
+  ?`<div class="system-session-group">
+      <strong>${escapeHTML(resolveText(locale,"system.sessions.eligible"))}</strong>
+      ${eligible.map(session=>`<label class="system-session-row eligible">
+       <input type="checkbox" data-old-session-pid="${session.pid}">
+       <span><b>${escapeHTML(sessionIdentityText(session))}</b><small>${escapeHTML(session.reason)}</small></span>
+      </label>`).join("")}
+     </div>`
+  :"";
+ const heldHTML=held.length
+  ?`<div class="system-session-group">
+      <strong>${escapeHTML(resolveText(locale,"system.sessions.held"))}</strong>
+      ${held.map(session=>`<div class="system-session-row held">
+       <span aria-hidden="true">🛡</span>
+       <span><b>${escapeHTML(sessionIdentityText(session))}</b><small>${escapeHTML(session.reason)}</small></span>
+      </div>`).join("")}
+     </div>`
+  :"";
+ oldSessionPlan.innerHTML=`
+  ${eligibleHTML}
+  ${heldHTML}
+  <div class="muted system-session-warning">${escapeHTML(plan.warning??"")}</div>
+  ${eligible.length?`<button id="retireOldSessions" type="button" disabled>${escapeHTML(resolveText(locale,"system.sessions.retire"))}</button>`:""}`;
+}
+
+function updateOldSessionRetireButton(){
+ const button=oldSessionPlan?.querySelector("#retireOldSessions");
+ if(!button)return;
+ button.disabled=!oldSessionPlan.querySelector("[data-old-session-pid]:checked");
 }
 
 function renderPlaybackTimeline(
@@ -1232,9 +1736,11 @@ function render(){
     });
 
  renderExplore();
+ renderImportRuntimeStatus();
  renderImportReview();
  renderImportJobs();
  renderSystemStatus();
+ syncActiveSongRows();
 
  queueList.innerHTML=qp.state.kind==="empty"?"":qp.state.items.map((ref,index)=>{
   const item=byRef.get(ref);
@@ -1246,12 +1752,32 @@ function render(){
      ? "queue.item.current"
      : "queue.item.up-next";
   const stateLabel=resolveText(locale,stateTextRef);
+  const titleText=trackTitle(item);
+  const album=String(item?.album??"").trim()||"Unknown album";
+  const sourceDetail=String(item?.sourceTitle??item?.channel??"").trim();
+  const description=String(item?.description??"").trim();
+  const metadata=[
+   trackArtist(item),
+   album,
+   ...(sourceDetail&&sourceDetail!==titleText?[sourceDetail]:[])
+  ];
+  const accessibleIdentity=[
+   stateLabel,
+   titleText,
+   ...metadata,
+   ...(description?[description]:[])
+  ].join(". ");
   const upDisabled=isCurrent||index===0;
   const downDisabled=isCurrent||index===qp.state.items.length-1;
-  return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-queue-index="${index}">
+  return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-queue-index="${index}" aria-label="${escapeHTML(accessibleIdentity)}">
     <span class="queue-index">${index+1}</span>
-    <span class="queue-title"><strong>${escapeHTML(trackTitle(item))}</strong><span class="queue-state">${escapeHTML(stateLabel)}</span></span>
-    <span class="queue-state">${isCurrent?"●":" "}</span>
+    <span class="queue-title">
+      ${marqueeTextHTML(titleText,{tag:"strong"})}
+      <span class="queue-meta" title="${escapeHTML(metadata.join(" · "))}">${escapeHTML(metadata.join(" · "))}</span>
+      ${isCurrent&&description?`<span class="queue-description">${escapeHTML(description)}</span>`:""}
+      <span class="queue-state">${escapeHTML(stateLabel)}</span>
+    </span>
+    <span class="queue-state" aria-hidden="true">${isCurrent?"●":" "}</span>
     <span class="queue-actions">
       <button data-queue-action="play" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"playback.play"))}</button>
       <button data-queue-action="up" ${upDisabled?"disabled":""}>↑</button>
@@ -1260,6 +1786,7 @@ function render(){
     </span>
   </li>`;
  }).join("");
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics(queueList));
 }
 
 function trackPlaylistActionHTML(){
@@ -1319,8 +1846,10 @@ function trackArtworkHTML(item){
 
 function songRowHTML(item,{selectable=false}={}){
  const selected=selectable&&librarySelection.isSelected(item.ref);
+ const playing=player.currentItem?.ref===item.ref;
+ const rowIntent=selectable?"Select":"Play";
  const secondary=String(item?.sourceTitle??item?.channel??"").trim();
- return `<tr class="${selected?"selected":""}" data-track-ref="${escapeHTML(item.ref)}">
+ return `<tr class="${playing?"playing ":""}${selected?"selected":""}" tabindex="0" aria-label="${rowIntent} ${escapeHTML(trackTitle(item))}" data-track-ref="${escapeHTML(item.ref)}">
    ${selectable
     ?`<td class="select-cell">
        <label class="song-select">
@@ -1333,15 +1862,15 @@ function songRowHTML(item,{selectable=false}={}){
     <div class="song-main">
      ${trackArtworkHTML(item)}
      <div class="song-copy">
-      <strong>${escapeHTML(trackTitle(item))}</strong>
-      ${secondary?`<small>${escapeHTML(secondary)}</small>`:""}
+      ${marqueeTextHTML(trackTitle(item),{tag:"strong"})}
+      ${secondary?marqueeTextHTML(secondary,{tag:"small"}):""}
      </div>
     </div>
    </td>
    <td class="col-added"><span class="small">${escapeHTML(formatLibraryAdded(item.addedAt))}</span></td>
-   <td class="col-artist"><span class="clip2">${escapeHTML(trackArtist(item))}</span></td>
-   <td class="col-album"><span class="clip2">${escapeHTML(String(item?.album??"").trim()||"Unknown album")}</span></td>
-   <td class="col-genre">${escapeHTML(String(item?.genre??"").trim()||"—")}</td>
+   <td class="col-artist">${marqueeTextHTML(trackArtist(item),{className:"clip2"})}</td>
+   <td class="col-album">${marqueeTextHTML(String(item?.album??"").trim()||"Unknown album",{className:"clip2"})}</td>
+   <td class="col-genre">${marqueeTextHTML(String(item?.genre??"").trim()||"—")}</td>
    <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
    <td class="col-actions">
     <div class="song-actions">
@@ -1473,12 +2002,12 @@ function renderArtistDetailTerrain(group,detail){
   ?`<div class="song-table-wrap">
      <table class="song-table artist-song-table">
       <thead><tr>
-       <th class="song-title-cell">${songSortHeader("title","Title")}</th>
-       <th class="col-added">${songSortHeader("added","Added")}</th>
+       ${songColumnHeader("title","Title","song-title-cell")}
+       ${songColumnHeader("added","Added","col-added")}
        <th class="col-artist">Artist</th>
-       <th class="col-album">${songSortHeader("album","Album")}</th>
-       <th class="col-genre">${songSortHeader("genre","Genre")}</th>
-       <th class="col-duration">${songSortHeader("duration","Time")}</th>
+       ${songColumnHeader("album","Album","col-album")}
+       ${songColumnHeader("genre","Genre","col-genre")}
+       ${songColumnHeader("duration","Time","col-duration")}
        <th class="col-actions"></th>
       </tr></thead>
       <tbody>${visible.map(item=>songRowHTML(item)).join("")}</tbody>
@@ -1580,16 +2109,105 @@ function sharedDisplayValue(rows,key){
  return values.length===1?values[0]:"";
 }
 
+function clampSongColumnWidth(key,value){
+ const rule=songColumnRules[key];
+ if(!rule)return 0;
+ return Math.round(Math.max(
+  rule.minWidth,
+  Math.min(rule.maxWidth,Number(value)||rule.defaultWidth)
+ ));
+}
+
+function visibleSongColumnKeys({home=false}={}){
+ const keys=["title","added","artist","album","genre","duration"];
+ return keys.filter(key=>
+  key==="title"||
+  (key==="genre"&&!home&&songLayout.genre)||
+  (key!=="genre"&&Boolean(songLayout[key]))
+ );
+}
+
 function applySongLayoutProjection(){
- document.documentElement.style.setProperty("--song-title-width",songLayout.titleWidth+"%");
+ for(const key of Object.keys(songColumnRules)){
+  const width=clampSongColumnWidth(key,songLayout.widths[key]);
+  document.documentElement.style.setProperty("--song-col-"+key,width+"px");
+ }
+ const songsMin=visibleSongColumnKeys().reduce(
+  (sum,key)=>sum+clampSongColumnWidth(key,songLayout.widths[key]),
+  112
+ );
+ const homeMin=visibleSongColumnKeys({home:true}).reduce(
+  (sum,key)=>sum+clampSongColumnWidth(key,songLayout.widths[key]),
+  82
+ );
+ document.documentElement.style.setProperty("--song-table-min-width",songsMin+"px");
+ document.documentElement.style.setProperty("--song-home-table-min-width",homeMin+"px");
  for(const key of ["artist","album","added","duration","genre"]){
   document.body.dataset["songField"+key[0].toUpperCase()+key.slice(1)]=String(Boolean(songLayout[key]));
  }
  for(const input of songLayoutFieldInputs){
   input.checked=Boolean(songLayout[input.dataset.songLayoutField]);
  }
- songTitleWidth.value=String(songLayout.titleWidth);
- songTitleWidthValue.textContent=songLayout.titleWidth+"%";
+ for(const handle of document.querySelectorAll("[data-song-resize]")){
+  const key=handle.dataset.songResize;
+  if(songColumnRules[key]){
+   handle.setAttribute("aria-valuenow",String(clampSongColumnWidth(key,songLayout.widths[key])));
+  }
+ }
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics());
+}
+
+function setSongColumnWidth(key,value){
+ if(!songColumnRules[key])return;
+ songLayout=Object.freeze({
+  ...songLayout,
+  widths:Object.freeze({
+   ...songLayout.widths,
+   [key]:clampSongColumnWidth(key,value)
+  })
+ });
+ applySongLayoutProjection();
+}
+
+let activeSongColumnResize=null;
+
+function beginSongColumnResize(event){
+ const handle=event.target.closest("[data-song-resize]");
+ if(!handle)return false;
+ const key=handle.dataset.songResize;
+ const cell=handle.closest("th");
+ if(!songColumnRules[key]||!cell)return false;
+ activeSongColumnResize={
+  key,
+  startX:event.clientX,
+  startWidth:cell.getBoundingClientRect().width
+ };
+ document.body.classList.add("song-column-resizing");
+ try{handle.setPointerCapture?.(event.pointerId);}catch{}
+ event.preventDefault();
+ event.stopPropagation();
+ return true;
+}
+
+function moveSongColumnResize(event){
+ if(!activeSongColumnResize)return;
+ const delta=event.clientX-activeSongColumnResize.startX;
+ setSongColumnWidth(
+  activeSongColumnResize.key,
+  activeSongColumnResize.startWidth+delta
+ );
+}
+
+function finishSongColumnResize(){
+ if(!activeSongColumnResize)return;
+ activeSongColumnResize=null;
+ document.body.classList.remove("song-column-resizing");
+ refreshSongMarqueeMetrics();
+}
+
+function resetSongColumnWidth(key){
+ if(!songColumnRules[key])return;
+ setSongColumnWidth(key,songColumnRules[key].defaultWidth);
 }
 
 function closeBulkDisplayEditor(){
@@ -1676,6 +2294,18 @@ function songSortHeader(key,label){
   </button>`;
 }
 
+function songColumnHeader(key,label,className,{sortable=true}={}){
+ const head=sortable
+  ?songSortHeader(key,label)
+  :`<span class="song-static-head">${escapeHTML(label)}</span>`;
+ const rule=songColumnRules[key];
+ const width=clampSongColumnWidth(key,songLayout.widths[key]);
+ return `<th class="${className}" data-song-column="${escapeHTML(key)}">
+   ${head}
+   <span class="song-column-resizer" data-song-resize="${escapeHTML(key)}" role="separator" tabindex="0" aria-orientation="vertical" aria-valuemin="${rule.minWidth}" aria-valuemax="${rule.maxWidth}" aria-valuenow="${width}" aria-label="Resize ${escapeHTML(label)} column" title="Drag to resize · Arrow keys resize · Double-click to reset"></span>
+  </th>`;
+}
+
 function renderSongSortSummary(){
  const songs=libraryView.mode==="songs";
  songSortSummary.hidden=!songs;
@@ -1729,12 +2359,12 @@ function renderTrackChoices(){
        <thead>
         <tr>
          ${selectable?'<th class="select-cell">✓</th>':""}
-         <th class="song-title-cell">${songSortHeader("title","Title")}</th>
-         <th class="col-added">${songSortHeader("added","Added")}</th>
-         <th class="col-artist">${songSortHeader("artist","Artist")}</th>
-         <th class="col-album">${songSortHeader("album","Album")}</th>
-         <th class="col-genre">${songSortHeader("genre","Genre")}</th>
-         <th class="col-duration">${songSortHeader("duration","Time")}</th>
+         ${songColumnHeader("title","Title","song-title-cell")}
+         ${songColumnHeader("added","Added","col-added")}
+         ${songColumnHeader("artist","Artist","col-artist")}
+         ${songColumnHeader("album","Album","col-album")}
+         ${songColumnHeader("genre","Genre","col-genre")}
+         ${songColumnHeader("duration","Time","col-duration")}
          <th class="col-actions"></th>
         </tr>
        </thead>
@@ -2032,6 +2662,50 @@ systemDrawerClose.addEventListener("click",()=>{
  systemStatusButton.setAttribute("aria-expanded","false");
 });
 
+systemAttention.addEventListener("click",event=>{
+ if(!event.target.closest('[data-system-action="reset-listening-session"]'))return;
+ void guarded(async()=>{
+  const state=queue.currentProjection.state;
+  await savePlayerSession(state);
+  const adoptedRef=currentQueueRef(state)??"";
+  currentSessionRestoration=Object.freeze({
+   kind:state.kind==="empty"?"empty":"restored",
+   queue:null,
+   droppedRefs:Object.freeze([]),
+   currentRef:adoptedRef
+  });
+  playerSessionPersistenceEnabled=true;
+  render();
+ });
+});
+
+reviewOldSessions.addEventListener("click",()=>void guarded(async()=>{
+ reviewOldSessions.disabled=true;
+ try{
+  renderOldSessionPlan(await loadSessionRetirePlan());
+ }finally{
+  reviewOldSessions.disabled=false;
+ }
+}));
+
+oldSessionPlan.addEventListener("change",event=>{
+ if(!event.target.closest("[data-old-session-pid]"))return;
+ updateOldSessionRetireButton();
+});
+
+oldSessionPlan.addEventListener("click",event=>{
+ if(!event.target.closest("#retireOldSessions"))return;
+ const pids=[...oldSessionPlan.querySelectorAll("[data-old-session-pid]:checked")]
+  .map(input=>Number(input.dataset.oldSessionPid))
+  .filter(Number.isInteger);
+ if(!pids.length)return;
+ if(!globalThis.confirm(resolveText(locale,"system.sessions.confirm")))return;
+ void guarded(async()=>{
+  await retireSessions(pids);
+  renderOldSessionPlan(await loadSessionRetirePlan());
+ });
+});
+
 exitVexStreamButton.addEventListener("click",()=>void guarded(async()=>{
  exitVexStreamButton.disabled=true;
  exitVexStreamButton.textContent=resolveText(locale,"system.exit.exiting");
@@ -2133,18 +2807,19 @@ for(const button of discoverModeButtons){
 }
 
 youtubeInspect.addEventListener("click",()=>void guarded(async()=>{
- const url=youtubeImportURL.value.trim();
- const [reviewed,destinations]=await Promise.all([
-  inspectImport(url),
-  loadImportDestinations()
- ]);
- currentImportReview=formImportReview(reviewed,destinations);
+ await loadImportReview(youtubeImportURL.value);
 }));
 
 youtubeImportURL.addEventListener("keydown",event=>{
  if(event.key!=="Enter")return;
  event.preventDefault();
  youtubeInspect.click();
+});
+
+importRuntimeNotice.addEventListener("click",event=>{
+ const action=event.target.closest("[data-import-runtime-action=\"setup\"]");
+ if(!action)return;
+ void guarded(()=>prepareImportRuntime());
 });
 
 libraryNavToggle.addEventListener("click",()=>{shellNavigation.toggleSidebar();});
@@ -2179,21 +2854,46 @@ nowPlaying.addEventListener("click",event=>{
  }
 });
 
+function rowTargetOwnsInteraction(target){
+ return Boolean(target.closest(
+  "button,input,select,option,summary,details,label,a,[role='button']"
+ ));
+}
+
+function activateTrackRow(
+ event,
+ {row,ref,playbackRefs=libraryPlaybackRefs(),selectionAware=false}={}
+){
+ if(!row||!ref||rowTargetOwnsInteraction(event.target))return false;
+ if(event.type==="keydown"){
+  if(event.key!=="Enter"&&event.key!==" ")return false;
+  event.preventDefault();
+ }
+ if(selectionAware&&librarySelection.currentProjection.active){
+  librarySelection.toggle(ref,!librarySelection.isSelected(ref));
+  return true;
+ }
+ void guarded(()=>player.playTrack(ref,playbackRefs));
+ return true;
+}
+
 recentSongs.addEventListener("click",event=>{
- const action=event.target.closest("[data-home-track-action]");
+ if(handleTrackAction(event,{playbackRefs:libraryPlaybackRefs()}))return;
  const row=event.target.closest("[data-home-track-ref]");
- if(!action||!row)return;
- if(action.dataset.homeTrackAction==="play"){
-  void guarded(()=>player.playTrack(
-   row.dataset.homeTrackRef,
-   libraryPlaybackRefs()
-  ));
-  return;
- }
- if(action.dataset.homeTrackAction==="append"){
-  player.append([row.dataset.homeTrackRef]);
-  render();
- }
+ if(!row)return;
+ activateTrackRow(event,{
+  row,
+  ref:row.dataset.homeTrackRef,
+  playbackRefs:libraryPlaybackRefs()
+ });
+});
+recentSongs.addEventListener("keydown",event=>{
+ const row=event.target.closest("[data-home-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.homeTrackRef,
+  playbackRefs:libraryPlaybackRefs()
+ });
 });
 
 function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){
@@ -2265,7 +2965,10 @@ playAllSongs.addEventListener("click",()=>void guarded(async()=>{
 
 songLayoutButton.addEventListener("click",()=>{songLayoutPanel.hidden=false;});
 songLayoutDone.addEventListener("click",()=>{songLayoutPanel.hidden=true;});
-songLayoutReset.addEventListener("click",()=>{songLayout=Object.freeze({...defaultSongLayout});applySongLayoutProjection();});
+songLayoutReset.addEventListener("click",()=>{
+ songLayout=freshDefaultSongLayout();
+ applySongLayoutProjection();
+});
 for(const input of songLayoutFieldInputs){
  input.addEventListener("change",()=>{
   const key=input.dataset.songLayoutField;
@@ -2273,10 +2976,35 @@ for(const input of songLayoutFieldInputs){
   applySongLayoutProjection();
  });
 }
-songTitleWidth.addEventListener("input",()=>{
- const value=Math.max(34,Math.min(62,Number(songTitleWidth.value)||46));
- songLayout=Object.freeze({...songLayout,titleWidth:value});
- applySongLayoutProjection();
+for(const host of [recentSongs,trackChoices,artistSongTable]){
+ host.addEventListener("pointerdown",beginSongColumnResize);
+}
+document.addEventListener("keydown",event=>{
+ const handle=event.target.closest("[data-song-resize]");
+ if(!handle)return;
+ const key=handle.dataset.songResize;
+ const rule=songColumnRules[key];
+ if(!rule)return;
+ let next=null;
+ const step=event.shiftKey?32:8;
+ if(event.key==="ArrowLeft")next=clampSongColumnWidth(key,songLayout.widths[key]-step);
+ if(event.key==="ArrowRight")next=clampSongColumnWidth(key,songLayout.widths[key]+step);
+ if(event.key==="Home")next=rule.minWidth;
+ if(event.key==="End")next=rule.maxWidth;
+ if(next==null)return;
+ event.preventDefault();
+ event.stopPropagation();
+ setSongColumnWidth(key,next);
+});
+document.addEventListener("pointermove",moveSongColumnResize);
+document.addEventListener("pointerup",finishSongColumnResize);
+document.addEventListener("pointercancel",finishSongColumnResize);
+document.addEventListener("dblclick",event=>{
+ const handle=event.target.closest("[data-song-resize]");
+ if(!handle)return;
+ event.preventDefault();
+ event.stopPropagation();
+ resetSongColumnWidth(handle.dataset.songResize);
 });
 
 selectSongs.addEventListener("click",()=>{
@@ -2407,12 +3135,43 @@ trackChoices.addEventListener("click",event=>{
    return;
   }
  }
- handleTrackAction(event);
+ if(handleTrackAction(event))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:currentLibraryView().map(item=>item.ref),
+  selectionAware:true
+ });
+});
+trackChoices.addEventListener("keydown",event=>{
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:currentLibraryView().map(item=>item.ref),
+  selectionAware:true
+ });
 });
 
 libraryGroupTracks.addEventListener("click",event=>{
  const group=currentLibraryDetailGroup();
- handleTrackAction(event,{
+ if(handleTrackAction(event,{
+  playbackRefs:group?.refs??libraryPlaybackRefs()
+ }))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:group?.refs??libraryPlaybackRefs()
+ });
+});
+libraryGroupTracks.addEventListener("keydown",event=>{
+ const group=currentLibraryDetailGroup();
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
   playbackRefs:group?.refs??libraryPlaybackRefs()
  });
 });
@@ -2468,7 +3227,23 @@ artistSongTable.addEventListener("click",event=>{
  }
  const group=currentLibraryDetailGroup();
  const visible=group?artistDetailVisibleTracks(group):[];
- handleTrackAction(event,{
+ if(handleTrackAction(event,{
+  playbackRefs:visible.map(item=>item.ref)
+ }))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:visible.map(item=>item.ref)
+ });
+});
+artistSongTable.addEventListener("keydown",event=>{
+ const group=currentLibraryDetailGroup();
+ const visible=group?artistDetailVisibleTracks(group):[];
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
   playbackRefs:visible.map(item=>item.ref)
  });
 });
@@ -2764,12 +3539,7 @@ exploreCandidates.addEventListener("click",event=>{
    if(!candidate?.url){
     throw new Error(resolveText(locale,"import.source.unavailable"));
    }
-   const [reviewed,destinations]=await Promise.all([
-    inspectImport(candidate.url),
-    loadImportDestinations()
-   ]);
-   currentImportReview=formImportReview(reviewed,destinations);
-   discoverNavigation.select(DiscoverMode.YOUTUBE);
+   await loadImportReview(candidate.url,{selectYouTube:true});
   });
  }
 });
@@ -2787,8 +3557,17 @@ exploreClear.addEventListener("click",()=>void guarded(async()=>{
 }));
 
 importReviewClose.addEventListener("click",()=>{
+ stopImportDuplicatePreview();
+ importReviewLoadingState=false;
+ importReviewLoadingURL="";
  currentImportReview=null;
  renderImportReview();
+});
+
+importDuplicateDetails.addEventListener("click",event=>{
+ const button=event.target.closest("[data-import-duplicate-preview]");
+ if(!button)return;
+ previewImportDuplicate(button.dataset.importDuplicatePreview,button);
 });
 
 importStart.addEventListener("click",()=>void guarded(async()=>{
@@ -2801,14 +3580,12 @@ importStart.addEventListener("click",()=>void guarded(async()=>{
   genre:importGenre.value,
   sections:importSectionEdits()
  });
- const started=await startImport(plan);
+ await ensureImportRuntimeReady();
+ await startImport(plan);
+ stopImportDuplicatePreview();
  currentImportReview=null;
+ youtubeImportURL.value="";
  await refreshImportJobs();
- if(started?.jobId){
-  importReviewHint.textContent=resolveText(locale,"import.started",{
-   id:started.jobId
-  });
- }
 }));
 
 importRefresh.addEventListener("click",()=>void guarded(()=>refreshImportJobs()));
@@ -2832,6 +3609,9 @@ importJobs.addEventListener("click",event=>{
   case "discard":
    await discardImport(id);
    break;
+  case "view":
+   shellNavigation.select(ShellView.SONGS);
+   return;
   }
   await refreshImportJobs();
  });
@@ -2972,6 +3752,8 @@ async function initialize(){
  trashSnapshot=nextTrash;
  applyCatalog(nextCatalog);
  currentImportJobs=nextImportJobs;
+ observedImportCompletionKey=importCompletionKey(currentImportJobs);
+ scheduleImportJobRefresh();
 
  if(loadedPlayerSession?.failure){
   currentSessionRestoration=Object.freeze({
@@ -3026,10 +3808,24 @@ async function initialize(){
   explore,
   get importReview(){return currentImportReview;},
   get importJobs(){return currentImportJobs;},
+  get importRuntime(){return importRuntimeState;},
   get sessionRestoration(){return currentSessionRestoration;},
   controls:Object.freeze({PlaybackControl,QueueControl})
  });
+ void refreshImportRuntime().catch(failure=>{
+  importRuntimeState=Object.freeze({
+   searchReady:false,
+   ffmpegReady:false,
+   importReady:false,
+   detail:failure?.message??String(failure)
+  });
+  renderImportRuntimeStatus();
+ });
 }
+
+window.addEventListener("resize",()=>{
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics());
+});
 
 void initialize().catch(failure=>{
  error.textContent=failure?.message??String(failure);

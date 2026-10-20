@@ -2350,9 +2350,10 @@ def main() -> int:
         checked(
             "explore-import-review-enters-youtube-route-without-starting-download",
             lambda: require(
-                page.locator("#youtubeImportURL").is_visible()
+                page.locator("#youtubeImportURL").is_hidden()
+                and page.locator("#importReview").is_visible()
                 and page.locator("#exploreCandidates").is_hidden(),
-                "Explore import review did not enter YouTube terrain",
+                "Explore import review did not replace the YouTube entry terrain",
             ),
         )
         checked(
@@ -2363,6 +2364,14 @@ def main() -> int:
                 in page.locator("#importReviewSourceTitle").inner_text()
                 and "1 possible library match"
                 in page.locator("#importDuplicateSummary").inner_text()
+                and "Possible duplicate already in your Library"
+                in page.locator("#importDuplicateDetails").inner_text()
+                and "VexStream Test Tone Two"
+                in page.locator("#importDuplicateDetails").inner_text()
+                and page.locator(
+                    "#importDuplicateDetails [data-import-duplicate-preview]"
+                ).count()
+                == 1
                 and page.locator("#importDestination").input_value()
                 == "/music"
                 and page.locator("#importMode").input_value()

@@ -96,6 +96,67 @@ intent of:
 
 Preservation is semantic and interaction-level, not a demand to keep one 200 KB HTML file forever.
 
+## Player, Queue, Home, and System lived contract
+
+Recent V4 lived review exposed a specific class of regressions that source-level Player/Queue
+correctness alone cannot catch. The product must preserve the human's ability to answer four
+ordinary questions without guessing:
+
+```text
+What is playing right now?
+What will play next, and what exactly is the current Queue item?
+What can I do with this song from the place where I found it?
+What does this System attention signal mean, and what safe action resolves it?
+```
+
+Unless Victor explicitly admits a different UX, preserve these V3-visible outcomes:
+
+- the fixed player gives current-track title and artist/collection enough horizontal room to remain
+  recognizable; Volume must not consume that identity budget merely because it is a horizontal
+  slider;
+- overflowing title text moves at a readable **distance-derived velocity**. A longer title receives
+  proportionally more time; it must not accelerate merely to finish inside one fixed duration;
+- the expanded Queue keeps the current item human- and accessibility-identifiable through title,
+  artist, album/collection, available description/source detail, and current/played/up-next state;
+- Home song rows expose the same normal track-action vocabulary as Songs: Play, Add to queue, and the
+  contextual actions such as Play next, Explore, Edit, Deleted music, and Playlist;
+- a held listening-session badge explains what is held and exposes a bounded reset/adopt-current
+  action instead of presenting an unexplained count;
+- System Status can review parallel VexStream server sessions. Retirement remains explicit and
+  fail-safe: the current process is never eligible; sessions with active imports, unverified state,
+  or live track IDs not covered by the current Library remain held; retiring an eligible old server
+  never deletes Library folders or media.
+
+The proof ownership for this slice is intentionally layered:
+
+```text
+web/foundation/marquee.js
+  overflow distance -> readable duration
+    -> tests/marquee-foundation.test.mjs
+
+desktop/lifecycle/sessions*.go
+  Windows process discovery + old-session safety classification/retirement
+    -> desktop/lifecycle/sessions_test.go
+
+web/features/system/client.js
+  explicit review/retire browser contract
+    -> tests/system-client.test.mjs
+
+actual V4 HTML/JS + deterministic API/media fixture
+  current-player geometry
+  Home action parity
+  Queue identity
+  held-session recovery
+  old-session review/retire interaction
+    -> tests/lived-shell-browser-smoke.mjs
+
+exact Windows lived run
+  real process discovery/retirement boundary + actual product feel
+```
+
+A green Queue reducer test does not prove the listener can read the current track. Likewise, a visible
+System badge is not complete merely because its underlying state is technically accurate.
+
 ## What V4 work remains valid
 
 Do not throw away the V4 extraction merely because the practicum shell failed lived acceptance.
@@ -129,6 +190,62 @@ preserve V3 lived product
 -> reconnect the V3 product shell to those owners
 -> move old monolithic browser/backend logic behind those boundaries slice by slice
 ```
+
+## YouTube Import lived contract
+
+The YouTube path is one cause-and-effect journey, not a bag of individually green endpoints.
+
+Unless Victor explicitly admits a UX change, preserve:
+
+```text
+paste/link or Explore candidate
+-> Review gives immediate in-app "Inspecting source…" feedback
+   -> provider subprocess remains background implementation
+   -> no acquisition has begun
+-> Source review keeps the chosen media recognizable
+   -> artwork / title / creator / duration
+   -> destination / track layout / metadata edits
+-> current Library is checked before acquisition
+   -> no match: say so
+   -> same/likely/possible match: show the actual existing track + reasons
+   -> SAME_SOURCE: make "Already in your Library" explicit
+   -> Preview 12s reads the existing local media only
+   -> duplicate evidence remains advisory for deliberate alternate edits/copies
+-> Download & add is the acquisition boundary
+-> active Import keeps the same source identity visible
+   -> provider stage + real bounded download progress
+   -> cancellation while active
+-> preparation / Library commit remains recoverable
+-> completion visibly becomes Added to Library
+-> committed track is reachable through View in Library
+```
+
+The proof map intentionally follows the same claim layering used by the Android VexStream feature:
+
+```text
+desktop/imports/duplicates/review_test.go
+    duplicate scoring / SAME_SOURCE / different-edit / quality meaning
+
+desktop/imports/review/service_test.go
+    provider inspection + current Library composition
+
+web/features/imports review/client tests
+    reviewed evidence + typed acquisition request
+
+desktop/provider/youtube process tests
+    provider subprocess platform behavior
+
+tests/lived-shell-browser-smoke.mjs
+    integrated human browser journey over deterministic API/media fixtures
+
+tests/player-browser-regression.py
+    broader browser interaction regression
+
+exact Windows build + Victor lived review
+    native host/process behavior and product feel
+```
+
+A lower layer going green never authorizes retiring a higher-layer product behavior.
 
 ## Current acceptance state
 

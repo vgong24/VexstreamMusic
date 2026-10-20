@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -234,7 +233,7 @@ func (b *Bridge) runStreamingProcess(
 		return errors.New("YouTube bridge streaming command is incomplete")
 	}
 
-	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
+	cmd := providerCommand(ctx, command)
 	if len(b.Env) > 0 {
 		cmd.Env = append([]string(nil), b.Env...)
 	}

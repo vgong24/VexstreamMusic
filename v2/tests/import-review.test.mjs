@@ -13,6 +13,8 @@ test("review preserves V3 human editing defaults without starting acquisition", 
         url: "https://example/song",
         title: "Source",
         channel: "Uploader",
+        thumbnail: "https://example/source.jpg",
+        duration: 123,
         artist: "Artist",
         album: "Album",
         genre: "",
@@ -26,7 +28,14 @@ test("review preserves V3 human editing defaults without starting acquisition", 
       items: [
         {
           kind: "whole",
-          matches: [{ trackId: "track-a", score: 90 }],
+          matches: [{
+            trackId: "track-a",
+            title: "Existing Source",
+            relation: "SAME_SOURCE",
+            confidence: "very likely",
+            reasons: ["same provider item"],
+            score: 100,
+          }],
         },
       ],
       advisory: true,
@@ -35,11 +44,20 @@ test("review preserves V3 human editing defaults without starting acquisition", 
   );
 
   assert.equal(review.defaultMode, "split");
+  assert.equal(review.creator, "Uploader");
+  assert.equal(review.thumbnail, "https://example/source.jpg");
+  assert.equal(review.durationSeconds, 123);
   assert.equal(review.collection, "Album");
   assert.equal(review.artistOverride, "Artist");
   assert.equal(review.genre, "Dream Pop");
   assert.deepEqual(review.destinations, ["/music", "/archive"]);
   assert.equal(review.duplicateItemCount, 1);
+  assert.equal(review.duplicateItems[0].matches[0].relation, "SAME_SOURCE");
+  assert.equal(review.duplicateItems[0].matches[0].title, "Existing Source");
+  assert.deepEqual(
+    review.duplicateItems[0].matches[0].reasons,
+    ["same provider item"],
+  );
   assert.equal(review.advisory, true);
 });
 
@@ -49,6 +67,9 @@ test("plan uses only admitted destination and explicit section edits", () => {
       inspection: {
         url: "https://example/song",
         title: "Source",
+        channel: "Uploader",
+        thumbnail: "https://example/source.jpg",
+        duration: 123,
         hasSections: true,
         sections: [
           { index: 1, title: "One", start: 0, end: 30, selected: true },
@@ -76,6 +97,9 @@ test("plan uses only admitted destination and explicit section edits", () => {
   assert.equal(plan.destination, "/music");
   assert.equal(plan.mode, "both");
   assert.equal(plan.wholeTitle, "Source");
+  assert.equal(plan.sourceCreator, "Uploader");
+  assert.equal(plan.thumbnail, "https://example/source.jpg");
+  assert.equal(plan.sourceDuration, 123);
   assert.equal(plan.sections[0].sourceTitle, "One");
   assert.equal(plan.sections[0].title, "Edited One");
   assert.equal(plan.sections[0].artist, "A");

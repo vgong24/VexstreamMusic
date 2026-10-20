@@ -81,54 +81,56 @@
       </section>
     </section>
 
-    <div id="nowPlaying" class="now">
-      <button id="nowArtButton" class="now-art-button" type="button" title="Open current track actions" aria-label="Open current track actions" disabled>
-        <div id="nowArt" class="art" aria-hidden="true">♫</div>
-      </button>
-      <div class="track-copy">
-        <div class="now-title-row">
-          <button id="nowTitleButton" class="now-title-button" type="button" title="Open current track actions" disabled>
-            <strong id="trackTitle">Nothing playing</strong>
-          </button>
-          <details id="nowDetails" class="now-details" hidden>
-            <summary class="now-details-toggle" aria-label="Current track actions" title="Current track actions">⋯</summary>
-            <div class="song-more-menu now-details-menu">
-              <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">Play next</button>
-              <button data-track-action="append" data-vex-action="vexstream.player.add-queue">Add to queue</button>
-              <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">Explore</button>
-              <button data-track-action="edit">Edit</button>
-              <button data-track-action="trash">Move to Deleted music</button>
-            </div>
-          </details>
-        </div>
-        <div id="nowMeta" class="now-meta">Choose something from your local library</div>
-      </div>
-    </div>
-
-    <div class="transport" aria-label="Playback and queue controls">
-      <div class="transport-controls">
-        <button id="previous" type="button" data-vex-control="vexstream.queue.previous" data-text-ref="queue.previous">Previous</button>
-        <button id="playPause" type="button" class="primary" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
-        <button id="next" type="button" data-vex-control="vexstream.queue.next" data-text-ref="queue.next">Next</button>
-        <button id="shuffle" type="button" data-vex-control="vexstream.queue.shuffle" data-text-ref="queue.shuffle" aria-pressed="false">Shuffle</button>
-        <button id="repeat" type="button" data-vex-control="vexstream.queue.repeat" data-text-ref="queue.repeat" aria-pressed="false">Repeat</button>
-      </div>
-      <div class="timeline small" aria-label="Playback position">
-        <span id="curTime">0:00</span>
-        <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek" disabled>
-        <span id="durTime">0:00</span>
-      </div>
-      <div class="player-aux">
-        <label class="volume-control">
-          <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
-          <span>Volume</span>
-        </label>
-        <button id="queueMiniBtn" class="queue-mini" type="button" aria-controls="queueDrawer" aria-expanded="false" title="Open Queue">
-          <span aria-hidden="true">☰</span>
-          <span id="queueMiniCount">0</span>
+    <footer class="player-footer">
+      <div id="nowPlaying" class="now">
+        <button id="nowArtButton" class="now-art-button" type="button" title="Open current track actions" aria-label="Open current track actions" disabled>
+          <div id="nowArt" class="art" aria-hidden="true">♫</div>
         </button>
+        <div class="track-copy">
+          <div class="now-title-row">
+            <button id="nowTitleButton" class="now-title-button" type="button" title="Open current track actions" disabled>
+              <strong id="trackTitle">Nothing playing</strong>
+            </button>
+            <details id="nowDetails" class="now-details" hidden>
+              <summary class="now-details-toggle" aria-label="Current track actions" title="Current track actions">⋯</summary>
+              <div class="song-more-menu now-details-menu">
+                <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">Play next</button>
+                <button data-track-action="append" data-vex-action="vexstream.player.add-queue">Add to queue</button>
+                <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">Explore</button>
+                <button data-track-action="edit">Edit</button>
+                <button data-track-action="trash">Move to Deleted music</button>
+              </div>
+            </details>
+          </div>
+          <div id="nowMeta" class="now-meta">Choose something from your local library</div>
+        </div>
       </div>
-    </div>
+
+      <div class="transport" aria-label="Playback and queue controls">
+        <div class="transport-controls">
+          <button id="previous" type="button" data-vex-control="vexstream.queue.previous" data-text-ref="queue.previous">Previous</button>
+          <button id="playPause" type="button" class="primary" data-vex-control="vexstream.playback.play-pause" data-text-ref="playback.play">Play</button>
+          <button id="next" type="button" data-vex-control="vexstream.queue.next" data-text-ref="queue.next">Next</button>
+          <button id="shuffle" type="button" data-vex-control="vexstream.queue.shuffle" data-text-ref="queue.shuffle" aria-pressed="false">Shuffle</button>
+          <button id="repeat" type="button" data-vex-control="vexstream.queue.repeat" data-text-ref="queue.repeat" aria-pressed="false">Repeat</button>
+        </div>
+        <div class="timeline small" aria-label="Playback position">
+          <span id="curTime">0:00</span>
+          <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek" disabled>
+          <span id="durTime">0:00</span>
+        </div>
+        <div class="player-aux">
+          <label class="volume-control">
+            <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
+            <span>Volume</span>
+          </label>
+          <button id="queueMiniBtn" class="queue-mini" type="button" aria-controls="queueDrawer" aria-expanded="false" title="Open Queue">
+            <span aria-hidden="true">☰</span>
+            <span id="queueMiniCount">0</span>
+          </button>
+        </div>
+      </div>
+    </footer>
 
     <section class="library" data-shell-panel="library" aria-labelledby="libraryTitle" hidden>
       <div class="section-heading">
@@ -179,7 +181,7 @@
         <div class="song-layout-head">
           <div>
             <strong id="songLayoutTitle">Song layout</strong>
-            <span class="small muted">Choose which metadata fields deserve space in this VexStream session.</span>
+            <span class="small muted">Drag a column's right edge to resize it. Hide fields here when you do not need them. Double-click a resize edge to restore that column's default width.</span>
           </div>
           <button id="songLayoutDone" type="button">Done</button>
         </div>
@@ -190,11 +192,6 @@
           <label><input type="checkbox" data-song-layout-field="duration" checked><span><strong>Time</strong><small>Track duration</small></span></label>
           <label><input type="checkbox" data-song-layout-field="genre"><span><strong>Genre</strong><small>Optional classification</small></span></label>
         </div>
-        <label class="song-title-width">
-          <strong>Title space</strong>
-          <input id="songTitleWidth" type="range" min="34" max="62" value="46">
-          <span id="songTitleWidthValue" class="small muted">46%</span>
-        </label>
         <div class="song-layout-actions">
           <button id="songLayoutReset" type="button">Reset layout</button>
         </div>
@@ -345,7 +342,7 @@
           <span>Review a provider link before VexStream downloads anything.</span>
         </div>
       </div>
-      <div class="youtube-import-entry">
+      <div class="youtube-import-entry" id="youtubeImportEntry">
         <label for="youtubeImportURL">YouTube link</label>
         <div class="youtube-import-row">
           <input id="youtubeImportURL" type="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
@@ -353,6 +350,80 @@
         </div>
         <div class="muted">Inspection and duplicate matching are read-only. Download begins only after the review step.</div>
       </div>
+      <div id="importRuntimeStatus" class="import-runtime-status" aria-live="polite">
+        Checking YouTube import tools…
+      </div>
+    <section class="import-review" id="importReview" aria-labelledby="importReviewTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <h2 id="importReviewTitle">Source review</h2>
+          <span id="importReviewSummary">Confirm how this source should enter your library</span>
+        </div>
+        <button id="importReviewClose" type="button">Back</button>
+      </div>
+
+      <div id="importReviewLoading" class="import-review-loading" role="status" aria-live="polite" hidden>
+        <span class="import-review-spinner" aria-hidden="true"></span>
+        <div>
+          <strong>Inspecting source…</strong>
+          <div id="importReviewLoadingDetail">Fetching provider details and checking your Library for existing matches. Nothing is downloading yet.</div>
+        </div>
+      </div>
+
+      <div id="importReviewContent">
+      <div class="import-review-source">
+        <img id="importReviewThumbnail" class="import-review-thumbnail" alt="" hidden>
+        <div id="importReviewThumbnailFallback" class="import-review-thumbnail fallback">♫</div>
+        <div class="import-review-source-copy">
+          <strong id="importReviewSourceTitle">Source</strong>
+          <div id="importReviewSourceCreator" class="muted"></div>
+          <div id="importReviewDuration" class="muted"></div>
+          <div id="importDuplicateSummary" class="import-note"></div>
+        </div>
+      </div>
+
+      <div id="importDuplicateDetails"></div>
+
+      <div class="import-review-grid">
+        <label>
+          <span>Save to</span>
+          <select id="importDestination"></select>
+        </label>
+
+        <label>
+          <span>Track layout</span>
+          <select id="importMode">
+            <option value="split">Save as individual tracks</option>
+            <option value="whole">Keep as one track</option>
+            <option value="both">Save both</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Collection / album label</span>
+          <input id="importCollection" type="text">
+        </label>
+
+        <label>
+          <span>Artist override</span>
+          <input id="importArtist" type="text" placeholder="Unknown — set if you know it">
+        </label>
+
+        <label>
+          <span>Genre / library label</span>
+          <input id="importGenre" type="text">
+        </label>
+      </div>
+
+      <div id="importSections"></div>
+
+      <div class="import-actions">
+        <button id="importStart" type="button" class="primary">Download &amp; add</button>
+        <span id="importReviewHint">Temporary staging protects the library until commit completes.</span>
+      </div>
+      </div>
+    </section>
+
     <section class="imports"  aria-labelledby="importsTitle">
       <div class="section-heading">
         <div>
@@ -420,60 +491,6 @@
         </div>
         <ol id="playlistDetailEntries" class="playlist-detail-entries"></ol>
       </section>
-    </section>
-
-    <section class="import-review" id="importReview" aria-labelledby="importReviewTitle" hidden>
-      <div class="section-heading">
-        <div>
-          <h2 id="importReviewTitle">Add to library</h2>
-          <span id="importReviewSummary">Review provider media before download</span>
-        </div>
-        <button id="importReviewClose" type="button">Close</button>
-      </div>
-
-      <div class="import-review-grid">
-        <div>
-          <strong id="importReviewSourceTitle">Source</strong>
-          <div id="importReviewSourceCreator" class="muted"></div>
-          <div id="importDuplicateSummary" class="import-note"></div>
-        </div>
-
-        <label>
-          <span>Save to</span>
-          <select id="importDestination"></select>
-        </label>
-
-        <label>
-          <span>Track layout</span>
-          <select id="importMode">
-            <option value="split">Save as individual tracks</option>
-            <option value="whole">Keep as one track</option>
-            <option value="both">Save both</option>
-          </select>
-        </label>
-
-        <label>
-          <span>Collection / album label</span>
-          <input id="importCollection" type="text">
-        </label>
-
-        <label>
-          <span>Artist override</span>
-          <input id="importArtist" type="text" placeholder="Unknown — set if you know it">
-        </label>
-
-        <label>
-          <span>Genre / library label</span>
-          <input id="importGenre" type="text">
-        </label>
-      </div>
-
-      <div id="importSections"></div>
-
-      <div class="import-actions">
-        <button id="importStart" type="button" class="primary">Download &amp; add</button>
-        <span id="importReviewHint">Temporary staging protects the library until commit completes.</span>
-      </div>
     </section>
 
     <section class="trash deleted-music-view" data-shell-panel="deleted" aria-labelledby="trashTitle" hidden>
@@ -609,9 +626,15 @@
       </section>
     </div>
     <section id="systemAttention" class="system-status-card"></section>
+    <section class="system-status-card system-session-review">
+      <h3 data-text-ref="system.sessions.title">Live VexStream sessions</h3>
+      <p class="muted" data-text-ref="system.sessions.detail">Review parallel VexStream servers before stopping any older process. Active imports, unverified state, and unique live tracks are held automatically.</p>
+      <button id="reviewOldSessions" type="button" data-text-ref="system.sessions.review">Review old sessions</button>
+      <div id="oldSessionPlan" hidden></div>
+    </section>
     <section class="system-status-card system-status-boundary">
-      <h3 data-text-ref="system.status.capability-boundary">Not migrated yet</h3>
-      <p data-text-ref="system.status.capability-detail">V3 diagnostics exports and reviewable safe-repair controls are not yet owned by Desktop V4. This status surface does not pretend those capabilities exist.</p>
+      <h3 data-text-ref="system.status.capability-boundary">Still not migrated</h3>
+      <p data-text-ref="system.status.capability-detail">V3 diagnostic exports and broader reviewable safe-repair controls are not yet owned by Desktop V4. Old-session review is restored separately above.</p>
     </section>
     <div class="system-drawer-actions">
       <button id="exitVexStream" type="button" data-vex-action="vexstream.system.exit">Exit VexStream</button>

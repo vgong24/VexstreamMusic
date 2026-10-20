@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/vgong24/VexstreamMusic/v2/desktop/appdata"
+	"github.com/vgong24/VexstreamMusic/v2/desktop/lifecycle"
 )
 
 func TestOpenFormsLocalDesktopCompositionWithRecoveredPhoneAdministration(t *testing.T) {
@@ -39,7 +40,8 @@ func TestOpenFormsLocalDesktopCompositionWithRecoveredPhoneAdministration(t *tes
 	}
 	if response.StatusCode != http.StatusOK ||
 		health["version"] != "4.0.0" ||
-		health["buildRef"] != "test-build" {
+		health["buildRef"] != "test-build" ||
+		health["pid"] != float64(os.Getpid()) {
 		t.Fatalf("health identity drift: code=%d body=%+v", response.StatusCode, health)
 	}
 
@@ -194,5 +196,113 @@ func TestPlayerSessionUsesV4OnlyLayoutThroughComposition(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(layout.Base, "player-session.json")); !os.IsNotExist(err) {
 		t.Fatalf("player session leaked into protected V3 root: %v", err)
+	}
+}
+
+func TestOldSessionRoutesExposePlanAndHoldUnsafeRetirement(t *testing.T) {
+	root := t.TempDir()
+	application, err := Open(Options{
+		Version:  "4.0.0",
+		BuildRef: "test-build",
+		Layout:   appdata.At(filepath.Join(root, "VexStreamMusic")),
+		Home:     root,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer application.Close()
+
+	application.sessionPlan = func() lifecycle.SessionPlan {
+		return lifecycle.SessionPlan{
+			CurrentPID: os.Getpid(),
+			Sessions: []lifecycle.LiveSession{
+				{
+					PID:             os.Getpid(),
+					Version:         "4.0.0",
+					Current:         true,
+					TrackCount:      2,
+					LibraryVerified: true,
+					ImportsVerified: true,
+				},
+				{
+					PID:             424242,
+					Version:         "3.0.0",
+					TrackCount:      1,
+					ActiveImports:   1,
+					LibraryVerified: true,
+					ImportsVerified: true,
+				},
+			},
+			Held: []lifecycle.RetireCandidate{
+				{
+					PID:           424242,
+					Version:       "3.0.0",
+					ActiveImports: 1,
+					Reason:        "1 active import(s) are still owned by this session",
+				},
+			},
+			Eligible: []lifecycle.RetireCandidate{},
+			Warning:  "safe retirement only",
+		}
+	}
+
+	plan := httptest.NewRecorder()
+	application.Handler().ServeHTTP(
+		plan,
+		httptest.NewRequest(
+			http.MethodGet,
+			"/api/system/sessions/retire-plan",
+			nil,
+		),
+	)
+	if plan.Code != http.StatusOK {
+		t.Fatalf("old-session plan status=%d body=%s", plan.Code, plan.Body.String())
+	}
+	var payload lifecycle.SessionPlan
+	if err := json.NewDecoder(plan.Body).Decode(&payload); err != nil {
+		t.Fatal(err)
+	}
+	if len(payload.Held) != 1 ||
+		payload.Held[0].PID != 424242 ||
+		payload.Held[0].ActiveImports != 1 {
+		t.Fatalf("old-session held projection drift: %+v", payload)
+	}
+
+	bad := httptest.NewRecorder()
+	application.Handler().ServeHTTP(
+		bad,
+		httptest.NewRequest(
+			http.MethodPost,
+			"/api/system/sessions/retire",
+			strings.NewReader(`{"confirm":"NO","pids":[424242]}`),
+		),
+	)
+	if bad.Code != http.StatusBadRequest {
+		t.Fatalf("old-session retirement admitted without confirmation: %d", bad.Code)
+	}
+
+	held := httptest.NewRecorder()
+	application.Handler().ServeHTTP(
+		held,
+		httptest.NewRequest(
+			http.MethodPost,
+			"/api/system/sessions/retire",
+			strings.NewReader(`{"confirm":"RETIRE_OLD_IDLE_SESSIONS","pids":[424242]}`),
+		),
+	)
+	if held.Code != http.StatusOK {
+		t.Fatalf("held retirement response=%d body=%s", held.Code, held.Body.String())
+	}
+	var result struct {
+		Retired []int                     `json:"retired"`
+		Failed  []lifecycle.RetireFailure `json:"failed"`
+	}
+	if err := json.NewDecoder(held.Body).Decode(&result); err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Retired) != 0 ||
+		len(result.Failed) != 1 ||
+		result.Failed[0].PID != 424242 {
+		t.Fatalf("held session was not kept safe: %+v", result)
 	}
 }

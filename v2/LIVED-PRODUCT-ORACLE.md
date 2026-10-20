@@ -121,14 +121,24 @@ Unless Victor explicitly admits a different UX, preserve these V3-visible outcom
   remains eligible as upcoming; preserving history applies to reshuffling an already-lived Queue,
   not to manufacturing a false history prefix from the source list's sort position;
 - the expanded Queue keeps the current item human- and accessibility-identifiable through title,
-  artist, album/collection, available description/source detail, and current/played/up-next state;
-  on desktop, rich current-track detail belongs in a dedicated left Now Playing pane beside the
-  Queue timeline at roughly a 25% / 75% information ratio, rather than inflating one timeline row;
+  artist, album/collection, and current/played/up-next state. Desktop uses a dedicated left Now
+  Playing pane beside the Queue timeline at roughly a 25% / 75% information ratio, but that pane is
+  **identity/navigation terrain**, not a dump of provider descriptions, source prose, or every
+  metadata field; artist and album remain directly navigable and deeper actions stay behind the
+  track-action entry;
 - Queue reorder preserves the identity of whatever is actually playing even when the current row
-  itself moves; current or neighboring rows may be repositioned by the visible reorder affordances,
-  while removing the actively playing row remains held;
-- drag reorder remains a first-class Queue affordance, not an implementation accident of the old
-  monolith;
+  itself moves; current or neighboring rows may be repositioned while removing the actively playing
+  row remains held;
+- drag reorder remains a first-class Queue affordance. The row exposes the V3-style six-dot handle,
+  and crossing a row midpoint must project an explicit dashed insertion placeholder at the exact
+  boundary that will receive the drop so the human does not have to infer before-vs-after placement;
+- ordinary Queue rows keep only the compact immediate controls needed in the timeline: Play when
+  applicable plus the contextual overflow entry. Move earlier/later and Remove belong in that
+  overflow rather than consuming permanent horizontal space;
+- V3 density is part of lived parity: the product shell is based on 14px text, normal-weight
+  8px/11px button padding, ~18px section headings, a normal-size Now Playing title, and ~38px
+  transport controls. Refactor scaffolding must not leak its larger/bolder practicum defaults into
+  the product shell;
 - the expanded Queue keeps V3's explicit **Shuffle upcoming** action separate from Shuffle mode:
   it can reshuffle the already-lived future without fabricating history or requiring an off/on
   toggle of the persistent Shuffle preference;

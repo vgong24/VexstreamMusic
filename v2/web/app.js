@@ -152,7 +152,6 @@ const queueSummary=document.querySelector("#queueSummary");
 const queueCurrentPane=document.querySelector("#queueCurrentPane");
 const queueTimelinePane=document.querySelector("#queueTimelinePane");
 const queueList=document.querySelector("#queueList");
-const queueDropEnd=document.querySelector("#queueDropEnd");
 const shuffleQueueUpcoming=document.querySelector("#shuffleQueueUpcoming");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
@@ -408,6 +407,11 @@ let currentSessionRestoration=Object.freeze({
 let playerSessionPersistenceEnabled=false;
 let queueDrawerOpen=false;
 let queueDragIndex=-1;
+let queueDropIndex=-1;
+const queueDropPlaceholder=document.createElement("li");
+queueDropPlaceholder.className="queue-drop-placeholder";
+queueDropPlaceholder.hidden=true;
+queueDropPlaceholder.setAttribute("aria-hidden","true");
 let playerSessionSaveTimer=null;
 let pendingPlayerSessionState=null;
 let playerSessionSaveChain=Promise.resolve();
@@ -1710,22 +1714,7 @@ function renderQueueCurrentPane(state){
  }
 
  const titleText=trackTitle(item);
- const album=String(item?.album??"").trim()||"Unknown album";
- const sourceDetail=String(item?.sourceTitle??item?.channel??"").trim();
- const description=String(item?.description??"").trim();
  const artwork=String(item?.thumbnailURL??"").trim();
- const duration=Number(item?.durationSeconds)||0;
- const genre=String(item?.genre??"").trim();
- const facts=[
-  [resolveText(locale,"queue.current.artist"),trackArtist(item)],
-  [resolveText(locale,"queue.current.album"),album],
-  duration>0?[resolveText(locale,"queue.current.time"),formatSeconds(duration)]:null,
-  sourceDetail&&sourceDetail!==titleText
-   ?[resolveText(locale,"queue.current.source"),sourceDetail]
-   :null,
-  genre?[resolveText(locale,"queue.current.genre"),genre]:null
- ].filter(Boolean);
-
  queueCurrentPane.dataset.trackRef=ref;
  queueCurrentPane.innerHTML=
   '<div class="queue-current-art'+(artwork?' has-art':'')+'">'+
@@ -1737,18 +1726,7 @@ function renderQueueCurrentPane(state){
    escapeHTML(resolveText(locale,"queue.current.eyebrow"))+
   '</div>'+
   marqueeTextHTML(titleText,{tag:"h2",className:"queue-current-title"})+
-  '<dl class="queue-current-facts">'+
-   facts.map(([label,value])=>
-    '<div class="queue-current-fact"><dt>'+
-     escapeHTML(label)+
-    '</dt><dd>'+
-     escapeHTML(value)+
-    '</dd></div>'
-   ).join("")+
-  '</dl>'+
-  (description
-   ?'<p class="queue-current-description">'+escapeHTML(description)+'</p>'
-   :"")+
+  '<div class="queue-current-meta">'+nowLibraryRelationsHTML(item)+'</div>'+
   '<details class="queue-current-actions"><summary>'+
    escapeHTML(resolveText(locale,"queue.current.actions"))+
   '</summary><div class="queue-current-action-menu">'+
@@ -1765,7 +1743,7 @@ function renderQueueCurrentPane(state){
   '</div></details>';
 }
 
-function render(){
+function render(){function render(){
  const pp=player.playPausePresentation;
  const qp=queue.currentProjection;
  setControl(playPause,pp);
@@ -1822,8 +1800,6 @@ function render(){
       position:qp.state.currentIndex+1
     });
  renderQueueCurrentPane(qp.state);
- queueDropEnd.hidden=qp.state.kind==="empty";
- queueDropEnd.textContent=resolveText(locale,"queue.drop-end");
 
  renderExplore();
  renderImportRuntimeStatus();
@@ -1844,8 +1820,6 @@ function render(){
   const stateLabel=resolveText(locale,stateTextRef);
   const titleText=trackTitle(item);
   const album=String(item?.album??"").trim()||"Unknown album";
-  const sourceDetail=String(item?.sourceTitle??item?.channel??"").trim();
-  const description=String(item?.description??"").trim();
   const metadata=[
    trackArtist(item),
    album
@@ -1853,22 +1827,22 @@ function render(){
   const accessibleIdentity=[
    stateLabel,
    titleText,
-   ...metadata,
-   ...(sourceDetail&&sourceDetail!==titleText?[sourceDetail]:[]),
-   ...(description?[description]:[])
+   ...metadata
   ].join(". ");
   const upDisabled=index===0;
   const downDisabled=index===qp.state.items.length-1;
   return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-track-ref="${escapeHTML(ref)}" data-queue-index="${index}" draggable="true" aria-label="${escapeHTML(accessibleIdentity)}">
-    <span class="queue-index">${index+1}</span>
-    <span class="queue-title">
-      ${marqueeTextHTML(titleText,{tag:"strong"})}
-      <span class="queue-meta" title="${escapeHTML(metadata.join(" · "))}">${escapeHTML(metadata.join(" · "))}</span>
-      <span class="queue-state">${escapeHTML(stateLabel)}</span>
-    </span>
     <span class="queue-drag-handle" aria-hidden="true" title="Drag to reorder">⋮⋮</span>
+    ${trackArtworkHTML(item)}
+    <span class="queue-title">
+      <span class="queue-title-line">
+       ${marqueeTextHTML(titleText,{tag:"strong"})}
+       <span class="queue-state">${escapeHTML(stateLabel)}</span>
+      </span>
+      <span class="queue-meta" title="${escapeHTML(metadata.join(" · "))}">${escapeHTML(metadata.join(" · "))}</span>
+    </span>
     <span class="queue-actions">
-      <button data-queue-action="play" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"playback.play"))}</button>
+      ${isCurrent?"":`<button data-queue-action="play" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>`}
       <details class="song-more queue-more">
        <summary aria-label="Track actions" title="Track actions">⋯</summary>
        <div class="song-more-menu">
@@ -1878,18 +1852,19 @@ function render(){
         <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
         <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
         ${trackPlaylistActionHTML()}
+        <span class="queue-menu-separator" aria-hidden="true"></span>
+        <button data-queue-action="up" ${upDisabled?"disabled":""}>${escapeHTML(resolveText(locale,"queue.move-up"))}</button>
+        <button data-queue-action="down" ${downDisabled?"disabled":""}>${escapeHTML(resolveText(locale,"queue.move-down"))}</button>
+        <button data-queue-action="remove" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"queue.remove"))}</button>
        </div>
       </details>
-      <button data-queue-action="up" title="${escapeHTML(resolveText(locale,"queue.move-up"))}" aria-label="${escapeHTML(resolveText(locale,"queue.move-up"))}" ${upDisabled?"disabled":""}>↑</button>
-      <button data-queue-action="down" title="${escapeHTML(resolveText(locale,"queue.move-down"))}" aria-label="${escapeHTML(resolveText(locale,"queue.move-down"))}" ${downDisabled?"disabled":""}>↓</button>
-      <button data-queue-action="remove" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"queue.remove"))}</button>
     </span>
   </li>`;
  }).join("");
  requestAnimationFrame(()=>refreshSongMarqueeMetrics(queueDrawer));
 }
 
-function trackPlaylistActionHTML(){
+function trackPlaylistActionHTML(){function trackPlaylistActionHTML(){
  return playlists.length
   ? `<select data-track-playlist-target>${playlists.map(playlist=>
       `<option value="${escapeHTML(playlist.id)}">${escapeHTML(playlist.name)}</option>`
@@ -3793,6 +3768,16 @@ recoverTrashPurgeButton.addEventListener("click",()=>void guarded(async()=>{
 }));
 
 queueCurrentPane.addEventListener("click",event=>{
+ const relation=event.target.closest(
+  "[data-now-library-kind][data-now-library-key]"
+ );
+ if(relation){
+  shellNavigation.openLibraryDetail(
+   relation.dataset.nowLibraryKind,
+   relation.dataset.nowLibraryKey
+  );
+  return;
+ }
  handleTrackAction(event);
 });
 
@@ -3828,10 +3813,47 @@ queueList.addEventListener("click",event=>{
 
 function clearQueueDragState(){
  queueDragIndex=-1;
- for(const row of queueList.querySelectorAll(".dragging,.drop-target")){
-  row.classList.remove("dragging","drop-target");
+ queueDropIndex=-1;
+ queueDropPlaceholder.remove();
+ queueDropPlaceholder.hidden=true;
+ for(const row of queueList.querySelectorAll(".dragging")){
+  row.classList.remove("dragging");
  }
- queueDropEnd.classList.remove("drop-target");
+}
+
+function updateQueueDropPreview(clientY){
+ const state=queue.currentProjection.state;
+ if(state.kind!=="positioned"||queueDragIndex<0)return;
+
+ queueDropPlaceholder.remove();
+ const rows=[...queueList.querySelectorAll("[data-queue-index]")];
+ if(!rows.length)return;
+
+ let boundary=state.items.length;
+ let before=null;
+ for(const row of rows){
+  const rect=row.getBoundingClientRect();
+  if(clientY<rect.top+(rect.height/2)){
+   boundary=Number(row.dataset.queueIndex);
+   before=row;
+   break;
+  }
+ }
+
+ const source=rows.find(
+  row=>Number(row.dataset.queueIndex)===queueDragIndex
+ )??rows[0];
+ const height=Math.max(
+  48,
+  Math.round(source.getBoundingClientRect().height)
+ );
+ queueDropIndex=boundary;
+ queueDropPlaceholder.dataset.dropIndex=String(boundary);
+ queueDropPlaceholder.style.height=`${height}px`;
+ queueDropPlaceholder.hidden=false;
+
+ if(before)queueList.insertBefore(queueDropPlaceholder,before);
+ else queueList.append(queueDropPlaceholder);
 }
 
 queueList.addEventListener("dragstart",event=>{
@@ -3842,61 +3864,36 @@ queueList.addEventListener("dragstart",event=>{
  const row=event.target.closest("[data-queue-index]");
  if(!row||!event.dataTransfer)return;
  queueDragIndex=Number(row.dataset.queueIndex);
+ queueDropIndex=-1;
  event.dataTransfer.effectAllowed="move";
  event.dataTransfer.setData("text/plain",String(queueDragIndex));
  row.classList.add("dragging");
 });
 
 queueList.addEventListener("dragover",event=>{
- const row=event.target.closest("[data-queue-index]");
- if(!row)return;
+ if(queueDragIndex<0)return;
  event.preventDefault();
  if(event.dataTransfer)event.dataTransfer.dropEffect="move";
- for(const candidate of queueList.querySelectorAll(".drop-target")){
-  candidate.classList.remove("drop-target");
- }
- row.classList.add("drop-target");
+ updateQueueDropPreview(event.clientY);
 });
 
 queueList.addEventListener("drop",event=>{
- const row=event.target.closest("[data-queue-index]");
- if(!row)return;
+ if(queueDragIndex<0)return;
  event.preventDefault();
  const from=queueDragIndex>=0
   ?queueDragIndex
   :Number(event.dataTransfer?.getData("text/plain"));
- const to=Number(row.dataset.queueIndex);
+ const to=queueDropIndex;
  clearQueueDragState();
- if(!Number.isInteger(from)||!Number.isInteger(to)||from===to)return;
+ if(!Number.isInteger(from)||!Number.isInteger(to))return;
+ if(from===to||from+1===to)return;
  player.moveQueue(from,to);
  render();
 });
 
 queueList.addEventListener("dragend",clearQueueDragState);
 
-queueDropEnd.addEventListener("dragover",event=>{
- event.preventDefault();
- if(event.dataTransfer)event.dataTransfer.dropEffect="move";
- queueDropEnd.classList.add("drop-target");
-});
-
-queueDropEnd.addEventListener("dragleave",()=>{
- queueDropEnd.classList.remove("drop-target");
-});
-
-queueDropEnd.addEventListener("drop",event=>{
- event.preventDefault();
- const from=queueDragIndex>=0
-  ?queueDragIndex
-  :Number(event.dataTransfer?.getData("text/plain"));
- const state=queue.currentProjection.state;
- clearQueueDragState();
- if(state.kind!=="positioned"||!Number.isInteger(from))return;
- player.moveQueue(from,state.items.length);
- render();
-});
-
-queue.subscribe(projection=>{
+queue.subscribe(projection=>{queue.subscribe(projection=>{
  render();
  schedulePlayerSessionSave(projection.state);
 });

@@ -2054,24 +2054,47 @@ def main() -> int:
             "document.querySelector('#queueDrawer').classList.contains('open')"
         )
         checked(
-            "expanded-queue-keeps-rich-current-detail-left-and-timeline-right",
+            "expanded-queue-keeps-identity-navigation-left-and-compact-timeline-right",
             lambda: require(
                 page.locator("#queueCurrentPane").get_attribute("data-track-ref")
                 == "media.vexstream.test-tone.2"
-                and "A deliberately descriptive current-track fixture"
+                and "VexStream Test Tone Two"
+                in page.locator("#queueCurrentPane").inner_text()
+                and "VexStream QA"
+                in page.locator("#queueCurrentPane").inner_text()
+                and "V4 Practicum"
                 in page.locator("#queueCurrentPane").inner_text()
                 and "A deliberately descriptive current-track fixture"
+                not in page.locator("#queueCurrentPane").inner_text()
+                and "A deliberately descriptive current-track fixture"
                 not in page.locator("#queueList li.current").inner_text()
+                and "A deliberately descriptive current-track fixture"
+                not in (
+                    page.locator("#queueList li.current").get_attribute("aria-label")
+                    or ""
+                )
+                and page.locator(
+                    "#queueCurrentPane [data-now-library-kind='artist']"
+                ).count()
+                == 1
+                and page.locator(
+                    "#queueCurrentPane [data-now-library-kind='album']"
+                ).count()
+                == 1
                 and page.evaluate(
                     """() => {
-                      const left=document.querySelector('#queueCurrentPane')
-                        .getBoundingClientRect().width;
-                      const right=document.querySelector('#queueTimelinePane')
-                        .getBoundingClientRect().width;
-                      return left>0 && right>=left*2;
+                      const shell=document.querySelector('.player.v3-product-shell');
+                      const current=document.querySelector('#queueCurrentPane');
+                      const right=document.querySelector('#queueTimelinePane');
+                      const title=document.querySelector('#trackTitle');
+                      return getComputedStyle(shell).fontSize==='14px'
+                        && getComputedStyle(title).fontSize==='14px'
+                        && current.getBoundingClientRect().width>0
+                        && right.getBoundingClientRect().width
+                           >= current.getBoundingClientRect().width*2;
                     }"""
                 ),
-                "expanded Queue lost its Now Playing/timeline split",
+                "expanded Queue identity/navigation or V3 density drift",
             ),
         )
         page.locator("#queueMiniBtn").click()
@@ -2314,48 +2337,91 @@ def main() -> int:
             ),
         )
         current_before=page.evaluate("window.vexV4.player.currentItem.ref")
+        current_row=page.locator("#queueList li.current")
         checked(
-            "current-queue-item-can-be-repositioned-but-not-removed",
+            "queue-row-keeps-drag-play-overflow-density",
             lambda: require(
-                page.locator(
-                    "#queueList li.current "
-                    "[data-queue-action='remove']"
-                ).is_disabled()
-                and page.locator(
-                    "#queueList li.current "
-                    "[data-queue-action='up']"
-                ).is_enabled()
-                and page.locator("#queueList li.current").get_attribute(
-                    "draggable"
-                )
-                == "true"
-                and page.locator(
-                    "#queueList li.current .queue-drag-handle"
+                current_row.get_attribute("draggable") == "true"
+                and current_row.locator(".queue-drag-handle").count() == 1
+                and current_row.locator(".queue-actions > button").count() == 0
+                and current_row.locator(
+                    ".queue-actions > .queue-more > summary"
                 ).count()
                 == 1
-                and page.locator(
-                    "#queueList li.current [data-track-action='explore']"
-                ).count()
-                == 1,
-                "current Queue row did not expose reorder/context actions while retaining remove guard",
+                and current_row.locator(
+                    "[data-queue-action='remove']"
+                ).is_disabled()
+                and current_row.locator(
+                    "[data-queue-action='up']"
+                ).is_enabled(),
+                "Queue row exposed bulky direct controls or lost drag/menu affordance",
             ),
         )
-        page.locator(
-            "#queueList li.current [data-queue-action='up']"
-        ).click()
+        drag_preview=page.evaluate(
+            """() => {
+              const source=document.querySelector('#queueList li.current');
+              const target=document.querySelector(
+                '#queueList li[data-queue-index="0"]'
+              );
+              const list=document.querySelector('#queueList');
+              const dt=new DataTransfer();
+              window.__VEX_QUEUE_DRAG_TEST=dt;
+              source.dispatchEvent(new DragEvent('dragstart',{
+                bubbles:true,
+                cancelable:true,
+                dataTransfer:dt
+              }));
+              const rect=target.getBoundingClientRect();
+              list.dispatchEvent(new DragEvent('dragover',{
+                bubbles:true,
+                cancelable:true,
+                dataTransfer:dt,
+                clientY:rect.top+1
+              }));
+              const placeholder=list.querySelector('.queue-drop-placeholder');
+              return {
+                dropIndex:placeholder?.dataset.dropIndex??null,
+                borderStyle:placeholder
+                  ?getComputedStyle(placeholder).borderTopStyle
+                  :null,
+                height:placeholder?.getBoundingClientRect().height??0
+              };
+            }"""
+        )
         checked(
-            "moving-current-queue-item-preserves-playing-identity",
+            "queue-drag-shows-exact-dashed-insertion-placeholder",
+            lambda: require(
+                drag_preview["dropIndex"] == "0"
+                and drag_preview["borderStyle"] == "dashed"
+                and drag_preview["height"] >= 48,
+                f"Queue insertion preview drift: {drag_preview}",
+            ),
+        )
+        page.evaluate(
+            """() => {
+              const list=document.querySelector('#queueList');
+              list.dispatchEvent(new DragEvent('drop',{
+                bubbles:true,
+                cancelable:true,
+                dataTransfer:window.__VEX_QUEUE_DRAG_TEST
+              }));
+              delete window.__VEX_QUEUE_DRAG_TEST;
+            }"""
+        )
+        page.wait_for_function(
+            "window.vexV4.queue.currentProjection.state.currentIndex===0"
+        )
+        checked(
+            "dragging-current-queue-item-preserves-playing-identity",
             lambda: require(
                 page.evaluate("window.vexV4.player.currentItem.ref")
-                == current_before
-                and page.evaluate(
-                    "window.vexV4.queue.currentProjection.state.currentIndex"
-                )
-                == 0,
-                "moving current Queue row changed Playback identity",
+                == current_before,
+                "dragging current Queue row changed Playback identity",
             ),
         )
         page.locator(
+            '#librarySidebar [data-shell-view="playlists"]'
+        ).click()        page.locator(
             '#librarySidebar [data-shell-view="playlists"]'
         ).click()
         page.wait_for_function(

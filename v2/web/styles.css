@@ -1818,7 +1818,9 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
  align-items:center;
  padding:7px 8px;
  border-radius:9px;
- contain:layout paint style;
+ position:relative;
+ overflow:visible;
+ contain:layout style;
 }
 .queue-timeline-pane #queueList li.current .queue-title strong,
 .queue-timeline-pane #queueList li.current .queue-meta{
@@ -1898,6 +1900,15 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
  font-weight:700;
 }
 .queue-more>summary::-webkit-details-marker{display:none}
+.queue-timeline-pane #queueList li:has(.queue-more[open]){
+ z-index:40;
+}
+.queue-timeline-pane .queue-more[open]{
+ z-index:50;
+}
+.queue-timeline-pane .queue-more .song-more-menu{
+ z-index:80;
+}
 .queue-menu-separator{
  display:block;
  height:1px;

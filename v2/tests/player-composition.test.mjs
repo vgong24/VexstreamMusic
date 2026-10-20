@@ -120,6 +120,34 @@ test("Play Track composes context selection with Playback instead of hiding it i
   assert.equal(h.media.paused,false);
 });
 
+test("Play now injects selected media after current without replacing shuffled Queue", async()=>{
+  const h=harness();
+  await h.player.activatePlayPause();
+  h.player.toggleShuffle();
+  assert.deepEqual(h.queue.currentProjection.state.items,["a","b","c"]);
+  await h.player.playNow("c",["a","b","c"]);
+  assert.deepEqual(h.queue.currentProjection.state.items,["a","c","b"]);
+  assert.equal(h.queue.currentProjection.state.shuffle,true);
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"c");
+  assert.equal(h.media.dataset.mediaRef,"c");
+
+  h.media.currentTime=0;
+  await h.player.previous();
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"a");
+  await h.player.next();
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"c");
+});
+
+test("Play now on the already-playing item does not toggle it to Pause", async()=>{
+  const h=harness();
+  await h.player.activatePlayPause();
+  const before=h.media.playCalls;
+  await h.player.playNow("a",["a","b","c"]);
+  assert.equal(h.media.paused,false);
+  assert.equal(h.media.playCalls,before);
+  assert.equal(currentQueueRef(h.queue.currentProjection.state),"a");
+});
+
 test("Add to queue on an empty Queue selects without auto-playing; Play then loads current media", async()=>{
   const h=harness();
   h.player.append(["b","c"]);

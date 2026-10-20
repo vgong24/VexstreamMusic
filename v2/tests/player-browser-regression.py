@@ -2097,6 +2097,34 @@ def main() -> int:
                 "expanded Queue identity/navigation or V3 density drift",
             ),
         )
+        current_more=page.locator(
+            "#queueList li.current .queue-more > summary"
+        )
+        current_more.click()
+        checked(
+            "queue-overflow-menu-renders-in-foreground",
+            lambda: require(
+                page.evaluate(
+                    """() => {
+                      const menu=document.querySelector(
+                        '#queueList li.current .queue-more[open] .song-more-menu'
+                      );
+                      const first=menu?.querySelector('button');
+                      if(!menu||!first)return false;
+                      const rect=first.getBoundingClientRect();
+                      const top=document.elementFromPoint(
+                        rect.left+Math.min(8,rect.width/2),
+                        rect.top+Math.min(8,rect.height/2)
+                      );
+                      return Boolean(
+                        top?.closest('.song-more-menu')===menu
+                      );
+                    }"""
+                ),
+                "Queue overflow menu fell behind a neighboring row",
+            ),
+        )
+        current_more.click()
         page.locator("#queueMiniBtn").click()
 
         page.evaluate("window.vexV4.media.currentTime=0")
@@ -2184,33 +2212,85 @@ def main() -> int:
             "==='media.vexstream.test-tone.3'"
         )
         checked(
-            "fresh-shuffled-context-makes-the-whole-library-upcoming",
+            "ordinary-play-promotes-track-without-rebuilding-shuffled-queue",
             lambda: require(
                 page.evaluate(
-                    "window.vexV4.queue.currentProjection.state.currentIndex"
-                )
-                == 0
-                and page.evaluate(
                     "window.vexV4.queue.currentProjection.state.items.join(',')"
                 )
                 == (
+                    "media.vexstream.test-tone.1,"
                     "media.vexstream.test-tone.3,"
-                    "media.vexstream.test-tone.2,"
-                    "media.vexstream.test-tone.1"
+                    "media.vexstream.test-tone.2"
                 )
-                and page.locator("#queueDrawerNextCount").inner_text()
-                == "2 next",
-                "fresh shuffled context retained a false sorted-history prefix",
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 1
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.shuffle"
+                )
+                is True,
+                "ordinary Play replaced or reshuffled the established Queue",
             ),
         )
 
-        shuf.click()
-        third_track_play.click()
+        page.evaluate("window.vexV4.media.currentTime=0")
+        prev.click()
         page.wait_for_function(
-            "window.vexV4.queue.currentProjection.state.currentIndex===2"
-            " && window.vexV4.queue.currentProjection.state.shuffle===false"
+            "window.vexV4.player.currentItem.ref"
+            "==='media.vexstream.test-tone.1'"
         )
-        shuf.click()
+        nxt.click()
+        page.wait_for_function(
+            "window.vexV4.player.currentItem.ref"
+            "==='media.vexstream.test-tone.3'"
+        )
+        checked(
+            "play-now-preserves-back-forward-continuity",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.2"
+                ),
+                "Play-now lost the surrounding Queue order",
+            ),
+        )
+
+        page.locator(
+            '#trackChoices [data-track-ref="media.vexstream.test-tone.2"] '
+            '.song-title-cell'
+        ).dblclick()
+        page.wait_for_function(
+            "window.vexV4.player.currentItem.ref"
+            "==='media.vexstream.test-tone.2'"
+        )
+        checked(
+            "double-click-plays-without-replacing-established-queue",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.2"
+                )
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 2
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.shuffle"
+                )
+                is True,
+                "double-click rebuilt Queue instead of selecting/promoting the track",
+            ),
+        )
+
         nxt.click()
         page.wait_for_function(
             "window.vexV4.player.currentItem.ref"
@@ -2225,7 +2305,25 @@ def main() -> int:
             ),
         )
 
+        shuf.click()
+        page.evaluate(
+            """async () => {
+              await window.vexV4.player.playContext([
+                'media.vexstream.test-tone.1',
+                'media.vexstream.test-tone.2',
+                'media.vexstream.test-tone.3'
+              ],0);
+            }"""
+        )
+        page.wait_for_function(
+            "window.vexV4.player.currentItem.ref"
+            "==='media.vexstream.test-tone.1'"
+        )
+
         page.locator(
+            '[data-track-ref="media.vexstream.test-tone.3"] '
+            '[data-track-action="play-next"]'
+        ).click()        page.locator(
             '[data-track-ref="media.vexstream.test-tone.3"] '
             '[data-track-action="play-next"]'
         ).click()

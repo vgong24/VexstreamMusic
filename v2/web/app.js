@@ -3025,15 +3025,30 @@ function activateTrackRow(
  {row,ref,playbackRefs=libraryPlaybackRefs(),selectionAware=false}={}
 ){
  if(!row||!ref||rowTargetOwnsInteraction(event.target))return false;
- if(event.type==="keydown"){
-  if(event.key!=="Enter"&&event.key!==" ")return false;
-  event.preventDefault();
- }
- if(selectionAware&&librarySelection.currentProjection.active){
+ const selecting=selectionAware&&librarySelection.currentProjection.active;
+
+ if(event.type==="click"){
+  if(!selecting)return false;
+  if(Number(event.detail)>1)return true;
   librarySelection.toggle(ref,!librarySelection.isSelected(ref));
   return true;
  }
- void guarded(()=>player.playTrack(ref,playbackRefs));
+
+ if(event.type==="dblclick"){
+  if(selecting)return true;
+  event.preventDefault();
+ }else if(event.type==="keydown"){
+  if(event.key!=="Enter"&&event.key!==" ")return false;
+  event.preventDefault();
+ }else{
+  return false;
+ }
+
+ if(selecting){
+  librarySelection.toggle(ref,!librarySelection.isSelected(ref));
+  return true;
+ }
+ void guarded(()=>player.playNow(ref,playbackRefs));
  return true;
 }
 
@@ -3044,6 +3059,14 @@ recentSongs.addEventListener("click",event=>{
  activateTrackRow(event,{
   row,
   ref:row.dataset.homeTrackRef,
+  playbackRefs:libraryPlaybackRefs()
+ });
+});
+recentSongs.addEventListener("dblclick",event=>{
+ const row=event.target.closest("[data-home-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.homeTrackRef,
   playbackRefs:libraryPlaybackRefs()
  });
 });
@@ -3062,7 +3085,7 @@ function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){
  if(!action||!card)return false;
  const ref=card.dataset.trackRef;
  if(action.dataset.trackAction==="play"){
-  void guarded(()=>player.playTrack(ref,playbackRefs));
+  void guarded(()=>player.playNow(ref,playbackRefs));
   return true;
  }
  if(action.dataset.trackAction==="play-next"){
@@ -3304,6 +3327,15 @@ trackChoices.addEventListener("click",event=>{
   selectionAware:true
  });
 });
+trackChoices.addEventListener("dblclick",event=>{
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:libraryPlaybackRefs(),
+  selectionAware:true
+ });
+});
 trackChoices.addEventListener("keydown",event=>{
  const row=event.target.closest("[data-track-ref]");
  activateTrackRow(event,{
@@ -3319,6 +3351,15 @@ libraryGroupTracks.addEventListener("click",event=>{
  if(handleTrackAction(event,{
   playbackRefs:group?.refs??libraryPlaybackRefs()
  }))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:group?.refs??libraryPlaybackRefs()
+ });
+});
+libraryGroupTracks.addEventListener("dblclick",event=>{
+ const group=currentLibraryDetailGroup();
  const row=event.target.closest("[data-track-ref]");
  activateTrackRow(event,{
   row,
@@ -3390,6 +3431,16 @@ artistSongTable.addEventListener("click",event=>{
  if(handleTrackAction(event,{
   playbackRefs:visible.map(item=>item.ref)
  }))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:visible.map(item=>item.ref)
+ });
+});
+artistSongTable.addEventListener("dblclick",event=>{
+ const group=currentLibraryDetailGroup();
+ const visible=group?artistDetailVisibleTracks(group):[];
  const row=event.target.closest("[data-track-ref]");
  activateTrackRow(event,{
   row,
@@ -3639,6 +3690,17 @@ playlistDetailDelete.addEventListener("click",()=>void guarded(async()=>{
  await refreshPlaylists();
 }));
 
+playlistDetailEntries.addEventListener("dblclick",event=>{
+ const resolved=currentPlaylistDetail();
+ if(!resolved)return;
+ const row=event.target.closest("[data-track-ref][data-available='true']");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:resolved.playableRefs
+ });
+});
+
 playlistDetailEntries.addEventListener("click",event=>{
  const resolved=currentPlaylistDetail();
  if(!resolved)return;
@@ -3868,6 +3930,20 @@ queueCurrentPane.addEventListener("click",event=>{
 
 shuffleQueueUpcoming.addEventListener("click",()=>{
  player.shuffleUpcoming();
+});
+
+queueList.addEventListener("dblclick",event=>{
+ if(rowTargetOwnsInteraction(event.target))return;
+ const row=event.target.closest("[data-queue-index]");
+ if(!row)return;
+ const index=Number(row.dataset.queueIndex);
+ const state=queue.currentProjection.state;
+ if(
+  state.kind!=="positioned" ||
+  index===state.currentIndex
+ )return;
+ event.preventDefault();
+ void guarded(()=>player.playQueueIndex(index));
 });
 
 queueList.addEventListener("click",event=>{

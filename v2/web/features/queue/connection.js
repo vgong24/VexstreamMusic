@@ -9,6 +9,7 @@ import {
   applyQueueEffect,
   insertNextQueueRefs,
   moveQueueItem,
+  playNowQueueRef,
   removeQueueItem,
   replaceQueueContext,
   reshuffleQueueUpcoming,
@@ -89,6 +90,11 @@ export function createQueueConnection({
 
     playNext(refs) {
       return setState(insertNextQueueRefs(state, refs));
+    },
+
+    playNow(ref) {
+      const next=playNowQueueRef(state,ref);
+      return next===state?projection():setState(next);
     },
 
     shuffleUpcoming() {

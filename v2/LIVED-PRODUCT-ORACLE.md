@@ -142,6 +142,18 @@ Unless Victor explicitly admits a different UX, preserve these V3-visible outcom
 - ordinary Queue rows keep only the compact immediate controls needed in the timeline: Play when
   applicable plus the contextual overflow entry. Move earlier/later and Remove belong in that
   overflow rather than consuming permanent horizontal space;
+- an opened Queue-row overflow menu is foreground interaction terrain: it must layer above neighboring
+  Queue rows rather than rendering underneath the next song or being clipped by row paint containment;
+- ordinary single-track **Play** and song-row **double-click** are play-now intentions once a Queue
+  already exists. They must not replace the Queue or re-run Shuffle. If the selected track already
+  exists in the upcoming suffix, promote that occurrence directly after current and select it; if it
+  exists only in played history, inject a new replay occurrence directly after current. The prior
+  current remains immediately behind it so Previous returns there, and the untouched future continues
+  after the promoted song. Whole-context Play / Shuffle actions remain the explicit ways to replace
+  listening context;
+- a normal song-row single click does not auto-start playback. It remains available for selection/
+  navigation affordances; double-click and the explicit Play button carry the immediate play-now
+  intention;
 - V3 density is part of lived parity: the product shell is based on 14px text, normal-weight
   8px/11px button padding, ~18px section headings, a normal-size Now Playing title, and ~38px
   transport controls. Refactor scaffolding must not leak its larger/bolder practicum defaults into

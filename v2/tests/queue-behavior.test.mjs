@@ -6,7 +6,7 @@ import {
 } from "../web/features/queue/behavior.js";
 import {
   appendQueueRefs, applyQueueEffect, insertNextQueueRefs,
-  moveQueueItem, removeQueueItem, replaceQueueContext, reshuffleQueueUpcoming
+  moveQueueItem, playNowQueueRef, removeQueueItem, replaceQueueContext, reshuffleQueueUpcoming
 } from "../web/features/queue/model.js";
 import { createQueueConnection } from "../web/features/queue/connection.js";
 
@@ -79,6 +79,30 @@ test("play-next insertion is directly after the current item", () => {
   assert.equal(next.currentIndex,0);
 });
 
+test("Play now promotes an upcoming item without rebuilding or reshuffling Queue", () => {
+  const state=QueueState.positioned({
+    items:["a","b","c","d"],
+    currentIndex:1,
+    shuffle:true
+  });
+  const next=playNowQueueRef(state,"d");
+  assert.deepEqual(next.items,["a","b","d","c"]);
+  assert.equal(next.currentIndex,2);
+  assert.equal(currentQueueRef(next),"d");
+  assert.equal(next.shuffle,true);
+});
+
+test("Play now replays a history item by injecting a new current occurrence", () => {
+  const state=QueueState.positioned({
+    items:["a","b","c"],
+    currentIndex:1
+  });
+  const next=playNowQueueRef(state,"a");
+  assert.deepEqual(next.items,["a","b","a","c"]);
+  assert.equal(next.currentIndex,2);
+  assert.equal(currentQueueRef(next),"a");
+});
+
 test("reorder can move current or adjacent items while preserving current identity", () => {
   const state=QueueState.positioned({items:["a","b","c","d"],currentIndex:2});
 
@@ -116,6 +140,10 @@ test("Queue Connection keeps payload operations separate from stable Control sem
   assert.deepEqual(queue.currentProjection.state.items,["a","c","b"]);
   queue.playNext(["x"]);
   assert.deepEqual(queue.currentProjection.state.items,["a","x","c","b"]);
+  queue.playNow("b");
+  assert.deepEqual(queue.currentProjection.state.items,["a","b","x","c"]);
+  assert.equal(currentQueueRef(queue.currentProjection.state),"b");
+  assert.equal(queue.currentProjection.state.shuffle,true);
   queue.shuffleUpcoming();
   assert.deepEqual(queue.currentProjection.state.items,["a","b","c","x"]);
   assert.equal(queue.currentProjection.state.shuffle,true);

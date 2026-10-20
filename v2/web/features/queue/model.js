@@ -84,6 +84,35 @@ export function insertNextQueueRefs(current, refs) {
   });
 }
 
+export function playNowQueueRef(current, ref) {
+  const wanted=String(ref??"").trim();
+  if(!wanted)return current;
+  if(current.kind==="empty"){
+    return QueueState.positioned({
+      items:[wanted],
+      currentIndex:0,
+      shuffle:current.shuffle,
+      repeat:current.repeat,
+    });
+  }
+
+  const currentRef=current.items[current.currentIndex];
+  if(currentRef===wanted)return current;
+
+  const items=[...current.items];
+  const futureIndex=items.indexOf(wanted,current.currentIndex+1);
+  if(futureIndex>=0){
+    items.splice(futureIndex,1);
+  }
+  const insertIndex=current.currentIndex+1;
+  items.splice(insertIndex,0,wanted);
+  return QueueState.positioned({
+    ...current,
+    items,
+    currentIndex:insertIndex,
+  });
+}
+
 export function selectQueueIndex(current, index) {
   if (current.kind === "empty") return current;
   const length = current.items.length;

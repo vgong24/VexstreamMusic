@@ -2400,10 +2400,24 @@ def main() -> int:
             "==='media.vexstream.test-tone.3'"
         )
         checked(
-            "play-queue-item-selects-then-realizes-playback",
+            "queue-play-button-promotes-without-rebuilding-queue",
             lambda: require(
-                page.evaluate("window.vexV4.media.paused") is False,
-                "queue play-now did not realize playback",
+                page.evaluate("window.vexV4.media.paused") is False
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.2,"
+                    "media.vexstream.test-tone.2,"
+                    "media.vexstream.test-tone.3"
+                )
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 1,
+                "Queue-row Play replaced or reshuffled the established Queue",
             ),
         )
 

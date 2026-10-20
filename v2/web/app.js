@@ -3942,8 +3942,10 @@ queueList.addEventListener("dblclick",event=>{
   state.kind!=="positioned" ||
   index===state.currentIndex
  )return;
+ const ref=row.dataset.queueRef;
+ if(!ref)return;
  event.preventDefault();
- void guarded(()=>player.playQueueIndex(index));
+ void guarded(()=>player.playNow(ref));
 });
 
 queueList.addEventListener("click",event=>{
@@ -3953,7 +3955,8 @@ queueList.addEventListener("click",event=>{
  if(!action||!row)return;
  const index=Number(row.dataset.queueIndex);
  if(action.dataset.queueAction==="play"){
-  void guarded(()=>player.playQueueIndex(index));
+  const ref=row.dataset.queueRef;
+  if(ref)void guarded(()=>player.playNow(ref));
   return;
  }
  if(action.dataset.queueAction==="up"){

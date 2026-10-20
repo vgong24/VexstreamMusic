@@ -664,8 +664,17 @@ function currentLibraryView(){
  });
 }
 
+function libraryPlaybackView(){
+ return projectLibraryView(catalog,{
+  query:"",
+  genre:"all",
+  sort:libraryView.sort,
+  sortStack:libraryView.sortStack
+ });
+}
+
 function libraryPlaybackRefs(){
- return [...refs];
+ return libraryPlaybackView().map(item=>item.ref);
 }
 
 function applyCatalog(nextCatalog){
@@ -3217,7 +3226,7 @@ trackChoices.addEventListener("click",event=>{
  activateTrackRow(event,{
   row,
   ref:row?.dataset.trackRef,
-  playbackRefs:currentLibraryView().map(item=>item.ref),
+  playbackRefs:libraryPlaybackRefs(),
   selectionAware:true
  });
 });
@@ -3226,7 +3235,7 @@ trackChoices.addEventListener("keydown",event=>{
  activateTrackRow(event,{
   row,
   ref:row?.dataset.trackRef,
-  playbackRefs:currentLibraryView().map(item=>item.ref),
+  playbackRefs:libraryPlaybackRefs(),
   selectionAware:true
  });
 });

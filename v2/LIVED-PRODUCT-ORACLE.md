@@ -129,6 +129,9 @@ Unless Victor explicitly admits a different UX, preserve these V3-visible outcom
   while removing the actively playing row remains held;
 - drag reorder remains a first-class Queue affordance, not an implementation accident of the old
   monolith;
+- Songs search/genre filtering remains a **display lens**: choosing Play from a filtered Songs view
+  must still form the full Library listening context in the active sort order, just as V3 did;
+  row activation and the explicit Play button must not disagree about Queue scope;
 - Home song rows expose the same normal track-action vocabulary as Songs: Play, Add to queue, and the
   contextual actions such as Play next, Explore, Edit, Deleted music, and Playlist;
 - a held listening-session badge explains what is held and exposes a bounded reset/adopt-current

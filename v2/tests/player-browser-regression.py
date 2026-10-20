@@ -2328,8 +2328,16 @@ def main() -> int:
                 and page.locator("#queueList li.current").get_attribute(
                     "draggable"
                 )
-                == "true",
-                "current Queue row did not expose reorder while retaining remove guard",
+                == "true"
+                and page.locator(
+                    "#queueList li.current .queue-drag-handle"
+                ).count()
+                == 1
+                and page.locator(
+                    "#queueList li.current [data-track-action='explore']"
+                ).count()
+                == 1,
+                "current Queue row did not expose reorder/context actions while retaining remove guard",
             ),
         )
         page.locator(

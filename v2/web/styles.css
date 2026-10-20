@@ -1751,3 +1751,14 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
 .queue-heading-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .queue-heading-actions button{white-space:nowrap}
 
+.queue-drag-handle{
+ color:#918c85;
+ font-weight:900;
+ letter-spacing:-2px;
+ cursor:grab;
+ user-select:none;
+}
+.queue-more{position:relative}
+.queue-more>summary{list-style:none;cursor:pointer;padding:5px 7px;font-weight:800}
+.queue-more>summary::-webkit-details-marker{display:none}
+

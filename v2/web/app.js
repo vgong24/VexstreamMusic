@@ -1859,16 +1859,27 @@ function render(){
   ].join(". ");
   const upDisabled=index===0;
   const downDisabled=index===qp.state.items.length-1;
-  return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-queue-index="${index}" draggable="true" aria-label="${escapeHTML(accessibleIdentity)}">
+  return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-track-ref="${escapeHTML(ref)}" data-queue-index="${index}" draggable="true" aria-label="${escapeHTML(accessibleIdentity)}">
     <span class="queue-index">${index+1}</span>
     <span class="queue-title">
       ${marqueeTextHTML(titleText,{tag:"strong"})}
       <span class="queue-meta" title="${escapeHTML(metadata.join(" · "))}">${escapeHTML(metadata.join(" · "))}</span>
       <span class="queue-state">${escapeHTML(stateLabel)}</span>
     </span>
-    <span class="queue-state" aria-hidden="true">${isCurrent?"●":" "}</span>
+    <span class="queue-drag-handle" aria-hidden="true" title="Drag to reorder">⋮⋮</span>
     <span class="queue-actions">
       <button data-queue-action="play" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"playback.play"))}</button>
+      <details class="song-more queue-more">
+       <summary aria-label="Track actions" title="Track actions">⋯</summary>
+       <div class="song-more-menu">
+        <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
+        <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
+        <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+        <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
+        <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
+        ${trackPlaylistActionHTML()}
+       </div>
+      </details>
       <button data-queue-action="up" title="${escapeHTML(resolveText(locale,"queue.move-up"))}" aria-label="${escapeHTML(resolveText(locale,"queue.move-up"))}" ${upDisabled?"disabled":""}>↑</button>
       <button data-queue-action="down" title="${escapeHTML(resolveText(locale,"queue.move-down"))}" aria-label="${escapeHTML(resolveText(locale,"queue.move-down"))}" ${downDisabled?"disabled":""}>↓</button>
       <button data-queue-action="remove" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"queue.remove"))}</button>
@@ -3790,6 +3801,7 @@ shuffleQueueUpcoming.addEventListener("click",()=>{
 });
 
 queueList.addEventListener("click",event=>{
+ if(handleTrackAction(event,{playbackRefs:libraryPlaybackRefs()}))return;
  const action=event.target.closest("[data-queue-action]");
  const row=event.target.closest("[data-queue-index]");
  if(!action||!row)return;
@@ -3823,6 +3835,10 @@ function clearQueueDragState(){
 }
 
 queueList.addEventListener("dragstart",event=>{
+ if(event.target.closest("button,summary,details,select,input,label,a")){
+  event.preventDefault();
+  return;
+ }
  const row=event.target.closest("[data-queue-index]");
  if(!row||!event.dataTransfer)return;
  queueDragIndex=Number(row.dataset.queueIndex);

@@ -40,7 +40,7 @@ function Install-DesktopShortcut {
     [Parameter(Mandatory=$true)][string]$TargetExe
   )
 
-  $desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
+  $desktop = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
   if ([string]::IsNullOrWhiteSpace($desktop)) {
     Write-Host '      Desktop shortcut: unavailable for this Windows profile.' -ForegroundColor Yellow
     return

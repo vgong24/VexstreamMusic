@@ -132,6 +132,13 @@ Unless Victor explicitly admits a different UX, preserve these V3-visible outcom
 - drag reorder remains a first-class Queue affordance. The row exposes the V3-style six-dot handle,
   and crossing a row midpoint must project an explicit dashed insertion placeholder at the exact
   boundary that will receive the drop so the human does not have to infer before-vs-after placement;
+- Queue size and Queue rendering are distinct truths: a 738-item Queue remains a 738-item ordered
+  listening context, while the browser materializes only a bounded RecyclerView-like window of 100
+  rows. Crossing roughly 75% of that window advances the rendered window without discarding played
+  history, changing current identity, or creating a new Queue; windowing is presentation only;
+- drag traversal is preview-only. Pointer movement may reposition a lightweight insertion witness,
+  but it must not reorder Queue State, persist a session, or rebuild the whole Queue. The one Queue
+  move is committed on drop;
 - ordinary Queue rows keep only the compact immediate controls needed in the timeline: Play when
   applicable plus the contextual overflow entry. Move earlier/later and Remove belong in that
   overflow rather than consuming permanent horizontal space;

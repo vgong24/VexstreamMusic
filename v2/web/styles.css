@@ -1807,12 +1807,18 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
 }
 
 /* Compact V3-shaped timeline row: drag handle, art, identity, Play + overflow. */
+.queue-timeline-pane #queueList{
+ gap:0;
+}
 .queue-timeline-pane #queueList li[data-queue-index]{
+ height:58px;
+ min-height:58px;
  grid-template-columns:18px 42px minmax(0,1fr) auto;
  gap:8px;
  align-items:center;
  padding:7px 8px;
  border-radius:9px;
+ contain:layout paint style;
 }
 .queue-timeline-pane #queueList li.current .queue-title strong,
 .queue-timeline-pane #queueList li.current .queue-meta{
@@ -1900,16 +1906,29 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
 }
 
 /* Insertion preview is the drop contract: the dashed space is exactly where the row will land. */
+.queue-timeline-pane #queueList .queue-virtual-spacer{
+ display:block;
+ min-height:0;
+ margin:0;
+ padding:0;
+ border:0;
+ border-radius:0;
+ background:transparent;
+ box-shadow:none;
+ list-style:none;
+ pointer-events:auto;
+}
 .queue-timeline-pane #queueList .queue-drop-placeholder{
  display:block;
- min-height:48px;
+ min-height:58px;
+ margin:0;
  padding:0;
  border:1px dashed #b8a99d;
  border-radius:9px;
  background:#fffaf6;
  box-shadow:inset 0 0 0 1px #fff;
  list-style:none;
- pointer-events:none;
+ pointer-events:auto;
  transition:height .08s ease;
 }
 .queue-timeline-pane #queueList .queue-drop-placeholder[hidden]{display:none}

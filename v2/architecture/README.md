@@ -13,6 +13,102 @@ dependency.
 
 The desktop adaptation keeps the useful questions and chooses browser/Go-native mechanisms.
 
+## Semantic provenance — why this architecture is portable
+
+The portability lesson is deeper than copying the SCAE file names.
+
+A fresh worker should be able to recognize **what kind of relationship a feature owns** even when the
+local source uses different nouns or a different runtime form.
+
+~~~text
+human/product purpose
+-> domain meaning
+-> first-principle relationship
+-> VexStream-native form
+-> browser/desktop manifestation
+-> proof
+~~~
+
+Current V2 already demonstrates that distinction:
+
+~~~text
+Playback
+    progression through the current media timeline
+    -> traversal dynamics
+
+Queue
+    ordered media context + current position
+    -> traversal ordering
+
+Library
+    current discovered/catalog truth + durable reconciliation
+    -> truth ownership / continuity
+
+Connection
+    semantic Effect <-> HTMLMediaElement/provider truth
+    -> manifestation + observation boundary
+
+Journey / browser proof
+    semantic human path -> lived realization evidence
+    -> proof, not another product truth owner
+~~~
+
+The useful realization is:
+
+~~~text
+SAME FIRST-PRINCIPLE RELATIONSHIP
+!= SAME DOMAIN
+!= SAME OWNER
+!= SAME IMPLEMENTATION
+~~~
+
+For example, Queue and Playback are both involved in "moving through music", but they own different
+meanings:
+
+~~~text
+Queue
+    decides traversal ordering
+
+Playback
+    owns traversal dynamics through the selected item
+~~~
+
+That first-principle distinction explains the package split better than file size or framework
+preference.
+
+Likewise, V2 may reuse a semantic lesson from Android without importing Android's implementation:
+
+~~~text
+REUSABLE MEANING
+!= REUSABLE TYPE EQUATION
+
+INTENTION BLUEPRINT
+!= FRAMEWORK DEPENDENCY
+~~~
+
+A future feature should therefore start by asking:
+
+~~~text
+What is this trying to make possible?
+What is true now?
+What topology / ordering / relationship does it inhabit?
+What can the human request?
+What does that request mean now?
+What transformation may be attempted?
+What provider/runtime realizes it?
+What truth comes back?
+What proof owns the claim?
+~~~
+
+Only then should source shape be chosen.
+
+Do not create generic `Terrain`, `Traversal`, `Observation` or similar abstractions merely because
+those meanings are reusable in explanation. Promote a semantic lesson into shared code only when
+real VexStream consumers need the same executable invariant.
+
+This is a **lesson for reading and authoring**, not a new mandatory taxonomy. Product-domain source
+still owns its exact meaning.
+
 ## 1. Behavior family
 
 A Behavior family owns one exact semantic question.

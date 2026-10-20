@@ -2049,6 +2049,84 @@ def main() -> int:
             ),
         )
 
+        page.locator("#queueMiniBtn").click()
+        page.wait_for_function(
+            "document.querySelector('#queueDrawer').classList.contains('open')"
+        )
+        checked(
+            "expanded-queue-keeps-identity-navigation-left-and-compact-timeline-right",
+            lambda: require(
+                page.locator("#queueCurrentPane").get_attribute("data-track-ref")
+                == "media.vexstream.test-tone.2"
+                and "VexStream Test Tone Two"
+                in page.locator("#queueCurrentPane").inner_text()
+                and "VexStream QA"
+                in page.locator("#queueCurrentPane").inner_text()
+                and "V4 Practicum"
+                in page.locator("#queueCurrentPane").inner_text()
+                and "A deliberately descriptive current-track fixture"
+                not in page.locator("#queueCurrentPane").inner_text()
+                and "A deliberately descriptive current-track fixture"
+                not in page.locator("#queueList li.current").inner_text()
+                and "A deliberately descriptive current-track fixture"
+                not in (
+                    page.locator("#queueList li.current").get_attribute("aria-label")
+                    or ""
+                )
+                and page.locator(
+                    "#queueCurrentPane [data-now-library-kind='artist']"
+                ).count()
+                == 1
+                and page.locator(
+                    "#queueCurrentPane [data-now-library-kind='album']"
+                ).count()
+                == 1
+                and page.evaluate(
+                    """() => {
+                      const shell=document.querySelector('.player.v3-product-shell');
+                      const current=document.querySelector('#queueCurrentPane');
+                      const right=document.querySelector('#queueTimelinePane');
+                      const title=document.querySelector('#trackTitle');
+                      return getComputedStyle(shell).fontSize==='14px'
+                        && getComputedStyle(title).fontSize==='14px'
+                        && current.getBoundingClientRect().width>0
+                        && right.getBoundingClientRect().width
+                           >= current.getBoundingClientRect().width*2;
+                    }"""
+                ),
+                "expanded Queue identity/navigation or V3 density drift",
+            ),
+        )
+        current_more=page.locator(
+            "#queueList li.current .queue-more > summary"
+        )
+        current_more.click()
+        checked(
+            "queue-overflow-menu-renders-in-foreground",
+            lambda: require(
+                page.evaluate(
+                    """() => {
+                      const menu=document.querySelector(
+                        '#queueList li.current .queue-more[open] .song-more-menu'
+                      );
+                      const first=menu?.querySelector('button');
+                      if(!menu||!first)return false;
+                      const rect=first.getBoundingClientRect();
+                      const top=document.elementFromPoint(
+                        rect.left+Math.min(8,rect.width/2),
+                        rect.top+Math.min(8,rect.height/2)
+                      );
+                      return Boolean(
+                        top?.closest('.song-more-menu')===menu
+                      );
+                    }"""
+                ),
+                "Queue overflow menu fell behind a neighboring row",
+            ),
+        )
+        current_more.click()
+        page.locator("#queueMiniBtn").click()
+
         page.evaluate("window.vexV4.media.currentTime=0")
         prev.click()
         page.wait_for_function(
@@ -2081,6 +2159,32 @@ def main() -> int:
                 "shuffle upcoming law drift",
             ),
         )
+
+        page.locator("#queueMiniBtn").click()
+        page.wait_for_function(
+            "document.querySelector('#queueDrawer').classList.contains('open')"
+        )
+        page.locator("#shuffleQueueUpcoming").click()
+        checked(
+            "drawer-shuffle-upcoming-reshuffles-suffix-without-toggling-mode",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.2,"
+                    "media.vexstream.test-tone.3"
+                )
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.shuffle"
+                )
+                is True
+                and shuf.get_attribute("aria-pressed") == "true",
+                "drawer Shuffle upcoming drift",
+            ),
+        )
+        page.locator("#queueMiniBtn").click()
         rep.click()
         checked(
             "repeat-is-queue-truth-not-playback-truth",
@@ -2098,14 +2202,95 @@ def main() -> int:
             ),
         )
 
-        page.locator(
+        third_track_play=page.locator(
             '[data-track-ref="media.vexstream.test-tone.3"] '
             '[data-track-action="play"]'
-        ).click()
+        )
+        third_track_play.click()
         page.wait_for_function(
             "window.vexV4.player.currentItem.ref"
             "==='media.vexstream.test-tone.3'"
         )
+        checked(
+            "ordinary-play-promotes-track-without-rebuilding-shuffled-queue",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.2"
+                )
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 1
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.shuffle"
+                )
+                is True,
+                "ordinary Play replaced or reshuffled the established Queue",
+            ),
+        )
+
+        page.evaluate("window.vexV4.media.currentTime=0")
+        prev.click()
+        page.wait_for_function(
+            "window.vexV4.player.currentItem.ref"
+            "==='media.vexstream.test-tone.1'"
+        )
+        nxt.click()
+        page.wait_for_function(
+            "window.vexV4.player.currentItem.ref"
+            "==='media.vexstream.test-tone.3'"
+        )
+        checked(
+            "play-now-preserves-back-forward-continuity",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.2"
+                ),
+                "Play-now lost the surrounding Queue order",
+            ),
+        )
+
+        page.locator(
+            '#trackChoices [data-track-ref="media.vexstream.test-tone.2"] '
+            '.song-title-cell'
+        ).dblclick()
+        page.wait_for_function(
+            "window.vexV4.player.currentItem.ref"
+            "==='media.vexstream.test-tone.2'"
+        )
+        checked(
+            "double-click-plays-without-replacing-established-queue",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.2"
+                )
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 2
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.shuffle"
+                )
+                is True,
+                "double-click rebuilt Queue instead of selecting/promoting the track",
+            ),
+        )
+
         nxt.click()
         page.wait_for_function(
             "window.vexV4.player.currentItem.ref"
@@ -2120,15 +2305,30 @@ def main() -> int:
             ),
         )
 
+        shuf.click()
+        page.evaluate(
+            """async () => {
+              await window.vexV4.player.playContext([
+                'media.vexstream.test-tone.1',
+                'media.vexstream.test-tone.2',
+                'media.vexstream.test-tone.3'
+              ],0);
+            }"""
+        )
+        page.wait_for_function(
+            "window.vexV4.player.currentItem.ref"
+            "==='media.vexstream.test-tone.1'"
+        )
+
         page.locator(
             '[data-track-ref="media.vexstream.test-tone.3"] '
             '[data-track-action="play-next"]'
         ).click()
         page.wait_for_function(
-            "window.vexV4.queue.currentProjection.state.items.length===4"
+            "window.vexV4.queue.currentProjection.state.items.length===3"
         )
         checked(
-            "play-next-inserts-directly-after-current",
+            "play-next-relocates-existing-track-without-duplicating-it",
             lambda: require(
                 page.evaluate(
                     "window.vexV4.queue.currentProjection.state.items"
@@ -2137,35 +2337,43 @@ def main() -> int:
                 == (
                     "media.vexstream.test-tone.1,"
                     "media.vexstream.test-tone.3,"
-                    "media.vexstream.test-tone.2,"
-                    "media.vexstream.test-tone.3"
-                ),
-                "play-next payload drift",
+                    "media.vexstream.test-tone.2"
+                )
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 0,
+                "Play next duplicated or replaced Queue context",
             ),
         )
 
         page.locator(
-            '[data-track-ref="media.vexstream.test-tone.2"] '
+            '[data-track-ref="media.vexstream.test-tone.1"] '
             '[data-track-action="append"]'
         ).click()
         page.wait_for_function(
-            "window.vexV4.queue.currentProjection.state.items.length===5"
+            "window.vexV4.queue.currentProjection.state.items.length===4"
         )
         checked(
-            "add-to-queue-appends-without-changing-current",
+            "add-to-queue-remains-the-explicit-duplicate-operation",
             lambda: require(
                 page.evaluate("window.vexV4.player.currentItem.ref")
                 == "media.vexstream.test-tone.1"
                 and page.evaluate(
-                    "window.vexV4.queue.currentProjection.state.items.at(-1)"
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
                 )
-                == "media.vexstream.test-tone.2",
-                "append payload drift",
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.2,"
+                    "media.vexstream.test-tone.1"
+                ),
+                "Add to queue no longer preserved explicit append semantics",
             ),
         )
 
         page.locator(
-            '#queueList li[data-queue-index="4"] '
+            '#queueList li[data-queue-index="3"] '
             '[data-queue-action="up"]'
         ).click()
         checked(
@@ -2180,9 +2388,8 @@ def main() -> int:
                 == (
                     "media.vexstream.test-tone.1,"
                     "media.vexstream.test-tone.3,"
-                    "media.vexstream.test-tone.2,"
-                    "media.vexstream.test-tone.2,"
-                    "media.vexstream.test-tone.3"
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.2"
                 ),
                 "reorder/current preservation drift",
             ),
@@ -2197,10 +2404,23 @@ def main() -> int:
             "==='media.vexstream.test-tone.3'"
         )
         checked(
-            "play-queue-item-selects-then-realizes-playback",
+            "queue-play-button-relocates-without-duplicating",
             lambda: require(
-                page.evaluate("window.vexV4.media.paused") is False,
-                "queue play-now did not realize playback",
+                page.evaluate("window.vexV4.media.paused") is False
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.3,"
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.2"
+                )
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.currentIndex"
+                )
+                == 1,
+                "Queue-row Play duplicated, replaced, or reshuffled Queue",
             ),
         )
 
@@ -2231,18 +2451,87 @@ def main() -> int:
                 "queue current projection drift",
             ),
         )
+        current_before=page.evaluate("window.vexV4.player.currentItem.ref")
+        current_row=page.locator("#queueList li.current")
         checked(
-            "current-queue-item-cannot-be-removed-or-reordered",
+            "queue-row-keeps-drag-play-overflow-density",
             lambda: require(
-                page.locator(
-                    "#queueList li.current "
+                current_row.get_attribute("draggable") == "true"
+                and current_row.locator(".queue-drag-handle").count() == 1
+                and current_row.locator(".queue-actions > button").count() == 0
+                and current_row.locator(
+                    ".queue-actions > .queue-more > summary"
+                ).count()
+                == 1
+                and current_row.locator(
                     "[data-queue-action='remove']"
                 ).is_disabled()
-                and page.locator(
-                    "#queueList li.current "
+                and current_row.locator(
                     "[data-queue-action='up']"
-                ).is_disabled(),
-                "current item mutation guard drift",
+                ).is_enabled(),
+                "Queue row exposed bulky direct controls or lost drag/menu affordance",
+            ),
+        )
+        drag_preview=page.evaluate(
+            """() => {
+              const source=document.querySelector('#queueList li.current');
+              const target=document.querySelector(
+                '#queueList li[data-queue-index="0"]'
+              );
+              const list=document.querySelector('#queueList');
+              const dt=new DataTransfer();
+              window.__VEX_QUEUE_DRAG_TEST=dt;
+              source.dispatchEvent(new DragEvent('dragstart',{
+                bubbles:true,
+                cancelable:true,
+                dataTransfer:dt
+              }));
+              const rect=target.getBoundingClientRect();
+              list.dispatchEvent(new DragEvent('dragover',{
+                bubbles:true,
+                cancelable:true,
+                dataTransfer:dt,
+                clientY:rect.top+1
+              }));
+              const placeholder=list.querySelector('.queue-drop-placeholder');
+              return {
+                dropIndex:placeholder?.dataset.dropIndex??null,
+                borderStyle:placeholder
+                  ?getComputedStyle(placeholder).borderTopStyle
+                  :null,
+                height:placeholder?.getBoundingClientRect().height??0
+              };
+            }"""
+        )
+        checked(
+            "queue-drag-shows-exact-dashed-insertion-placeholder",
+            lambda: require(
+                drag_preview["dropIndex"] == "0"
+                and drag_preview["borderStyle"] == "dashed"
+                and drag_preview["height"] >= 48,
+                f"Queue insertion preview drift: {drag_preview}",
+            ),
+        )
+        page.evaluate(
+            """() => {
+              const list=document.querySelector('#queueList');
+              list.dispatchEvent(new DragEvent('drop',{
+                bubbles:true,
+                cancelable:true,
+                dataTransfer:window.__VEX_QUEUE_DRAG_TEST
+              }));
+              delete window.__VEX_QUEUE_DRAG_TEST;
+            }"""
+        )
+        page.wait_for_function(
+            "window.vexV4.queue.currentProjection.state.currentIndex===0"
+        )
+        checked(
+            "dragging-current-queue-item-preserves-playing-identity",
+            lambda: require(
+                page.evaluate("window.vexV4.player.currentItem.ref")
+                == current_before,
+                "dragging current Queue row changed Playback identity",
             ),
         )
         page.locator(

@@ -6,7 +6,7 @@ import {
 } from "../web/features/queue/behavior.js";
 import {
   appendQueueRefs, applyQueueEffect, insertNextQueueRefs,
-  moveQueueItem, removeQueueItem, replaceQueueContext
+  moveQueueItem, playNowQueueRef, removeQueueItem, replaceQueueContext, reshuffleQueueUpcoming
 } from "../web/features/queue/model.js";
 import { createQueueConnection } from "../web/features/queue/connection.js";
 
@@ -49,10 +49,20 @@ test("disabling shuffle does not reconstruct the old order", () => {
   assert.equal(next.shuffle,false);
 });
 
-test("set context with shuffle enabled keeps selected item and shuffles only its future", () => {
+test("Shuffle upcoming can reshuffle an already-lived suffix without toggling mode", () => {
+  const state=QueueState.positioned({items:["a","b","c","d"],currentIndex:1,shuffle:false});
+  const next=reshuffleQueueUpcoming(state,reverse);
+  assert.deepEqual(next.items,["a","b","d","c"]);
+  assert.equal(next.currentIndex,1);
+  assert.equal(currentQueueRef(next),"b");
+  assert.equal(next.shuffle,false);
+});
+
+test("fresh shuffled context keeps selected current and makes every other item upcoming", () => {
   const flags=QueueState.empty({shuffle:true});
   const next=replaceQueueContext(flags,["a","b","c","d"],1,reverse);
-  assert.deepEqual(next.items,["a","b","d","c"]);
+  assert.deepEqual(next.items,["b","d","c","a"]);
+  assert.equal(next.currentIndex,0);
   assert.equal(currentQueueRef(next),"b");
 });
 
@@ -62,20 +72,66 @@ test("append to empty queue establishes first current item without playback sema
   assert.deepEqual(next.items,["a","b"]);
 });
 
-test("play-next insertion is directly after the current item", () => {
-  const state=QueueState.positioned({items:["a","d"],currentIndex:0});
-  const next=insertNextQueueRefs(state,["b","c"]);
-  assert.deepEqual(next.items,["a","b","c","d"]);
+test("play-next relocates existing refs directly after current instead of duplicating them", () => {
+  const state=QueueState.positioned({
+    items:["a","b","c","d","b"],
+    currentIndex:0
+  });
+  const next=insertNextQueueRefs(state,["d","b"]);
+  assert.deepEqual(next.items,["a","d","b","c"]);
   assert.equal(next.currentIndex,0);
+  assert.equal(currentQueueRef(next),"a");
 });
 
-test("reorder cannot move current item and preserves current identity when peers move", () => {
-  const state=QueueState.positioned({items:["a","b","c","d"],currentIndex:2});
-  assert.equal(moveQueueItem(state,2,0),state);
-  const next=moveQueueItem(state,0,4);
-  assert.deepEqual(next.items,["b","c","d","a"]);
-  assert.equal(currentQueueRef(next),"c");
+test("Play now relocates an upcoming item without rebuilding or reshuffling Queue", () => {
+  const state=QueueState.positioned({
+    items:["a","b","c","d","d"],
+    currentIndex:1,
+    shuffle:true
+  });
+  const next=playNowQueueRef(state,"d");
+  assert.deepEqual(next.items,["a","b","d","c"]);
+  assert.equal(next.currentIndex,2);
+  assert.equal(currentQueueRef(next),"d");
+  assert.equal(next.shuffle,true);
+});
+
+test("Play now relocates a history item instead of duplicating it", () => {
+  const state=QueueState.positioned({
+    items:["a","b","c","a"],
+    currentIndex:2
+  });
+  const next=playNowQueueRef(state,"a");
+  assert.deepEqual(next.items,["b","c","a"]);
+  assert.equal(next.currentIndex,2);
+  assert.equal(currentQueueRef(next),"a");
+});
+
+test("Play now on current collapses other occurrences while preserving current identity", () => {
+  const state=QueueState.positioned({
+    items:["a","b","a","c","a"],
+    currentIndex:2,
+    shuffle:true
+  });
+  const next=playNowQueueRef(state,"a");
+  assert.deepEqual(next.items,["b","a","c"]);
   assert.equal(next.currentIndex,1);
+  assert.equal(currentQueueRef(next),"a");
+  assert.equal(next.shuffle,true);
+});
+
+test("reorder can move current or adjacent items while preserving current identity", () => {
+  const state=QueueState.positioned({items:["a","b","c","d"],currentIndex:2});
+
+  const movedCurrent=moveQueueItem(state,2,0);
+  assert.deepEqual(movedCurrent.items,["c","a","b","d"]);
+  assert.equal(currentQueueRef(movedCurrent),"c");
+  assert.equal(movedCurrent.currentIndex,0);
+
+  const movedAdjacent=moveQueueItem(state,3,2);
+  assert.deepEqual(movedAdjacent.items,["a","b","d","c"]);
+  assert.equal(currentQueueRef(movedAdjacent),"c");
+  assert.equal(movedAdjacent.currentIndex,3);
 });
 
 test("removing an item before current adjusts index without changing current identity", () => {
@@ -101,6 +157,15 @@ test("Queue Connection keeps payload operations separate from stable Control sem
   assert.deepEqual(queue.currentProjection.state.items,["a","c","b"]);
   queue.playNext(["x"]);
   assert.deepEqual(queue.currentProjection.state.items,["a","x","c","b"]);
+  queue.playNow("b");
+  assert.deepEqual(queue.currentProjection.state.items,["a","b","x","c"]);
+  assert.equal(currentQueueRef(queue.currentProjection.state),"b");
+  assert.equal(queue.currentProjection.state.shuffle,true);
+  queue.playNext(["x"]);
+  assert.deepEqual(queue.currentProjection.state.items,["a","b","x","c"]);
+  queue.shuffleUpcoming();
+  assert.deepEqual(queue.currentProjection.state.items,["a","b","c","x"]);
+  assert.equal(queue.currentProjection.state.shuffle,true);
 });
 
 

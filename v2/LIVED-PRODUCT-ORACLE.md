@@ -116,8 +116,62 @@ Unless Victor explicitly admits a different UX, preserve these V3-visible outcom
   slider;
 - overflowing title text moves at a readable **distance-derived velocity**. A longer title receives
   proportionally more time; it must not accelerate merely to finish inside one fixed duration;
+- when Shuffle is already enabled and a person starts a **fresh** listening context from any item,
+  that chosen item becomes the current item at position 1 and every other item in that context
+  remains eligible as upcoming; preserving history applies to reshuffling an already-lived Queue,
+  not to manufacturing a false history prefix from the source list's sort position;
 - the expanded Queue keeps the current item human- and accessibility-identifiable through title,
-  artist, album/collection, available description/source detail, and current/played/up-next state;
+  artist, album/collection, and current/played/up-next state. Desktop uses a dedicated left Now
+  Playing pane beside the Queue timeline at roughly a 25% / 75% information ratio, but that pane is
+  **identity/navigation terrain**, not a dump of provider descriptions, source prose, or every
+  metadata field; artist and album remain directly navigable and deeper actions stay behind the
+  track-action entry;
+- Queue reorder preserves the identity of whatever is actually playing even when the current row
+  itself moves; current or neighboring rows may be repositioned while removing the actively playing
+  row remains held;
+- drag reorder remains a first-class Queue affordance. The row exposes the V3-style six-dot handle,
+  and crossing a row midpoint must project an explicit dashed insertion placeholder at the exact
+  boundary that will receive the drop so the human does not have to infer before-vs-after placement;
+- Queue size and Queue rendering are distinct truths: a 738-item Queue remains a 738-item ordered
+  listening context, while the browser materializes only a bounded RecyclerView-like window of 100
+  rows. Crossing roughly 75% of that window advances the rendered window without discarding played
+  history, changing current identity, or creating a new Queue; windowing is presentation only;
+- drag traversal is preview-only. Pointer movement may reposition a lightweight insertion witness,
+  but it must not reorder Queue State, persist a session, or rebuild the whole Queue. The one Queue
+  move is committed on drop;
+- ordinary Queue rows keep only the compact immediate controls needed in the timeline: Play when
+  applicable plus the contextual overflow entry. Move earlier/later and Remove belong in that
+  overflow rather than consuming permanent horizontal space;
+- an opened Queue-row overflow menu is foreground interaction terrain: it must layer above neighboring
+  Queue rows rather than rendering underneath the next song or being clipped by row paint containment;
+- ordinary single-track **Play** (including the Queue-row Play button) and song-row
+  **double-click** are play-now intentions once a Queue already exists. They must not replace the
+  Queue or re-run Shuffle. Play-now **relocates** the selected Queue ref directly after the prior
+  current and makes that relocated occurrence current; it removes any other Queue occurrences of
+  that same ref rather than manufacturing a duplicate. If the selected ref was in played history,
+  that occurrence moves forward instead of being copied. The prior current remains immediately
+  behind it so Previous returns there, and the untouched non-selected items keep their relative
+  order. Whole-context Play / Shuffle actions remain the explicit ways to replace listening context;
+- a normal song-row single click does not auto-start playback. It remains available for selection/
+  navigation affordances; double-click and the explicit Play button carry the immediate play-now
+  intention;
+- **Play next** follows the same relocation rule without changing current Playback: existing
+  occurrences of the requested ref(s) are removed from their old positions and reinserted exactly
+  once immediately after current. **Add to queue** remains the explicit operation that may append
+  another occurrence intentionally;
+- V3 density is part of lived parity: the product shell is based on 14px text, normal-weight
+  8px/11px button padding, ~18px section headings, a normal-size Now Playing title, and ~38px
+  transport controls. Refactor scaffolding must not leak its larger/bolder practicum defaults into
+  the product shell;
+- the expanded Queue keeps V3's explicit **Shuffle upcoming** action separate from Shuffle mode:
+  it can reshuffle the already-lived future without fabricating history or requiring an off/on
+  toggle of the persistent Shuffle preference;
+- Queue timeline rows keep an obvious drag handle plus the ordinary contextual track-action entry;
+  reordering must be discoverable without removing access to Explore, Edit, Deleted music, and
+  Playlist actions;
+- Songs search/genre filtering remains a **display lens**: choosing Play from a filtered Songs view
+  must still form the full Library listening context in the active sort order, just as V3 did;
+  row activation and the explicit Play button must not disagree about Queue scope;
 - Home song rows expose the same normal track-action vocabulary as Songs: Play, Add to queue, and the
   contextual actions such as Play next, Explore, Edit, Deleted music, and Playlist;
 - a held listening-session badge explains what is held and exposes a bounded reset/adopt-current

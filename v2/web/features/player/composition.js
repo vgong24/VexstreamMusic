@@ -122,6 +122,25 @@ export function createPlayerComposition({
     return playContext(index >= 0 ? refs : [ref], index >= 0 ? index : 0);
   }
 
+  async function playNow(ref, contextRefs = [ref]) {
+    const wanted=String(ref??"").trim();
+    if(!wanted||!resolveMedia(wanted))return null;
+    if(!currentRef()){
+      return playTrack(wanted,contextRefs);
+    }
+    if(currentRef()===wanted){
+      if(playback.currentProjection.state.kind==="no-media"){
+        return loadCurrent({autoplay:true});
+      }
+      if(media.paused){
+        return playback.activate(PlaybackControl.PlayPause);
+      }
+      return currentItem();
+    }
+    queue.playNow(wanted);
+    return loadCurrent({autoplay:true});
+  }
+
   async function playQueueIndex(index) {
     queue.select(index);
     return loadCurrent({ autoplay: true });
@@ -223,10 +242,12 @@ export function createPlayerComposition({
     activatePlayPause,
     playContext,
     playTrack,
+    playNow,
     playQueueIndex,
     next,
     previous,
     toggleShuffle,
+    shuffleUpcoming: () => queue.shuffleUpcoming(),
     toggleRepeat,
     clearAfterCurrent,
     append: refs => queue.append(refs),

@@ -1664,3 +1664,288 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
   justify-self:start;
  }
 }
+
+/* V3 density + Queue lived-product parity over V4 semantic owners.
+   The old practicum defaults were 16px / bold / oversized; V3's lived shell is 14px and lighter. */
+:where(.player.v3-product-shell){
+ font-size:14px;
+ line-height:1.45;
+}
+:where(.player.v3-product-shell) button{
+ border-radius:9px;
+ padding:8px 11px;
+ font-weight:400;
+}
+:where(.player.v3-product-shell) input,
+:where(.player.v3-product-shell) select{font:inherit}
+:where(.player.v3-product-shell) h2{
+ font-size:18px;
+ line-height:1.25;
+}
+:where(.player.v3-product-shell) h3{
+ font-size:16px;
+ line-height:1.3;
+}
+.product-header .brand{font-weight:760}
+.top-tabs button.active,
+.top-tabs button[aria-pressed="true"]{font-weight:700}
+.sidebar .nav button{padding:8px 10px}
+.home-view .stat strong{font-size:17px}
+.now .track-copy strong{
+ font-size:14px;
+ line-height:1.3;
+ font-weight:700;
+}
+.transport button{
+ width:38px;
+ height:38px;
+ min-width:38px;
+ padding:0;
+ font-size:14px;
+}
+.transport button.primary{
+ width:38px;
+ height:38px;
+ font-size:15px;
+}
+.queue-mini{height:36px!important}
+
+/* Expanded Queue: V3's current-identity terrain beside the V4 Queue owner. */
+.queue-drawer-body{
+ display:grid;
+ grid-template-columns:minmax(220px,1fr) minmax(0,3fr);
+ min-width:0;
+ min-height:0;
+ overflow:hidden;
+ padding:0;
+}
+.queue-current-pane{
+ min-width:0;
+ min-height:0;
+ overflow:auto;
+ padding:16px;
+ border-right:1px solid #ddd7cd;
+ background:#fbf9f5;
+}
+.queue-current-empty{
+ min-height:100%;
+ display:grid;
+ align-content:center;
+ gap:5px;
+ color:#767c7d;
+}
+.queue-current-art{
+ width:min(100%,220px);
+ aspect-ratio:1;
+ margin:0 auto 12px;
+ border-radius:12px;
+ overflow:hidden;
+ display:grid;
+ place-items:center;
+ background:#e9e6df;
+ color:#767c7d;
+ font-size:40px;
+}
+.queue-current-art.has-art img{
+ width:100%;
+ height:100%;
+ object-fit:cover;
+}
+.queue-current-title{
+ margin:6px 0 6px;
+ font-size:18px;
+ line-height:1.25;
+}
+.queue-current-meta{
+ min-width:0;
+ color:#6f7475;
+ overflow:hidden;
+ white-space:nowrap;
+ text-overflow:ellipsis;
+}
+.queue-current-pane .now-relation{max-width:45%}
+.queue-current-actions{margin-top:12px}
+.queue-current-actions>summary{
+ cursor:pointer;
+ font-size:12px;
+ font-weight:700;
+ color:#555b5c;
+}
+.queue-current-action-menu{
+ display:flex;
+ gap:6px;
+ flex-wrap:wrap;
+ align-items:center;
+ margin-top:8px;
+}
+.queue-current-action-menu button,
+.queue-current-action-menu select{font-size:12px}
+
+.queue-timeline-pane{
+ min-width:0;
+ min-height:0;
+ overflow:auto;
+ overscroll-behavior:contain;
+ padding:12px;
+}
+.queue-timeline-pane .section-heading{
+ position:sticky;
+ top:0;
+ z-index:2;
+ background:#fbf9f5;
+}
+.queue-heading-actions{
+ display:flex;
+ gap:6px;
+ flex-wrap:wrap;
+ justify-content:flex-end;
+}
+.queue-heading-actions button{
+ white-space:nowrap;
+ font-size:12px;
+ padding:7px 9px;
+}
+
+/* Compact V3-shaped timeline row: drag handle, art, identity, Play + overflow. */
+.queue-timeline-pane #queueList{
+ gap:0;
+}
+.queue-timeline-pane #queueList li[data-queue-index]{
+ height:58px;
+ min-height:58px;
+ grid-template-columns:18px 42px minmax(0,1fr) auto;
+ gap:8px;
+ align-items:center;
+ padding:7px 8px;
+ border-radius:9px;
+ position:relative;
+ overflow:visible;
+ contain:layout style;
+}
+.queue-timeline-pane #queueList li.current .queue-title strong,
+.queue-timeline-pane #queueList li.current .queue-meta{
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+}
+.queue-timeline-pane .song-art{
+ width:42px;
+ height:42px;
+ flex:0 0 42px;
+ border-radius:10px;
+}
+.queue-title{
+ display:grid;
+ gap:2px;
+ min-width:0;
+}
+.queue-title-line{
+ display:flex;
+ align-items:center;
+ gap:6px;
+ min-width:0;
+}
+.queue-title-line>strong{
+ min-width:0;
+ flex:1;
+}
+.queue-meta{
+ min-width:0;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ color:#767c7d;
+ font-size:12px;
+ line-height:1.25;
+}
+.queue-state{
+ flex:0 0 auto;
+ font-size:10px;
+ line-height:1.2;
+ color:#767c7d;
+ white-space:nowrap;
+}
+.queue-drag-handle{
+ color:#918c85;
+ font-weight:900;
+ letter-spacing:-2px;
+ cursor:grab;
+ user-select:none;
+ text-align:center;
+}
+.queue-drawer-body #queueList li[draggable="true"]{cursor:grab}
+.queue-drawer-body #queueList li.dragging{opacity:.35}
+.queue-actions{
+ display:flex;
+ align-items:center;
+ justify-content:flex-end;
+ gap:4px;
+ flex-wrap:nowrap;
+}
+.queue-actions>button,
+.queue-actions>.queue-more>summary{
+ width:30px;
+ height:30px;
+ min-width:30px;
+ padding:0;
+ display:grid;
+ place-items:center;
+ border-radius:8px;
+ font-size:12px;
+}
+.queue-more{position:relative}
+.queue-more>summary{
+ list-style:none;
+ cursor:pointer;
+ font-weight:700;
+}
+.queue-more>summary::-webkit-details-marker{display:none}
+.queue-timeline-pane #queueList li:has(.queue-more[open]){
+ z-index:40;
+}
+.queue-timeline-pane .queue-more[open]{
+ z-index:50;
+}
+.queue-timeline-pane .queue-more .song-more-menu{
+ z-index:80;
+}
+.queue-menu-separator{
+ display:block;
+ height:1px;
+ margin:2px 0;
+ background:#e3ded5;
+}
+
+/* Insertion preview is the drop contract: the dashed space is exactly where the row will land. */
+.queue-timeline-pane #queueList .queue-virtual-spacer{
+ display:block;
+ min-height:0;
+ margin:0;
+ padding:0;
+ border:0;
+ border-radius:0;
+ background:transparent;
+ box-shadow:none;
+ list-style:none;
+ pointer-events:auto;
+}
+.queue-timeline-pane #queueList .queue-drop-placeholder{
+ display:block;
+ min-height:58px;
+ margin:0;
+ padding:0;
+ border:1px dashed #b8a99d;
+ border-radius:9px;
+ background:#fffaf6;
+ box-shadow:inset 0 0 0 1px #fff;
+ list-style:none;
+ pointer-events:auto;
+ transition:height .08s ease;
+}
+.queue-timeline-pane #queueList .queue-drop-placeholder[hidden]{display:none}
+
+@media(max-width:900px){
+ .queue-drawer-body{grid-template-columns:1fr}
+ .queue-current-pane{display:none}
+}
+

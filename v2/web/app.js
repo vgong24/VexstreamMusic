@@ -5,6 +5,11 @@ import { createHTMLMediaPlaybackTimelineConnection } from "./features/playback/t
 import { createHTMLMediaPlaybackVolumeConnection } from "./features/playback/volume.js";
 import { QueueControl, QueueState, currentQueueRef } from "./features/queue/behavior.js";
 import { createQueueConnection } from "./features/queue/connection.js";
+import {
+  QueueWindowPolicy,
+  queueWindowAroundIndex,
+  queueWindowForScroll,
+} from "./features/queue/window.js";
 import { createPlayerComposition } from "./features/player/composition.js";
 import { playerJourney } from "./features/player/journey.js";
 import {
@@ -149,7 +154,10 @@ const queueDrawerHandle=document.querySelector("#queueDrawerHandle");
 const queueDrawerCount=document.querySelector("#queueDrawerCount");
 const queueDrawerNextCount=document.querySelector("#queueDrawerNextCount");
 const queueSummary=document.querySelector("#queueSummary");
+const queueCurrentPane=document.querySelector("#queueCurrentPane");
+const queueTimelinePane=document.querySelector("#queueTimelinePane");
 const queueList=document.querySelector("#queueList");
+const shuffleQueueUpcoming=document.querySelector("#shuffleQueueUpcoming");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
 const playAllSongs=document.querySelector("#playAllSongs");
@@ -330,6 +338,7 @@ const error=document.querySelector("#error");
 let systemIdentity=null;
 let currentSystemStatus=null;
 let catalog=Object.freeze([]);
+let catalogRevision=0;
 let byRef=new Map();
 let refs=[];
 let libraryView=Object.freeze({
@@ -403,6 +412,17 @@ let currentSessionRestoration=Object.freeze({
 });
 let playerSessionPersistenceEnabled=false;
 let queueDrawerOpen=false;
+const QUEUE_ROW_HEIGHT=58;
+let queueWindowStart=0;
+let queueWindowInitialized=false;
+let queueWindowRenderKey="";
+let queueScrollFrame=null;
+let queueDragIndex=-1;
+let queueDropIndex=-1;
+const queueDropPlaceholder=document.createElement("li");
+queueDropPlaceholder.className="queue-drop-placeholder";
+queueDropPlaceholder.hidden=true;
+queueDropPlaceholder.setAttribute("aria-hidden","true");
 let playerSessionSaveTimer=null;
 let pendingPlayerSessionState=null;
 let playerSessionSaveChain=Promise.resolve();
@@ -554,7 +574,7 @@ function homeRecentRowHTML(item){
    <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
    <td class="col-actions">
     <div class="song-actions">
-     <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+     <button data-track-action="play" data-vex-action="vexstream.player.play-now" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
      <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
      <details class="song-more">
       <summary aria-label="Track actions" title="Track actions">⋯</summary>
@@ -660,12 +680,23 @@ function currentLibraryView(){
  });
 }
 
+function libraryPlaybackView(){
+ return projectLibraryView(catalog,{
+  query:"",
+  genre:"all",
+  sort:libraryView.sort,
+  sortStack:libraryView.sortStack
+ });
+}
+
 function libraryPlaybackRefs(){
- return [...refs];
+ return libraryPlaybackView().map(item=>item.ref);
 }
 
 function applyCatalog(nextCatalog){
  catalog=nextCatalog;
+ catalogRevision+=1;
+ queueWindowRenderKey="";
  byRef=new Map(catalog.map(item=>[item.ref,item]));
  refs=catalog.map(item=>item.ref);
  librarySelection.reconcile(refs);
@@ -1672,12 +1703,182 @@ function renderPlaybackVolume(
 }
 
 function setQueueDrawerOpen(open){
- queueDrawerOpen=Boolean(open);
+ const nextOpen=Boolean(open);
+ const opening=nextOpen&&!queueDrawerOpen;
+ queueDrawerOpen=nextOpen;
+ if(opening){
+  queueWindowInitialized=false;
+  queueWindowRenderKey="";
+ }
  render();
+ if(opening){
+  requestAnimationFrame(()=>{
+   const state=queue.currentProjection.state;
+   if(state.kind!=="positioned")return;
+   const target=Math.max(0,state.currentIndex-2);
+   queueTimelinePane.scrollTop=
+    queueList.offsetTop+(target*QUEUE_ROW_HEIGHT);
+  });
+ }
 }
 
 function toggleQueueDrawer(){
  setQueueDrawerOpen(!queueDrawerOpen);
+}
+
+
+function renderQueueCurrentPane(state){
+ const ref=currentQueueRef(state);
+ const item=ref?byRef.get(ref):null;
+ if(!item){
+  queueCurrentPane.removeAttribute("data-track-ref");
+  queueCurrentPane.innerHTML=
+   '<div class="queue-current-empty"><strong>'+
+   escapeHTML(resolveText(locale,"player.nothing.title"))+
+   '</strong><span>'+
+   escapeHTML(resolveText(locale,"player.nothing.artist"))+
+   '</span></div>';
+  return;
+ }
+
+ const titleText=trackTitle(item);
+ const artwork=String(item?.thumbnailURL??"").trim();
+ queueCurrentPane.dataset.trackRef=ref;
+ queueCurrentPane.innerHTML=
+  '<div class="queue-current-art'+(artwork?' has-art':'')+'">'+
+   (artwork
+    ?'<img src="'+escapeHTML(artwork)+'" alt="">'
+    :'<span aria-hidden="true">♫</span>')+
+  '</div>'+
+  '<div class="eyebrow">'+
+   escapeHTML(resolveText(locale,"queue.current.eyebrow"))+
+  '</div>'+
+  marqueeTextHTML(titleText,{tag:"h2",className:"queue-current-title"})+
+  '<div class="queue-current-meta">'+nowLibraryRelationsHTML(item)+'</div>'+
+  '<details class="queue-current-actions"><summary>'+
+   escapeHTML(resolveText(locale,"queue.current.actions"))+
+  '</summary><div class="queue-current-action-menu">'+
+   '<button data-track-action="explore" data-vex-action="vexstream.explore.from-track">'+
+    escapeHTML(resolveText(locale,"explore.open"))+
+   '</button>'+
+   '<button data-track-action="edit">'+
+    escapeHTML(resolveText(locale,"library.edit"))+
+   '</button>'+
+   '<button data-track-action="trash">'+
+    escapeHTML(resolveText(locale,"trash.move"))+
+   '</button>'+
+   trackPlaylistActionHTML()+
+  '</div></details>';
+}
+
+
+function queueTimelineRowHTML(state,ref,index){
+ const item=byRef.get(ref);
+ const isCurrent=index===state.currentIndex;
+ const currentClass=isCurrent?"current":"";
+ const stateTextRef=index<state.currentIndex
+  ?"queue.item.played"
+  :isCurrent
+    ?"queue.item.current"
+    :"queue.item.up-next";
+ const stateLabel=resolveText(locale,stateTextRef);
+ const titleText=trackTitle(item);
+ const album=String(item?.album??"").trim()||"Unknown album";
+ const metadata=[trackArtist(item),album];
+ const accessibleIdentity=[stateLabel,titleText,...metadata].join(". ");
+ const upDisabled=index===0;
+ const downDisabled=index===state.items.length-1;
+ return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-track-ref="${escapeHTML(ref)}" data-queue-index="${index}" draggable="true" aria-label="${escapeHTML(accessibleIdentity)}">
+   <span class="queue-drag-handle" aria-hidden="true" title="Drag to reorder">⋮⋮</span>
+   ${trackArtworkHTML(item)}
+   <span class="queue-title">
+     <span class="queue-title-line">
+      ${marqueeTextHTML(titleText,{tag:"strong"})}
+      <span class="queue-state">${escapeHTML(stateLabel)}</span>
+     </span>
+     <span class="queue-meta" title="${escapeHTML(metadata.join(" · "))}">${escapeHTML(metadata.join(" · "))}</span>
+   </span>
+   <span class="queue-actions">
+     ${isCurrent?"":`<button data-queue-action="play" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>`}
+     <details class="song-more queue-more">
+      <summary aria-label="Track actions" title="Track actions">⋯</summary>
+      <div class="song-more-menu">
+       <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
+       <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
+       <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+       <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
+       <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
+       ${trackPlaylistActionHTML()}
+       <span class="queue-menu-separator" aria-hidden="true"></span>
+       <button data-queue-action="up" ${upDisabled?"disabled":""}>${escapeHTML(resolveText(locale,"queue.move-up"))}</button>
+       <button data-queue-action="down" ${downDisabled?"disabled":""}>${escapeHTML(resolveText(locale,"queue.move-down"))}</button>
+       <button data-queue-action="remove" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"queue.remove"))}</button>
+      </div>
+     </details>
+   </span>
+ </li>`;
+}
+
+function queueVirtualSpacerHTML(kind,count){
+ if(count<=0)return"";
+ return `<li class="queue-virtual-spacer queue-virtual-spacer-${kind}" data-queue-virtual="${kind}" style="height:${count*QUEUE_ROW_HEIGHT}px" aria-hidden="true"></li>`;
+}
+
+function renderQueueWindow(state,{force=false}={}){
+ if(!queueDrawerOpen){
+  if(queueList.childElementCount)queueList.innerHTML="";
+  queueWindowRenderKey="";
+  return;
+ }
+ if(state.kind==="empty"){
+  queueList.innerHTML="";
+  queueWindowStart=0;
+  queueWindowInitialized=false;
+  queueWindowRenderKey="empty";
+  return;
+ }
+
+ const length=state.items.length;
+ if(!queueWindowInitialized){
+  const initial=queueWindowAroundIndex(
+   length,
+   state.currentIndex,
+   QueueWindowPolicy
+  );
+  queueWindowStart=initial.start;
+  queueWindowInitialized=true;
+ }
+ const maxStart=Math.max(0,length-QueueWindowPolicy.size);
+ queueWindowStart=Math.max(0,Math.min(queueWindowStart,maxStart));
+ const end=Math.min(length,queueWindowStart+QueueWindowPolicy.size);
+ const visibleRefs=state.items.slice(queueWindowStart,end);
+ const playlistSignature=playlists
+  .map(playlist=>`${playlist.id}:${playlist.name}`)
+  .join("|");
+ const key=[
+  catalogRevision,
+  state.currentIndex,
+  queueWindowStart,
+  end,
+  visibleRefs.join("\\u001f"),
+  playlistSignature
+ ].join("\\u001e");
+ if(!force&&key===queueWindowRenderKey)return;
+
+ queueList.dataset.windowStart=String(queueWindowStart);
+ queueList.dataset.windowEnd=String(end);
+ queueList.innerHTML=
+  queueVirtualSpacerHTML("top",queueWindowStart)+
+  visibleRefs.map(
+   (ref,offset)=>queueTimelineRowHTML(
+    state,
+    ref,
+    queueWindowStart+offset
+   )
+  ).join("")+
+  queueVirtualSpacerHTML("bottom",length-end);
+ queueWindowRenderKey=key;
+ requestAnimationFrame(()=>refreshSongMarqueeMetrics(queueList));
 }
 
 function render(){
@@ -1707,6 +1908,8 @@ function render(){
  queueDrawerNextCount.textContent=resolveText(locale,"queue.drawer.next",{
   count:queueNextCount
  });
+ shuffleQueueUpcoming.disabled=queueNextCount<2;
+ shuffleQueueUpcoming.title=resolveText(locale,"queue.shuffle-upcoming");
 
  const hasCurrent=Boolean(currentQueueRef(qp.state));
  const previousLabel=resolveText(locale,"queue.previous");
@@ -1734,6 +1937,7 @@ function render(){
       count:qp.state.items.length,
       position:qp.state.currentIndex+1
     });
+ renderQueueCurrentPane(qp.state);
 
  renderExplore();
  renderImportRuntimeStatus();
@@ -1742,51 +1946,7 @@ function render(){
  renderSystemStatus();
  syncActiveSongRows();
 
- queueList.innerHTML=qp.state.kind==="empty"?"":qp.state.items.map((ref,index)=>{
-  const item=byRef.get(ref);
-  const isCurrent=index===qp.state.currentIndex;
-  const currentClass=isCurrent?"current":"";
-  const stateTextRef=index<qp.state.currentIndex
-   ? "queue.item.played"
-   : isCurrent
-     ? "queue.item.current"
-     : "queue.item.up-next";
-  const stateLabel=resolveText(locale,stateTextRef);
-  const titleText=trackTitle(item);
-  const album=String(item?.album??"").trim()||"Unknown album";
-  const sourceDetail=String(item?.sourceTitle??item?.channel??"").trim();
-  const description=String(item?.description??"").trim();
-  const metadata=[
-   trackArtist(item),
-   album,
-   ...(sourceDetail&&sourceDetail!==titleText?[sourceDetail]:[])
-  ];
-  const accessibleIdentity=[
-   stateLabel,
-   titleText,
-   ...metadata,
-   ...(description?[description]:[])
-  ].join(". ");
-  const upDisabled=isCurrent||index===0;
-  const downDisabled=isCurrent||index===qp.state.items.length-1;
-  return `<li class="${currentClass}" data-queue-ref="${escapeHTML(ref)}" data-queue-index="${index}" aria-label="${escapeHTML(accessibleIdentity)}">
-    <span class="queue-index">${index+1}</span>
-    <span class="queue-title">
-      ${marqueeTextHTML(titleText,{tag:"strong"})}
-      <span class="queue-meta" title="${escapeHTML(metadata.join(" · "))}">${escapeHTML(metadata.join(" · "))}</span>
-      ${isCurrent&&description?`<span class="queue-description">${escapeHTML(description)}</span>`:""}
-      <span class="queue-state">${escapeHTML(stateLabel)}</span>
-    </span>
-    <span class="queue-state" aria-hidden="true">${isCurrent?"●":" "}</span>
-    <span class="queue-actions">
-      <button data-queue-action="play" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"playback.play"))}</button>
-      <button data-queue-action="up" ${upDisabled?"disabled":""}>↑</button>
-      <button data-queue-action="down" ${downDisabled?"disabled":""}>↓</button>
-      <button data-queue-action="remove" ${isCurrent?"disabled":""}>${escapeHTML(resolveText(locale,"queue.remove"))}</button>
-    </span>
-  </li>`;
- }).join("");
- requestAnimationFrame(()=>refreshSongMarqueeMetrics(queueList));
+ renderQueueWindow(qp.state);
 }
 
 function trackPlaylistActionHTML(){
@@ -1815,7 +1975,7 @@ function trackCardHTML(item,{selectable=false}={}){
        )}</span>
       </div>
       <span class="track-actions">
-       <button data-track-action="play" data-vex-action="vexstream.player.play-track">${escapeHTML(resolveText(locale,"playback.play"))}</button>
+       <button data-track-action="play" data-vex-action="vexstream.player.play-now">${escapeHTML(resolveText(locale,"playback.play"))}</button>
        <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
        <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
        <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
@@ -1874,7 +2034,7 @@ function songRowHTML(item,{selectable=false}={}){
    <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
    <td class="col-actions">
     <div class="song-actions">
-     <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+     <button data-track-action="play" data-vex-action="vexstream.player.play-now" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
      <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
      <details class="song-more">
       <summary aria-label="Track actions" title="Track actions">⋯</summary>
@@ -2514,7 +2674,7 @@ function playlistEntryHTML(entry,index,total){
    <span class="playlist-entry-actions">
     ${entry.available
      ?`<span class="playlist-track-actions">
-       <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+       <button data-track-action="play" data-vex-action="vexstream.player.play-now" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
        <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
        <details class="song-more">
         <summary aria-label="Track actions" title="Track actions">⋯</summary>
@@ -2865,15 +3025,30 @@ function activateTrackRow(
  {row,ref,playbackRefs=libraryPlaybackRefs(),selectionAware=false}={}
 ){
  if(!row||!ref||rowTargetOwnsInteraction(event.target))return false;
- if(event.type==="keydown"){
-  if(event.key!=="Enter"&&event.key!==" ")return false;
-  event.preventDefault();
- }
- if(selectionAware&&librarySelection.currentProjection.active){
+ const selecting=selectionAware&&librarySelection.currentProjection.active;
+
+ if(event.type==="click"){
+  if(!selecting)return false;
+  if(Number(event.detail)>1)return true;
   librarySelection.toggle(ref,!librarySelection.isSelected(ref));
   return true;
  }
- void guarded(()=>player.playTrack(ref,playbackRefs));
+
+ if(event.type==="dblclick"){
+  if(selecting)return true;
+  event.preventDefault();
+ }else if(event.type==="keydown"){
+  if(event.key!=="Enter"&&event.key!==" ")return false;
+  event.preventDefault();
+ }else{
+  return false;
+ }
+
+ if(selecting){
+  librarySelection.toggle(ref,!librarySelection.isSelected(ref));
+  return true;
+ }
+ void guarded(()=>player.playNow(ref,playbackRefs));
  return true;
 }
 
@@ -2884,6 +3059,14 @@ recentSongs.addEventListener("click",event=>{
  activateTrackRow(event,{
   row,
   ref:row.dataset.homeTrackRef,
+  playbackRefs:libraryPlaybackRefs()
+ });
+});
+recentSongs.addEventListener("dblclick",event=>{
+ const row=event.target.closest("[data-home-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.homeTrackRef,
   playbackRefs:libraryPlaybackRefs()
  });
 });
@@ -2902,7 +3085,7 @@ function handleTrackAction(event,{playbackRefs=libraryPlaybackRefs()}={}){
  if(!action||!card)return false;
  const ref=card.dataset.trackRef;
  if(action.dataset.trackAction==="play"){
-  void guarded(()=>player.playTrack(ref,playbackRefs));
+  void guarded(()=>player.playNow(ref,playbackRefs));
   return true;
  }
  if(action.dataset.trackAction==="play-next"){
@@ -3140,7 +3323,16 @@ trackChoices.addEventListener("click",event=>{
  activateTrackRow(event,{
   row,
   ref:row?.dataset.trackRef,
-  playbackRefs:currentLibraryView().map(item=>item.ref),
+  playbackRefs:libraryPlaybackRefs(),
+  selectionAware:true
+ });
+});
+trackChoices.addEventListener("dblclick",event=>{
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:libraryPlaybackRefs(),
   selectionAware:true
  });
 });
@@ -3149,7 +3341,7 @@ trackChoices.addEventListener("keydown",event=>{
  activateTrackRow(event,{
   row,
   ref:row?.dataset.trackRef,
-  playbackRefs:currentLibraryView().map(item=>item.ref),
+  playbackRefs:libraryPlaybackRefs(),
   selectionAware:true
  });
 });
@@ -3159,6 +3351,15 @@ libraryGroupTracks.addEventListener("click",event=>{
  if(handleTrackAction(event,{
   playbackRefs:group?.refs??libraryPlaybackRefs()
  }))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:group?.refs??libraryPlaybackRefs()
+ });
+});
+libraryGroupTracks.addEventListener("dblclick",event=>{
+ const group=currentLibraryDetailGroup();
  const row=event.target.closest("[data-track-ref]");
  activateTrackRow(event,{
   row,
@@ -3230,6 +3431,16 @@ artistSongTable.addEventListener("click",event=>{
  if(handleTrackAction(event,{
   playbackRefs:visible.map(item=>item.ref)
  }))return;
+ const row=event.target.closest("[data-track-ref]");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:visible.map(item=>item.ref)
+ });
+});
+artistSongTable.addEventListener("dblclick",event=>{
+ const group=currentLibraryDetailGroup();
+ const visible=group?artistDetailVisibleTracks(group):[];
  const row=event.target.closest("[data-track-ref]");
  activateTrackRow(event,{
   row,
@@ -3479,6 +3690,17 @@ playlistDetailDelete.addEventListener("click",()=>void guarded(async()=>{
  await refreshPlaylists();
 }));
 
+playlistDetailEntries.addEventListener("dblclick",event=>{
+ const resolved=currentPlaylistDetail();
+ if(!resolved)return;
+ const row=event.target.closest("[data-track-ref][data-available='true']");
+ activateTrackRow(event,{
+  row,
+  ref:row?.dataset.trackRef,
+  playbackRefs:resolved.playableRefs
+ });
+});
+
 playlistDetailEntries.addEventListener("click",event=>{
  const resolved=currentPlaylistDetail();
  if(!resolved)return;
@@ -3692,29 +3914,185 @@ recoverTrashPurgeButton.addEventListener("click",()=>void guarded(async()=>{
  await refreshTrash();
 }));
 
+queueCurrentPane.addEventListener("click",event=>{
+ const relation=event.target.closest(
+  "[data-now-library-kind][data-now-library-key]"
+ );
+ if(relation){
+  shellNavigation.openLibraryDetail(
+   relation.dataset.nowLibraryKind,
+   relation.dataset.nowLibraryKey
+  );
+  return;
+ }
+ handleTrackAction(event);
+});
+
+shuffleQueueUpcoming.addEventListener("click",()=>{
+ player.shuffleUpcoming();
+});
+
+queueList.addEventListener("dblclick",event=>{
+ if(rowTargetOwnsInteraction(event.target))return;
+ const row=event.target.closest("[data-queue-index]");
+ if(!row)return;
+ const index=Number(row.dataset.queueIndex);
+ const state=queue.currentProjection.state;
+ if(
+  state.kind!=="positioned" ||
+  index===state.currentIndex
+ )return;
+ const ref=row.dataset.queueRef;
+ if(!ref)return;
+ event.preventDefault();
+ void guarded(()=>player.playNow(ref));
+});
+
 queueList.addEventListener("click",event=>{
+ if(handleTrackAction(event,{playbackRefs:libraryPlaybackRefs()}))return;
  const action=event.target.closest("[data-queue-action]");
  const row=event.target.closest("[data-queue-index]");
  if(!action||!row)return;
  const index=Number(row.dataset.queueIndex);
  if(action.dataset.queueAction==="play"){
-  void guarded(()=>player.playQueueIndex(index));
+  const ref=row.dataset.queueRef;
+  if(ref)void guarded(()=>player.playNow(ref));
   return;
  }
  if(action.dataset.queueAction==="up"){
   player.moveQueue(index,index-1);
-  render();
   return;
  }
  if(action.dataset.queueAction==="down"){
   player.moveQueue(index,index+2);
-  render();
   return;
  }
  if(action.dataset.queueAction==="remove"){
   player.removeQueue(index);
-  render();
  }
+});
+
+function clearQueueDragState(){
+ queueDragIndex=-1;
+ queueDropIndex=-1;
+ queueDropPlaceholder.remove();
+ queueDropPlaceholder.hidden=true;
+ for(const row of queueList.querySelectorAll(".dragging")){
+  row.classList.remove("dragging");
+ }
+}
+
+function placeQueueDropPreview(boundary,before){
+ if(
+  boundary===queueDropIndex &&
+  queueDropPlaceholder.isConnected
+ )return;
+ queueDropPlaceholder.remove();
+ queueDropIndex=boundary;
+ queueDropPlaceholder.dataset.dropIndex=String(boundary);
+ queueDropPlaceholder.style.height=`${QUEUE_ROW_HEIGHT}px`;
+ queueDropPlaceholder.hidden=false;
+ if(before)queueList.insertBefore(queueDropPlaceholder,before);
+ else queueList.append(queueDropPlaceholder);
+}
+
+function updateQueueDropPreview(event){
+ const state=queue.currentProjection.state;
+ if(state.kind!=="positioned"||queueDragIndex<0)return;
+
+ if(event.target.closest(".queue-drop-placeholder"))return;
+
+ const row=event.target.closest("[data-queue-index]");
+ if(row){
+  const index=Number(row.dataset.queueIndex);
+  const rect=row.getBoundingClientRect();
+  const beforePointer=event.clientY<rect.top+(rect.height/2);
+  const boundary=beforePointer?index:index+1;
+  if(boundary===queueDropIndex&&queueDropPlaceholder.isConnected)return;
+  queueDropPlaceholder.remove();
+  const before=beforePointer?row:row.nextElementSibling;
+  placeQueueDropPreview(boundary,before);
+  return;
+ }
+
+ const spacer=event.target.closest("[data-queue-virtual]");
+ if(!spacer)return;
+ const start=Number(queueList.dataset.windowStart||0);
+ const end=Number(queueList.dataset.windowEnd||state.items.length);
+ if(spacer.dataset.queueVirtual==="top"){
+  placeQueueDropPreview(start,spacer.nextElementSibling);
+  return;
+ }
+ placeQueueDropPreview(end,spacer);
+}
+
+queueList.addEventListener("dragstart",event=>{
+ if(event.target.closest("button,summary,details,select,input,label,a")){
+  event.preventDefault();
+  return;
+ }
+ const row=event.target.closest("[data-queue-index]");
+ if(!row||!event.dataTransfer)return;
+ queueDragIndex=Number(row.dataset.queueIndex);
+ queueDropIndex=-1;
+ event.dataTransfer.effectAllowed="move";
+ event.dataTransfer.setData("text/plain",String(queueDragIndex));
+ row.classList.add("dragging");
+});
+
+queueList.addEventListener("dragover",event=>{
+ if(queueDragIndex<0)return;
+ event.preventDefault();
+ if(event.dataTransfer)event.dataTransfer.dropEffect="move";
+ updateQueueDropPreview(event);
+});
+
+queueList.addEventListener("drop",event=>{
+ if(queueDragIndex<0)return;
+ event.preventDefault();
+ const from=queueDragIndex>=0
+  ?queueDragIndex
+  :Number(event.dataTransfer?.getData("text/plain"));
+ const to=queueDropIndex;
+ clearQueueDragState();
+ if(!Number.isInteger(from)||!Number.isInteger(to))return;
+ if(from===to||from+1===to)return;
+ player.moveQueue(from,to);
+});
+
+queueList.addEventListener("dragend",clearQueueDragState);
+
+queueTimelinePane.addEventListener("scroll",()=>{
+ if(queueDragIndex>=0||queueScrollFrame!==null)return;
+ queueScrollFrame=requestAnimationFrame(()=>{
+  queueScrollFrame=null;
+  const state=queue.currentProjection.state;
+  if(
+   state.kind!=="positioned" ||
+   !queueDrawerOpen ||
+   !queueWindowInitialized
+  )return;
+  const relative=Math.max(
+   0,
+   queueTimelinePane.scrollTop-queueList.offsetTop
+  );
+  const firstVisible=Math.max(
+   0,
+   Math.min(
+    state.items.length-1,
+    Math.floor(relative/QUEUE_ROW_HEIGHT)
+   )
+  );
+  const nextWindow=queueWindowForScroll({
+   length:state.items.length,
+   start:queueWindowStart,
+   firstVisible,
+   policy:QueueWindowPolicy
+  });
+  if(!nextWindow.changed)return;
+  queueWindowStart=nextWindow.start;
+  renderQueueWindow(state,{force:true});
+ });
 });
 
 queue.subscribe(projection=>{

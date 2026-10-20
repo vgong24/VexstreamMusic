@@ -1748,3 +1748,6 @@ body.song-column-resizing *{cursor:col-resize!important;user-select:none!importa
  .queue-current-pane{display:none}
 }
 
+.queue-heading-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.queue-heading-actions button{white-space:nowrap}
+

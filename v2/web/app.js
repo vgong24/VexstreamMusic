@@ -153,6 +153,7 @@ const queueCurrentPane=document.querySelector("#queueCurrentPane");
 const queueTimelinePane=document.querySelector("#queueTimelinePane");
 const queueList=document.querySelector("#queueList");
 const queueDropEnd=document.querySelector("#queueDropEnd");
+const shuffleQueueUpcoming=document.querySelector("#shuffleQueueUpcoming");
 const clearAfterCurrent=document.querySelector("#clearAfterCurrent");
 const trackChoices=document.querySelector("#trackChoices");
 const playAllSongs=document.querySelector("#playAllSongs");
@@ -1791,6 +1792,8 @@ function render(){
  queueDrawerNextCount.textContent=resolveText(locale,"queue.drawer.next",{
   count:queueNextCount
  });
+ shuffleQueueUpcoming.disabled=queueNextCount<2;
+ shuffleQueueUpcoming.title=resolveText(locale,"queue.shuffle-upcoming");
 
  const hasCurrent=Boolean(currentQueueRef(qp.state));
  const previousLabel=resolveText(locale,"queue.previous");
@@ -3780,6 +3783,10 @@ recoverTrashPurgeButton.addEventListener("click",()=>void guarded(async()=>{
 
 queueCurrentPane.addEventListener("click",event=>{
  handleTrackAction(event);
+});
+
+shuffleQueueUpcoming.addEventListener("click",()=>{
+ player.shuffleUpcoming();
 });
 
 queueList.addEventListener("click",event=>{

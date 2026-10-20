@@ -11,6 +11,7 @@ import {
   moveQueueItem,
   removeQueueItem,
   replaceQueueContext,
+  reshuffleQueueUpcoming,
   selectQueueIndex,
 } from "./model.js";
 import { presentQueueControls } from "./presentation.js";
@@ -88,6 +89,10 @@ export function createQueueConnection({
 
     playNext(refs) {
       return setState(insertNextQueueRefs(state, refs));
+    },
+
+    shuffleUpcoming() {
+      return setState(reshuffleQueueUpcoming(state, shuffle));
     },
 
     select(index) {

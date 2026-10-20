@@ -15,6 +15,7 @@ export const en=Object.freeze({
  "queue.previous":"Previous",
  "queue.next":"Next",
  "queue.shuffle":"Shuffle",
+ "queue.shuffle-upcoming":"Shuffle upcoming",
  "queue.repeat":"Repeat",
  "queue.clear-after-current":"Clear after current",
  "queue.remove":"Remove",

@@ -129,6 +129,9 @@ Unless Victor explicitly admits a different UX, preserve these V3-visible outcom
   while removing the actively playing row remains held;
 - drag reorder remains a first-class Queue affordance, not an implementation accident of the old
   monolith;
+- the expanded Queue keeps V3's explicit **Shuffle upcoming** action separate from Shuffle mode:
+  it can reshuffle the already-lived future without fabricating history or requiring an off/on
+  toggle of the persistent Shuffle preference;
 - Songs search/genre filtering remains a **display lens**: choosing Play from a filtered Songs view
   must still form the full Library listening context in the active sort order, just as V3 did;
   row activation and the explicit Play button must not disagree about Queue scope;

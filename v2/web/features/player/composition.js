@@ -227,6 +227,7 @@ export function createPlayerComposition({
     next,
     previous,
     toggleShuffle,
+    shuffleUpcoming: () => queue.shuffleUpcoming(),
     toggleRepeat,
     clearAfterCurrent,
     append: refs => queue.append(refs),

@@ -2108,6 +2108,32 @@ def main() -> int:
                 "shuffle upcoming law drift",
             ),
         )
+
+        page.locator("#queueMiniBtn").click()
+        page.wait_for_function(
+            "document.querySelector('#queueDrawer').classList.contains('open')"
+        )
+        page.locator("#shuffleQueueUpcoming").click()
+        checked(
+            "drawer-shuffle-upcoming-reshuffles-suffix-without-toggling-mode",
+            lambda: require(
+                page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.items.join(',')"
+                )
+                == (
+                    "media.vexstream.test-tone.1,"
+                    "media.vexstream.test-tone.2,"
+                    "media.vexstream.test-tone.3"
+                )
+                and page.evaluate(
+                    "window.vexV4.queue.currentProjection.state.shuffle"
+                )
+                is True
+                and shuf.get_attribute("aria-pressed") == "true",
+                "drawer Shuffle upcoming drift",
+            ),
+        )
+        page.locator("#queueMiniBtn").click()
         rep.click()
         checked(
             "repeat-is-queue-truth-not-playback-truth",

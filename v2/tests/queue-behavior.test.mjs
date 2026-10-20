@@ -6,7 +6,7 @@ import {
 } from "../web/features/queue/behavior.js";
 import {
   appendQueueRefs, applyQueueEffect, insertNextQueueRefs,
-  moveQueueItem, removeQueueItem, replaceQueueContext
+  moveQueueItem, removeQueueItem, replaceQueueContext, reshuffleQueueUpcoming
 } from "../web/features/queue/model.js";
 import { createQueueConnection } from "../web/features/queue/connection.js";
 
@@ -46,6 +46,15 @@ test("disabling shuffle does not reconstruct the old order", () => {
   const state=QueueState.positioned({items:["a","b","d","c"],currentIndex:1,shuffle:true});
   const next=applyQueueEffect(state,QueueEffect.DisableShuffle,reverse);
   assert.deepEqual(next.items,["a","b","d","c"]);
+  assert.equal(next.shuffle,false);
+});
+
+test("Shuffle upcoming can reshuffle an already-lived suffix without toggling mode", () => {
+  const state=QueueState.positioned({items:["a","b","c","d"],currentIndex:1,shuffle:false});
+  const next=reshuffleQueueUpcoming(state,reverse);
+  assert.deepEqual(next.items,["a","b","d","c"]);
+  assert.equal(next.currentIndex,1);
+  assert.equal(currentQueueRef(next),"b");
   assert.equal(next.shuffle,false);
 });
 
@@ -107,6 +116,9 @@ test("Queue Connection keeps payload operations separate from stable Control sem
   assert.deepEqual(queue.currentProjection.state.items,["a","c","b"]);
   queue.playNext(["x"]);
   assert.deepEqual(queue.currentProjection.state.items,["a","x","c","b"]);
+  queue.shuffleUpcoming();
+  assert.deepEqual(queue.currentProjection.state.items,["a","b","c","x"]);
+  assert.equal(queue.currentProjection.state.shuffle,true);
 });
 
 

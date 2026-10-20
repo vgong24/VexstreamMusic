@@ -24,6 +24,14 @@ export function shuffleFreshContextRefs(items, currentIndex, shuffleFn) {
   ];
 }
 
+export function reshuffleQueueUpcoming(current, shuffleFn = value => value) {
+  if (current.kind === "empty") return current;
+  return QueueState.positioned({
+    ...current,
+    items: shuffleUpcomingRefs(current.items, current.currentIndex, shuffleFn),
+  });
+}
+
 export function replaceQueueContext(current, refs, startIndex = 0, shuffleFn = value => value) {
   const items = uniqueRefs(refs);
   if (!items.length) return QueueState.empty(current);

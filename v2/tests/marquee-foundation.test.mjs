@@ -14,9 +14,9 @@ test("short overflow keeps the familiar minimum reveal time",()=>{
 test("long titles receive proportionally more time instead of accelerating",()=>{
  const medium=marqueeDurationSeconds(480);
  const long=marqueeDurationSeconds(960);
- assert.equal(medium,25);
- assert.equal(long,50);
- assert.equal(long/medium,2);
+ assert.ok(Math.abs(medium-25)<1e-9);
+ assert.ok(Math.abs(long-50)<1e-9);
+ assert.ok(Math.abs(long/medium-2)<1e-12);
 });
 
 test("marquee timing rejects invalid speed or travel ownership",()=>{

@@ -35,6 +35,32 @@ function Format-ByteSize {
   return "$Bytes bytes"
 }
 
+function Install-DesktopShortcut {
+  param(
+    [Parameter(Mandatory=$true)][string]$TargetExe
+  )
+
+  $desktop = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
+  if ([string]::IsNullOrWhiteSpace($desktop)) {
+    Write-Host '      Desktop shortcut: unavailable for this Windows profile.' -ForegroundColor Yellow
+    return
+  }
+
+  try {
+    $shortcutPath = Join-Path $desktop 'VexStream Music.lnk'
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath = $TargetExe
+    $shortcut.WorkingDirectory = Split-Path -Parent $TargetExe
+    $shortcut.IconLocation = "$TargetExe,0"
+    $shortcut.Description = 'VexStream Music'
+    $shortcut.Save()
+    Write-Host "      Desktop shortcut: $shortcutPath"
+  } catch {
+    Write-Host "      Desktop shortcut could not be created: $($_.Exception.Message)" -ForegroundColor Yellow
+  }
+}
+
 function Invoke-ProgressDownload {
   param(
     [Parameter(Mandatory=$true)][string]$Uri,
@@ -388,8 +414,9 @@ if ((Test-Path -LiteralPath $exe -PathType Leaf) -and (Test-Path -LiteralPath $r
         Write-Host '      Already installed and verified for this exact source.'
         Write-Host '      No downloads or rebuild are needed.'
         Write-Host ''
-        Write-Host '[5/5] Launching VexStream'
+        Write-Host '[5/5] Installing desktop shortcut and launching VexStream'
         Write-Host "      App: $exe"
+        Install-DesktopShortcut -TargetExe $exe
         Start-Process -FilePath $exe
         exit 0
       }
@@ -500,14 +527,16 @@ try {
 }
 
 Write-Host ''
-Write-Host '[5/5] VexStream is ready - launching now'
+Write-Host '[5/5] VexStream is ready - installing desktop shortcut and launching'
 Write-Host "      Source: $commit"
 Write-Host "      App:    $exe"
 Write-Host "      Size:   $(Format-ByteSize $exeBytes)"
+Install-DesktopShortcut -TargetExe $exe
 Write-Host ''
 Write-Host 'A reusable Windows app was created from this exact source.'
-Write-Host 'File Explorer will open with that .exe selected so you know where it lives.'
-Write-Host 'The browser should also open automatically with your existing VexStream library.'
+Write-Host 'The VexStream Music desktop shortcut points to this verified managed build.'
+Write-Host 'File Explorer will open with that .exe selected so you can also see where the managed app lives.'
+Write-Host 'The browser should open automatically with your existing VexStream library.'
 $explorerSelect = '/select,"' + $exe.Replace('"','""') + '"'
 Start-Process -FilePath explorer.exe -ArgumentList $explorerSelect
 Start-Process -FilePath $exe

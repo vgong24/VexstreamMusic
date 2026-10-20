@@ -574,7 +574,7 @@ function homeRecentRowHTML(item){
    <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
    <td class="col-actions">
     <div class="song-actions">
-     <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+     <button data-track-action="play" data-vex-action="vexstream.player.play-now" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
      <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
      <details class="song-more">
       <summary aria-label="Track actions" title="Track actions">⋯</summary>
@@ -1975,7 +1975,7 @@ function trackCardHTML(item,{selectable=false}={}){
        )}</span>
       </div>
       <span class="track-actions">
-       <button data-track-action="play" data-vex-action="vexstream.player.play-track">${escapeHTML(resolveText(locale,"playback.play"))}</button>
+       <button data-track-action="play" data-vex-action="vexstream.player.play-now">${escapeHTML(resolveText(locale,"playback.play"))}</button>
        <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
        <button data-track-action="append" data-vex-action="vexstream.player.add-queue">${escapeHTML(resolveText(locale,"player.add-to-queue"))}</button>
        <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
@@ -2034,7 +2034,7 @@ function songRowHTML(item,{selectable=false}={}){
    <td class="col-duration">${escapeHTML(formatSeconds(item?.durationSeconds))}</td>
    <td class="col-actions">
     <div class="song-actions">
-     <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+     <button data-track-action="play" data-vex-action="vexstream.player.play-now" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
      <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
      <details class="song-more">
       <summary aria-label="Track actions" title="Track actions">⋯</summary>
@@ -2674,7 +2674,7 @@ function playlistEntryHTML(entry,index,total){
    <span class="playlist-entry-actions">
     ${entry.available
      ?`<span class="playlist-track-actions">
-       <button data-track-action="play" data-vex-action="vexstream.player.play-track" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+       <button data-track-action="play" data-vex-action="vexstream.player.play-now" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
        <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
        <details class="song-more">
         <summary aria-label="Track actions" title="Track actions">⋯</summary>

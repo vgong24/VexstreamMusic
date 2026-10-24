@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -23,6 +24,7 @@ type trackProjection struct {
 	MediaByteLength      int64    `json:"mediaByteLength"`
 	Title                string   `json:"title"`
 	Artist               string   `json:"artist"`
+	ArtworkURL           string   `json:"artworkUrl,omitempty"`
 	Album                string   `json:"album,omitempty"`
 	Genre                string   `json:"genre,omitempty"`
 	Year                 string   `json:"year,omitempty"`
@@ -89,6 +91,7 @@ func (s *Service) mobileCatalog(w http.ResponseWriter, r *http.Request) {
 			MediaByteLength:      size,
 			Title:                track.Title,
 			Artist:               track.Artist,
+			ArtworkURL:           projectArtworkURL(track.ThumbnailURL),
 			Album:                track.Album,
 			Genre:                track.Genre,
 			Year:                 track.Year,
@@ -180,6 +183,20 @@ func (s *Service) mobileMedia(w http.ResponseWriter, r *http.Request) {
 		stat.ModTime(),
 		file,
 	)
+}
+
+func projectArtworkURL(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+
+	parsed, err := url.Parse(value)
+	if err != nil || parsed.Scheme != "https" || parsed.Host == "" {
+		return ""
+	}
+
+	return parsed.String()
 }
 
 func projectPlaylists(

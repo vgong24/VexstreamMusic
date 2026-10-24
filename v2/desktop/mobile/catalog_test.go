@@ -65,6 +65,7 @@ func TestCatalogSanitizesDesktopPathsAndBindsMediaBytes(t *testing.T) {
 				Filename:      "song.mp3",
 				Title:         "On The Go",
 				Artist:        "Vex",
+				ThumbnailURL:  "https://images.example.test/artwork/on-the-go.jpg",
 				Album:         "Mobile",
 				Genre:         "Test",
 				Year:          "2026",
@@ -112,6 +113,9 @@ func TestCatalogSanitizesDesktopPathsAndBindsMediaBytes(t *testing.T) {
 	if got.MediaByteLength != int64(len(mediaBytes)) {
 		t.Fatalf("media length=%d", got.MediaByteLength)
 	}
+	if got.ArtworkURL != "https://images.example.test/artwork/on-the-go.jpg" {
+		t.Fatalf("artwork url=%q", got.ArtworkURL)
+	}
 	if got.PlaybackStartSeconds != 2 ||
 		got.PlaybackEndSeconds == nil ||
 		*got.PlaybackEndSeconds != 18 {
@@ -132,6 +136,24 @@ func TestCatalogSanitizesDesktopPathsAndBindsMediaBytes(t *testing.T) {
 	} {
 		if strings.Contains(body, forbidden) {
 			t.Fatalf("catalog leaked %q: %s", forbidden, body)
+		}
+	}
+}
+
+func TestProjectArtworkURLAllowsOnlyHttps(t *testing.T) {
+	cases := map[string]string{
+		"":                                      "",
+		"   ":                                   "",
+		"file:///private/cover.jpg":              "",
+		"http://images.example.test/cover.jpg":   "",
+		"javascript:alert(1)":                    "",
+		"https://images.example.test/cover.jpg":  "https://images.example.test/cover.jpg",
+		" https://images.example.test/cover.jpg ": "https://images.example.test/cover.jpg",
+	}
+
+	for input, expected := range cases {
+		if got := projectArtworkURL(input); got != expected {
+			t.Fatalf("projectArtworkURL(%q)=%q want=%q", input, got, expected)
 		}
 	}
 }

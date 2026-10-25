@@ -21,7 +21,6 @@ type Track struct {
 	Categories        []string `json:"categories,omitempty"`
 	Description       string   `json:"description,omitempty"`
 	ThumbnailURL      string   `json:"thumbnailUrl,omitempty"`
-	EmbeddedArtwork  bool     `json:"embeddedArtwork,omitempty"`
 	IndexedAt         string   `json:"indexedAt,omitempty"`
 	AddedAt           string   `json:"addedAt"`
 	SourceTitle       string   `json:"sourceTitle,omitempty"`
@@ -56,4 +55,4 @@ type CacheEntry struct {
 	Track        Track  `json:"track"`
 }
 
-const CacheSchemaV3 = "vexstream.library-index/v3"
+const CacheSchemaV2 = "vexstream.library-index/v2"

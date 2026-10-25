@@ -46,12 +46,11 @@ func LoadCache(path string) (CacheLoadResult, error) {
 	if err := json.Unmarshal(data, &file); err != nil {
 		return result, err
 	}
-	if file.SchemaVersion == "vexstream.library-index/v1" ||
-		file.SchemaVersion == "vexstream.library-index/v2" {
+	if file.SchemaVersion == "vexstream.library-index/v1" {
 		result.DiscardedLegacy = true
 		return result, nil
 	}
-	if file.SchemaVersion != "" && file.SchemaVersion != library.CacheSchemaV3 {
+	if file.SchemaVersion != "" && file.SchemaVersion != library.CacheSchemaV2 {
 		return result, fmt.Errorf("unsupported cache schema: %s", file.SchemaVersion)
 	}
 	for _, entry := range file.Entries {
@@ -71,7 +70,7 @@ func SaveCache(path string, entries map[string]library.CacheEntry) error {
 		return strings.ToLower(rows[i].Path) < strings.ToLower(rows[j].Path)
 	})
 	file := cacheFile{
-		SchemaVersion: library.CacheSchemaV3,
+		SchemaVersion: library.CacheSchemaV2,
 		GeneratedAt:   time.Now().UTC().Format(time.RFC3339Nano),
 		Entries:       rows,
 	}

@@ -56,4 +56,4 @@ type CacheEntry struct {
 	Track        Track  `json:"track"`
 }
 
-const CacheSchemaV2 = "vexstream.library-index/v2"
+const CacheSchemaV3 = "vexstream.library-index/v3"

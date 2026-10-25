@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/vgong24/VexstreamMusic/v2/desktop/library/filesystem"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/playlists"
 )
 
@@ -25,6 +27,7 @@ type trackProjection struct {
 	Title                string   `json:"title"`
 	Artist               string   `json:"artist"`
 	ArtworkURL           string   `json:"artworkUrl,omitempty"`
+	ArtworkRef           string   `json:"artworkRef,omitempty"`
 	Album                string   `json:"album,omitempty"`
 	Genre                string   `json:"genre,omitempty"`
 	Year                 string   `json:"year,omitempty"`
@@ -92,6 +95,7 @@ func (s *Service) mobileCatalog(w http.ResponseWriter, r *http.Request) {
 			Title:                track.Title,
 			Artist:               track.Artist,
 			ArtworkURL:           projectArtworkURL(track.ThumbnailURL),
+			ArtworkRef:           projectArtworkRef(track.ID, track.EmbeddedArtwork),
 			Album:                track.Album,
 			Genre:                track.Genre,
 			Year:                 track.Year,
@@ -183,6 +187,102 @@ func (s *Service) mobileMedia(w http.ResponseWriter, r *http.Request) {
 		stat.ModTime(),
 		file,
 	)
+}
+
+func (s *Service) mobileArtwork(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		w.Header().Set("Allow", "GET, HEAD")
+		writeJSON(
+			w,
+			http.StatusMethodNotAllowed,
+			map[string]string{
+				"error": "GET or HEAD required",
+			},
+		)
+		return
+	}
+
+	trackRef :=
+		strings.TrimPrefix(
+			r.URL.Path,
+			"/v1/artwork/",
+		)
+	if trackRef == "" ||
+		strings.ContainsAny(
+			trackRef,
+			"/\\",
+		) {
+		http.NotFound(
+			w,
+			r,
+		)
+		return
+	}
+
+	path :=
+		s.librarySnapshot()
+			.Paths[
+			trackRef
+		]
+	if path == "" {
+		http.NotFound(
+			w,
+			r,
+		)
+		return
+	}
+
+	mime, artwork, ok :=
+		filesystem.ReadEmbeddedArtwork(
+			path,
+		)
+	if !ok {
+		http.NotFound(
+			w,
+			r,
+		)
+		return
+	}
+
+	w.Header().Set(
+		"Content-Type",
+		mime,
+	)
+	w.Header().Set(
+		"Content-Length",
+		fmt.Sprintf(
+			"%d",
+			len(artwork),
+		),
+	)
+	w.Header().Set(
+		"Cache-Control",
+		"private, no-store",
+	)
+	w.Header().Set(
+		"X-Content-Type-Options",
+		"nosniff",
+	)
+	w.WriteHeader(
+		http.StatusOK,
+	)
+	if r.Method == http.MethodHead {
+		return
+	}
+	_, _ =
+		w.Write(
+			artwork,
+		)
+}
+
+func projectArtworkRef(
+	trackRef string,
+	embeddedArtwork bool,
+) string {
+	if !embeddedArtwork {
+		return ""
+	}
+	return trackRef
 }
 
 func projectArtworkURL(value string) string {

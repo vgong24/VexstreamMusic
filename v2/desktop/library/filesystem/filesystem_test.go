@@ -126,7 +126,7 @@ func TestReadTrackPreservesV3ID3AndCatalogProvenance(t *testing.T) {
 	}
 }
 
-func TestReadTrackProjectsBoundedEmbeddedArtworkAvailability(t *testing.T) {
+func TestEmbeddedArtworkAvailabilityAndBytesAreDerivedFromCurrentFile(t *testing.T) {
 	root := t.TempDir()
 	media := filepath.Join(
 		root,
@@ -151,15 +151,11 @@ func TestReadTrackProjectsBoundedEmbeddedArtworkAvailability(t *testing.T) {
 		artwork,
 	)
 
-	track :=
-		ReadTrack(
-			media,
-			root,
-		)
-	if !track.EmbeddedArtwork {
-		t.Fatalf(
-			"embedded artwork availability missing: %+v",
-			track,
+	if !HasEmbeddedArtwork(
+		media,
+	) {
+		t.Fatal(
+			"embedded artwork availability was not derived from the MP3",
 		)
 	}
 
@@ -189,6 +185,7 @@ func TestReadTrackProjectsBoundedEmbeddedArtworkAvailability(t *testing.T) {
 		)
 	}
 }
+
 
 func TestParseAPICRejectsOversizedArtwork(t *testing.T) {
 	payload :=
@@ -301,7 +298,7 @@ func TestScanUsesIndexedAtForFirstSeenAndSkipsIgnoredDirectories(t *testing.T) {
 	}
 }
 
-func TestCacheV3RoundTripsAndLegacyCachesAreDiscarded(t *testing.T) {
+func TestCacheV2RoundTripsAndLegacyV1IsDiscarded(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "library-cache.json")
 	entries := map[string]library.CacheEntry{
 		"a": {Path: "/music/a.mp3", Track: library.Track{ID: "a", Title: "A"}},
@@ -317,41 +314,16 @@ func TestCacheV3RoundTripsAndLegacyCachesAreDiscarded(t *testing.T) {
 		t.Fatalf("v2 cache round-trip drift: %+v", loaded)
 	}
 
-	for _, schema := range []string{
-		"vexstream.library-index/v1",
-		"vexstream.library-index/v2",
-	} {
-		legacy :=
-			[]byte(
-				`{"schemaVersion":"` +
-					schema +
-					`","entries":[{"path":"/old.mp3"}]}`,
-			)
-		if err :=
-			os.WriteFile(
-				path,
-				legacy,
-				0o644,
-			); err != nil {
-			t.Fatal(err)
-		}
-		loaded, err =
-			LoadCache(
-				path,
-			)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !loaded.DiscardedLegacy ||
-			len(
-				loaded.Entries,
-			) != 0 {
-			t.Fatalf(
-				"legacy %s cache was not deliberately discarded: %+v",
-				schema,
-				loaded,
-			)
-		}
+	legacy := []byte(`{"schemaVersion":"vexstream.library-index/v1","entries":[{"path":"/old.mp3"}]}`)
+	if err := os.WriteFile(path, legacy, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err = LoadCache(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !loaded.DiscardedLegacy || len(loaded.Entries) != 0 {
+		t.Fatalf("legacy v1 cache was not deliberately discarded: %+v", loaded)
 	}
 }
 

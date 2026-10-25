@@ -54,6 +54,104 @@ func TestAuthorizationAcceptsOnlyStoredTokenHash(t *testing.T) {
 	}
 }
 
+func TestArtworkRouteUsesStoredBearerAuthorization(t *testing.T) {
+	service :=
+		testService(
+			t,
+			library.Projection{},
+			nil,
+		)
+
+	token :=
+		"fixture-artwork-token"
+	sum :=
+		sha256.Sum256(
+			[]byte(token),
+		)
+	service.devices[
+		"vexlife.fixture",
+	] =
+		pairedDevice{
+			DeviceRef: "vexlife.fixture",
+			TokenHash:
+				hex.EncodeToString(
+					sum[:],
+				),
+		}
+
+	handler :=
+		service.authorized(
+			service.mobileArtwork,
+		)
+
+	missing :=
+		httptest.NewRecorder()
+	handler(
+		missing,
+		httptest.NewRequest(
+			http.MethodGet,
+			"/v1/artwork/track",
+			nil,
+		),
+	)
+	if missing.Code !=
+		http.StatusUnauthorized {
+		t.Fatalf(
+			"missing token status=%d",
+			missing.Code,
+		)
+	}
+
+	wrongRequest :=
+		httptest.NewRequest(
+			http.MethodGet,
+			"/v1/artwork/track",
+			nil,
+		)
+	wrongRequest.Header.Set(
+		"Authorization",
+		"Bearer wrong-token",
+	)
+	wrong :=
+		httptest.NewRecorder()
+	handler(
+		wrong,
+		wrongRequest,
+	)
+	if wrong.Code !=
+		http.StatusUnauthorized {
+		t.Fatalf(
+			"wrong token status=%d",
+			wrong.Code,
+		)
+	}
+
+	allowedRequest :=
+		httptest.NewRequest(
+			http.MethodGet,
+			"/v1/artwork/track",
+			nil,
+		)
+	allowedRequest.Header.Set(
+		"Authorization",
+		"Bearer "+token,
+	)
+	allowed :=
+		httptest.NewRecorder()
+	handler(
+		allowed,
+		allowedRequest,
+	)
+	if allowed.Code !=
+		http.StatusNotFound {
+		t.Fatalf(
+			"stored token did not reach artwork handler: status=%d body=%s",
+			allowed.Code,
+			allowed.Body.String(),
+		)
+	}
+}
+
 func TestPairingRequestRequiresOpenWindowAndTokenOnlyAfterApproval(t *testing.T) {
 	service := testService(t, library.Projection{}, nil)
 

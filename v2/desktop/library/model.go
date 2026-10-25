@@ -21,7 +21,7 @@ type Track struct {
 	Categories        []string `json:"categories,omitempty"`
 	Description       string   `json:"description,omitempty"`
 	ThumbnailURL      string   `json:"thumbnailUrl,omitempty"`
-EmbeddedArtwork  bool     `json:"embeddedArtwork,omitempty"`
+	EmbeddedArtwork  bool     `json:"embeddedArtwork,omitempty"`
 	IndexedAt         string   `json:"indexedAt,omitempty"`
 	AddedAt           string   `json:"addedAt"`
 	SourceTitle       string   `json:"sourceTitle,omitempty"`

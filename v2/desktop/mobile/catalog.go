@@ -251,9 +251,7 @@ func (s *Service) mobileArtwork(w http.ResponseWriter, r *http.Request) {
 	snapshot :=
 		s.librarySnapshot()
 	path :=
-		snapshot.Paths[
-			trackRef
-		]
+		snapshot.Paths[trackRef]
 	if path == "" {
 		http.NotFound(
 			w,

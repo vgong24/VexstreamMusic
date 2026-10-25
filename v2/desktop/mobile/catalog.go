@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/vgong24/VexstreamMusic/v2/desktop/library/filesystem"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/playlists"
 )
 
@@ -25,6 +27,7 @@ type trackProjection struct {
 	Title                string   `json:"title"`
 	Artist               string   `json:"artist"`
 	ArtworkURL           string   `json:"artworkUrl,omitempty"`
+	ArtworkRef           string   `json:"artworkRef,omitempty"`
 	Album                string   `json:"album,omitempty"`
 	Genre                string   `json:"genre,omitempty"`
 	Year                 string   `json:"year,omitempty"`
@@ -51,6 +54,12 @@ type fingerprintCacheEntry struct {
 	Size    int64
 	ModTime int64
 	SHA256  string
+}
+
+type artworkAvailabilityCacheEntry struct {
+	Size      int64
+	ModTime   int64
+	Available bool
 }
 
 func (s *Service) mobileCatalog(w http.ResponseWriter, r *http.Request) {
@@ -85,13 +94,37 @@ func (s *Service) mobileCatalog(w http.ResponseWriter, r *http.Request) {
 			end = &copied
 		}
 
+		artworkURL :=
+			projectArtworkURL(
+				track.ThumbnailURL,
+			)
+		artworkRef := ""
+		if artworkURL == "" {
+			embeddedArtwork, err :=
+				s.embeddedArtworkAvailable(
+					path,
+				)
+			if err != nil {
+				writeJSON(w, http.StatusServiceUnavailable, map[string]string{
+					"error": "library artwork metadata unavailable for " + track.ID,
+				})
+				return
+			}
+			artworkRef =
+				projectArtworkRef(
+					track.ID,
+					embeddedArtwork,
+				)
+		}
+
 		projected = append(projected, trackProjection{
 			TrackRef:             track.ID,
 			MediaSHA256:          sha,
 			MediaByteLength:      size,
 			Title:                track.Title,
 			Artist:               track.Artist,
-			ArtworkURL:           projectArtworkURL(track.ThumbnailURL),
+			ArtworkURL:           artworkURL,
+			ArtworkRef:           artworkRef,
 			Album:                track.Album,
 			Genre:                track.Genre,
 			Year:                 track.Year,
@@ -185,6 +218,101 @@ func (s *Service) mobileMedia(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
+func (s *Service) mobileArtwork(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		w.Header().Set("Allow", "GET, HEAD")
+		writeJSON(
+			w,
+			http.StatusMethodNotAllowed,
+			map[string]string{
+				"error": "GET or HEAD required",
+			},
+		)
+		return
+	}
+
+	trackRef :=
+		strings.TrimPrefix(
+			r.URL.Path,
+			"/v1/artwork/",
+		)
+	if trackRef == "" ||
+		strings.ContainsAny(
+			trackRef,
+			"/\\",
+		) {
+		http.NotFound(
+			w,
+			r,
+		)
+		return
+	}
+
+	snapshot :=
+		s.librarySnapshot()
+	path :=
+		snapshot.Paths[trackRef]
+	if path == "" {
+		http.NotFound(
+			w,
+			r,
+		)
+		return
+	}
+
+	mime, artwork, ok :=
+		filesystem.ReadEmbeddedArtwork(
+			path,
+		)
+	if !ok {
+		http.NotFound(
+			w,
+			r,
+		)
+		return
+	}
+
+	w.Header().Set(
+		"Content-Type",
+		mime,
+	)
+	w.Header().Set(
+		"Content-Length",
+		fmt.Sprintf(
+			"%d",
+			len(artwork),
+		),
+	)
+	w.Header().Set(
+		"Cache-Control",
+		"private, no-store",
+	)
+	w.Header().Set(
+		"X-Content-Type-Options",
+		"nosniff",
+	)
+	w.WriteHeader(
+		http.StatusOK,
+	)
+	if r.Method == http.MethodHead {
+		return
+	}
+	_, _ =
+		w.Write(
+			artwork,
+		)
+}
+
+func projectArtworkRef(
+	trackRef string,
+	embeddedArtwork bool,
+) string {
+	if !embeddedArtwork {
+		return ""
+	}
+	return trackRef
+}
+
 func projectArtworkURL(value string) string {
 	value = strings.TrimSpace(value)
 	if value == "" {
@@ -232,6 +360,44 @@ func projectPlaylists(
 			strings.ToLower(projected[j].Name)
 	})
 	return projected
+}
+
+func (s *Service) embeddedArtworkAvailable(path string) (bool, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+	if !stat.Mode().IsRegular() {
+		return false, errors.New("artwork media path is not a regular file")
+	}
+
+	cacheKey := filepath.Clean(path)
+	modTime := stat.ModTime().UnixNano()
+
+	s.artworkAvailabilityMu.Lock()
+	cached, ok := s.artworkAvailabilityCache[cacheKey]
+	s.artworkAvailabilityMu.Unlock()
+	if ok &&
+		cached.Size == stat.Size() &&
+		cached.ModTime == modTime {
+		return cached.Available, nil
+	}
+
+	available :=
+		filesystem.HasEmbeddedArtwork(
+			path,
+		)
+
+	s.artworkAvailabilityMu.Lock()
+	s.artworkAvailabilityCache[cacheKey] =
+		artworkAvailabilityCacheEntry{
+			Size:      stat.Size(),
+			ModTime:   modTime,
+			Available: available,
+		}
+	s.artworkAvailabilityMu.Unlock()
+
+	return available, nil
 }
 
 func (s *Service) mediaFingerprint(path string) (string, int64, error) {

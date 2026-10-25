@@ -129,6 +129,64 @@ func stringList(value any) []string {
 	return out
 }
 
+const maxEmbeddedArtworkBytes = 8 * 1024 * 1024
+
+// ReadEmbeddedArtwork returns one bounded embedded ID3v2 APIC image without retaining image bytes
+// in the canonical library model. Front-cover (picture type 3) wins; otherwise the first supported
+// embedded image is used.
+func ReadEmbeddedArtwork(path string) (mime string, data []byte, ok bool) {
+	var fallbackMIME string
+	var fallbackData []byte
+
+	forEachID3v2Frame(path, func(id string, payload []byte) bool {
+		if id != "APIC" {
+			return true
+		}
+		candidateMIME, candidateData, pictureType, valid := parseAPIC(payload)
+		if !valid {
+			return true
+		}
+
+		copyData := append([]byte(nil), candidateData...)
+		if pictureType == 3 {
+			mime = candidateMIME
+			data = copyData
+			ok = true
+			return false
+		}
+		if fallbackData == nil {
+			fallbackMIME = candidateMIME
+			fallbackData = copyData
+		}
+		return true
+	})
+
+	if ok {
+		return
+	}
+	if fallbackData != nil {
+		return fallbackMIME, fallbackData, true
+	}
+	return "", nil, false
+}
+
+// HasEmbeddedArtwork answers whether the exact current MP3 contains one supported bounded APIC
+// image. It does not copy or retain artwork bytes; callers that need bytes use ReadEmbeddedArtwork.
+func HasEmbeddedArtwork(path string) bool {
+	found := false
+	forEachID3v2Frame(path, func(id string, payload []byte) bool {
+		if id != "APIC" {
+			return true
+		}
+		if _, _, _, valid := parseAPIC(payload); valid {
+			found = true
+			return false
+		}
+		return true
+	})
+	return found
+}
+
 func readID3(path string) (title, artist, album, genre, year string) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -190,6 +248,126 @@ func readID3(path string) (title, artist, album, genre, year string) {
 		}
 	}
 	return
+}
+
+func forEachID3v2Frame(path string, visit func(id string, payload []byte) bool) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	header := make([]byte, 10)
+	if _, err = io.ReadFull(f, header); err != nil || string(header[:3]) != "ID3" {
+		return
+	}
+
+	version := header[3]
+	if version != 3 && version != 4 {
+		return
+	}
+	size := synchsafe(header[6:10])
+	if size <= 0 || size >= 16*1024*1024 {
+		return
+	}
+	tag := make([]byte, size)
+	if _, err = io.ReadFull(f, tag); err != nil {
+		return
+	}
+
+	for pos := 0; pos+10 <= len(tag); {
+		id := string(tag[pos : pos+4])
+		if strings.Trim(id, "\x00 ") == "" {
+			return
+		}
+		var frameSize int
+		if version == 4 {
+			frameSize = synchsafe(tag[pos+4 : pos+8])
+		} else {
+			frameSize = int(binary.BigEndian.Uint32(tag[pos+4 : pos+8]))
+		}
+		if frameSize <= 0 || pos+10+frameSize > len(tag) {
+			return
+		}
+		if !visit(id, tag[pos+10:pos+10+frameSize]) {
+			return
+		}
+		pos += 10 + frameSize
+	}
+}
+
+func parseAPIC(value []byte) (mime string, data []byte, pictureType byte, ok bool) {
+	if len(value) < 5 {
+		return
+	}
+	encoding := value[0]
+	mimeEnd := bytes.IndexByte(value[1:], 0)
+	if mimeEnd < 0 {
+		return
+	}
+	mimeEnd += 1
+	mime = normalizeArtworkMIME(string(value[1:mimeEnd]))
+	if mime == "" {
+		return "", nil, 0, false
+	}
+
+	pos := mimeEnd + 1
+	if pos >= len(value) {
+		return "", nil, 0, false
+	}
+	pictureType = value[pos]
+	pos++
+
+	descriptionEnd := findEncodedTerminator(value, pos, encoding)
+	if descriptionEnd < 0 {
+		return "", nil, 0, false
+	}
+	if encoding == 1 || encoding == 2 {
+		pos = descriptionEnd + 2
+	} else {
+		pos = descriptionEnd + 1
+	}
+	if pos >= len(value) {
+		return "", nil, 0, false
+	}
+
+	data = value[pos:]
+	if len(data) == 0 || len(data) > maxEmbeddedArtworkBytes {
+		return "", nil, 0, false
+	}
+	return mime, data, pictureType, true
+}
+
+func findEncodedTerminator(value []byte, start int, encoding byte) int {
+	if start < 0 || start >= len(value) {
+		return -1
+	}
+	if encoding == 1 || encoding == 2 {
+		for i := start; i+1 < len(value); i += 2 {
+			if value[i] == 0 && value[i+1] == 0 {
+				return i
+			}
+		}
+		return -1
+	}
+	index := bytes.IndexByte(value[start:], 0)
+	if index < 0 {
+		return -1
+	}
+	return start + index
+}
+
+func normalizeArtworkMIME(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "image/jpeg", "image/jpg":
+		return "image/jpeg"
+	case "image/png":
+		return "image/png"
+	case "image/webp":
+		return "image/webp"
+	default:
+		return ""
+	}
 }
 
 func synchsafe(value []byte) int {

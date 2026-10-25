@@ -3,6 +3,7 @@ package mobile
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
@@ -37,6 +38,104 @@ func testService(
 		t.Fatal(err)
 	}
 	return service
+}
+
+func writeEmbeddedArtworkMP3(
+	t *testing.T,
+	path string,
+	artwork []byte,
+) {
+	t.Helper()
+
+	payload :=
+		append(
+			[]byte{3},
+			[]byte("image/jpeg")...,
+		)
+	payload =
+		append(
+			payload,
+			0,
+			3,
+			0,
+		)
+	payload =
+		append(
+			payload,
+			artwork...,
+		)
+
+	frame :=
+		make(
+			[]byte,
+			10+
+				len(payload),
+		)
+	copy(
+		frame[:4],
+		[]byte("APIC"),
+	)
+	binary.BigEndian.PutUint32(
+		frame[4:8],
+		uint32(
+			len(payload),
+		),
+	)
+	copy(
+		frame[10:],
+		payload,
+	)
+
+	header :=
+		make(
+			[]byte,
+			10,
+		)
+	copy(
+		header[:3],
+		[]byte("ID3"),
+	)
+	header[3] = 3
+	size := len(frame)
+	header[6] =
+		byte(
+			(size >> 21) &
+				0x7f,
+		)
+	header[7] =
+		byte(
+			(size >> 14) &
+				0x7f,
+		)
+	header[8] =
+		byte(
+			(size >> 7) &
+				0x7f,
+		)
+	header[9] =
+		byte(
+			size &
+				0x7f,
+		)
+
+	data :=
+		append(
+			header,
+			frame...,
+		)
+	data =
+		append(
+			data,
+			[]byte("audio")...,
+		)
+	if err :=
+		os.WriteFile(
+			path,
+			data,
+			0o644,
+		); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestCatalogSanitizesDesktopPathsAndBindsMediaBytes(t *testing.T) {
@@ -137,6 +236,197 @@ func TestCatalogSanitizesDesktopPathsAndBindsMediaBytes(t *testing.T) {
 		if strings.Contains(body, forbidden) {
 			t.Fatalf("catalog leaked %q: %s", forbidden, body)
 		}
+	}
+}
+
+func TestCatalogProjectsEmbeddedArtworkRefAndServesBytes(
+	t *testing.T,
+) {
+	root :=
+		t.TempDir()
+	mediaPath :=
+		filepath.Join(
+			root,
+			"embedded.mp3",
+		)
+	artwork :=
+		[]byte{
+			0xff,
+			0xd8,
+			0xff,
+			0xe0,
+			0x4a,
+			0x46,
+			0x49,
+			0x46,
+		}
+	writeEmbeddedArtworkMP3(
+		t,
+		mediaPath,
+		artwork,
+	)
+
+	service :=
+		testService(
+			t,
+			library.Projection{
+				Tracks: []library.Track{{
+					ID:       "track-with-cover",
+					Path:     mediaPath,
+					Filename: "embedded.mp3",
+					Title:    "Embedded",
+					Artist:   "Vex",
+				}},
+				Paths: map[string]string{
+					"track-with-cover": mediaPath,
+				},
+			},
+			nil,
+		)
+
+	catalogRequest :=
+		httptest.NewRequest(
+			http.MethodGet,
+			"/v1/catalog",
+			nil,
+		)
+	catalogResponse :=
+		httptest.NewRecorder()
+	service.mobileCatalog(
+		catalogResponse,
+		catalogRequest,
+	)
+	if catalogResponse.Code !=
+		http.StatusOK {
+		t.Fatalf(
+			"catalog status=%d body=%s",
+			catalogResponse.Code,
+			catalogResponse.Body.String(),
+		)
+	}
+
+	var catalog catalogProjection
+	if err :=
+		json.Unmarshal(
+			catalogResponse.Body.Bytes(),
+			&catalog,
+		); err != nil {
+		t.Fatal(err)
+	}
+	if len(catalog.Tracks) != 1 ||
+		catalog.Tracks[0].ArtworkRef !=
+			"track-with-cover" {
+		t.Fatalf(
+			"artwork projection=%+v",
+			catalog.Tracks,
+		)
+	}
+
+	artworkRequest :=
+		httptest.NewRequest(
+			http.MethodGet,
+			"/v1/artwork/track-with-cover",
+			nil,
+		)
+	artworkResponse :=
+		httptest.NewRecorder()
+	service.mobileArtwork(
+		artworkResponse,
+		artworkRequest,
+	)
+	if artworkResponse.Code !=
+		http.StatusOK {
+		t.Fatalf(
+			"artwork status=%d body=%s",
+			artworkResponse.Code,
+			artworkResponse.Body.String(),
+		)
+	}
+	if artworkResponse.Header().Get(
+		"Content-Type",
+	) != "image/jpeg" {
+		t.Fatalf(
+			"content type=%q",
+			artworkResponse.Header().Get(
+				"Content-Type",
+			),
+		)
+	}
+	if !bytes.Equal(
+		artworkResponse.Body.Bytes(),
+		artwork,
+	) {
+		t.Fatalf(
+			"artwork=%x want=%x",
+			artworkResponse.Body.Bytes(),
+			artwork,
+		)
+	}
+}
+
+func TestEmbeddedArtworkAvailabilityCacheInvalidatesWithFileFingerprint(
+	t *testing.T,
+) {
+	root :=
+		t.TempDir()
+	mediaPath :=
+		filepath.Join(
+			root,
+			"changing.mp3",
+		)
+	writeEmbeddedArtworkMP3(
+		t,
+		mediaPath,
+		[]byte{
+			0xff,
+			0xd8,
+			0xff,
+			0xe0,
+		},
+	)
+
+	service :=
+		testService(
+			t,
+			library.Projection{},
+			nil,
+		)
+
+	available, err :=
+		service.embeddedArtworkAvailable(
+			mediaPath,
+		)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !available {
+		t.Fatal(
+			"embedded artwork was not detected",
+		)
+	}
+
+	if err :=
+		os.WriteFile(
+			mediaPath,
+			[]byte(
+				"plain audio without id3",
+			),
+			0o644,
+		); err != nil {
+		t.Fatal(err)
+	}
+
+	available, err =
+		service.embeddedArtworkAvailable(
+			mediaPath,
+		)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if available {
+		t.Fatal(
+			"stale embedded-artwork availability survived a changed file fingerprint",
+		)
 	}
 }
 
@@ -241,6 +531,7 @@ func TestMobileProjectionRejectsMutationMethods(t *testing.T) {
 		{"/v1/health", service.lanHealth},
 		{"/v1/catalog", service.mobileCatalog},
 		{"/v1/media/track-ref", service.mobileMedia},
+		{"/v1/artwork/track-ref", service.mobileArtwork},
 	} {
 		request := httptest.NewRequest(
 			http.MethodPost,

@@ -1,6 +1,7 @@
 package filesystem
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -30,6 +31,51 @@ func copyFile(t *testing.T, from, to string) {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(to, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeEmbeddedArtworkFixture(
+	t *testing.T,
+	path string,
+	artwork []byte,
+) {
+	t.Helper()
+
+	payload := append(
+		[]byte{3},
+		[]byte("image/jpeg")...,
+	)
+	payload = append(payload, 0, 3, 0)
+	payload = append(payload, artwork...)
+
+	frame := make([]byte, 10+len(payload))
+	copy(frame[:4], []byte("APIC"))
+	binary.BigEndian.PutUint32(
+		frame[4:8],
+		uint32(len(payload)),
+	)
+	copy(frame[10:], payload)
+
+	tagHeader := make([]byte, 10)
+	copy(tagHeader[:3], []byte("ID3"))
+	tagHeader[3] = 3
+	size := len(frame)
+	tagHeader[6] = byte((size >> 21) & 0x7f)
+	tagHeader[7] = byte((size >> 14) & 0x7f)
+	tagHeader[8] = byte((size >> 7) & 0x7f)
+	tagHeader[9] = byte(size & 0x7f)
+
+	data := append(tagHeader, frame...)
+	data = append(
+		data,
+		[]byte("audio")...,
+	)
+	if err := os.WriteFile(
+		path,
+		data,
+		0o644,
+	); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -77,6 +123,98 @@ func TestReadTrackPreservesV3ID3AndCatalogProvenance(t *testing.T) {
 	}
 	if !reflect.DeepEqual(track.Tags, []string{"test", "tone"}) || !reflect.DeepEqual(track.Categories, []string{"Music"}) {
 		t.Fatalf("catalog lists drift: %+v", track)
+	}
+}
+
+func TestEmbeddedArtworkAvailabilityAndBytesAreDerivedFromCurrentFile(t *testing.T) {
+	root := t.TempDir()
+	media := filepath.Join(
+		root,
+		"cover.mp3",
+	)
+	artwork :=
+		[]byte{
+			0xff,
+			0xd8,
+			0xff,
+			0xe0,
+			0x00,
+			0x10,
+			0x4a,
+			0x46,
+			0x49,
+			0x46,
+		}
+	writeEmbeddedArtworkFixture(
+		t,
+		media,
+		artwork,
+	)
+
+	if !HasEmbeddedArtwork(
+		media,
+	) {
+		t.Fatal(
+			"embedded artwork availability was not derived from the MP3",
+		)
+	}
+
+	mime, got, ok :=
+		ReadEmbeddedArtwork(
+			media,
+		)
+	if !ok {
+		t.Fatal(
+			"embedded artwork bytes were not readable",
+		)
+	}
+	if mime != "image/jpeg" {
+		t.Fatalf(
+			"mime=%q",
+			mime,
+		)
+	}
+	if !reflect.DeepEqual(
+		got,
+		artwork,
+	) {
+		t.Fatalf(
+			"artwork=%x want=%x",
+			got,
+			artwork,
+		)
+	}
+}
+
+func TestParseAPICRejectsOversizedArtwork(t *testing.T) {
+	payload :=
+		append(
+			[]byte{3},
+			[]byte("image/jpeg")...,
+		)
+	payload =
+		append(
+			payload,
+			0,
+			3,
+			0,
+		)
+	payload =
+		append(
+			payload,
+			make(
+				[]byte,
+				maxEmbeddedArtworkBytes+1,
+			)...,
+		)
+
+	if _, _, _, ok :=
+		parseAPIC(
+			payload,
+		); ok {
+		t.Fatal(
+			"oversized APIC artwork was accepted",
+		)
 	}
 }
 

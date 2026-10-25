@@ -7,7 +7,7 @@
 //	-> advertise _vexstream._tcp with the persistent TLS fingerprint
 //	-> VexLife selects the producer and compares the six-digit code
 //	-> Desktop approves or denies the request
-//	-> a remembered bearer authorizes only /v1/catalog and /v1/media/<trackRef>
+//	-> a remembered bearer authorizes only /v1/catalog, /v1/media/<trackRef> and /v1/artwork/<trackRef>
 //
 // The ordinary Desktop browser/admin server remains loopback-only. This package does not own
 // desktop administration, remote/off-home authority, Home membership, or Android presentation.
@@ -67,6 +67,9 @@ type Service struct {
 
 	fingerprintMu    sync.Mutex
 	fingerprintCache map[string]fingerprintCacheEntry
+
+	artworkAvailabilityMu    sync.Mutex
+	artworkAvailabilityCache map[string]artworkAvailabilityCacheEntry
 }
 
 func New(options Options) (*Service, error) {
@@ -87,13 +90,14 @@ func New(options Options) (*Service, error) {
 	}
 
 	service := &Service{
-		root:             options.Root,
-		version:          options.Version,
-		librarySnapshot:  options.LibrarySnapshot,
-		playlistSnapshot: options.PlaylistSnapshot,
-		pending:          map[string]*pendingPairing{},
-		devices:          map[string]pairedDevice{},
-		fingerprintCache: map[string]fingerprintCacheEntry{},
+		root:                     options.Root,
+		version:                  options.Version,
+		librarySnapshot:          options.LibrarySnapshot,
+		playlistSnapshot:         options.PlaylistSnapshot,
+		pending:                  map[string]*pendingPairing{},
+		devices:                  map[string]pairedDevice{},
+		fingerprintCache:         map[string]fingerprintCacheEntry{},
+		artworkAvailabilityCache: map[string]artworkAvailabilityCacheEntry{},
 	}
 
 	service.certPath = filepath.Join(options.Root, "server-cert.pem")
@@ -167,6 +171,7 @@ func (s *Service) EnsureStarted() error {
 	mux.HandleFunc("/v1/pairing/revoke-self", s.authorized(s.pairingRevokeSelf))
 	mux.HandleFunc("/v1/catalog", s.authorized(s.mobileCatalog))
 	mux.HandleFunc("/v1/media/", s.authorized(s.mobileMedia))
+	mux.HandleFunc("/v1/artwork/", s.authorized(s.mobileArtwork))
 
 	server := &http.Server{
 		Handler:           mux,

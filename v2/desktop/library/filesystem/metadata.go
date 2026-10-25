@@ -170,7 +170,6 @@ func ReadEmbeddedArtwork(path string) (mime string, data []byte, ok bool) {
 	return "", nil, false
 }
 
-
 // HasEmbeddedArtwork answers whether the exact current MP3 contains one supported bounded APIC
 // image. It does not copy or retain artwork bytes; callers that need bytes use ReadEmbeddedArtwork.
 func HasEmbeddedArtwork(path string) bool {

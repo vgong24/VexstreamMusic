@@ -90,12 +90,12 @@ func New(options Options) (*Service, error) {
 	}
 
 	service := &Service{
-		root:             options.Root,
-		version:          options.Version,
-		librarySnapshot:  options.LibrarySnapshot,
-		playlistSnapshot: options.PlaylistSnapshot,
-		pending:          map[string]*pendingPairing{},
-		devices:          map[string]pairedDevice{},
+		root:                     options.Root,
+		version:                  options.Version,
+		librarySnapshot:          options.LibrarySnapshot,
+		playlistSnapshot:         options.PlaylistSnapshot,
+		pending:                  map[string]*pendingPairing{},
+		devices:                  map[string]pairedDevice{},
 		fingerprintCache:         map[string]fingerprintCacheEntry{},
 		artworkAvailabilityCache: map[string]artworkAvailabilityCacheEntry{},
 	}

@@ -186,7 +186,6 @@ func TestEmbeddedArtworkAvailabilityAndBytesAreDerivedFromCurrentFile(t *testing
 	}
 }
 
-
 func TestParseAPICRejectsOversizedArtwork(t *testing.T) {
 	payload :=
 		append(

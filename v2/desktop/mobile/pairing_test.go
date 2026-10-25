@@ -68,15 +68,12 @@ func TestArtworkRouteUsesStoredBearerAuthorization(t *testing.T) {
 		sha256.Sum256(
 			[]byte(token),
 		)
-	service.devices[
-		"vexlife.fixture",
-	] =
+	service.devices["vexlife.fixture"] =
 		pairedDevice{
 			DeviceRef: "vexlife.fixture",
-			TokenHash:
-				hex.EncodeToString(
-					sum[:],
-				),
+			TokenHash: hex.EncodeToString(
+				sum[:],
+			),
 		}
 
 	handler :=

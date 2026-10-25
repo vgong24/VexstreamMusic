@@ -270,19 +270,16 @@ func TestCatalogProjectsEmbeddedArtworkRefAndServesBytes(
 		testService(
 			t,
 			library.Projection{
-				Tracks:
-					[]library.Track{{
-						ID: "track-with-cover",
-						Path: mediaPath,
-						Filename: "embedded.mp3",
-						Title: "Embedded",
-						Artist: "Vex",
-					}},
-				Paths:
-					map[string]string{
-						"track-with-cover":
-							mediaPath,
-					},
+				Tracks: []library.Track{{
+					ID:       "track-with-cover",
+					Path:     mediaPath,
+					Filename: "embedded.mp3",
+					Title:    "Embedded",
+					Artist:   "Vex",
+				}},
+				Paths: map[string]string{
+					"track-with-cover": mediaPath,
+				},
 			},
 			nil,
 		)
@@ -437,10 +434,10 @@ func TestProjectArtworkURLAllowsOnlyHttps(t *testing.T) {
 	cases := map[string]string{
 		"":                                      "",
 		"   ":                                   "",
-		"file:///private/cover.jpg":              "",
-		"http://images.example.test/cover.jpg":   "",
-		"javascript:alert(1)":                    "",
-		"https://images.example.test/cover.jpg":  "https://images.example.test/cover.jpg",
+		"file:///private/cover.jpg":             "",
+		"http://images.example.test/cover.jpg":  "",
+		"javascript:alert(1)":                   "",
+		"https://images.example.test/cover.jpg": "https://images.example.test/cover.jpg",
 		" https://images.example.test/cover.jpg ": "https://images.example.test/cover.jpg",
 	}
 

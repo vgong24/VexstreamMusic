@@ -248,9 +248,10 @@ func (s *Service) mobileArtwork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path :=
+	snapshot :=
 		s.librarySnapshot()
-			.Paths[
+	path :=
+		snapshot.Paths[
 			trackRef
 		]
 	if path == "" {

@@ -144,10 +144,10 @@ func TestProjectArtworkURLAllowsOnlyHttps(t *testing.T) {
 	cases := map[string]string{
 		"":                                      "",
 		"   ":                                   "",
-		"file:///private/cover.jpg":              "",
-		"http://images.example.test/cover.jpg":   "",
-		"javascript:alert(1)":                    "",
-		"https://images.example.test/cover.jpg":  "https://images.example.test/cover.jpg",
+		"file:///private/cover.jpg":             "",
+		"http://images.example.test/cover.jpg":  "",
+		"javascript:alert(1)":                   "",
+		"https://images.example.test/cover.jpg": "https://images.example.test/cover.jpg",
 		" https://images.example.test/cover.jpg ": "https://images.example.test/cover.jpg",
 	}
 

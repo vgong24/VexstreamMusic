@@ -67,6 +67,9 @@ type Service struct {
 
 	fingerprintMu    sync.Mutex
 	fingerprintCache map[string]fingerprintCacheEntry
+
+	artworkAvailabilityMu    sync.Mutex
+	artworkAvailabilityCache map[string]artworkAvailabilityCacheEntry
 }
 
 func New(options Options) (*Service, error) {
@@ -93,7 +96,8 @@ func New(options Options) (*Service, error) {
 		playlistSnapshot: options.PlaylistSnapshot,
 		pending:          map[string]*pendingPairing{},
 		devices:          map[string]pairedDevice{},
-		fingerprintCache: map[string]fingerprintCacheEntry{},
+		fingerprintCache:         map[string]fingerprintCacheEntry{},
+		artworkAvailabilityCache: map[string]artworkAvailabilityCacheEntry{},
 	}
 
 	service.certPath = filepath.Join(options.Root, "server-cert.pem")

@@ -7,7 +7,7 @@
 //	-> advertise _vexstream._tcp with the persistent TLS fingerprint
 //	-> VexLife selects the producer and compares the six-digit code
 //	-> Desktop approves or denies the request
-//	-> a remembered bearer authorizes only /v1/catalog and /v1/media/<trackRef>
+//	-> a remembered bearer authorizes only /v1/catalog, /v1/media/<trackRef> and /v1/artwork/<trackRef>
 //
 // The ordinary Desktop browser/admin server remains loopback-only. This package does not own
 // desktop administration, remote/off-home authority, Home membership, or Android presentation.
@@ -167,6 +167,7 @@ func (s *Service) EnsureStarted() error {
 	mux.HandleFunc("/v1/pairing/revoke-self", s.authorized(s.pairingRevokeSelf))
 	mux.HandleFunc("/v1/catalog", s.authorized(s.mobileCatalog))
 	mux.HandleFunc("/v1/media/", s.authorized(s.mobileMedia))
+	mux.HandleFunc("/v1/artwork/", s.authorized(s.mobileArtwork))
 
 	server := &http.Server{
 		Handler:           mux,

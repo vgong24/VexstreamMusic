@@ -52,7 +52,7 @@ func readTrack(path, source string, catalog map[string]catalogMeta) library.Trac
 		Title:    title,
 		Artist:   artist,
 		Album:    album,
-		Genre:    genre,
+		Genre:            genre,
 		Year:             year,
 		Source:           source,
 		EmbeddedArtwork: embeddedArtwork,

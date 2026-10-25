@@ -277,7 +277,6 @@ func TestCatalogProjectsEmbeddedArtworkRefAndServesBytes(
 						Filename: "embedded.mp3",
 						Title: "Embedded",
 						Artist: "Vex",
-						EmbeddedArtwork: true,
 					}},
 				Paths:
 					map[string]string{
@@ -364,6 +363,72 @@ func TestCatalogProjectsEmbeddedArtworkRefAndServesBytes(
 			"artwork=%x want=%x",
 			artworkResponse.Body.Bytes(),
 			artwork,
+		)
+	}
+}
+
+func TestEmbeddedArtworkAvailabilityCacheInvalidatesWithFileFingerprint(
+	t *testing.T,
+) {
+	root :=
+		t.TempDir()
+	mediaPath :=
+		filepath.Join(
+			root,
+			"changing.mp3",
+		)
+	writeEmbeddedArtworkMP3(
+		t,
+		mediaPath,
+		[]byte{
+			0xff,
+			0xd8,
+			0xff,
+			0xe0,
+		},
+	)
+
+	service :=
+		testService(
+			t,
+			library.Projection{},
+			nil,
+		)
+
+	available, err :=
+		service.embeddedArtworkAvailable(
+			mediaPath,
+		)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !available {
+		t.Fatal(
+			"embedded artwork was not detected",
+		)
+	}
+
+	if err :=
+		os.WriteFile(
+			mediaPath,
+			[]byte(
+				"plain audio without id3",
+			),
+			0o644,
+		); err != nil {
+		t.Fatal(err)
+	}
+
+	available, err =
+		service.embeddedArtworkAvailable(
+			mediaPath,
+		)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if available {
+		t.Fatal(
+			"stale embedded-artwork availability survived a changed file fingerprint",
 		)
 	}
 }

@@ -301,7 +301,7 @@ func TestScanUsesIndexedAtForFirstSeenAndSkipsIgnoredDirectories(t *testing.T) {
 	}
 }
 
-func TestCacheV2RoundTripsAndLegacyV1IsDiscarded(t *testing.T) {
+func TestCacheV3RoundTripsAndLegacyCachesAreDiscarded(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "library-cache.json")
 	entries := map[string]library.CacheEntry{
 		"a": {Path: "/music/a.mp3", Track: library.Track{ID: "a", Title: "A"}},
@@ -317,16 +317,41 @@ func TestCacheV2RoundTripsAndLegacyV1IsDiscarded(t *testing.T) {
 		t.Fatalf("v2 cache round-trip drift: %+v", loaded)
 	}
 
-	legacy := []byte(`{"schemaVersion":"vexstream.library-index/v1","entries":[{"path":"/old.mp3"}]}`)
-	if err := os.WriteFile(path, legacy, 0o644); err != nil {
-		t.Fatal(err)
-	}
-	loaded, err = LoadCache(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !loaded.DiscardedLegacy || len(loaded.Entries) != 0 {
-		t.Fatalf("legacy v1 cache was not deliberately discarded: %+v", loaded)
+	for _, schema := range []string{
+		"vexstream.library-index/v1",
+		"vexstream.library-index/v2",
+	} {
+		legacy :=
+			[]byte(
+				`{"schemaVersion":"` +
+					schema +
+					`","entries":[{"path":"/old.mp3"}]}`,
+			)
+		if err :=
+			os.WriteFile(
+				path,
+				legacy,
+				0o644,
+			); err != nil {
+			t.Fatal(err)
+		}
+		loaded, err =
+			LoadCache(
+				path,
+			)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !loaded.DiscardedLegacy ||
+			len(
+				loaded.Entries,
+			) != 0 {
+			t.Fatalf(
+				"legacy %s cache was not deliberately discarded: %+v",
+				schema,
+				loaded,
+			)
+		}
 	}
 }
 

@@ -41,7 +41,7 @@ func ReadTrack(path, source string) library.Track {
 }
 
 func readTrack(path, source string, catalog map[string]catalogMeta) library.Track {
-	title, artist, album, genre, year, embeddedArtwork := readID3(path)
+	title, artist, album, genre, year := readID3(path)
 	if title == "" {
 		title = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	}
@@ -52,10 +52,9 @@ func readTrack(path, source string, catalog map[string]catalogMeta) library.Trac
 		Title:    title,
 		Artist:   artist,
 		Album:    album,
-		Genre:            genre,
-		Year:             year,
-		Source:           source,
-		EmbeddedArtwork: embeddedArtwork,
+		Genre:    genre,
+		Year:     year,
+		Source:   source,
 	}
 	if c, ok := catalog[filepath.Base(path)]; ok {
 		t.Duration = c.Duration
@@ -171,36 +170,73 @@ func ReadEmbeddedArtwork(path string) (mime string, data []byte, ok bool) {
 	return "", nil, false
 }
 
-func readID3(path string) (title, artist, album, genre, year string, embeddedArtwork bool) {
+
+// HasEmbeddedArtwork answers whether the exact current MP3 contains one supported bounded APIC
+// image. It does not copy or retain artwork bytes; callers that need bytes use ReadEmbeddedArtwork.
+func HasEmbeddedArtwork(path string) bool {
+	found := false
 	forEachID3v2Frame(path, func(id string, payload []byte) bool {
-		switch id {
-		case "TIT2":
-			title = decodeText(payload)
-		case "TPE1":
-			artist = decodeText(payload)
-		case "TALB":
-			album = decodeText(payload)
-		case "TCON":
-			genre = decodeText(payload)
-		case "TDRC", "TYER":
-			if year == "" {
-				year = decodeText(payload)
-			}
-		case "APIC":
-			if _, _, _, valid := parseAPIC(payload); valid {
-				embeddedArtwork = true
-			}
+		if id != "APIC" {
+			return true
+		}
+		if _, _, _, valid := parseAPIC(payload); valid {
+			found = true
+			return false
 		}
 		return true
 	})
+	return found
+}
 
-	if title == "" && artist == "" && album == "" {
-		f, err := os.Open(path)
-		if err != nil {
-			return
+func readID3(path string) (title, artist, album, genre, year string) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	header := make([]byte, 10)
+	if _, err = io.ReadFull(f, header); err == nil && string(header[:3]) == "ID3" {
+		version := header[3]
+		size := synchsafe(header[6:10])
+		if size > 0 && size < 16*1024*1024 {
+			tag := make([]byte, size)
+			if _, err = io.ReadFull(f, tag); err == nil {
+				for pos := 0; pos+10 <= len(tag); {
+					id := string(tag[pos : pos+4])
+					if strings.Trim(id, "\x00 ") == "" {
+						break
+					}
+					var frameSize int
+					if version == 4 {
+						frameSize = synchsafe(tag[pos+4 : pos+8])
+					} else {
+						frameSize = int(binary.BigEndian.Uint32(tag[pos+4 : pos+8]))
+					}
+					if frameSize <= 0 || pos+10+frameSize > len(tag) {
+						break
+					}
+					text := decodeText(tag[pos+10 : pos+10+frameSize])
+					switch id {
+					case "TIT2":
+						title = text
+					case "TPE1":
+						artist = text
+					case "TALB":
+						album = text
+					case "TCON":
+						genre = text
+					case "TDRC", "TYER":
+						if year == "" {
+							year = text
+						}
+					}
+					pos += 10 + frameSize
+				}
+			}
 		}
-		defer f.Close()
-
+	}
+	if title == "" && artist == "" && album == "" {
 		stat, _ := f.Stat()
 		if stat != nil && stat.Size() >= 128 {
 			block := make([]byte, 128)

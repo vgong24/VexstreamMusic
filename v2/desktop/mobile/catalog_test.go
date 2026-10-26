@@ -654,9 +654,7 @@ func TestMediaRangeStressPreservesExactBytesAcrossSequentialAndBackwardDemand(
 				)
 			}
 
-			expected := mediaBytes[
-				testCase.start : testCase.end+1
-			]
+			expected := mediaBytes[testCase.start : testCase.end+1]
 			if !bytes.Equal(body, expected) {
 				t.Fatalf(
 					"range %s returned wrong bytes",

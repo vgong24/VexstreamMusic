@@ -6,12 +6,14 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/vgong24/VexstreamMusic/v2/desktop/library"
 	"github.com/vgong24/VexstreamMusic/v2/desktop/playlists"
@@ -518,6 +520,155 @@ func TestMediaSupportsExactRangeReads(t *testing.T) {
 			"Accept-Ranges=%q",
 			response.Header().Get("Accept-Ranges"),
 		)
+	}
+}
+
+func TestMediaRangeStressPreservesExactBytesAcrossSequentialAndBackwardDemand(
+	t *testing.T,
+) {
+	const mediaSize = 4 * 1024 * 1024
+	mediaBytes := make([]byte, mediaSize)
+	for index := range mediaBytes {
+		mediaBytes[index] = byte((index*31 + 7) % 251)
+	}
+
+	root := t.TempDir()
+	mediaPath := filepath.Join(root, "stress.mp3")
+	if err := os.WriteFile(
+		mediaPath,
+		mediaBytes,
+		0o644,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	service := testService(
+		t,
+		library.Projection{
+			Paths: map[string]string{
+				"stress-track": mediaPath,
+			},
+		},
+		nil,
+	)
+	server := httptest.NewServer(
+		http.HandlerFunc(service.mobileMedia),
+	)
+	defer server.Close()
+
+	cases := []struct {
+		name         string
+		rangeHeader  string
+		contentRange string
+		start        int
+		end          int
+	}{
+		{
+			name:         "sequential-first",
+			rangeHeader:  "bytes=0-524287",
+			contentRange: "bytes 0-524287/4194304",
+			start:        0,
+			end:          524287,
+		},
+		{
+			name:         "sequential-second",
+			rangeHeader:  "bytes=524288-1048575",
+			contentRange: "bytes 524288-1048575/4194304",
+			start:        524288,
+			end:          1048575,
+		},
+		{
+			name:         "forward-seek",
+			rangeHeader:  "bytes=2097152-2621439",
+			contentRange: "bytes 2097152-2621439/4194304",
+			start:        2097152,
+			end:          2621439,
+		},
+		{
+			name:         "backward-seek",
+			rangeHeader:  "bytes=262144-786431",
+			contentRange: "bytes 262144-786431/4194304",
+			start:        262144,
+			end:          786431,
+		},
+		{
+			name:         "tail-range",
+			rangeHeader:  "bytes=3670016-4194303",
+			contentRange: "bytes 3670016-4194303/4194304",
+			start:        3670016,
+			end:          4194303,
+		},
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			request, err := http.NewRequest(
+				http.MethodGet,
+				server.URL+"/v1/media/stress-track",
+				nil,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			request.Header.Set(
+				"Range",
+				testCase.rangeHeader,
+			)
+
+			started := time.Now()
+			response, err := server.Client().Do(request)
+			if err != nil {
+				t.Fatal(err)
+			}
+			body, readErr := io.ReadAll(response.Body)
+			closeErr := response.Body.Close()
+			elapsed := time.Since(started)
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			if closeErr != nil {
+				t.Fatal(closeErr)
+			}
+
+			if response.StatusCode != http.StatusPartialContent {
+				t.Fatalf(
+					"range %s status=%d body-bytes=%d",
+					testCase.rangeHeader,
+					response.StatusCode,
+					len(body),
+				)
+			}
+			if response.Header.Get("Accept-Ranges") != "bytes" {
+				t.Fatalf(
+					"range %s Accept-Ranges=%q",
+					testCase.rangeHeader,
+					response.Header.Get("Accept-Ranges"),
+				)
+			}
+			if response.Header.Get("Content-Range") != testCase.contentRange {
+				t.Fatalf(
+					"range %s Content-Range=%q want=%q",
+					testCase.rangeHeader,
+					response.Header.Get("Content-Range"),
+					testCase.contentRange,
+				)
+			}
+
+			expected := mediaBytes[testCase.start : testCase.end+1]
+			if !bytes.Equal(body, expected) {
+				t.Fatalf(
+					"range %s returned wrong bytes",
+					testCase.rangeHeader,
+				)
+			}
+
+			t.Logf(
+				"range=%s bytes=%d elapsed=%s",
+				testCase.rangeHeader,
+				len(body),
+				elapsed,
+			)
+		})
 	}
 }
 

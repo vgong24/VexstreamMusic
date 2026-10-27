@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -24,6 +25,7 @@ type mobileTrackProjection struct {
 	MediaByteLength      int64    `json:"mediaByteLength"`
 	Title                string   `json:"title"`
 	Artist               string   `json:"artist"`
+	ArtworkURL           string   `json:"artworkUrl,omitempty"`
 	Album                string   `json:"album,omitempty"`
 	Genre                string   `json:"genre,omitempty"`
 	Year                 string   `json:"year,omitempty"`
@@ -148,6 +150,7 @@ func (a *App) mobileCatalog(w http.ResponseWriter, r *http.Request) {
 			MediaByteLength:      size,
 			Title:                track.Title,
 			Artist:               track.Artist,
+			ArtworkURL:           projectMobileArtworkURL(track.ThumbnailURL),
 			Album:                track.Album,
 			Genre:                track.Genre,
 			Year:                 track.Year,
@@ -334,4 +337,38 @@ func mobileMediaFingerprint(path string) (string, int64, error) {
 	mobileMediaFingerprintCache.Unlock()
 
 	return sha, stat.Size(), nil
+}
+
+func projectMobileArtworkURL(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+
+	parsed, err := url.Parse(value)
+	if err != nil ||
+		parsed.Scheme != "https" ||
+		parsed.Host == "" ||
+		parsed.User != nil {
+		return ""
+	}
+
+	host := strings.ToLower(strings.TrimSuffix(parsed.Hostname(), "."))
+	if host == "" ||
+		host == "localhost" ||
+		strings.HasSuffix(host, ".localhost") ||
+		host == "local" ||
+		strings.HasSuffix(host, ".local") {
+		return ""
+	}
+
+	if ip := net.ParseIP(host); ip != nil {
+		if !ip.IsGlobalUnicast() || ip.IsPrivate() {
+			return ""
+		}
+	} else if !strings.Contains(host, ".") {
+		return ""
+	}
+
+	return parsed.String()
 }

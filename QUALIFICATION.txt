@@ -1,0 +1,26 @@
+[VXG RealForever]
+VexStream Music 1.1.7 qualification
+
+sourceExe=VexStreamMusic-1.1.5.exe
+sourceExeSha256=e5c06539522bed4e265f7fca6b90cbf13a76d6220bfbec2065b225ca1455ed7f
+candidateExe=VexStreamMusic-1.1.7.exe
+candidateExeSha256=1050a2364c617bce93663b21046ffb7419e96a231f748b02e9166c3091a1a4cc
+candidateUiSha256=7c8292b290b5299beb05a53e059d2abdec75d0c199f8f7b3a436a82cb40e240f
+sourceBytes=6903808
+candidateBytes=6903808
+
+uiQueueRegression=7_PASS__0_FAIL
+artifactRegression=15_PASS__0_FAIL
+inlineScriptParse=PASS
+patchReproducibility=PASS
+wrongBaselineRejection=PASS
+compiledLaunchGuard115=ABSENT
+compiledLaunchGuard117=UNIQUE_AT_0x2cd120
+nonUiDiffOffsets=[0x2cd131,0x39c751,0x3bdfca]
+nonUiDiffSemantics=ASCII_5_TO_7_ONLY
+GoBuildInfo=go1.23.2|command-line-arguments|windows-amd64
+WindowsRuntimeSmoke=NOT_RUN_NO_WINDOWS_EXECUTION_SURFACE
+
+Failed candidate note:
+1.1.6 changed UI/data version strings but left the compiled main.main startup comparator at ASCII '5'.
+A running 1.1.5 session could therefore be opened as if it were the same version.

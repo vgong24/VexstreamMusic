@@ -346,7 +346,27 @@ func projectMobileArtworkURL(value string) string {
 	}
 
 	parsed, err := url.Parse(value)
-	if err != nil || parsed.Scheme != "https" || parsed.Host == "" {
+	if err != nil ||
+		parsed.Scheme != "https" ||
+		parsed.Host == "" ||
+		parsed.User != nil {
+		return ""
+	}
+
+	host := strings.ToLower(strings.TrimSuffix(parsed.Hostname(), "."))
+	if host == "" ||
+		host == "localhost" ||
+		strings.HasSuffix(host, ".localhost") ||
+		host == "local" ||
+		strings.HasSuffix(host, ".local") {
+		return ""
+	}
+
+	if ip := net.ParseIP(host); ip != nil {
+		if !ip.IsGlobalUnicast() || ip.IsPrivate() {
+			return ""
+		}
+	} else if !strings.Contains(host, ".") {
 		return ""
 	}
 

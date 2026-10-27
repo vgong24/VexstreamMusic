@@ -198,6 +198,36 @@ func TestProjectMobileArtworkURLAdmitsOnlyExternalHTTPS(t *testing.T) {
 			input: "https:///cover.jpg",
 			want:  "",
 		},
+		{
+			name:  "userinfo credentials rejected",
+			input: "https://user:secret@images.example.test/cover.jpg",
+			want:  "",
+		},
+		{
+			name:  "localhost rejected",
+			input: "https://localhost/cover.jpg",
+			want:  "",
+		},
+		{
+			name:  "private IPv4 rejected",
+			input: "https://192.168.1.10/cover.jpg",
+			want:  "",
+		},
+		{
+			name:  "loopback IPv6 rejected",
+			input: "https://[::1]/cover.jpg",
+			want:  "",
+		},
+		{
+			name:  "mDNS local host rejected",
+			input: "https://artwork.local/cover.jpg",
+			want:  "",
+		},
+		{
+			name:  "single-label host rejected",
+			input: "https://artwork/cover.jpg",
+			want:  "",
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if got := projectMobileArtworkURL(test.input); got != test.want {

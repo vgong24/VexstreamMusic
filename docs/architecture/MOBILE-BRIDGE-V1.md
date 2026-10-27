@@ -74,6 +74,7 @@ tracks[]
   mediaByteLength
   title
   artist
+  artworkUrl?   # admitted external HTTPS metadata only
   album
   genre
   year
@@ -85,6 +86,12 @@ tracks[]
 It deliberately excludes desktop paths, filenames, source-folder locations, provider/private
 configuration, credentials, raw Home/model endpoints, import controls, diagnostics, repair controls,
 and arbitrary administrative actions.
+
+For the protected V3 / same-Wi-Fi producer, `artworkUrl` is optional presentation metadata projected
+only from the existing library-owned `Track.ThumbnailURL` when that value is an absolute HTTPS URL.
+It is not media identity, does not carry credentials, and does not authorize a new fetch surface.
+Embedded MP3 artwork remains owned by the V4 producer's authenticated `artworkRef` route rather than
+being duplicated into this protected V3 bridge.
 
 ## Identity
 

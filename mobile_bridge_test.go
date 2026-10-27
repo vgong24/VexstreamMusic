@@ -32,6 +32,7 @@ func TestMobileCatalogSanitizesDesktopPathsAndBindsMediaBytes(t *testing.T) {
 			Filename:      "song.mp3",
 			Title:         "On The Go",
 			Artist:        "Vex",
+			ThumbnailURL:  "https://images.example.test/vexstream-cover.jpg",
 			Album:         "Mobile",
 			Genre:         "Test",
 			Year:          "2026",
@@ -72,6 +73,9 @@ func TestMobileCatalogSanitizesDesktopPathsAndBindsMediaBytes(t *testing.T) {
 	}
 	if got.MediaByteLength != int64(len(mediaBytes)) {
 		t.Fatalf("media length=%d", got.MediaByteLength)
+	}
+	if got.ArtworkURL != "https://images.example.test/vexstream-cover.jpg" {
+		t.Fatalf("artwork URL=%q", got.ArtworkURL)
 	}
 	if got.PlaybackStartSeconds != 2 || got.PlaybackEndSeconds == nil || *got.PlaybackEndSeconds != 18 {
 		t.Fatalf("playback window=%v..%v", got.PlaybackStartSeconds, got.PlaybackEndSeconds)
@@ -165,5 +169,41 @@ func TestMobileBridgeRejectsMutationMethods(t *testing.T) {
 		if response.Code != http.StatusMethodNotAllowed {
 			t.Fatalf("%s POST status=%d", target.path, response.Code)
 		}
+	}
+}
+
+
+func TestProjectMobileArtworkURLAdmitsOnlyExternalHTTPS(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "https",
+			input: "  https://images.example.test/cover.jpg  ",
+			want:  "https://images.example.test/cover.jpg",
+		},
+		{
+			name:  "http rejected",
+			input: "http://images.example.test/cover.jpg",
+			want:  "",
+		},
+		{
+			name:  "relative rejected",
+			input: "/private/cover.jpg",
+			want:  "",
+		},
+		{
+			name:  "missing host rejected",
+			input: "https:///cover.jpg",
+			want:  "",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := projectMobileArtworkURL(test.input); got != test.want {
+				t.Fatalf("projectMobileArtworkURL(%q)=%q want=%q", test.input, got, test.want)
+			}
+		})
 	}
 }

@@ -1,3 +1,0 @@
-# Canonical Go formatting is byte-sensitive. Keep tracked Go source LF on every host
-# so Windows checkout policy cannot manufacture false gofmt drift.
-*.go text eol=lf

@@ -172,7 +172,6 @@ func TestMobileBridgeRejectsMutationMethods(t *testing.T) {
 	}
 }
 
-
 func TestProjectMobileArtworkURLAdmitsOnlyExternalHTTPS(t *testing.T) {
 	for _, test := range []struct {
 		name  string

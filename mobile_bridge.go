@@ -339,7 +339,6 @@ func mobileMediaFingerprint(path string) (string, int64, error) {
 	return sha, stat.Size(), nil
 }
 
-
 func projectMobileArtworkURL(value string) string {
 	value = strings.TrimSpace(value)
 	if value == "" {

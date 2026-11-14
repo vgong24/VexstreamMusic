@@ -2,6 +2,10 @@
 
 `[VXG RealForever]`
 
+<p align="center">
+  <img src="assets/brand/vexstream-music-logo.png" width="128" alt="VexStream Music logo">
+</p>
+
 VexStream Music is a local-first desktop music library and player. It opens its interface in your
 browser, keeps ordinary desktop administration local to the computer, and can expose a bounded
 same-Wi-Fi music surface to VexLife Android for streaming and verified offline copies.

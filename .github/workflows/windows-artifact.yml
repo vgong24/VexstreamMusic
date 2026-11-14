@@ -1,0 +1,49 @@
+name: Windows VexStream artifact
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Prepare Go 1.23.2
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+
+      - name: Build and qualify Windows executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA="$(git rev-parse HEAD)"
+          python v2/build_windows.py --source-ref "$SOURCE_SHA"
+
+      - name: Verify embedded app icon resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          objdump -x dist/VexStreamMusic-4.0.0.exe > dist/VexStreamMusic-4.0.0-Windows-resources.txt
+          grep -q 'Entry: ID: 0x000003' dist/VexStreamMusic-4.0.0-Windows-resources.txt
+          grep -q 'Entry: ID: 0x00000e' dist/VexStreamMusic-4.0.0-Windows-resources.txt
+
+      - name: Upload qualified Windows executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: VexStreamMusic-4.0.0-Windows
+          path: |
+            dist/VexStreamMusic-4.0.0.exe
+            dist/VexStreamMusic-4.0.0-Windows-qualification.json
+            dist/VexStreamMusic-4.0.0-Windows-resources.txt
+          if-no-files-found: error

@@ -1,0 +1,66 @@
+name: Bootstrap accepted VexStream icon resource
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare Go 1.23.2
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
+
+      - name: Regenerate Windows resource from accepted ICO
+        shell: bash
+        run: |
+          set -euo pipefail
+          go run github.com/akavel/rsrc@v0.10.2 \
+            -arch amd64 \
+            -ico assets/brand/vexstream-music.ico \
+            -o v2/cmd/vexstream-v4/rsrc_windows_amd64.syso
+
+          echo "ico_sha256=$(sha256sum assets/brand/vexstream-music.ico | awk '{print $1}')"
+          echo "syso_sha256=$(sha256sum v2/cmd/vexstream-v4/rsrc_windows_amd64.syso | awk '{print $1}')"
+
+      - name: Commit generated resource and retire bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "VexGPT"
+          git config user.email "victor.gong@vextreme24.com"
+          git rm .github/workflows/bootstrap-vexstream-icon-resource.yml
+          git add v2/cmd/vexstream-v4/rsrc_windows_amd64.syso
+          git commit -m "Regenerate Windows icon resource from accepted brand source"
+          git push origin HEAD:VXG-111426-vexstream-music-brand-source-a001
+
+      - name: Build exact resource-updated Windows candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA="$(git rev-parse HEAD)"
+          python v2/build_windows.py --source-ref "$SOURCE_SHA"
+          objdump -x dist/VexStreamMusic-4.0.0.exe > dist/VexStreamMusic-4.0.0-Windows-resources.txt
+          grep -q 'Entry: ID: 0x000003' dist/VexStreamMusic-4.0.0-Windows-resources.txt
+          grep -q 'Entry: ID: 0x00000e' dist/VexStreamMusic-4.0.0-Windows-resources.txt
+
+      - name: Upload exact branded Windows candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: VexStreamMusic-4.0.0-Windows-icon-source-candidate
+          path: |
+            dist/VexStreamMusic-4.0.0.exe
+            dist/VexStreamMusic-4.0.0-Windows-qualification.json
+            dist/VexStreamMusic-4.0.0-Windows-resources.txt
+          if-no-files-found: error

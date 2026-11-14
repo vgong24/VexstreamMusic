@@ -85,56 +85,15 @@ jobs:
               readme.write_text(text, encoding="utf-8")
           PY
 
-          cat > .github/workflows/windows-artifact.yml <<'YAML'
-          name: Windows VexStream artifact
-
-          on:
-            push:
-              branches:
-                - main
-            pull_request:
-              branches:
-                - main
-
-          permissions:
-            contents: read
-
-          jobs:
-            windows:
-              runs-on: ubuntu-latest
-              steps:
-                - name: Check out source
-                  uses: actions/checkout@v4
-
-                - name: Prepare Go 1.23.2
-                  uses: actions/setup-go@v5
-                  with:
-                    go-version: '1.23.2'
-
-                - name: Build and qualify Windows executable
-                  shell: bash
-                  run: |
-                    set -euo pipefail
-                    SOURCE_SHA="$(git rev-parse HEAD)"
-                    python v2/build_windows.py --source-ref "$SOURCE_SHA"
-
-                - name: Upload qualified Windows executable
-                  uses: actions/upload-artifact@v4
-                  with:
-                    name: VexStreamMusic-4.0.0-Windows
-                    path: |
-                      dist/VexStreamMusic-4.0.0.exe
-                      dist/VexStreamMusic-4.0.0-Windows-qualification.json
-                    if-no-files-found: error
-          YAML
-
-          rm -f .github/workflows/bootstrap-vexstream-brand.yml
-
           git config user.name "VexGPT"
           git config user.email "victor.gong@vextreme24.com"
-          git add README.md assets/brand v2/cmd/vexstream-v4/rsrc_windows_amd64.syso .github/workflows
-          git commit -m "Brand VexStream Music Windows app"
-          git push origin HEAD:VXG-111426-vexstream-music-brand-icon-a001
+          git add README.md assets/brand v2/cmd/vexstream-v4/rsrc_windows_amd64.syso
+          if git diff --cached --quiet; then
+            echo "Brand projection already matches this source."
+          else
+            git commit -m "Brand VexStream Music Windows app"
+            git push origin HEAD:VXG-111426-vexstream-music-brand-icon-a001
+          fi
 
       - name: Build exact branded Windows candidate
         shell: bash

@@ -1,9 +1,9 @@
 name: Bootstrap accepted VexStream icon resource
 
 on:
-  push:
+  pull_request:
     branches:
-      - VXG-111426-vexstream-music-brand-source-a001
+      - main
 
 permissions:
   contents: write

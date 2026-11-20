@@ -154,3 +154,41 @@ test("Playlists list/create terrain is a source-authored Shell expression while 
  assert.ok(screen.elements.some(element=>element.ref==="element.vexstream.playlists.create"));
  assert.ok(screen.realization.held.some(value=>/Playlist detail/.test(value)));
 });
+
+
+test("selected Playlist detail is a gated presentation with rightful fixed child pathways",()=>{
+  const lens=JSON.parse(committed);
+  const screen=lens.screens[0];
+  const shell=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.shell.primary-terrain");
+  const detail=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.playlists.detail-open");
+  assert.equal(detail.kind,"PRESENTATION");
+  assert.equal(detail.subjectRef,"vexstream.desktop.library.playlists.detail");
+  assert.equal(detail.owner,"PlaylistNavigation");
+  assert.equal(detail.gate.presenceRef,shell.ref);
+  assert.equal(detail.gate.choice,3);
+  assert.equal(detail.realizes.length,7);
+  assert.ok(screen.view.stateBindings.some(binding=>binding.presenceRef===detail.ref&&binding.value==="OPEN"));
+  assert.ok(screen.view.stateBindings.some(binding=>binding.presenceRef===detail.ref&&binding.value==="CLOSED"));
+  assert.match(screen.view.html,/id="playlistOverview"[^>]*data-vex-structural-ref="vexstream\.desktop\.library\.playlists\.overview"/);
+  assert.match(screen.view.html,/id="playlistDetail"[^>]*data-vex-structural-ref="vexstream\.desktop\.library\.playlists\.detail"/);
+
+  const expectedPathways=[
+    "pathway.vexstream.playlists.detail.close",
+    "pathway.vexstream.player.play-playlist",
+    "pathway.vexstream.player.shuffle-playlist",
+    "pathway.vexstream.playlists.detail.add-songs",
+    "pathway.vexstream.playlists.rename",
+    "pathway.vexstream.playlists.delete",
+  ];
+  for(const ref of expectedPathways)assert.ok(lens.pathways.some(pathway=>pathway.pathwayRef===ref),ref+" is projected");
+});
+
+test("exported element kind follows the source interaction type",()=>{
+  const lens=JSON.parse(committed);
+  const elements=new Map(lens.screens[0].elements.map(element=>[element.ref,element]));
+  assert.equal(elements.get("element.vexstream.playlists.rename.name")?.kind,"FIELD");
+  assert.equal(elements.get("element.vexstream.playlists.create.name")?.kind,"FIELD");
+  assert.equal(elements.get("element.vexstream.library.sort.preset")?.kind,"FIELD");
+  assert.equal(elements.get("element.vexstream.playlists.rename")?.kind,"BUTTON");
+  assert.equal(elements.get("element.vexstream.playback.play-pause")?.kind,"BUTTON");
+});

@@ -5,6 +5,10 @@
 // Library truth, Playback, Queue, Playlists, Trash, and metadata mutation remain
 // with their existing owners.
 
+export const TrackSelectionIntent=Object.freeze({
+ ToggleMode:"vexstream.library.selection.toggle"
+});
+
 export function createTrackSelection({active=false}={}){
  let enabled=Boolean(active);
  let selected=[];

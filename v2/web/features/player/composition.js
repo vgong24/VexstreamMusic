@@ -4,7 +4,8 @@
 // This is feature-local composition, not a fifth semantic family and not a generic command bus.
 
 export const PlayerCompositionIntent=Object.freeze({
-  ShuffleLibrary:"vexstream.player.shuffle-library"
+  ShuffleLibrary:"vexstream.player.shuffle-library",
+  PlayLibraryView:"vexstream.player.play-library-view"
 });
 
 import { PlaybackControl } from "../playback/behavior.js";

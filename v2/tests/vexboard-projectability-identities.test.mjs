@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { ShellNavigationIntent } from "../web/features/shell/navigation.js";
 import { LibraryClientIntent } from "../web/features/library/client.js";
 import { LibraryProjectionIntent } from "../web/features/library/projection.js";
+import { TrackSelectionIntent } from "../web/features/library/selection.js";
 import { PlayerCompositionIntent } from "../web/features/player/composition.js";
 import { DiscoverNavigationIntent } from "../web/features/discover/navigation.js";
 import { PlaybackTimelineIntent } from "../web/features/playback/timeline.js";
@@ -32,6 +33,10 @@ const expected=Object.freeze([
   Object.freeze({id:"volume",identity:PlaybackVolumeIntent.Set}),
   Object.freeze({id:"queueMiniBtn",identity:QueuePresentationIntent.ToggleDrawer}),
   Object.freeze({id:"queueDrawerHandle",identity:QueuePresentationIntent.ToggleDrawer}),
+  Object.freeze({id:"songLayoutButton",identity:LibraryProjectionIntent.OpenSongLayout}),
+  Object.freeze({id:"playAllSongs",identity:PlayerCompositionIntent.PlayLibraryView}),
+  Object.freeze({id:"selectSongs",identity:TrackSelectionIntent.ToggleMode}),
+  Object.freeze({id:"librarySort",identity:LibraryProjectionIntent.SortPreset}),
   Object.freeze({id:"shuffleQueueUpcoming",identity:QueueConnectionIntent.ShuffleUpcoming}),
 ]);
 
@@ -48,6 +53,10 @@ test("all default-visible runtime-wired projectability gaps have source-owned id
     "vexstream.playback.volume.set",
     "vexstream.queue.drawer.toggle",
     "vexstream.queue.drawer.toggle",
+    "vexstream.library.song-layout.open",
+    "vexstream.player.play-library-view",
+    "vexstream.library.selection.toggle",
+    "vexstream.library.sort.preset",
     "vexstream.queue.shuffle-upcoming",
   ]);
   for(const row of expected){
@@ -76,5 +85,9 @@ test("identity alignment does not replace or reroute existing runtime handlers",
   assert.match(app,/volumeInput\.addEventListener\("input",\(\)=>\{\s*playbackVolume\.setVolume\(Number\(volumeInput\.value\)\);/);
   assert.match(app,/queueDrawerHandle\.addEventListener\("click",toggleQueueDrawer\);/);
   assert.match(app,/queueMiniBtn\.addEventListener\("click",toggleQueueDrawer\);/);
+  assert.match(app,/songLayoutButton\.addEventListener\("click",\(\)=>\{songLayoutPanel\.hidden=false;\}\);/);
+  assert.match(app,/playAllSongs\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{\s*const visible=currentLibraryView\(\);\s*if\(visible\.length\)await player\.playContext\(/);
+  assert.match(app,/selectSongs\.addEventListener\("click",\(\)=>\{\s*const wasActive=librarySelection\.currentProjection\.active;\s*librarySelection\.toggleMode\(\);/);
+  assert.match(app,/librarySort\.addEventListener\("change",\(\)=>\{\s*if\(librarySort\.value==="custom"\)return;/);
   assert.match(app,/shuffleQueueUpcoming\.addEventListener\("click",\(\)=>\{\s*player\.shuffleUpcoming\(\);/);
 });

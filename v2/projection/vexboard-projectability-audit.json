@@ -9,9 +9,9 @@
   "defaultVisible": 32,
   "latent": 99,
   "counts": {
-    "ADDRESSABLE_HELD": 37,
+    "ADDRESSABLE_HELD": 41,
     "MAPPED_PATHWAY": 7,
-    "LATENT_WIRED_UNIDENTIFIED": 56,
+    "LATENT_WIRED_UNIDENTIFIED": 52,
     "VISIBLE_DISABLED_UNIDENTIFIED": 2,
     "LATENT_UNIDENTIFIED": 29
   },
@@ -56,8 +56,7 @@
       "visible": 0,
       "latent": 7,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 4,
-        "ADDRESSABLE_HELD": 3
+        "ADDRESSABLE_HELD": 7
       }
     },
     "shell:library/hidden:#librarySelectionBar": {
@@ -1273,7 +1272,10 @@
       "id": "songLayoutButton",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.library.song-layout.open"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "library",
@@ -1289,10 +1291,11 @@
       "attrs": {
         "id": "songLayoutButton",
         "type": "button",
+        "data-vex-action": "vexstream.library.song-layout.open",
         "title": "Choose visible fields and title space"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.song-layout.open",
       "pathwayRef": null,
       "events": [
         "click"
@@ -1304,7 +1307,10 @@
       "id": "playAllSongs",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.player.play-library-view"
+      },
       "textRef": "library.play-all",
       "presentation": {
         "shellPanel": "library",
@@ -1320,10 +1326,11 @@
       "attrs": {
         "id": "playAllSongs",
         "type": "button",
+        "data-vex-action": "vexstream.player.play-library-view",
         "data-text-ref": "library.play-all"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.player.play-library-view",
       "pathwayRef": null,
       "events": [
         "click"
@@ -1335,7 +1342,10 @@
       "id": "selectSongs",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.library.selection.toggle"
+      },
       "textRef": "library.selection.select",
       "presentation": {
         "shellPanel": "library",
@@ -1351,10 +1361,11 @@
       "attrs": {
         "id": "selectSongs",
         "type": "button",
+        "data-vex-action": "vexstream.library.selection.toggle",
         "data-text-ref": "library.selection.select"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.selection.toggle",
       "pathwayRef": null,
       "events": [
         "click"
@@ -1366,7 +1377,10 @@
       "id": "librarySort",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.library.sort.preset"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "library",
@@ -1380,10 +1394,11 @@
         }
       },
       "attrs": {
-        "id": "librarySort"
+        "id": "librarySort",
+        "data-vex-action": "vexstream.library.sort.preset"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.sort.preset",
       "pathwayRef": null,
       "events": [
         "change"

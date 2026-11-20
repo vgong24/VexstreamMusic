@@ -140,12 +140,12 @@
           <div id="songSortSummary" class="sort-help" hidden></div>
         </div>
         <div class="library-heading-actions">
-          <button id="songLayoutButton" type="button" title="Choose visible fields and title space">▥ Columns</button>
-          <button id="playAllSongs" type="button" data-text-ref="library.play-all">Play all</button>
-          <button id="selectSongs" type="button" data-text-ref="library.selection.select">Select</button>
+          <button id="songLayoutButton" type="button" data-vex-action="vexstream.library.song-layout.open" title="Choose visible fields and title space">▥ Columns</button>
+          <button id="playAllSongs" type="button" data-vex-action="vexstream.player.play-library-view" data-text-ref="library.play-all">Play all</button>
+          <button id="selectSongs" type="button" data-vex-action="vexstream.library.selection.toggle" data-text-ref="library.selection.select">Select</button>
           <label class="library-sort-control">
             <span class="sr-only">Sort library</span>
-            <select id="librarySort">
+            <select id="librarySort" data-vex-action="vexstream.library.sort.preset">
               <option value="title">Title</option>
               <option value="artist">Artist</option>
               <option value="album">Album</option>

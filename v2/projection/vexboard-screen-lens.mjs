@@ -23,18 +23,51 @@ const semanticIdentity=token=>token.familyRef+"."+token.ref;
 const elementRef=identity=>"element."+identity;
 const source=relative=>"v2:"+relative;
 
-const SOURCE_IDENTITY_ATTRIBUTES=Object.freeze(["data-vex-control","data-vex-action"]);
+const RELATIONSHIP_ATTRIBUTES=Object.freeze([
+  "data-vex-control",
+  "data-vex-action",
+  "data-shell-view",
+  "data-library-mode",
+  "data-discover-mode",
+  "data-phone-action",
+  "data-system-action",
+  "data-track-action",
+]);
 
-function stableSourceIdentities(html){
+function attributeValue(raw,attribute){
+  return String(raw).match(new RegExp("\\b"+attribute+"=\"([^\"]+)\""))?.[1]??null;
+}
+
+function relationshipIdentity(attribute,value){
+  if(attribute==="data-vex-control"||attribute==="data-vex-action")return value;
+  if(attribute==="data-shell-view")return "vexstream.shell.view."+value;
+  if(attribute==="data-library-mode")return "vexstream.library.mode."+value;
+  if(attribute==="data-discover-mode")return "vexstream.discover.mode."+value;
+  if(attribute==="data-phone-action")return "vexstream.phone.action."+value;
+  if(attribute==="data-system-action")return "vexstream.system.action."+value;
+  if(attribute==="data-track-action")return "vexstream.track.action."+value;
+  return null;
+}
+
+function sourceRelationshipForTag(tagSource){
+  for(const attribute of RELATIONSHIP_ATTRIBUTES){
+    const value=attributeValue(tagSource,attribute);
+    if(!value)continue;
+    return Object.freeze({attribute,value,identity:relationshipIdentity(attribute,value)});
+  }
+  return null;
+}
+
+function stableSourceRelationships(html){
   const found=[];
-  const seen=new Set();
-  const pattern=/data-vex-(control|action)="([^"]+)"/g;
-  for(const match of String(html).matchAll(pattern)){
-    const attribute="data-vex-"+match[1];
-    const identity=match[2];
-    if(seen.has(identity)) throw new Error("VexBoard export requires unique stable source identity in this bounded shell: "+identity);
-    seen.add(identity);
-    found.push(Object.freeze({attribute,identity}));
+  const byIdentity=new Map();
+  for(const match of String(html).matchAll(/<[A-Za-z][^>]*>/g)){
+    const relation=sourceRelationshipForTag(match[0]);
+    if(!relation)continue;
+    if(!byIdentity.has(relation.identity)){
+      byIdentity.set(relation.identity,relation);
+      found.push(relation);
+    }
   }
   return Object.freeze(found);
 }
@@ -43,15 +76,27 @@ function identityLabel(identity){
   return identity.split(".").slice(-2).join(" / ").replaceAll("-"," ");
 }
 
+function relationLabel(relation){
+  const title=String(relation.value).replaceAll("-"," ").replace(/\b\w/g,(char)=>char.toUpperCase());
+  if(relation.attribute==="data-shell-view")return "Shell view: "+title;
+  if(relation.attribute==="data-library-mode")return "Library mode: "+title;
+  if(relation.attribute==="data-discover-mode")return "Discover mode: "+title;
+  if(relation.attribute==="data-track-action")return "Track action: "+title;
+  if(relation.attribute==="data-phone-action")return "Phone action: "+title;
+  if(relation.attribute==="data-system-action")return "System action: "+title;
+  return identityLabel(relation.identity);
+}
+
 function viewHTML(sourceHTML){
   let html=String(sourceHTML);
   html=html.replace('<body data-vex-screen="vexstream.desktop.library" data-shell-current-view="home">','<body data-vex-screen="vexstream.desktop.library" data-shell-current-view="home" data-vex-structural-ref="'+FRAME_REF+'">');
   html=html.replace('<main class="shell">','<main class="shell" data-vex-structural-ref="'+SHELL_REF+'">');
-  for(const {attribute,identity} of stableSourceIdentities(sourceHTML)){
-    const before=attribute+'="'+identity+'"';
-    const after=before+' data-vex-ref="'+elementRef(identity)+'"';
-    html=html.replace(before,after);
-  }
+  html=html.replace(/<[A-Za-z][^>]*>/g,(tagSource)=>{
+    if(/\bdata-vex-ref=/.test(tagSource))return tagSource;
+    const relation=sourceRelationshipForTag(tagSource);
+    if(!relation)return tagSource;
+    return tagSource.replace(/>$/,' data-vex-ref="'+elementRef(relation.identity)+'">');
+  });
   return html;
 }
 
@@ -195,8 +240,9 @@ function mappedPathwayRef(identity){
   return null;
 }
 
-function button(identity,label,pathwayRef,attribute){
-  return {ref:elementRef(identity),kind:"BUTTON",label,parentRef:SHELL_REF,symbol:identity,declared:attribute+'="'+identity+'"',intent:identity,...(pathwayRef?{pathwayRef}:{}),layer:"CHROME",interactions:["ACTIVATE"]};
+function button(identity,label,pathwayRef,attribute,value=null){
+  const declaredValue=value??identity;
+  return {ref:elementRef(identity),kind:"BUTTON",label,parentRef:SHELL_REF,symbol:identity,declared:attribute+'="'+declaredValue+'"',intent:identity,...(pathwayRef?{pathwayRef}:{}),layer:"CHROME",interactions:["ACTIVATE"]};
 }
 
 export function buildVexStreamVexBoardLens({html,css}){
@@ -204,7 +250,7 @@ export function buildVexStreamVexBoardLens({html,css}){
   const next=semanticIdentity(QueueControl.Next);
   const shuffle=semanticIdentity(QueueControl.Shuffle);
   const repeat=semanticIdentity(QueueControl.Repeat);
-  const identities=stableSourceIdentities(html);
+  const relationships=stableSourceRelationships(html);
   const explicitLabels=new Map([
     [PREVIOUS_ACTION,"Previous"],
     [play,"Play / Pause"],
@@ -214,8 +260,14 @@ export function buildVexStreamVexBoardLens({html,css}){
     [PhoneConnectionIntent.Open,"Connect VexLife phone"],
     [SystemStatusIntent.Open,"System status"],
   ]);
-  const stableElements=identities.map(({attribute,identity})=>
-    button(identity,explicitLabels.get(identity)??identityLabel(identity),mappedPathwayRef(identity),attribute));
+  const stableElements=relationships.map((relation)=>
+    button(
+      relation.identity,
+      explicitLabels.get(relation.identity)??relationLabel(relation),
+      mappedPathwayRef(relation.identity),
+      relation.attribute,
+      relation.value
+    ));
   return {
     schemaVersion:VEXBOARD_SCREEN_LENS_SCHEMA,lensRef:"lens.vexstream-music.desktop",title:"VexStream Music",
     summary:"Bounded projection of the persistent V4 desktop shell, every source-stable control/action identity in that shell, and the currently admitted Player / Playback / Queue / Phone / System relationships.",
@@ -223,7 +275,7 @@ export function buildVexStreamVexBoardLens({html,css}){
     sourceSnapshot:{repositoryRef:"repo.vexstream-music",repositoryUrl:"https://github.com/vgong24/VexstreamMusic.git",commit:null,observedAt:null,roots:{v2:"v2/"},notes:[
       "Generated by "+VEXSTREAM_VEXBOARD_EXPORTER_VERSION+" from source-owned semantic modules and the lived shell.",
       "Product JavaScript is excluded from the VexBoard static view.",
-      "Every source-stable data-vex-control/action becomes addressable; deeper pathways remain bounded to relationships explicitly admitted by the current projectability slice.",
+      "Every source-stable relationship attribute in the bounded shell becomes addressable; repeated affordances may share one Lens relationship ref. Deeper pathways remain bounded to relationships explicitly admitted by the current projectability slice.",
     ]},
     chrome:[],
     screens:[{

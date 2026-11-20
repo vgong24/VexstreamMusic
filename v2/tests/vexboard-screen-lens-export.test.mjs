@@ -42,17 +42,40 @@ test("first slice keeps Player composition distinct from Playback and Queue Fami
   assert.ok(playback.nodes.some(node=>node.role==="CONNECTION"));
 });
 
-test("every source-stable control/action is addressable in the exported inert view and Lens tree",()=>{
+test("every source-stable relationship is addressable in the exported inert view and Lens tree",()=>{
   const live=fs.readFileSync(path.join(V2,"web","index.html"),"utf8");
   const lens=JSON.parse(committed);
   const view=lens.screens[0].view;
-  const identities=[...live.matchAll(/data-vex-(?:control|action)="([^"]+)"/g)].map(match=>match[1]);
-  assert.equal(new Set(identities).size,identities.length,"stable source identities must be unique within the bounded shell");
+  const relationPatterns=[
+    ["data-vex-control",(value)=>value],
+    ["data-vex-action",(value)=>value],
+    ["data-shell-view",(value)=>"vexstream.shell.view."+value],
+    ["data-library-mode",(value)=>"vexstream.library.mode."+value],
+    ["data-discover-mode",(value)=>"vexstream.discover.mode."+value],
+    ["data-phone-action",(value)=>"vexstream.phone.action."+value],
+    ["data-system-action",(value)=>"vexstream.system.action."+value],
+    ["data-track-action",(value)=>"vexstream.track.action."+value],
+  ];
+  const identities=[];
+  for(const tag of live.matchAll(/<[A-Za-z][^>]*>/g)){
+    for(const [attribute,identityFor] of relationPatterns){
+      const match=tag[0].match(new RegExp("\\b"+attribute+'="([^"]+)"'));
+      if(!match)continue;
+      identities.push(identityFor(match[1]));
+      break;
+    }
+  }
   const elementRefs=new Set(lens.screens[0].elements.map(element=>element.ref));
-  for(const identity of identities){
-    assert.match(view.html,new RegExp('data-vex-ref="element\\.'+identity.replace(/[.*+?^$()|[\\]{}]/g,"\\$&")+'"'));
+  for(const identity of new Set(identities)){
+    assert.ok(view.html.includes('data-vex-ref="element.'+identity+'"'),identity+" is anchored in the inert view");
     assert.ok(elementRefs.has("element."+identity),identity+" is addressable in the Lens tree");
   }
+  assert.ok((view.html.match(/data-vex-ref="element\.vexstream\.shell\.view\.home"/g)??[]).length>=3,
+    "repeated Home affordances share one relationship ref instead of inventing separate semantics");
+  assert.ok(elementRefs.has("element.vexstream.player.play-next"),
+    "a stronger data-vex-action identity wins over the same node's generic data-track-action");
+  assert.equal(elementRefs.has("element.vexstream.track.action.play-next"),false,
+    "one physical control does not receive two competing Lens identities");
 });
 
 test("phone and System shell controls expose full admitted pathways rather than silent pixels",()=>{

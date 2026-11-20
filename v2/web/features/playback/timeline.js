@@ -6,6 +6,10 @@
 //
 // Library owns the playback-window facts. Queue owns what comes next. This connection owns neither.
 
+export const PlaybackTimelineIntent=Object.freeze({
+ Seek:"vexstream.playback.timeline.seek"
+});
+
 const WINDOW_END_TOLERANCE_SECONDS=0.015;
 
 export function projectPlaybackTimeline(media,window){

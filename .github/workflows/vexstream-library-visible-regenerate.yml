@@ -1,0 +1,38 @@
+name: Regenerate Library Projectability Candidate
+
+on:
+  push:
+    branches:
+      - VXG-112026-vexstream-projectability-library-visible-identity-a001
+    paths:
+      - 'v2/web/index.html'
+      - 'v2/web/features/library/projection.js'
+      - 'v2/web/features/library/selection.js'
+      - 'v2/web/features/player/composition.js'
+      - '.github/workflows/vexstream-library-visible-regenerate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: VXG-112026-vexstream-projectability-library-visible-identity-a001
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Regenerate Lens and audit
+        run: |
+          node v2/projection/vexboard-screen-lens.mjs
+          node v2/projection/vexboard-projectability-audit.mjs
+      - name: Commit generated artifacts
+        run: |
+          git config user.name VexGPT
+          git config user.email victor.gong@vextreme24.com
+          git add v2/projection/vexboard-screen-lens.json v2/projection/vexboard-projectability-audit.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "[VexStream] Regenerate Library projectability artifacts"
+          git push origin HEAD:VXG-112026-vexstream-projectability-library-visible-identity-a001

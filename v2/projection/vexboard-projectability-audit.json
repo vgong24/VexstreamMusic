@@ -9,11 +9,11 @@
   "defaultVisible": 32,
   "latent": 99,
   "counts": {
-    "ADDRESSABLE_HELD": 41,
+    "ADDRESSABLE_HELD": 49,
     "MAPPED_PATHWAY": 7,
-    "LATENT_WIRED_UNIDENTIFIED": 52,
+    "LATENT_WIRED_UNIDENTIFIED": 45,
     "VISIBLE_DISABLED_UNIDENTIFIED": 2,
-    "LATENT_UNIDENTIFIED": 29
+    "LATENT_UNIDENTIFIED": 28
   },
   "groupedCoverage": {
     "default": {
@@ -132,8 +132,7 @@
       "visible": 0,
       "latent": 5,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 4,
-        "LATENT_UNIDENTIFIED": 1
+        "ADDRESSABLE_HELD": 5
       }
     },
     "shell:discover/discover:youtube": {
@@ -141,7 +140,7 @@
       "visible": 0,
       "latent": 3,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 3
+        "ADDRESSABLE_HELD": 3
       }
     },
     "shell:discover/discover:youtube/hidden:#importReview": {
@@ -2902,7 +2901,10 @@
       "id": "sourceAdd",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.sources.add-folder"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "discover",
@@ -2917,10 +2919,11 @@
       },
       "attrs": {
         "id": "sourceAdd",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.sources.add-folder"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.sources.add-folder",
       "pathwayRef": null,
       "events": [
         "click"
@@ -2932,7 +2935,10 @@
       "id": "sourceDiscover",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.sources.discover"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "discover",
@@ -2947,10 +2953,11 @@
       },
       "attrs": {
         "id": "sourceDiscover",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.sources.discover"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.sources.discover",
       "pathwayRef": null,
       "events": [
         "click"
@@ -2962,7 +2969,10 @@
       "id": "sourceDiscoverDeep",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.sources.discover-deep"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "discover",
@@ -2977,10 +2987,11 @@
       },
       "attrs": {
         "id": "sourceDiscoverDeep",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.sources.discover-deep"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.sources.discover-deep",
       "pathwayRef": null,
       "events": [
         "click"
@@ -2992,7 +3003,10 @@
       "id": null,
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.sources.ignored.toggle"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "discover",
@@ -3005,9 +3019,11 @@
           "discoverPanel": "pc"
         }
       },
-      "attrs": {},
-      "status": "LATENT_UNIDENTIFIED",
-      "elementRef": null,
+      "attrs": {
+        "data-vex-action": "vexstream.sources.ignored.toggle"
+      },
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.sources.ignored.toggle",
       "pathwayRef": null,
       "events": []
     },
@@ -3017,7 +3033,10 @@
       "id": "clearIgnoredSources",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.sources.ignored.clear"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "discover",
@@ -3032,10 +3051,11 @@
       },
       "attrs": {
         "id": "clearIgnoredSources",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.sources.ignored.clear"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.sources.ignored.clear",
       "pathwayRef": null,
       "events": [
         "click"
@@ -3047,7 +3067,10 @@
       "id": "youtubeImportURL",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.import.source-url"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "discover",
@@ -3063,11 +3086,12 @@
       "attrs": {
         "id": "youtubeImportURL",
         "type": "url",
+        "data-vex-action": "vexstream.import.source-url",
         "placeholder": "https://www.youtube.com/watch?v=…",
         "autocomplete": "off"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.import.source-url",
       "pathwayRef": null,
       "events": [
         "keydown"
@@ -3079,7 +3103,10 @@
       "id": "youtubeInspect",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.import.inspect"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "discover",
@@ -3095,10 +3122,11 @@
       "attrs": {
         "id": "youtubeInspect",
         "type": "button",
-        "class": "primary"
+        "class": "primary",
+        "data-vex-action": "vexstream.import.inspect"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.import.inspect",
       "pathwayRef": null,
       "events": [
         "click"
@@ -3310,7 +3338,10 @@
       "id": "importRefresh",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.import.jobs.refresh"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "discover",
@@ -3325,10 +3356,11 @@
       },
       "attrs": {
         "id": "importRefresh",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.import.jobs.refresh"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.import.jobs.refresh",
       "pathwayRef": null,
       "events": [
         "click"

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { projectSystemStatus } from "../web/features/system/status.js";
+import { SystemStatusIntent, projectSystemStatus } from "../web/features/system/status.js";
 
 test("healthy System status projects current V4 truths without new ownership",()=>{
  const status=projectSystemStatus({
@@ -66,4 +66,8 @@ test("missing optional inputs remain a healthy empty projection",()=>{
  assert.equal(status.sessionKind,"fresh");
  assert.equal(status.attentionCount,0);
  assert.equal(status.state,"healthy");
+});
+
+test("System status top-level open intent has one stable product identity",()=>{
+ assert.equal(SystemStatusIntent.Open,"vexstream.system.status.open");
 });

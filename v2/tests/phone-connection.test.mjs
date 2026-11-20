@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   PhoneConnectionAction,
+  PhoneConnectionIntent,
   createPhoneConnection,
 } from "../web/features/phone/connection.js";
 
@@ -134,4 +135,8 @@ test("connection failure is projected as feature state instead of escaping into 
   await connection.open();
   assert.equal(connection.currentProjection.phase,"failed");
   assert.match(connection.currentProjection.error,/discovery unavailable/);
+});
+
+test("phone connection top-level open intent has one stable product identity",()=>{
+  assert.equal(PhoneConnectionIntent.Open,"vexstream.phone.connection.open");
 });

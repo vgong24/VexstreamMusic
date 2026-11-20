@@ -6,6 +6,10 @@
 //
 // Network contract remains in client.js. Modal HTML remains in presentation.js.
 
+export const PhoneConnectionIntent = Object.freeze({
+  Open: "vexstream.phone.connection.open",
+});
+
 export const PhoneConnectionAction = Object.freeze({
   StartPairing: "start",
   Approve: "approve",

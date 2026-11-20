@@ -16,6 +16,10 @@ import { ImportClientIntent } from "../web/features/imports/client.js";
 import { PlaylistClientIntent } from "../web/features/playlists/client.js";
 import { PlaylistNavigationIntent } from "../web/features/playlists/navigation.js";
 import { PlayerCompositionIntent } from "../web/features/player/composition.js";
+import {
+  VexPresentationContinuity,
+  VEX_PRESENTATION_INSTANCE_ENCODING,
+} from "../web/foundation/identity.js";
 
 export const VEXBOARD_SCREEN_LENS_SCHEMA="vexboard.screen-lens/v1";
 export const VEXSTREAM_VEXBOARD_EXPORTER_VERSION="vexstream-vexboard-exporter/1";
@@ -44,6 +48,12 @@ const SHELL_SELECTION_REF="presence.vexstream.shell.primary-terrain";
 const LIBRARY_MODE_SELECTION_REF="presence.vexstream.library.mode";
 const DISCOVER_MODE_SELECTION_REF="presence.vexstream.discover.mode";
 const PLAYLIST_DETAIL_PRESENTATION_REF="presence.vexstream.playlists.detail-open";
+const PLAYLIST_CARD_POPULATION_REF="presence.vexstream.playlists.cards";
+const PLAYLIST_ENTRY_POPULATION_REF="presence.vexstream.playlists.detail.entries";
+const PLAYLIST_CARD_TEMPLATE_REF="template.vexstream.playlists.card";
+const PLAYLIST_ENTRY_TEMPLATE_REF="template.vexstream.playlists.detail-entry";
+const PLAYLIST_CARD_INSTANCE_BASE="element.vexstream.playlists.card";
+const PLAYLIST_ENTRY_INSTANCE_BASE="element.vexstream.playlists.entry";
 const PREVIOUS_ACTION="vexstream.player.previous";
 const semanticIdentity=token=>token.familyRef+"."+token.ref;
 const elementRef=identity=>"element."+identity;
@@ -612,12 +622,105 @@ export function buildVexStreamVexBoardLens({html,css}){
               elementRef(PlaylistClientIntent.Rename),
               elementRef(PlaylistClientIntent.Delete)
             ]
+          },
+          {
+            ref:PLAYLIST_CARD_POPULATION_REF,
+            kind:"POPULATION",
+            subjectRef:PLAYLISTS_OVERVIEW_REF,
+            owner:"renderPlaylistChoices",
+            list:{ref:"runtime.vexstream.playlists.cards",expression:"resolvedPlaylists",identity:"RUNTIME"},
+            items:"resolvedPlaylists",
+            itemKey:"playlist.id",
+            contentType:"playlist-card",
+            realizedBy:"renderPlaylistChoices",
+            source:source("web/app.js"),
+            templateRef:PLAYLIST_CARD_TEMPLATE_REF,
+            gate:{presenceRef:SHELL_SELECTION_REF,choice:3},
+            empty:[],
+            emptyRealization:"SOURCE_AUTHORED"
+          },
+          {
+            ref:PLAYLIST_ENTRY_POPULATION_REF,
+            kind:"POPULATION",
+            subjectRef:PLAYLIST_DETAIL_REF,
+            owner:"renderPlaylistChoices",
+            list:{ref:"runtime.vexstream.playlists.detail.entries",expression:"resolved.entries",identity:"RUNTIME"},
+            items:"resolved.entries",
+            itemKey:"playlist.id + entry.ref + occurrenceWithinPlaylist",
+            contentType:"playlist-detail-entry",
+            realizedBy:"playlistEntryHTML",
+            source:source("web/app.js"),
+            templateRef:PLAYLIST_ENTRY_TEMPLATE_REF,
+            gate:{presenceRef:PLAYLIST_DETAIL_PRESENTATION_REF,choice:0},
+            empty:[],
+            emptyRealization:"SOURCE_AUTHORED"
           }
         ],
-        templates:[],elements:[],opaque:[],held:[
+        templates:[
+          {
+            ref:PLAYLIST_CARD_TEMPLATE_REF,
+            symbol:"playlist-card",
+            source:source("web/app.js"),
+            summary:"One durable Playlist rendered in the overview; identity survives ordering and wording changes.",
+            instanceFormation:'dynamicVexPresentationRef("'+PLAYLIST_CARD_INSTANCE_BASE+'",[playlist.id])',
+            instanceIdentity:{
+              kind:"RUNTIME_INSTANCE",
+              baseRef:PLAYLIST_CARD_INSTANCE_BASE,
+              partSources:["playlist.id"],
+              encoding:VEX_PRESENTATION_INSTANCE_ENCODING,
+              continuity:VexPresentationContinuity.STABLE_INSTANCE
+            },
+            realizes:[
+              elementRef(PlayerCompositionIntent.PlayPlaylist),
+              elementRef(PlayerCompositionIntent.ShufflePlaylist)
+            ],
+            usedBy:[PLAYLIST_CARD_POPULATION_REF],
+            slots:[
+              {path:"card",kind:"CARD",primitive:"article.playlist-card",instanceFormation:"playlistCardRef",instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistCardRef",localPath:"card"},depth:0},
+              {path:"actions.play",kind:"BUTTON",primitive:"button[data-playlist-action=play]",realizes:elementRef(PlayerCompositionIntent.PlayPlaylist),instanceFormation:'appendVexPresentationPath(playlistCardRef,"actions/play")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistCardRef",localPath:"actions/play"},depth:1},
+              {path:"actions.shuffle",kind:"BUTTON",primitive:"button[data-playlist-action=shuffle]",realizes:elementRef(PlayerCompositionIntent.ShufflePlaylist),instanceFormation:'appendVexPresentationPath(playlistCardRef,"actions/shuffle")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistCardRef",localPath:"actions/shuffle"},depth:1},
+              {path:"actions.open",kind:"BUTTON",primitive:"button[data-playlist-action=open]",instanceFormation:'appendVexPresentationPath(playlistCardRef,"actions/open")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistCardRef",localPath:"actions/open"},depth:1}
+            ]
+          },
+          {
+            ref:PLAYLIST_ENTRY_TEMPLATE_REF,
+            symbol:"playlist-entry",
+            source:source("web/app.js"),
+            summary:"One current Playlist entry occurrence. Duplicate refs and reorder prevent a stronger durable entry claim without a source-owned entry ID.",
+            instanceFormation:'dynamicVexPresentationRef("'+PLAYLIST_ENTRY_INSTANCE_BASE+'",[playlist.id,entry.ref,occurrenceWithinPlaylist])',
+            instanceIdentity:{
+              kind:"RUNTIME_INSTANCE",
+              baseRef:PLAYLIST_ENTRY_INSTANCE_BASE,
+              partSources:["playlist.id","entry.ref","occurrenceWithinPlaylist"],
+              encoding:VEX_PRESENTATION_INSTANCE_ENCODING,
+              continuity:VexPresentationContinuity.CURRENT_OCCURRENCE
+            },
+            realizes:[
+              elementRef("vexstream.player.add-queue"),
+              elementRef("vexstream.player.play-next"),
+              elementRef("vexstream.explore.from-track"),
+              elementRef("vexstream.track.action.edit"),
+              elementRef("vexstream.track.action.trash")
+            ],
+            usedBy:[PLAYLIST_ENTRY_POPULATION_REF],
+            slots:[
+              {path:"entry",kind:"ROW",primitive:"li.playlist-entry",instanceFormation:"playlistEntryRef",instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"entry"},depth:0},
+              {path:"actions.play",kind:"BUTTON",primitive:"button[data-track-action=play]",instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/play")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/play"},depth:1},
+              {path:"actions.add-queue",kind:"BUTTON",primitive:"button[data-track-action=append]",realizes:elementRef("vexstream.player.add-queue"),instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/add-queue")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/add-queue"},depth:1},
+              {path:"actions.play-next",kind:"BUTTON",primitive:"button[data-track-action=play-next]",realizes:elementRef("vexstream.player.play-next"),instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/play-next")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/play-next"},depth:1},
+              {path:"actions.explore",kind:"BUTTON",primitive:"button[data-track-action=explore]",realizes:elementRef("vexstream.explore.from-track"),instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/explore")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/explore"},depth:1},
+              {path:"actions.edit",kind:"BUTTON",primitive:"button[data-track-action=edit]",realizes:elementRef("vexstream.track.action.edit"),instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/edit")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/edit"},depth:1},
+              {path:"actions.trash",kind:"BUTTON",primitive:"button[data-track-action=trash]",realizes:elementRef("vexstream.track.action.trash"),instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/trash")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/trash"},depth:1},
+              {path:"actions.up",kind:"BUTTON",primitive:"button[data-playlist-entry-action=up]",instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/up")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/up"},depth:1},
+              {path:"actions.down",kind:"BUTTON",primitive:"button[data-playlist-entry-action=down]",instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/down")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/down"},depth:1},
+              {path:"actions.remove",kind:"BUTTON",primitive:"button[data-playlist-entry-action=remove]",instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/remove")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/remove"},depth:1}
+            ]
+          }
+        ],elements:[],opaque:[],held:[
           "Deleted Shell terrain remains outside the current expression slice.",
-          "Selected Playlist identity/content remains runtime data; the open/closed detail presentation and its fixed actions are projected without enumerating dynamic playlist IDs.",
-          "Catalog rows/groups are runtime data populations and remain held in the inert Product view."
+          "Current runtime Playlist instances remain unobserved; their source-owned identity formation is projected as POPULATION + template relationships without enumerating live IDs.",
+          "Playlist entry identity is CURRENT_OCCURRENCE because the Product does not yet own a durable per-entry ID across arbitrary duplicate-ref reorder/rebuild.",
+          "Other catalog rows/groups remain runtime data populations outside this bounded dynamic-identity slice."
         ]
       },
     }],
@@ -629,7 +732,7 @@ export function buildVexStreamVexBoardLens({html,css}){
       queuePathway("repeat",QueueControl.Repeat,QueueAct.EnableRepeat.ref+" / "+QueueAct.DisableRepeat.ref,QueueEffect.EnableRepeat.ref+" / "+QueueEffect.DisableRepeat.ref,"Player.toggleRepeat()"),
     ],
     annotations:[],examples:[],
-    examplesHeld:[{ref:"examples.vexstream-music.dynamic-shell",source:source("tests/player-browser-regression.py"),reason:"Home, Library modes, Discover modes, Playlists overview/create, and selected-Playlist detail presentation are projected. Dynamic playlist rows/entry actions, nested Library/Import states, and Deleted remain owned by current browser proof until separately admitted."}],
+    examplesHeld:[{ref:"examples.vexstream-music.dynamic-shell",source:source("tests/player-browser-regression.py"),reason:"Home, Library modes, Discover modes, Playlists overview/create, selected-Playlist detail, and Playlist runtime identity templates are projected. Current live Playlist instances are never claimed; nested Library/Import states, other dynamic catalog populations, and Deleted remain separately admitted."}],
   };
 }
 

@@ -3,6 +3,14 @@
 //
 // Picking/discovering a folder never admits it. Only addSource mutates the accepted source set.
 
+export const SourceClientIntent=Object.freeze({
+ AddFolder:"vexstream.sources.add-folder",
+ Discover:"vexstream.sources.discover",
+ DiscoverDeep:"vexstream.sources.discover-deep",
+ ToggleIgnored:"vexstream.sources.ignored.toggle",
+ ClearIgnored:"vexstream.sources.ignored.clear"
+});
+
 export async function loadSourceConfig(
  {request=globalThis.fetch}={}
 ){

@@ -10,7 +10,10 @@ import {
   queueWindowAroundIndex,
   queueWindowForScroll,
 } from "./features/queue/window.js";
-import { createPlayerComposition } from "./features/player/composition.js";
+import {
+  PlayerCompositionIntent,
+  createPlayerComposition,
+} from "./features/player/composition.js";
 import { playerJourney } from "./features/player/journey.js";
 import {
   loadPlayerSession,
@@ -63,7 +66,10 @@ import {
   reorderPlaylist,
   resolvePlaylistAvailability,
 } from "./features/playlists/client.js";
-import { createPlaylistNavigation } from "./features/playlists/navigation.js";
+import {
+  PlaylistNavigationIntent,
+  createPlaylistNavigation,
+} from "./features/playlists/navigation.js";
 import { createExploreSession } from "./features/explore/session.js";
 import { createExploreComposition } from "./features/explore/composition.js";
 import {
@@ -106,6 +112,13 @@ import {
   createDiscoverNavigation,
 } from "./features/discover/navigation.js";
 import { escapeHTML } from "./foundation/html.js";
+import {
+  PlaylistPresentationIdentity,
+  playlistCardChildRef,
+  playlistCardPresentationRef,
+  playlistEntryChildRef,
+  playlistEntryPresentationRef,
+} from "./features/playlists/presentation.js";
 import { marqueeDurationSeconds } from "./foundation/marquee.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
@@ -2647,7 +2660,7 @@ function playlistUnavailableWitness(ref){
  });
 }
 
-function playlistEntryHTML(entry,index,total){
+function playlistEntryHTML(entry,index,total,playlistID,occurrence){
  const witness=entry.available
   ?Object.freeze({track:entry.track,status:""})
   :playlistUnavailableWitness(entry.ref);
@@ -2658,10 +2671,19 @@ function playlistEntryHTML(entry,index,total){
  const metadata=entry.available
   ?[trackArtist(item),String(item?.album??"").trim()].filter(Boolean).join(" · ")
   :[item?trackArtist(item):entry.ref,witness.status].filter(Boolean).join(" · ");
+ const entryIdentity={
+  playlistID,
+  trackRef:entry.ref,
+  occurrence,
+ };
+ const entryPresentationRef=playlistEntryPresentationRef(entryIdentity);
+ const childRef=path=>playlistEntryChildRef(entryIdentity,path);
  return `<li class="playlist-entry ${entry.available?"":"missing"}"
       data-playlist-track-ref="${escapeHTML(entry.ref)}"
       data-track-ref="${escapeHTML(entry.ref)}"
       data-playlist-index="${index}"
+      data-vex-ref="${escapeHTML(entryPresentationRef)}"
+      data-vex-continuity="${PlaylistPresentationIdentity.DetailEntry.continuity}"
       data-available="${String(entry.available)}">
    <span class="playlist-entry-order">${index+1}</span>
    ${item
@@ -2674,23 +2696,23 @@ function playlistEntryHTML(entry,index,total){
    <span class="playlist-entry-actions">
     ${entry.available
      ?`<span class="playlist-track-actions">
-       <button data-track-action="play" data-vex-action="vexstream.player.play-now" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
-       <button data-track-action="append" data-vex-action="vexstream.player.add-queue" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
+       <button data-track-action="play" data-vex-action="vexstream.player.play-now" data-vex-ref="${escapeHTML(childRef("actions/play"))}" title="${escapeHTML(resolveText(locale,"playback.play"))}" aria-label="${escapeHTML(resolveText(locale,"playback.play"))}">▶</button>
+       <button data-track-action="append" data-vex-action="vexstream.player.add-queue" data-vex-ref="${escapeHTML(childRef("actions/add-queue"))}" title="${escapeHTML(resolveText(locale,"player.add-to-queue"))}" aria-label="${escapeHTML(resolveText(locale,"player.add-to-queue"))}">☷＋</button>
        <details class="song-more">
-        <summary aria-label="Track actions" title="Track actions">⋯</summary>
+        <summary data-vex-ref="${escapeHTML(childRef("actions/menu"))}" aria-label="Track actions" title="Track actions">⋯</summary>
         <div class="song-more-menu">
-         <button data-track-action="play-next" data-vex-action="vexstream.player.play-next">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
-         <button data-track-action="explore" data-vex-action="vexstream.explore.from-track">${escapeHTML(resolveText(locale,"explore.open"))}</button>
-         <button data-track-action="edit">${escapeHTML(resolveText(locale,"library.edit"))}</button>
-         <button data-track-action="trash">${escapeHTML(resolveText(locale,"trash.move"))}</button>
+         <button data-track-action="play-next" data-vex-action="vexstream.player.play-next" data-vex-ref="${escapeHTML(childRef("actions/play-next"))}">${escapeHTML(resolveText(locale,"player.play-next"))}</button>
+         <button data-track-action="explore" data-vex-action="vexstream.explore.from-track" data-vex-ref="${escapeHTML(childRef("actions/explore"))}">${escapeHTML(resolveText(locale,"explore.open"))}</button>
+         <button data-track-action="edit" data-vex-ref="${escapeHTML(childRef("actions/edit"))}">${escapeHTML(resolveText(locale,"library.edit"))}</button>
+         <button data-track-action="trash" data-vex-ref="${escapeHTML(childRef("actions/trash"))}">${escapeHTML(resolveText(locale,"trash.move"))}</button>
          ${trackPlaylistActionHTML()}
         </div>
        </details>
       </span>`
      :""}
-    <button data-playlist-entry-action="up" ${index===0?"disabled":""}>↑</button>
-    <button data-playlist-entry-action="down" ${index===total-1?"disabled":""}>↓</button>
-    <button data-playlist-entry-action="remove">${escapeHTML(resolveText(locale,"playlist.remove-track"))}</button>
+    <button data-playlist-entry-action="up" data-vex-ref="${escapeHTML(childRef("actions/up"))}" ${index===0?"disabled":""}>↑</button>
+    <button data-playlist-entry-action="down" data-vex-ref="${escapeHTML(childRef("actions/down"))}" ${index===total-1?"disabled":""}>↓</button>
+    <button data-playlist-entry-action="remove" data-vex-ref="${escapeHTML(childRef("actions/remove"))}">${escapeHTML(resolveText(locale,"playlist.remove-track"))}</button>
    </span>
   </li>`;
 }
@@ -2708,15 +2730,17 @@ function renderPlaylistChoices(){
     available:resolved.playableRefs.length,
     missing:resolved.missingRefs.length
    });
-   return `<article class="playlist-card" data-playlist-id="${escapeHTML(playlist.id)}">
+   const cardRef=playlistCardPresentationRef(playlist.id);
+   const cardChild=path=>playlistCardChildRef(playlist.id,path);
+   return `<article class="playlist-card" data-playlist-id="${escapeHTML(playlist.id)}" data-vex-ref="${escapeHTML(cardRef)}" data-vex-continuity="${PlaylistPresentationIdentity.Card.continuity}">
     <div class="playlist-heading">
      <strong>${escapeHTML(playlist.name)}</strong>
      <small>${escapeHTML(availability)}</small>
     </div>
     <div class="playlist-card-actions">
-     <button data-playlist-action="play" ${resolved.playableRefs.length?"":"disabled"}>${escapeHTML(resolveText(locale,"playlist.play"))}</button>
-     <button data-playlist-action="shuffle" ${resolved.playableRefs.length?"":"disabled"}>${escapeHTML(resolveText(locale,"playlist.shuffle"))}</button>
-     <button data-playlist-action="open">${escapeHTML(resolveText(locale,"playlist.open"))}</button>
+     <button data-playlist-action="play" data-vex-action="${PlayerCompositionIntent.PlayPlaylist}" data-vex-ref="${escapeHTML(cardChild("actions/play"))}" ${resolved.playableRefs.length?"":"disabled"}>${escapeHTML(resolveText(locale,"playlist.play"))}</button>
+     <button data-playlist-action="shuffle" data-vex-action="${PlayerCompositionIntent.ShufflePlaylist}" data-vex-ref="${escapeHTML(cardChild("actions/shuffle"))}" ${resolved.playableRefs.length?"":"disabled"}>${escapeHTML(resolveText(locale,"playlist.shuffle"))}</button>
+     <button data-playlist-action="open" data-vex-action="${PlaylistNavigationIntent.OpenDetail}" data-vex-ref="${escapeHTML(cardChild("actions/open"))}">${escapeHTML(resolveText(locale,"playlist.open"))}</button>
     </div>
    </article>`;
   }).join("")
@@ -2735,10 +2759,19 @@ function renderPlaylistChoices(){
   missing:resolved.missingRefs.length
  });
  playlistDetailPlay.disabled=resolved.playableRefs.length===0;
+ const occurrenceByRef=new Map();
  playlistDetailEntries.innerHTML=resolved.entries.length
-  ?resolved.entries.map((entry,index)=>
-    playlistEntryHTML(entry,index,resolved.entries.length)
-   ).join("")
+  ?resolved.entries.map((entry,index)=>{
+    const occurrence=(occurrenceByRef.get(entry.ref)??0)+1;
+    occurrenceByRef.set(entry.ref,occurrence);
+    return playlistEntryHTML(
+     entry,
+     index,
+     resolved.entries.length,
+     playlist.id,
+     occurrence
+    );
+   }).join("")
   :`<li class="empty-state">${escapeHTML(resolveText(locale,"playlist.empty"))}</li>`;
 }
 

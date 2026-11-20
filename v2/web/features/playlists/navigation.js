@@ -6,6 +6,7 @@
 // Queue, and Library truth remain with their existing owners.
 
 export const PlaylistNavigationIntent=Object.freeze({
+ OpenDetail:"vexstream.playlists.detail.open",
  CloseDetail:"vexstream.playlists.detail.close",
  AddSongs:"vexstream.playlists.detail.add-songs"
 });

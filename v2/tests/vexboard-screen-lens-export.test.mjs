@@ -192,3 +192,31 @@ test("exported element kind follows the source interaction type",()=>{
   assert.equal(elements.get("element.vexstream.playlists.rename")?.kind,"BUTTON");
   assert.equal(elements.get("element.vexstream.playback.play-pause")?.kind,"BUTTON");
 });
+
+
+test("Playlist runtime populations project typed cross-platform identity formation without live instances",()=>{
+  const lens=JSON.parse(committed);
+  const screen=lens.screens[0];
+  const cardPopulation=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.playlists.cards");
+  const entryPopulation=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.playlists.detail.entries");
+  const cardTemplate=screen.realization.templates.find(entry=>entry.ref==="template.vexstream.playlists.card");
+  const entryTemplate=screen.realization.templates.find(entry=>entry.ref==="template.vexstream.playlists.detail-entry");
+
+  assert.equal(cardPopulation.kind,"POPULATION");
+  assert.equal(cardPopulation.itemKey,"playlist.id");
+  assert.equal(cardTemplate.instanceIdentity.kind,"RUNTIME_INSTANCE");
+  assert.equal(cardTemplate.instanceIdentity.continuity,"STABLE_INSTANCE");
+  assert.deepEqual(cardTemplate.instanceIdentity.partSources,["playlist.id"]);
+
+  assert.equal(entryPopulation.kind,"POPULATION");
+  assert.equal(entryPopulation.gate.presenceRef,"presence.vexstream.playlists.detail-open");
+  assert.equal(entryTemplate.instanceIdentity.continuity,"CURRENT_OCCURRENCE");
+  assert.deepEqual(
+    entryTemplate.instanceIdentity.partSources,
+    ["playlist.id","entry.ref","occurrenceWithinPlaylist"]
+  );
+  assert.ok(entryTemplate.slots.every(slot=>
+    slot.depth===0||slot.instanceIdentity?.kind==="DERIVED_CHILD"
+  ));
+  assert.ok(screen.realization.held.some(value=>/does not yet own a durable per-entry ID/.test(value)));
+});

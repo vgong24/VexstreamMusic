@@ -88,6 +88,6 @@ jobs:
           assert.ok(open,'selected Playlist detail OPEN expression exists');
           const resolved=Realization.resolvePresence(lens,screen.screenRef,open.context);
           assert.equal(resolved.elements.size,screen.elements.length);
-          assert.equal(resolved.elements.get('vexstream.desktop.library.playlists.detail')?.state,'SOURCE');
+          assert.equal(resolved.elements.get('vexstream.desktop.library.playlists.detail')?.state,'SCENARIO','generated open expression presents the detail through an explicit expression override');
           console.log(JSON.stringify({state:'PASS',expressions:expressions.length,detailExpression:open.what},null,2));
           NODE

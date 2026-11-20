@@ -35,39 +35,7 @@ const RELATIONSHIP_ATTRIBUTES=Object.freeze([
 ]);
 
 function attributeValue(raw,attribute){
-  const escaped=attribute.replace(/[.*+?^$(){}|[\]\\]/g,"\\const SOURCE_IDENTITY_ATTRIBUTES=Object.freeze(["data-vex-control","data-vex-action"]);
-
-function stableSourceIdentities(html){
-  const found=[];
-  const seen=new Set();
-  const pattern=/data-vex-(control|action)="([^"]+)"/g;
-  for(const match of String(html).matchAll(pattern)){
-    const attribute="data-vex-"+match[1];
-    const identity=match[2];
-    if(seen.has(identity)) throw new Error("VexBoard export requires unique stable source identity in this bounded shell: "+identity);
-    seen.add(identity);
-    found.push(Object.freeze({attribute,identity}));
-  }
-  return Object.freeze(found);
-}
-
-function identityLabel(identity){
-  return identity.split(".").slice(-2).join(" / ").replaceAll("-"," ");
-}
-
-function viewHTML(sourceHTML){
-  let html=String(sourceHTML);
-  html=html.replace('<body data-vex-screen="vexstream.desktop.library" data-shell-current-view="home">','<body data-vex-screen="vexstream.desktop.library" data-shell-current-view="home" data-vex-structural-ref="'+FRAME_REF+'">');
-  html=html.replace('<main class="shell">','<main class="shell" data-vex-structural-ref="'+SHELL_REF+'">');
-  for(const {attribute,identity} of stableSourceIdentities(sourceHTML)){
-    const before=attribute+'="'+identity+'"';
-    const after=before+' data-vex-ref="'+elementRef(identity)+'"';
-    html=html.replace(before,after);
-  }
-  return html;
-}
-");
-  return String(raw).match(new RegExp("\\b"+escaped+"=\"([^\"]+)\""))?.[1]??null;
+  return String(raw).match(new RegExp("\\b"+attribute+"=\"([^\"]+)\""))?.[1]??null;
 }
 
 function relationshipIdentity(attribute,value){
@@ -109,7 +77,7 @@ function identityLabel(identity){
 }
 
 function relationLabel(relation){
-  const title=String(relation.value).replaceAll("-"," ").replace(/\\b\\w/g,(char)=>char.toUpperCase());
+  const title=String(relation.value).replaceAll("-"," ").replace(/\b\w/g,(char)=>char.toUpperCase());
   if(relation.attribute==="data-shell-view")return "Shell view: "+title;
   if(relation.attribute==="data-library-mode")return "Library mode: "+title;
   if(relation.attribute==="data-discover-mode")return "Discover mode: "+title;
@@ -124,7 +92,7 @@ function viewHTML(sourceHTML){
   html=html.replace('<body data-vex-screen="vexstream.desktop.library" data-shell-current-view="home">','<body data-vex-screen="vexstream.desktop.library" data-shell-current-view="home" data-vex-structural-ref="'+FRAME_REF+'">');
   html=html.replace('<main class="shell">','<main class="shell" data-vex-structural-ref="'+SHELL_REF+'">');
   html=html.replace(/<[A-Za-z][^>]*>/g,(tagSource)=>{
-    if(/\\bdata-vex-ref=/.test(tagSource))return tagSource;
+    if(/\bdata-vex-ref=/.test(tagSource))return tagSource;
     const relation=sourceRelationshipForTag(tagSource);
     if(!relation)return tagSource;
     return tagSource.replace(/>$/,' data-vex-ref="'+elementRef(relation.identity)+'">');

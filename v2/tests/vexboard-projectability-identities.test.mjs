@@ -15,6 +15,8 @@ import { PlaybackTimelineIntent } from "../web/features/playback/timeline.js";
 import { PlaybackVolumeIntent } from "../web/features/playback/volume.js";
 import { QueuePresentationIntent } from "../web/features/queue/presentation.js";
 import { QueueConnectionIntent } from "../web/features/queue/connection.js";
+import { SourceClientIntent } from "../web/features/sources/client.js";
+import { ImportClientIntent } from "../web/features/imports/client.js";
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
 const V2=path.resolve(HERE,"..");
@@ -36,6 +38,13 @@ const expected=Object.freeze([
   Object.freeze({id:"songLayoutButton",identity:LibraryProjectionIntent.OpenSongLayout}),
   Object.freeze({id:"playAllSongs",identity:PlayerCompositionIntent.PlayLibraryView}),
   Object.freeze({id:"selectSongs",identity:TrackSelectionIntent.ToggleMode}),
+  Object.freeze({id:"sourceAdd",identity:SourceClientIntent.AddFolder}),
+  Object.freeze({id:"sourceDiscover",identity:SourceClientIntent.Discover}),
+  Object.freeze({id:"sourceDiscoverDeep",identity:SourceClientIntent.DiscoverDeep}),
+  Object.freeze({id:"clearIgnoredSources",identity:SourceClientIntent.ClearIgnored}),
+  Object.freeze({id:"youtubeImportURL",identity:ImportClientIntent.SourceURL}),
+  Object.freeze({id:"youtubeInspect",identity:ImportClientIntent.Inspect}),
+  Object.freeze({id:"importRefresh",identity:ImportClientIntent.RefreshJobs}),
   Object.freeze({id:"librarySort",identity:LibraryProjectionIntent.SortPreset}),
   Object.freeze({id:"shuffleQueueUpcoming",identity:QueueConnectionIntent.ShuffleUpcoming}),
 ]);
@@ -56,6 +65,13 @@ test("all default-visible runtime-wired projectability gaps have source-owned id
     "vexstream.library.song-layout.open",
     "vexstream.player.play-library-view",
     "vexstream.library.selection.toggle",
+    "vexstream.sources.add-folder",
+    "vexstream.sources.discover",
+    "vexstream.sources.discover-deep",
+    "vexstream.sources.ignored.clear",
+    "vexstream.import.source-url",
+    "vexstream.import.inspect",
+    "vexstream.import.jobs.refresh",
     "vexstream.library.sort.preset",
     "vexstream.queue.shuffle-upcoming",
   ]);
@@ -88,6 +104,18 @@ test("identity alignment does not replace or reroute existing runtime handlers",
   assert.match(app,/songLayoutButton\.addEventListener\("click",\(\)=>\{songLayoutPanel\.hidden=false;\}\);/);
   assert.match(app,/playAllSongs\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{\s*const visible=currentLibraryView\(\);\s*if\(visible\.length\)await player\.playContext\(/);
   assert.match(app,/selectSongs\.addEventListener\("click",\(\)=>\{\s*const wasActive=librarySelection\.currentProjection\.active;\s*librarySelection\.toggleMode\(\);/);
+  assert.match(app,/sourceAdd\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{\s*const path=await chooseSourceFolder\(\);\s*const mutation=await addSource\(path\);/);
+  assert.match(app,/sourceDiscover\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{\s*sourceDiscoveryState=await discoverSources\(\{deep:false\}\);/);
+  assert.match(app,/sourceDiscoverDeep\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{\s*sourceDiscoveryState=await discoverSources\(\{deep:true\}\);/);
+  assert.match(app,/clearIgnoredSourcesButton\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{\s*const mutation=await clearIgnoredSources\(\);/);
+  assert.match(app,/youtubeInspect\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{\s*await loadImportReview\(youtubeImportURL\.value\);/);
+  assert.match(app,/youtubeImportURL\.addEventListener\("keydown",event=>\{\s*if\(event\.key!=="Enter"\)return;/);
+  assert.match(app,/importRefresh\.addEventListener\("click",\(\)=>void guarded\(\(\)=>refreshImportJobs\(\)\)\);/);
   assert.match(app,/librarySort\.addEventListener\("change",\(\)=>\{\s*if\(librarySort\.value==="custom"\)return;/);
   assert.match(app,/shuffleQueueUpcoming\.addEventListener\("click",\(\)=>\{\s*player\.shuffleUpcoming\(\);/);
+});
+
+test("ignored folders toggle keeps source identity without inventing an app handler",()=>{
+ assert.equal(SourceClientIntent.ToggleIgnored,"vexstream.sources.ignored.toggle");
+ assert.match(html,/<summary data-vex-action="vexstream\.sources\.ignored\.toggle">Ignored folders<\/summary>/);
 });

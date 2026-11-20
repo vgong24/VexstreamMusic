@@ -61,3 +61,12 @@ test("explicit hidden owners distinguish Library terrain from nested Library sta
   assert.ok(audit.groupedCoverage["shell:library/hidden:#librarySelectionBar"]);
   assert.ok(audit.groupedCoverage["shell:library/hidden:#libraryGroupDetail"]);
 });
+
+test("admitted Discover modes have addressable immediate controls while Import review remains nested debt",()=>{
+ const audit=auditProjectability(readCurrentAuditInputs());
+ assert.deepEqual(audit.groupedCoverage["shell:discover"].statuses,{ADDRESSABLE_HELD:3});
+ assert.deepEqual(audit.groupedCoverage["shell:discover/discover:pc"].statuses,{ADDRESSABLE_HELD:5});
+ assert.deepEqual(audit.groupedCoverage["shell:discover/discover:youtube"].statuses,{ADDRESSABLE_HELD:3});
+ assert.deepEqual(audit.groupedCoverage["shell:discover/discover:explore"].statuses,{ADDRESSABLE_HELD:2});
+ assert.ok(audit.groupedCoverage["shell:discover/discover:youtube/hidden:#importReview"]);
+});

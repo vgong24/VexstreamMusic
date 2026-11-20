@@ -97,10 +97,10 @@ test("Library alternate terrain uses source-authored nested selections without P
   assert.equal(shell.kind,"SELECTION");
   assert.equal(shell.exhaustive,false);
   assert.equal(shell.defaultRef,"vexstream.desktop.library.panel.home");
-  assert.deepEqual(shell.choices.map(choice=>choice.targetRef),[
-    "vexstream.desktop.library.panel.home",
-    "vexstream.desktop.library.panel.library",
-  ]);
+  const shellTargets=shell.choices.map(choice=>choice.targetRef);
+  assert.ok(shellTargets.includes("vexstream.desktop.library.panel.home"));
+  assert.ok(shellTargets.includes("vexstream.desktop.library.panel.library"));
+  assert.equal(new Set(shellTargets).size,shellTargets.length,"Shell terrain refs stay unique as additional terrains are admitted");
   assert.equal(mode.kind,"SELECTION");
   assert.deepEqual(mode.choices.map(choice=>choice.targetRef),[
     "vexstream.desktop.library.mode-state.songs",
@@ -112,4 +112,29 @@ test("Library alternate terrain uses source-authored nested selections without P
   assert.ok(screen.view.stateBindings.some(binding=>binding.presenceRef===mode.ref&&binding.value==="vexstream.desktop.library.mode-state.albums"));
   assert.match(screen.view.html,/data-shell-panel="library"[^>]*data-vex-structural-ref="vexstream.desktop.library.panel.library"/);
   assert.match(screen.view.html,/id="trackChoices"[^>]*data-vex-structural-ref="vexstream.desktop.library.track-choices"/);
+});
+
+test("Discover alternate terrain uses source-authored nested selection without Product JavaScript",()=>{
+ const lens=JSON.parse(committed);
+ const screen=lens.screens[0];
+ const shell=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.shell.primary-terrain");
+ const discover=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.discover.mode");
+ assert.equal(screen.view.scriptPolicy,"NONE");
+ assert.ok(shell.choices.some(choice=>choice.targetRef==="vexstream.desktop.library.panel.discover"));
+ assert.equal(discover.kind,"SELECTION");
+ assert.equal(discover.owner,"DiscoverNavigation");
+ assert.equal(discover.defaultRef,"vexstream.desktop.library.discover-panel.pc");
+ assert.equal(discover.exhaustive,true);
+ assert.equal(discover.gate.presenceRef,shell.ref);
+ assert.equal(discover.gate.choice,2);
+ assert.deepEqual(
+  discover.choices.map(choice=>choice.targetRef),
+  [
+   "vexstream.desktop.library.discover-panel.pc",
+   "vexstream.desktop.library.discover-panel.youtube",
+   "vexstream.desktop.library.discover-panel.explore"
+  ]
+ );
+ assert.ok(screen.view.stateBindings.some(binding=>binding.presenceRef===discover.ref&&binding.value==="vexstream.desktop.library.discover-panel.youtube"));
+ assert.ok(screen.view.stateBindings.some(binding=>binding.presenceRef===discover.ref&&binding.value==="vexstream.desktop.library.discover-panel.explore"));
 });

@@ -4,6 +4,12 @@
 // This module owns request/response shape only. It does not decide duplicate blocking, provider
 // execution, staging custody, or Library commit/recovery semantics.
 
+export const ImportClientIntent=Object.freeze({
+ SourceURL:"vexstream.import.source-url",
+ Inspect:"vexstream.import.inspect",
+ RefreshJobs:"vexstream.import.jobs.refresh"
+});
+
 export async function inspectImport(
   url,
   { request = globalThis.fetch } = {},

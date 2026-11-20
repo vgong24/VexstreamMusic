@@ -1,0 +1,48 @@
+name: Projectability Identity Candidate Proof
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'v2/web/index.html'
+      - 'v2/web/features/playback/journey.js'
+      - 'v2/web/features/player/journey.js'
+      - 'v2/tests/player-browser-regression.py'
+      - '.github/workflows/projectability-identity-candidate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  identity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Playback / Queue semantic regressions
+        run: |
+          node --test \
+            v2/tests/playback-behavior.test.mjs \
+            v2/tests/queue-behavior.test.mjs
+      - name: Stable projectability identities
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          import { playbackJourney } from './v2/web/features/playback/journey.js';
+          import { playerJourney } from './v2/web/features/player/journey.js';
+
+          const html=fs.readFileSync('v2/web/index.html','utf8');
+          assert.equal(playbackJourney.screenRef,'vexstream.desktop.library');
+          assert.equal(playerJourney.screenRef,'vexstream.desktop.library');
+          assert.match(html,/id="previous"[^>]*data-vex-action="vexstream\.player\.previous"/);
+          assert.doesNotMatch(html,/id="previous"[^>]*data-vex-control="vexstream\.queue\.previous"/);
+          assert.match(html,/data-vex-control="vexstream\.playback\.play-pause"/);
+          assert.match(html,/data-vex-control="vexstream\.queue\.next"/);
+          console.log(JSON.stringify({state:'PASS',screenRef:playerJourney.screenRef,previousAction:'vexstream.player.previous'},null,2));
+          NODE
+      - name: Current browser regression syntax
+        run: python3 -m py_compile v2/tests/player-browser-regression.py

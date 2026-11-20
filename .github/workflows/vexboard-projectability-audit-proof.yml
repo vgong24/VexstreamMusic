@@ -40,7 +40,7 @@ jobs:
           assert.equal(audit.counts.SOURCE_RELATIONSHIP_UNMAPPED,18);
           assert.equal(audit.counts.VISIBLE_WIRED_UNIDENTIFIED,12);
           assert.equal(audit.blocking.length,30);
-          console.log(JSON.stringify({state:'PASS',strictExit:status,blocking:audit.blocking.length,total:audit.total,defaultVisible:audit.defaultVisible},null,2));
+          console.log(JSON.stringify({state:'PASS',blocking:audit.blocking.length,total:audit.total,defaultVisible:audit.defaultVisible},null,2));
           NODE
           if [ "$status" -eq 0 ]; then
             echo "strict audit unexpectedly passed"

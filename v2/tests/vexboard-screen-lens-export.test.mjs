@@ -252,3 +252,37 @@ test("Deleted terrain and Trash population reuse the generic expression and runt
   ));
   assert.ok(screen.realization.held.some(value=>/Trash selection, purge confirmation and purge recovery/.test(value)));
 });
+
+
+test("source-authored selections name the controls that choose each projected child",()=>{
+  const lens=JSON.parse(committed);
+  const screen=lens.screens[0];
+  const shell=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.shell.primary-terrain");
+  const library=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.library.mode");
+  const discover=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.discover.mode");
+
+  assert.deepEqual(shell.choices.map(choice=>choice.selectorRefs),[
+    ["element.vexstream.shell.view.home"],
+    ["element.vexstream.shell.view.library"],
+    ["element.vexstream.shell.view.discover"],
+    ["element.vexstream.shell.view.playlists"],
+    ["element.vexstream.shell.view.deleted"],
+  ]);
+  assert.deepEqual(library.choices.map(choice=>choice.selectorRefs),[
+    ["element.vexstream.library.mode.songs"],
+    ["element.vexstream.library.mode.albums"],
+    ["element.vexstream.library.mode.artists"],
+  ]);
+  assert.deepEqual(discover.choices.map(choice=>choice.selectorRefs),[
+    ["element.vexstream.discover.mode.pc"],
+    ["element.vexstream.discover.mode.youtube"],
+    ["element.vexstream.discover.mode.explore"],
+  ]);
+
+  const refs=new Set(screen.elements.map(element=>element.ref));
+  for(const selection of [shell,library,discover]){
+    for(const choice of selection.choices){
+      for(const selectorRef of choice.selectorRefs) assert.ok(refs.has(selectorRef),selectorRef+" is source-addressable");
+    }
+  }
+});

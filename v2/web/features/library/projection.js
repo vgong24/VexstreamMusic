@@ -4,6 +4,12 @@
 // Search/sort/grouping answer "how should the current catalog be viewed?" They never mutate Library,
 // Queue, source configuration, or durable metadata.
 
+export const LibraryProjectionIntent=Object.freeze({
+ SearchQuery:"vexstream.library.search.query",
+ SearchExecute:"vexstream.library.search.execute",
+ FilterGenre:"vexstream.library.filter.genre"
+});
+
 const SORT_KEYS=new Set([
  "title",
  "added",

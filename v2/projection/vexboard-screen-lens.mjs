@@ -16,10 +16,7 @@ import { ImportClientIntent } from "../web/features/imports/client.js";
 import { PlaylistClientIntent } from "../web/features/playlists/client.js";
 import { PlaylistNavigationIntent } from "../web/features/playlists/navigation.js";
 import { PlayerCompositionIntent } from "../web/features/player/composition.js";
-import {
-  VexPresentationContinuity,
-  VEX_PRESENTATION_INSTANCE_ENCODING,
-} from "../web/foundation/identity.js";
+import { PlaylistPresentationIdentity } from "../web/features/playlists/presentation.js";
 
 export const VEXBOARD_SCREEN_LENS_SCHEMA="vexboard.screen-lens/v1";
 export const VEXSTREAM_VEXBOARD_EXPORTER_VERSION="vexstream-vexboard-exporter/1";
@@ -52,8 +49,6 @@ const PLAYLIST_CARD_POPULATION_REF="presence.vexstream.playlists.cards";
 const PLAYLIST_ENTRY_POPULATION_REF="presence.vexstream.playlists.detail.entries";
 const PLAYLIST_CARD_TEMPLATE_REF="template.vexstream.playlists.card";
 const PLAYLIST_ENTRY_TEMPLATE_REF="template.vexstream.playlists.detail-entry";
-const PLAYLIST_CARD_INSTANCE_BASE="element.vexstream.playlists.card";
-const PLAYLIST_ENTRY_INSTANCE_BASE="element.vexstream.playlists.entry";
 const PREVIOUS_ACTION="vexstream.player.previous";
 const semanticIdentity=token=>token.familyRef+"."+token.ref;
 const elementRef=identity=>"element."+identity;
@@ -662,14 +657,8 @@ export function buildVexStreamVexBoardLens({html,css}){
             symbol:"playlist-card",
             source:source("web/app.js"),
             summary:"One durable Playlist rendered in the overview; identity survives ordering and wording changes.",
-            instanceFormation:'dynamicVexPresentationRef("'+PLAYLIST_CARD_INSTANCE_BASE+'",[playlist.id])',
-            instanceIdentity:{
-              kind:"RUNTIME_INSTANCE",
-              baseRef:PLAYLIST_CARD_INSTANCE_BASE,
-              partSources:["playlist.id"],
-              encoding:VEX_PRESENTATION_INSTANCE_ENCODING,
-              continuity:VexPresentationContinuity.STABLE_INSTANCE
-            },
+            instanceFormation:"playlistCardPresentationRef(playlist.id)",
+            instanceIdentity:PlaylistPresentationIdentity.Card,
             realizes:[
               elementRef(PlayerCompositionIntent.PlayPlaylist),
               elementRef(PlayerCompositionIntent.ShufflePlaylist)
@@ -687,14 +676,8 @@ export function buildVexStreamVexBoardLens({html,css}){
             symbol:"playlist-entry",
             source:source("web/app.js"),
             summary:"One current Playlist entry occurrence. Duplicate refs and reorder prevent a stronger durable entry claim without a source-owned entry ID.",
-            instanceFormation:'dynamicVexPresentationRef("'+PLAYLIST_ENTRY_INSTANCE_BASE+'",[playlist.id,entry.ref,occurrenceWithinPlaylist])',
-            instanceIdentity:{
-              kind:"RUNTIME_INSTANCE",
-              baseRef:PLAYLIST_ENTRY_INSTANCE_BASE,
-              partSources:["playlist.id","entry.ref","occurrenceWithinPlaylist"],
-              encoding:VEX_PRESENTATION_INSTANCE_ENCODING,
-              continuity:VexPresentationContinuity.CURRENT_OCCURRENCE
-            },
+            instanceFormation:"playlistEntryPresentationRef({ playlistID: playlist.id, trackRef: entry.ref, occurrence: occurrenceWithinPlaylist })",
+            instanceIdentity:PlaylistPresentationIdentity.DetailEntry,
             realizes:[
               elementRef("vexstream.player.add-queue"),
               elementRef("vexstream.player.play-next"),

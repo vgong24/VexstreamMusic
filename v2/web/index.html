@@ -473,20 +473,20 @@
       </div>
       <section id="playlistDetail" class="playlist-detail" aria-labelledby="playlistDetailName" hidden>
         <div class="playlist-detail-head">
-          <button id="playlistDetailBack" type="button" data-text-ref="playlist.detail.back">← All playlists</button>
+          <button id="playlistDetailBack" type="button" data-vex-action="vexstream.playlists.detail.close" data-text-ref="playlist.detail.back">← All playlists</button>
           <span class="muted" data-text-ref="playlist.detail.terrain">Playlist terrain</span>
         </div>
         <div class="playlist-detail-hero">
           <div class="playlist-detail-copy">
-            <input id="playlistDetailName" type="text" aria-label="Playlist name">
+            <input id="playlistDetailName" type="text" data-vex-action="vexstream.playlists.rename.name" aria-label="Playlist name">
             <span id="playlistDetailAvailability" class="muted"></span>
           </div>
           <div class="playlist-detail-actions">
-            <button id="playlistDetailPlay" type="button" class="primary" data-text-ref="playlist.play">Play playlist</button>
-            <button id="playlistDetailShuffle" type="button" data-text-ref="playlist.shuffle">Shuffle playlist</button>
-            <button id="playlistDetailAddSongs" type="button" data-text-ref="playlist.add-songs">Add songs</button>
-            <button id="playlistDetailRename" type="button" data-text-ref="playlist.rename">Rename</button>
-            <button id="playlistDetailDelete" type="button" data-text-ref="playlist.delete">Delete playlist</button>
+            <button id="playlistDetailPlay" type="button" class="primary" data-vex-action="vexstream.player.play-playlist" data-text-ref="playlist.play">Play playlist</button>
+            <button id="playlistDetailShuffle" type="button" data-vex-action="vexstream.player.shuffle-playlist" data-text-ref="playlist.shuffle">Shuffle playlist</button>
+            <button id="playlistDetailAddSongs" type="button" data-vex-action="vexstream.playlists.detail.add-songs" data-text-ref="playlist.add-songs">Add songs</button>
+            <button id="playlistDetailRename" type="button" data-vex-action="vexstream.playlists.rename" data-text-ref="playlist.rename">Rename</button>
+            <button id="playlistDetailDelete" type="button" data-vex-action="vexstream.playlists.delete" data-text-ref="playlist.delete">Delete playlist</button>
           </div>
         </div>
         <ol id="playlistDetailEntries" class="playlist-detail-entries"></ol>

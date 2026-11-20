@@ -15,6 +15,10 @@ export const ShellView=Object.freeze({
  DISCOVER:"discover"
 });
 
+export const ShellNavigationIntent=Object.freeze({
+ ToggleSidebar:"vexstream.shell.sidebar.toggle"
+});
+
 const VIEWS=new Set(Object.values(ShellView));
 const LIBRARY_VIEWS=new Set([
  ShellView.SONGS,

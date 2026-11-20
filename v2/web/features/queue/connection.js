@@ -17,6 +17,10 @@ import {
 } from "./model.js";
 import { presentQueueControls } from "./presentation.js";
 
+export const QueueConnectionIntent=Object.freeze({
+  ShuffleUpcoming:"vexstream.queue.shuffle-upcoming"
+});
+
 export function createQueueConnection({
   initialState = QueueState.empty(),
   shuffle = value => value,

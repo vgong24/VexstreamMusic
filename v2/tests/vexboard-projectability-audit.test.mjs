@@ -32,3 +32,15 @@ test("audit mechanically exposes visible runtime-wired affordances still missing
   assert.ok(unresolved.every(row=>row.id&&row.events.length));
   assert.equal(Array.isArray(audit.blocking),true);
 });
+
+test("audit groups latent debt by source presentation terrain",()=>{
+  const audit=auditProjectability(readCurrentAuditInputs());
+  const groups=audit.groupedCoverage;
+  assert.ok(groups.default?.total>0,"default shell group exists");
+  assert.ok(Object.keys(groups).some(key=>key.startsWith("shell:")),"shell terrain groups exist");
+  assert.ok(Object.keys(groups).some(key=>key.startsWith("shell:discover/discover:")),"Discover sub-terrain groups exist");
+  const groupedTotal=Object.values(groups).reduce((sum,group)=>sum+group.total,0);
+  const groupedLatent=Object.values(groups).reduce((sum,group)=>sum+group.latent,0);
+  assert.equal(groupedTotal,audit.total);
+  assert.equal(groupedLatent,audit.latent);
+});

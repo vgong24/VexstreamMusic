@@ -19,9 +19,9 @@ test("committed projectability audit regenerates from current shell/runtime/Lens
   assert.equal(committed,stableJSON(auditProjectability(readCurrentAuditInputs())));
 });
 
-test("every source-stable data-vex control/action is at least addressable",()=>{
+test("every source-stable relationship is at least addressable",()=>{
   const audit=auditProjectability(readCurrentAuditInputs());
-  const stable=audit.rows.filter(row=>row.relation?.kind==="vex-control"||row.relation?.kind==="vex-action");
+  const stable=audit.rows.filter(row=>row.relation);
   assert.ok(stable.length>0);
   assert.equal(stable.some(row=>row.status==="SOURCE_RELATIONSHIP_UNMAPPED"),false);
 });

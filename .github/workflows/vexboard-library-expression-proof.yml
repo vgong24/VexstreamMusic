@@ -71,7 +71,8 @@ jobs:
           assert.ok(find(LIBRARY,ARTISTS),'Library/Artists expression exists');
 
           const library=find(LIBRARY,SONGS);
-          assert.equal(library.presence.elements.get(LIBRARY)?.state,'SOURCE');
+          assert.equal(library.presence.elements.get(LIBRARY)?.state,'SCENARIO',
+            'alternate Library terrain is presented by the browser-local scenario, not source default');
           assert.equal(library.presence.elements.get(HOME)?.state,'LATENT');
 
           const albums=find(LIBRARY,ALBUMS);

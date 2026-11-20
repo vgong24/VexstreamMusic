@@ -39,14 +39,16 @@ function nearestContext(stack,attribute){
   return null;
 }
 
-function nearestHiddenAncestor(stack){
+function nearestExplicitHiddenAncestor(stack){
   for(let index=stack.length-1;index>=0;index-=1){
     const entry=stack[index];
-    if(!entry.hidden)continue;
+    if(!entry.explicitHidden)continue;
     return {
       tag:entry.tag,
       id:typeof entry.attrs?.id==="string"?entry.attrs.id:null,
-      className:typeof entry.attrs?.class==="string"?entry.attrs.class:null
+      className:typeof entry.attrs?.class==="string"?entry.attrs.class:null,
+      shellPanel:typeof entry.attrs?.["data-shell-panel"]==="string"?entry.attrs["data-shell-panel"]:null,
+      discoverPanel:typeof entry.attrs?.["data-discover-panel"]==="string"?entry.attrs["data-discover-panel"]:null
     };
   }
   return null;
@@ -56,7 +58,7 @@ function presentationContext(stack){
   return {
     shellPanel:nearestContext(stack,"data-shell-panel"),
     discoverPanel:nearestContext(stack,"data-discover-panel"),
-    hiddenAncestor:nearestHiddenAncestor(stack)
+    hiddenAncestor:nearestExplicitHiddenAncestor(stack)
   };
 }
 
@@ -78,8 +80,9 @@ export function scanInteractiveHTML(html){
     if(!open)continue;
     const tag=open[1].toLowerCase();
     const a=attrs(open[2]);
+    const explicitHidden=Object.hasOwn(a,"hidden");
     const parentHidden=stack.some(entry=>entry.hidden);
-    const hidden=parentHidden||Object.hasOwn(a,"hidden");
+    const hidden=parentHidden||explicitHidden;
     if(INTERACTIVE.has(tag)&&!(tag==="a"&&!a.href)){
       ordinal+=1;
       rows.push({
@@ -94,7 +97,7 @@ export function scanInteractiveHTML(html){
         attrs:a
       });
     }
-    if(!VOID.has(tag)&&!token.endsWith("/>"))stack.push({tag,hidden,attrs:a});
+    if(!VOID.has(tag)&&!token.endsWith("/>"))stack.push({tag,hidden,explicitHidden,attrs:a});
   }
   return rows;
 }
@@ -142,14 +145,28 @@ function classify(row,lens,eventsById){
   return {status:"VISIBLE_UNIDENTIFIED",elementRef:null,pathwayRef:null,events};
 }
 
+function hiddenKey(hidden){
+  if(hidden?.id)return "#"+hidden.id;
+  if(hidden?.className)return "."+String(hidden.className).trim().split(/\s+/)[0];
+  return hidden?.tag??null;
+}
+
 function terrainKey(row){
   const shell=row.presentation?.shellPanel;
   const discover=row.presentation?.discoverPanel;
-  if(shell==="discover"&&discover)return "shell:discover/discover:"+discover;
-  if(shell)return "shell:"+shell;
   const hidden=row.presentation?.hiddenAncestor;
-  if(hidden?.id)return "hidden:#"+hidden.id;
-  if(hidden?.className)return "hidden:."+String(hidden.className).trim().split(/\s+/)[0];
+  const base=shell==="discover"&&discover
+    ?"shell:discover/discover:"+discover
+    :shell
+      ?"shell:"+shell
+      :null;
+  const hiddenIsTerrainRoot=
+    (shell&&hidden?.shellPanel===shell)||
+    (discover&&hidden?.discoverPanel===discover);
+  const nestedHidden=hiddenIsTerrainRoot?null:hiddenKey(hidden);
+  if(base&&nestedHidden)return base+"/hidden:"+nestedHidden;
+  if(base)return base;
+  if(nestedHidden)return "hidden:"+nestedHidden;
   return row.hidden?"latent:other":"default";
 }
 

@@ -6,6 +6,10 @@
 //
 // It does not own Playback play/pause, Queue, Library, or persistence.
 
+export const PlaybackVolumeIntent=Object.freeze({
+ Set:"vexstream.playback.volume.set"
+});
+
 export function projectPlaybackVolume(media){
  const volume=clampVolume(media?.volume);
  return Object.freeze({

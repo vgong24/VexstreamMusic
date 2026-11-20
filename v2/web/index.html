@@ -10,7 +10,7 @@
 <main class="shell">
   <section class="player v3-product-shell" aria-labelledby="screenTitle">
     <header class="app-identity product-header">
-      <button id="libraryNavToggle" class="nav-toggle" type="button" title="Toggle library navigation" aria-label="Toggle library navigation" aria-expanded="true">☰</button>
+      <button id="libraryNavToggle" class="nav-toggle" type="button" data-vex-action="vexstream.shell.sidebar.toggle" title="Toggle library navigation" aria-label="Toggle library navigation" aria-expanded="true">☰</button>
       <button id="brandHome" class="brand brand-home" type="button" data-shell-view="home" title="Go to Library home" aria-label="Go to Library home"><span>Vex</span>Stream Music</button>
       <div class="top-tabs" aria-label="VexStream terrain">
         <button id="libraryTopTab" type="button" data-shell-view="home" class="active">Library</button>
@@ -33,26 +33,26 @@
         <button type="button" data-shell-view="deleted"><span class="nav-icon">♲</span><span>Deleted music <span id="trashNavCount" class="small muted"></span></span></button>
       </nav>
       <div class="sidebar-actions nav">
-        <button id="rescanLibraryBtn" type="button"><span class="nav-icon">↻</span><span>Rescan library</span></button>
-        <button id="shuffleAllBtn" type="button"><span class="nav-icon">⤨</span><span>Shuffle all</span></button>
+        <button id="rescanLibraryBtn" type="button" data-vex-action="vexstream.library.rescan"><span class="nav-icon">↻</span><span>Rescan library</span></button>
+        <button id="shuffleAllBtn" type="button" data-vex-action="vexstream.player.shuffle-library"><span class="nav-icon">⤨</span><span>Shuffle all</span></button>
       </div>
       <div class="sidebar-note">Your library is local. Source folders are managed under Discover → This PC.</div>
     </aside>
 
     <div id="libraryUtilityBar" class="library-toolbar library-utility-bar">
       <div class="library-search">
-        <input id="librarySearch" type="search" placeholder="Search this library…" aria-label="Search library">
-        <button id="librarySearchExecute" class="search-go" type="button" title="Search" aria-label="Search">🔍</button>
+        <input id="librarySearch" type="search" data-vex-action="vexstream.library.search.query" placeholder="Search this library…" aria-label="Search library">
+        <button id="librarySearchExecute" class="search-go" type="button" data-vex-action="vexstream.library.search.execute" title="Search" aria-label="Search">🔍</button>
         <button id="librarySearchClear" class="search-clear" type="button" title="Clear search" hidden>Clear</button>
       </div>
       <div class="toolbar-group">
         <label>
           <span class="sr-only">Genre</span>
-          <select id="libraryGenre" title="Filter by genre">
+          <select id="libraryGenre" data-vex-action="vexstream.library.filter.genre" title="Filter by genre">
             <option value="all">Genre: All</option>
           </select>
         </label>
-        <button id="goDiscoverAdd" type="button">＋ Add music</button>
+        <button id="goDiscoverAdd" type="button" data-vex-action="vexstream.discover.add.open">＋ Add music</button>
       </div>
     </div>
 
@@ -116,15 +116,15 @@
         </div>
         <div class="timeline small" aria-label="Playback position">
           <span id="curTime">0:00</span>
-          <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek" disabled>
+          <input id="seek" type="range" data-vex-action="vexstream.playback.timeline.seek" min="0" max="1000" value="0" aria-label="Seek" disabled>
           <span id="durTime">0:00</span>
         </div>
         <div class="player-aux">
           <label class="volume-control">
-            <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
+            <input id="volume" type="range" data-vex-action="vexstream.playback.volume.set" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
             <span>Volume</span>
           </label>
-          <button id="queueMiniBtn" class="queue-mini" type="button" aria-controls="queueDrawer" aria-expanded="false" title="Open Queue">
+          <button id="queueMiniBtn" class="queue-mini" type="button" data-vex-action="vexstream.queue.drawer.toggle" aria-controls="queueDrawer" aria-expanded="false" title="Open Queue">
             <span aria-hidden="true">☰</span>
             <span id="queueMiniCount">0</span>
           </button>
@@ -554,7 +554,7 @@
     </section>
 
     <div id="queueDrawer" class="queue-drawer" aria-expanded="false">
-      <button id="queueDrawerHandle" class="queue-handle" type="button" aria-controls="queueDrawerBody" aria-expanded="false">
+      <button id="queueDrawerHandle" class="queue-handle" type="button" data-vex-action="vexstream.queue.drawer.toggle" aria-controls="queueDrawerBody" aria-expanded="false">
         <span class="grabber" aria-hidden="true"></span>
         <strong>Queue</strong>
         <span id="queueDrawerCount" class="small muted">0</span>
@@ -569,7 +569,7 @@
               <span id="queueSummary">Empty</span>
             </div>
             <div class="queue-heading-actions">
-              <button id="shuffleQueueUpcoming" type="button" data-text-ref="queue.shuffle-upcoming">Shuffle upcoming</button>
+              <button id="shuffleQueueUpcoming" type="button" data-vex-action="vexstream.queue.shuffle-upcoming" data-text-ref="queue.shuffle-upcoming">Shuffle upcoming</button>
               <button id="clearAfterCurrent" type="button" data-vex-control="vexstream.queue.clear-after-current" data-text-ref="queue.clear-after-current">Clear after current</button>
             </div>
           </div>

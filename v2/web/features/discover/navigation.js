@@ -5,6 +5,10 @@
 // configuration, Import, Explore, provider runtime, and Library truth remain
 // with their existing owners.
 
+export const DiscoverNavigationIntent=Object.freeze({
+ OpenAddMusic:"vexstream.discover.add.open"
+});
+
 export const DiscoverMode=Object.freeze({
  PC:"pc",
  YOUTUBE:"youtube",

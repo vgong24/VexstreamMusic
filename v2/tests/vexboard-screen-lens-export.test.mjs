@@ -140,7 +140,7 @@ test("Discover alternate terrain uses source-authored nested selection without P
 });
 
 
-test("Playlists list/create terrain is a source-authored Shell expression while detail remains held",()=>{
+test("Playlists list/create terrain remains a source-authored Shell expression when detail is admitted separately",()=>{
  const lens=JSON.parse(committed);
  const screen=lens.screens[0];
  const shell=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.shell.primary-terrain");
@@ -152,7 +152,7 @@ test("Playlists list/create terrain is a source-authored Shell expression while 
  assert.match(screen.view.html,/data-shell-panel="playlists"[^>]*data-vex-structural-ref="vexstream\.desktop\.library\.panel\.playlists"/);
  assert.ok(screen.elements.some(element=>element.ref==="element.vexstream.playlists.create.name"));
  assert.ok(screen.elements.some(element=>element.ref==="element.vexstream.playlists.create"));
- assert.ok(screen.realization.held.some(value=>/Playlist detail/.test(value)));
+ assert.ok(screen.elements.some(element=>element.ref==="vexstream.desktop.library.playlists.overview"));
 });
 
 

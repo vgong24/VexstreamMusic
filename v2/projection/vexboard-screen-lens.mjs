@@ -10,6 +10,9 @@ import { PlaybackAct, PlaybackControl, PlaybackEffect, VexStreamPlaybackFamily }
 import { QueueAct, QueueControl, QueueEffect, VexStreamQueueFamily } from "../web/features/queue/behavior.js";
 import { PhoneConnectionIntent } from "../web/features/phone/connection.js";
 import { SystemStatusIntent } from "../web/features/system/status.js";
+import { DiscoverMode } from "../web/features/discover/navigation.js";
+import { SourceClientIntent } from "../web/features/sources/client.js";
+import { ImportClientIntent } from "../web/features/imports/client.js";
 
 export const VEXBOARD_SCREEN_LENS_SCHEMA="vexboard.screen-lens/v1";
 export const VEXSTREAM_VEXBOARD_EXPORTER_VERSION="vexstream-vexboard-exporter/1";
@@ -21,6 +24,11 @@ const SHELL_REF="vexstream.desktop.library.region.shell";
 const SHELL_TERRAIN_REF="vexstream.desktop.library.terrain";
 const HOME_PANEL_REF="vexstream.desktop.library.panel.home";
 const LIBRARY_PANEL_REF="vexstream.desktop.library.panel.library";
+const DISCOVER_PANEL_REF="vexstream.desktop.library.panel.discover";
+const DISCOVER_MODE_REF="vexstream.desktop.library.discover-mode-selection";
+const DISCOVER_PC_PANEL_REF="vexstream.desktop.library.discover-panel.pc";
+const DISCOVER_YOUTUBE_PANEL_REF="vexstream.desktop.library.discover-panel.youtube";
+const DISCOVER_EXPLORE_PANEL_REF="vexstream.desktop.library.discover-panel.explore";
 const LIBRARY_MODE_REF="vexstream.desktop.library.mode-selection";
 const LIBRARY_MODE_SONGS_REF="vexstream.desktop.library.mode-state.songs";
 const LIBRARY_MODE_ALBUMS_REF="vexstream.desktop.library.mode-state.albums";
@@ -28,6 +36,7 @@ const LIBRARY_MODE_ARTISTS_REF="vexstream.desktop.library.mode-state.artists";
 const TRACK_CHOICES_REF="vexstream.desktop.library.track-choices";
 const SHELL_SELECTION_REF="presence.vexstream.shell.primary-terrain";
 const LIBRARY_MODE_SELECTION_REF="presence.vexstream.library.mode";
+const DISCOVER_MODE_SELECTION_REF="presence.vexstream.discover.mode";
 const PREVIOUS_ACTION="vexstream.player.previous";
 const semanticIdentity=token=>token.familyRef+"."+token.ref;
 const elementRef=identity=>"element."+identity;
@@ -105,6 +114,14 @@ function viewHTML(sourceHTML){
     '<section$1 data-vex-structural-ref="'+HOME_PANEL_REF+'">');
   html=html.replace(/<section([^>]*\bdata-shell-panel="library"[^>]*)>/,
     '<section$1 data-vex-structural-ref="'+LIBRARY_PANEL_REF+'">');
+  html=html.replace(/<section([^>]*\bdata-shell-panel="discover"[^>]*)>/,
+    '<section$1 data-vex-structural-ref="'+DISCOVER_PANEL_REF+'">');
+  html=html.replace(/<section([^>]*\bdata-discover-panel="pc"[^>]*)>/,
+    '<section$1 data-vex-structural-ref="'+DISCOVER_PC_PANEL_REF+'">');
+  html=html.replace(/<section([^>]*\bdata-discover-panel="youtube"[^>]*)>/,
+    '<section$1 data-vex-structural-ref="'+DISCOVER_YOUTUBE_PANEL_REF+'">');
+  html=html.replace(/<section([^>]*\bdata-discover-panel="explore"[^>]*)>/,
+    '<section$1 data-vex-structural-ref="'+DISCOVER_EXPLORE_PANEL_REF+'">');
   html=html.replace(/<div([^>]*\bid="trackChoices"[^>]*)>/,
     '<div$1 data-vex-structural-ref="'+TRACK_CHOICES_REF+'">');
   html=html.replace(/<[A-Za-z][^>]*>/g,(tagSource)=>{
@@ -256,6 +273,15 @@ function mappedPathwayRef(identity){
   return null;
 }
 
+function relationshipParentRef(relation){
+  if(relation.attribute==="data-library-mode")return LIBRARY_MODE_REF;
+  if(relation.attribute==="data-discover-mode")return DISCOVER_MODE_REF;
+  if(Object.values(SourceClientIntent).includes(relation.identity))return DISCOVER_PC_PANEL_REF;
+  if(Object.values(ImportClientIntent).includes(relation.identity))return DISCOVER_YOUTUBE_PANEL_REF;
+  if(relation.identity==="vexstream.explore.back"||relation.identity==="vexstream.explore.clear")return DISCOVER_EXPLORE_PANEL_REF;
+  return SHELL_REF;
+}
+
 function button(identity,label,pathwayRef,attribute,value=null,parentRef=SHELL_REF){
   const declaredValue=value??identity;
   return {ref:elementRef(identity),kind:"BUTTON",label,parentRef,symbol:identity,declared:attribute+'="'+declaredValue+'"',intent:identity,...(pathwayRef?{pathwayRef}:{}),layer:"CHROME",interactions:["ACTIVATE"]};
@@ -283,7 +309,7 @@ export function buildVexStreamVexBoardLens({html,css}){
       mappedPathwayRef(relation.identity),
       relation.attribute,
       relation.value,
-      relation.attribute==="data-library-mode"?LIBRARY_MODE_REF:SHELL_REF
+      relationshipParentRef(relation)
     ));
   const libraryModeButtons=Object.freeze({
     songs:elementRef("vexstream.library.mode.songs"),
@@ -297,14 +323,26 @@ export function buildVexStreamVexBoardLens({html,css}){
       op:"SET_ATTRIBUTE",targetRef:ref,attribute:"aria-pressed",value:String(key===mode)
     })),
   ];
+  const discoverModeButtons=Object.freeze({
+    pc:elementRef("vexstream.discover.mode.pc"),
+    youtube:elementRef("vexstream.discover.mode.youtube"),
+    explore:elementRef("vexstream.discover.mode.explore"),
+  });
+  const discoverModeOperations=(mode)=>[
+    {op:"SET_ATTRIBUTE",targetRef:SCREEN_REF,attribute:"data-shell-current-view",value:"discover"},
+    {op:"SET_ATTRIBUTE",targetRef:DISCOVER_PANEL_REF,attribute:"data-discover-terrain",value:mode},
+    ...Object.entries(discoverModeButtons).map(([key,ref])=>({
+      op:"SET_ATTRIBUTE",targetRef:ref,attribute:"aria-pressed",value:String(key===mode)
+    })),
+  ];
   return {
     schemaVersion:VEXBOARD_SCREEN_LENS_SCHEMA,lensRef:"lens.vexstream-music.desktop",title:"VexStream Music",
-    summary:"Projection of the persistent V4 desktop shell, zero-blocker default-visible relationship coverage, and the first source-authored alternate Library terrain expressions.",
+    summary:"Projection of the persistent V4 desktop shell with zero-blocker default-visible coverage plus source-authored Library and Discover terrain expressions.",
     entryScreenRef:SCREEN_REF,entryElementRef:elementRef(play),relatedBoardRefs:[],
     sourceSnapshot:{repositoryRef:"repo.vexstream-music",repositoryUrl:"https://github.com/vgong24/VexstreamMusic.git",commit:null,observedAt:null,roots:{v2:"v2/"},notes:[
       "Generated by "+VEXSTREAM_VEXBOARD_EXPORTER_VERSION+" from source-owned semantic modules and the lived shell.",
       "Product JavaScript is excluded from the VexBoard static view.",
-      "Every source-stable relationship attribute in the bounded shell becomes addressable; repeated affordances may share one Lens relationship ref. Home/Library and Songs/Albums/Artists are projected as browser-local source-authored expressions; deeper runtime/data states remain bounded.",
+      "Every source-stable relationship attribute in the bounded shell becomes addressable; repeated affordances may share one Lens relationship ref. Home/Library/Discover plus Library and Discover nested modes are projected as browser-local source-authored expressions; deeper runtime/data states remain bounded.",
     ]},
     chrome:[],
     screens:[{
@@ -319,14 +357,25 @@ export function buildVexStreamVexBoardLens({html,css}){
         ]},
         {presenceRef:LIBRARY_MODE_SELECTION_REF,value:LIBRARY_MODE_SONGS_REF,operations:modeOperations("songs")},
         {presenceRef:LIBRARY_MODE_SELECTION_REF,value:LIBRARY_MODE_ALBUMS_REF,operations:modeOperations("albums")},
-        {presenceRef:LIBRARY_MODE_SELECTION_REF,value:LIBRARY_MODE_ARTISTS_REF,operations:modeOperations("artists")}
+        {presenceRef:LIBRARY_MODE_SELECTION_REF,value:LIBRARY_MODE_ARTISTS_REF,operations:modeOperations("artists")},
+        {presenceRef:SHELL_SELECTION_REF,value:DISCOVER_PANEL_REF,operations:[
+          {op:"SET_ATTRIBUTE",targetRef:SCREEN_REF,attribute:"data-shell-current-view",value:"discover"}
+        ]},
+        {presenceRef:DISCOVER_MODE_SELECTION_REF,value:DISCOVER_PC_PANEL_REF,operations:discoverModeOperations("pc")},
+        {presenceRef:DISCOVER_MODE_SELECTION_REF,value:DISCOVER_YOUTUBE_PANEL_REF,operations:discoverModeOperations("youtube")},
+        {presenceRef:DISCOVER_MODE_SELECTION_REF,value:DISCOVER_EXPLORE_PANEL_REF,operations:discoverModeOperations("explore")}
       ],interactionBindings:[]},
       elements:[
         {ref:FRAME_REF,kind:"FRAME",label:"Desktop shell frame",parentRef:null,symbol:"body[data-vex-screen]",declared:'data-vex-screen="'+SCREEN_REF+'"'},
         {ref:SHELL_REF,kind:"REGION",label:"V3-shaped V4 shell",parentRef:FRAME_REF,symbol:"main.shell",declared:'<main class="shell">'},
-        {ref:SHELL_TERRAIN_REF,kind:"REGION",label:"Admitted Shell terrain selection",parentRef:SHELL_REF,symbol:"ShellNavigation.currentProjection.panel",declared:"bounded Home / Library projection"},
+        {ref:SHELL_TERRAIN_REF,kind:"REGION",label:"Admitted Shell terrain selection",parentRef:SHELL_REF,symbol:"ShellNavigation.currentProjection.panel",declared:"bounded Home / Library / Discover projection"},
         {ref:HOME_PANEL_REF,kind:"REGION",label:"Home terrain",parentRef:SHELL_TERRAIN_REF,symbol:'[data-shell-panel="home"]',declared:'data-shell-panel="home"'},
         {ref:LIBRARY_PANEL_REF,kind:"REGION",label:"Library terrain",parentRef:SHELL_TERRAIN_REF,symbol:'[data-shell-panel="library"]',declared:'data-shell-panel="library"'},
+        {ref:DISCOVER_PANEL_REF,kind:"REGION",label:"Discover terrain",parentRef:SHELL_TERRAIN_REF,symbol:'[data-shell-panel="discover"]',declared:'data-shell-panel="discover"'},
+        {ref:DISCOVER_MODE_REF,kind:"REGION",label:"Discover mode selection",parentRef:DISCOVER_PANEL_REF,symbol:"DiscoverNavigation.currentProjection.mode",declared:"This PC / YouTube / Explore selection"},
+        {ref:DISCOVER_PC_PANEL_REF,kind:"REGION",label:"This PC mode",parentRef:DISCOVER_MODE_REF,symbol:'[data-discover-panel="pc"]',declared:'data-discover-panel="pc"'},
+        {ref:DISCOVER_YOUTUBE_PANEL_REF,kind:"REGION",label:"YouTube mode",parentRef:DISCOVER_MODE_REF,symbol:'[data-discover-panel="youtube"]',declared:'data-discover-panel="youtube"'},
+        {ref:DISCOVER_EXPLORE_PANEL_REF,kind:"REGION",label:"Explore mode",parentRef:DISCOVER_MODE_REF,symbol:'[data-discover-panel="explore"]',declared:'data-discover-panel="explore"'},
         {ref:LIBRARY_MODE_REF,kind:"REGION",label:"Library mode selection",parentRef:LIBRARY_PANEL_REF,symbol:"libraryView.mode",declared:"Songs / Albums / Artists selection"},
         {ref:LIBRARY_MODE_SONGS_REF,kind:"REGION",label:"Songs mode",parentRef:LIBRARY_MODE_REF,symbol:"songs",declared:"libraryView.mode = songs"},
         {ref:LIBRARY_MODE_ALBUMS_REF,kind:"REGION",label:"Albums mode",parentRef:LIBRARY_MODE_REF,symbol:"albums",declared:"libraryView.mode = albums"},
@@ -337,9 +386,9 @@ export function buildVexStreamVexBoardLens({html,css}){
       layout:{kind:"FRAME",symbol:"VexStream desktop shell",source:source("web/index.html"),root:FRAME_REF,frames:[{ref:FRAME_REF,seams:[],regions:[{ref:SHELL_REF,start:"FRAME_START",end:"FRAME_END",top:"FRAME_TOP",bottom:"FRAME_BOTTOM"}],chrome:[]}],overlays:[]},
       realization:{
         status:"PROJECTED",
-        entry:{symbol:"ShellNavigation + Library view",source:source("web/app.js")},
+        entry:{symbol:"ShellNavigation + Library view + DiscoverNavigation",source:source("web/app.js")},
         rendersRegisteredTree:SCREEN_REF,
-        realizers:["ShellNavigation","Library view projection"],
+        realizers:["ShellNavigation","Library view projection","DiscoverNavigation"],
         presence:[
           {
             ref:SHELL_SELECTION_REF,
@@ -351,7 +400,8 @@ export function buildVexStreamVexBoardLens({html,css}){
             source:source("web/features/shell/navigation.js"),
             choices:[
               {condition:"projection.panel === 'home'",targetRef:HOME_PANEL_REF,realizedBy:"ShellNavigation.project",realizes:[]},
-              {condition:"projection.panel === 'library'",targetRef:LIBRARY_PANEL_REF,realizedBy:"ShellNavigation.project",realizes:[LIBRARY_MODE_REF,TRACK_CHOICES_REF]}
+              {condition:"projection.panel === 'library'",targetRef:LIBRARY_PANEL_REF,realizedBy:"ShellNavigation.project",realizes:[LIBRARY_MODE_REF,TRACK_CHOICES_REF]},
+              {condition:"projection.panel === 'discover'",targetRef:DISCOVER_PANEL_REF,realizedBy:"ShellNavigation.project",realizes:[DISCOVER_MODE_REF]}
             ]
           },
           {
@@ -368,10 +418,25 @@ export function buildVexStreamVexBoardLens({html,css}){
               {condition:"projection.libraryMode === 'albums'",targetRef:LIBRARY_MODE_ALBUMS_REF,realizedBy:"ShellNavigation.project",realizes:[TRACK_CHOICES_REF]},
               {condition:"projection.libraryMode === 'artists'",targetRef:LIBRARY_MODE_ARTISTS_REF,realizedBy:"ShellNavigation.project",realizes:[TRACK_CHOICES_REF]}
             ]
+          },
+          {
+            ref:DISCOVER_MODE_SELECTION_REF,
+            kind:"SELECTION",
+            subjectRef:DISCOVER_MODE_REF,
+            owner:"DiscoverNavigation",
+            defaultRef:DISCOVER_PC_PANEL_REF,
+            exhaustive:true,
+            source:source("web/features/discover/navigation.js"),
+            gate:{presenceRef:SHELL_SELECTION_REF,choice:2},
+            choices:[
+              {condition:"projection.mode === '"+DiscoverMode.PC+"'",targetRef:DISCOVER_PC_PANEL_REF,realizedBy:"DiscoverNavigation.project",realizes:[]},
+              {condition:"projection.mode === '"+DiscoverMode.YOUTUBE+"'",targetRef:DISCOVER_YOUTUBE_PANEL_REF,realizedBy:"DiscoverNavigation.project",realizes:[]},
+              {condition:"projection.mode === '"+DiscoverMode.EXPLORE+"'",targetRef:DISCOVER_EXPLORE_PANEL_REF,realizedBy:"DiscoverNavigation.project",realizes:[]}
+            ]
           }
         ],
         templates:[],elements:[],opaque:[],held:[
-          "Playlists / Deleted / Discover Shell terrains are source-known but remain outside this first alternate-terrain expression slice.",
+          "Playlists / Deleted Shell terrains are source-known but remain outside the current expression slice.",
           "Catalog rows/groups are runtime data populations and remain held in the inert Product view."
         ]
       },
@@ -383,7 +448,7 @@ export function buildVexStreamVexBoardLens({html,css}){
       queuePathway("repeat",QueueControl.Repeat,QueueAct.EnableRepeat.ref+" / "+QueueAct.DisableRepeat.ref,QueueEffect.EnableRepeat.ref+" / "+QueueEffect.DisableRepeat.ref,"Player.toggleRepeat()"),
     ],
     annotations:[],examples:[],
-    examplesHeld:[{ref:"examples.vexstream-music.dynamic-shell",source:source("tests/player-browser-regression.py"),reason:"Home and the first Library shell/mode selections are now projected. Dynamic catalog population, nested selection/detail/editor states, and later Shell terrains remain owned by current browser proof until separately admitted."}],
+    examplesHeld:[{ref:"examples.vexstream-music.dynamic-shell",source:source("tests/player-browser-regression.py"),reason:"Home, Library modes, and Discover modes are projected. Dynamic catalog population, nested Library/Import review states, and later Playlists/Deleted Shell terrains remain owned by current browser proof until separately admitted."}],
   };
 }
 

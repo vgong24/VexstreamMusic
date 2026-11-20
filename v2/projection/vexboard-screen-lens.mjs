@@ -276,6 +276,114 @@ function systemStatusPathway(){
   };
 }
 
+function playlistDetailClosePathway(){
+  const p="pathway.vexstream.playlists.detail.close";
+  const intent=p+".intent", dispatch=p+".dispatch", method=p+".method", projection=p+".projection";
+  return {
+    pathwayRef:p,label:"Close Playlist detail",disposition:"DIRECT_REGISTRATION",
+    summary:"PlaylistNavigation owns whether the human is browsing all playlists or one selected durable playlist.",
+    returns:"Playlists overview presentation",returnRef:projection,
+    nodes:[
+      node(intent,"BEHAVIOR","INTENT","Close Playlist detail",{symbol:PlaylistNavigationIntent.CloseDetail,sourcePath:"web/features/playlists/navigation.js"}),
+      node(dispatch,"BEHAVIOR","DISPATCH","playlistNavigation.close()",{sourcePath:"web/app.js"}),
+      node(projection,"BEHAVIOR","PROJECTION","Playlists overview",{summary:"Selected-playlist detail closes and overview returns.",sourcePath:"web/features/playlists/navigation.js"}),
+      node(method,"DEPTH","METHOD","PlaylistNavigation.close()",{sourcePath:"web/features/playlists/navigation.js"}),
+    ],
+    edges:[edge(intent,dispatch),edge(dispatch,method),edge(method,projection,"projects","RETURN")],
+  };
+}
+
+function playlistPlayPathway(){
+  const p="pathway.vexstream.player.play-playlist";
+  const intent=p+".intent", state=p+".state", dispatch=p+".dispatch", method=p+".method", realization=p+".realization";
+  return {
+    pathwayRef:p,label:"Play selected Playlist",disposition:"DIRECT_REGISTRATION",
+    summary:"Player composition consumes the selected Playlist's currently playable refs without taking durable Playlist ownership.",
+    returns:"Current Queue/Playback listening state",returnRef:realization,
+    nodes:[
+      node(intent,"BEHAVIOR","INTENT","Play selected Playlist",{symbol:PlayerCompositionIntent.PlayPlaylist,sourcePath:"web/features/player/composition.js"}),
+      node(state,"BEHAVIOR","STATE","Resolved Playlist playable refs",{summary:"Playlist owns durable refs; Library availability decides which are playable now.",sourcePath:"web/features/playlists/client.js"}),
+      node(dispatch,"BEHAVIOR","DISPATCH","player.playContext(resolved.playableRefs, 0)",{sourcePath:"web/app.js"}),
+      node(method,"DEPTH","METHOD","Player.playContext()",{sourcePath:"web/features/player/composition.js"}),
+      node(realization,"DEPTH","REALIZATION","Queue + Playback composition",{summary:"Player composition forms the temporary listening context and realizes current media through existing Queue/Playback owners.",sourcePath:"web/features/player/composition.js"}),
+    ],
+    edges:[edge(intent,dispatch),edge(state,dispatch,null,"DATA"),edge(dispatch,method),edge(method,realization)],
+  };
+}
+
+function playlistShufflePathway(){
+  const p="pathway.vexstream.player.shuffle-playlist";
+  const intent=p+".intent", state=p+".state", dispatch=p+".dispatch", shuffle=p+".shuffle", realization=p+".realization";
+  return {
+    pathwayRef:p,label:"Shuffle selected Playlist",disposition:"DIRECT_REGISTRATION",
+    summary:"Player composition shuffles the selected Playlist's currently playable refs, then starts that temporary listening context.",
+    returns:"Current shuffled Queue/Playback listening state",returnRef:realization,
+    nodes:[
+      node(intent,"BEHAVIOR","INTENT","Shuffle selected Playlist",{symbol:PlayerCompositionIntent.ShufflePlaylist,sourcePath:"web/features/player/composition.js"}),
+      node(state,"BEHAVIOR","STATE","Resolved Playlist playable refs",{sourcePath:"web/features/playlists/client.js"}),
+      node(dispatch,"BEHAVIOR","DISPATCH","shuffleRefs([...resolved.playableRefs])",{sourcePath:"web/app.js"}),
+      node(shuffle,"DEPTH","METHOD","shuffleRefs()",{sourcePath:"web/app.js"}),
+      node(realization,"DEPTH","REALIZATION","Player.playContext(shuffled, 0)",{sourcePath:"web/features/player/composition.js"}),
+    ],
+    edges:[edge(intent,dispatch),edge(state,dispatch,null,"DATA"),edge(dispatch,shuffle),edge(shuffle,realization)],
+  };
+}
+
+function playlistAddSongsPathway(){
+  const p="pathway.vexstream.playlists.detail.add-songs";
+  const intent=p+".intent", state=p+".state", dispatch=p+".dispatch", select=p+".selection", navigate=p+".navigate", projection=p+".projection";
+  return {
+    pathwayRef:p,label:"Add songs to selected Playlist",disposition:"DIRECT_REGISTRATION",
+    summary:"The selected Playlist ID becomes the target for the existing Library track-selection flow; PlaylistNavigation does not absorb Library selection ownership.",
+    returns:"Library Songs terrain with selection active and target Playlist retained",returnRef:projection,
+    nodes:[
+      node(intent,"BEHAVIOR","INTENT","Add songs",{symbol:PlaylistNavigationIntent.AddSongs,sourcePath:"web/features/playlists/navigation.js"}),
+      node(state,"BEHAVIOR","STATE","Current selected Playlist ID",{sourcePath:"web/features/playlists/navigation.js"}),
+      node(dispatch,"BEHAVIOR","DISPATCH","playlistSelectionTargetID = resolved.playlist.id",{sourcePath:"web/app.js"}),
+      node(projection,"BEHAVIOR","PROJECTION","Library selection targeting Playlist",{sourcePath:"web/app.js"}),
+      node(select,"DEPTH","METHOD","librarySelection.activate()",{sourcePath:"web/features/library/selection.js"}),
+      node(navigate,"DEPTH","METHOD","ShellNavigation.select(Songs)",{sourcePath:"web/features/shell/navigation.js"}),
+    ],
+    edges:[edge(intent,dispatch),edge(state,dispatch,null,"DATA"),edge(dispatch,select),edge(select,navigate),edge(navigate,projection,"projects","RETURN")],
+  };
+}
+
+function playlistRenamePathway(){
+  const p="pathway.vexstream.playlists.rename";
+  const intent=p+".intent", state=p+".state", dispatch=p+".dispatch", method=p+".method", projection=p+".projection";
+  return {
+    pathwayRef:p,label:"Rename selected Playlist",disposition:"DIRECT_REGISTRATION",
+    summary:"Playlist client owns the durable rename mutation; the detail name field supplies the proposed name and does not become a second semantic owner.",
+    returns:"Refreshed selected Playlist detail",returnRef:projection,
+    nodes:[
+      node(intent,"BEHAVIOR","INTENT","Rename Playlist",{symbol:PlaylistClientIntent.Rename,sourcePath:"web/features/playlists/client.js"}),
+      node(state,"BEHAVIOR","STATE","Selected Playlist + proposed name",{symbol:PlaylistClientIntent.RenameName,sourcePath:"web/features/playlists/client.js"}),
+      node(dispatch,"BEHAVIOR","DISPATCH","renamePlaylist(id, playlistDetailName.value)",{sourcePath:"web/app.js"}),
+      node(projection,"BEHAVIOR","PROJECTION","Renamed Playlist detail",{sourcePath:"web/app.js"}),
+      node(method,"DEPTH","METHOD","POST /api/playlists/rename",{sourcePath:"web/features/playlists/client.js"}),
+    ],
+    edges:[edge(intent,dispatch),edge(state,dispatch,null,"DATA"),edge(dispatch,method),edge(method,projection,"RETURN")],
+  };
+}
+
+function playlistDeletePathway(){
+  const p="pathway.vexstream.playlists.delete";
+  const intent=p+".intent", state=p+".state", dispatch=p+".dispatch", method=p+".method", projection=p+".projection";
+  return {
+    pathwayRef:p,label:"Delete selected Playlist",disposition:"DIRECT_REGISTRATION",
+    summary:"Playlist client deletes only the durable Playlist record; Library media truth is not deleted by this action.",
+    returns:"Refreshed Playlists terrain; PlaylistNavigation reconciliation closes a missing detail",returnRef:projection,
+    nodes:[
+      node(intent,"BEHAVIOR","INTENT","Delete Playlist",{symbol:PlaylistClientIntent.Delete,sourcePath:"web/features/playlists/client.js"}),
+      node(state,"BEHAVIOR","STATE","Selected Playlist ID",{sourcePath:"web/features/playlists/navigation.js"}),
+      node(dispatch,"BEHAVIOR","DISPATCH","deletePlaylist(resolved.playlist.id)",{sourcePath:"web/app.js"}),
+      node(projection,"BEHAVIOR","PROJECTION","Playlists terrain after refresh",{sourcePath:"web/app.js"}),
+      node(method,"DEPTH","METHOD","POST /api/playlists/delete",{sourcePath:"web/features/playlists/client.js"}),
+    ],
+    edges:[edge(intent,dispatch),edge(state,dispatch,null,"DATA"),edge(dispatch,method),edge(method,projection,"RETURN")],
+  };
+}
+
 function mappedPathwayRef(identity){
   if(identity===PREVIOUS_ACTION)return "pathway.vexstream.player.previous";
   if(identity===PhoneConnectionIntent.Open)return "pathway.vexstream.phone.connection.open";
@@ -403,6 +511,14 @@ export function buildVexStreamVexBoardLens({html,css}){
         {presenceRef:DISCOVER_MODE_SELECTION_REF,value:DISCOVER_EXPLORE_PANEL_REF,operations:discoverModeOperations("explore")},
         {presenceRef:SHELL_SELECTION_REF,value:PLAYLISTS_PANEL_REF,operations:[
           {op:"SET_ATTRIBUTE",targetRef:SCREEN_REF,attribute:"data-shell-current-view",value:"playlists"}
+        ]},
+        {presenceRef:PLAYLIST_DETAIL_PRESENTATION_REF,value:"OPEN",operations:[
+          {op:"SET_ATTRIBUTE",targetRef:PLAYLISTS_OVERVIEW_REF,attribute:"hidden",value:""},
+          {op:"REMOVE_ATTRIBUTE",targetRef:PLAYLIST_DETAIL_REF,attribute:"hidden"}
+        ]},
+        {presenceRef:PLAYLIST_DETAIL_PRESENTATION_REF,value:"CLOSED",operations:[
+          {op:"REMOVE_ATTRIBUTE",targetRef:PLAYLISTS_OVERVIEW_REF,attribute:"hidden"},
+          {op:"SET_ATTRIBUTE",targetRef:PLAYLIST_DETAIL_REF,attribute:"hidden",value:""}
         ]}
       ],interactionBindings:[]},
       elements:[
@@ -413,6 +529,8 @@ export function buildVexStreamVexBoardLens({html,css}){
         {ref:LIBRARY_PANEL_REF,kind:"REGION",label:"Library terrain",parentRef:SHELL_TERRAIN_REF,symbol:'[data-shell-panel="library"]',declared:'data-shell-panel="library"'},
         {ref:DISCOVER_PANEL_REF,kind:"REGION",label:"Discover terrain",parentRef:SHELL_TERRAIN_REF,symbol:'[data-shell-panel="discover"]',declared:'data-shell-panel="discover"'},
         {ref:PLAYLISTS_PANEL_REF,kind:"REGION",label:"Playlists terrain",parentRef:SHELL_TERRAIN_REF,symbol:'[data-shell-panel="playlists"]',declared:'data-shell-panel="playlists"'},
+        {ref:PLAYLISTS_OVERVIEW_REF,kind:"REGION",label:"Playlists overview",parentRef:PLAYLISTS_PANEL_REF,symbol:"#playlistOverview",declared:'id="playlistOverview"'},
+        {ref:PLAYLIST_DETAIL_REF,kind:"REGION",label:"Selected Playlist detail",parentRef:PLAYLISTS_PANEL_REF,symbol:"#playlistDetail",declared:'id="playlistDetail"'},
         {ref:DISCOVER_MODE_REF,kind:"REGION",label:"Discover mode selection",parentRef:DISCOVER_PANEL_REF,symbol:"DiscoverNavigation.currentProjection.mode",declared:"This PC / YouTube / Explore selection"},
         {ref:DISCOVER_PC_PANEL_REF,kind:"REGION",label:"This PC mode",parentRef:DISCOVER_MODE_REF,symbol:'[data-discover-panel="pc"]',declared:'data-discover-panel="pc"'},
         {ref:DISCOVER_YOUTUBE_PANEL_REF,kind:"REGION",label:"YouTube mode",parentRef:DISCOVER_MODE_REF,symbol:'[data-discover-panel="youtube"]',declared:'data-discover-panel="youtube"'},
@@ -427,9 +545,9 @@ export function buildVexStreamVexBoardLens({html,css}){
       layout:{kind:"FRAME",symbol:"VexStream desktop shell",source:source("web/index.html"),root:FRAME_REF,frames:[{ref:FRAME_REF,seams:[],regions:[{ref:SHELL_REF,start:"FRAME_START",end:"FRAME_END",top:"FRAME_TOP",bottom:"FRAME_BOTTOM"}],chrome:[]}],overlays:[]},
       realization:{
         status:"PROJECTED",
-        entry:{symbol:"ShellNavigation + Library view + DiscoverNavigation",source:source("web/app.js")},
+        entry:{symbol:"ShellNavigation + Library view + DiscoverNavigation + PlaylistNavigation",source:source("web/app.js")},
         rendersRegisteredTree:SCREEN_REF,
-        realizers:["ShellNavigation","Library view projection","DiscoverNavigation"],
+        realizers:["ShellNavigation","Library view projection","DiscoverNavigation","PlaylistNavigation"],
         presence:[
           {
             ref:SHELL_SELECTION_REF,
@@ -475,23 +593,43 @@ export function buildVexStreamVexBoardLens({html,css}){
               {condition:"projection.mode === '"+DiscoverMode.YOUTUBE+"'",targetRef:DISCOVER_YOUTUBE_PANEL_REF,realizedBy:"DiscoverNavigation.project",realizes:[]},
               {condition:"projection.mode === '"+DiscoverMode.EXPLORE+"'",targetRef:DISCOVER_EXPLORE_PANEL_REF,realizedBy:"DiscoverNavigation.project",realizes:[]}
             ]
+          },
+          {
+            ref:PLAYLIST_DETAIL_PRESENTATION_REF,
+            kind:"PRESENTATION",
+            subjectRef:PLAYLIST_DETAIL_REF,
+            owner:"PlaylistNavigation",
+            condition:"projection.openPlaylistID !== ''",
+            realizedBy:"PlaylistNavigation.open/close",
+            source:source("web/features/playlists/navigation.js"),
+            gate:{presenceRef:SHELL_SELECTION_REF,choice:3},
+            realizes:[
+              elementRef(PlaylistNavigationIntent.CloseDetail),
+              elementRef(PlaylistClientIntent.RenameName),
+              elementRef(PlayerCompositionIntent.PlayPlaylist),
+              elementRef(PlayerCompositionIntent.ShufflePlaylist),
+              elementRef(PlaylistNavigationIntent.AddSongs),
+              elementRef(PlaylistClientIntent.Rename),
+              elementRef(PlaylistClientIntent.Delete)
+            ]
           }
         ],
         templates:[],elements:[],opaque:[],held:[
           "Deleted Shell terrain remains outside the current expression slice.",
-          "Playlist detail is a distinct selected-playlist state and remains held until separately admitted.",
+          "Selected Playlist identity/content remains runtime data; the open/closed detail presentation and its fixed actions are projected without enumerating dynamic playlist IDs.",
           "Catalog rows/groups are runtime data populations and remain held in the inert Product view."
         ]
       },
     }],
     pathways:[
       previousPathway(),phoneConnectionPathway(),systemStatusPathway(),playbackPathway(),
+      playlistDetailClosePathway(),playlistPlayPathway(),playlistShufflePathway(),playlistAddSongsPathway(),playlistRenamePathway(),playlistDeletePathway(),
       queuePathway("next",QueueControl.Next,QueueAct.Next.ref,QueueEffect.Advance.ref+" / "+QueueEffect.Wrap.ref,"Player.next()"),
       queuePathway("shuffle",QueueControl.Shuffle,QueueAct.EnableShuffle.ref+" / "+QueueAct.DisableShuffle.ref,QueueEffect.ShuffleUpcoming.ref+" / "+QueueEffect.DisableShuffle.ref,"Player.toggleShuffle()"),
       queuePathway("repeat",QueueControl.Repeat,QueueAct.EnableRepeat.ref+" / "+QueueAct.DisableRepeat.ref,QueueEffect.EnableRepeat.ref+" / "+QueueEffect.DisableRepeat.ref,"Player.toggleRepeat()"),
     ],
     annotations:[],examples:[],
-    examplesHeld:[{ref:"examples.vexstream-music.dynamic-shell",source:source("tests/player-browser-regression.py"),reason:"Home, Library modes, Discover modes, and the Playlists list/create terrain are projected. Dynamic catalog population, nested Library/Import/Playlist-detail states, and Deleted remain owned by current browser proof until separately admitted."}],
+    examplesHeld:[{ref:"examples.vexstream-music.dynamic-shell",source:source("tests/player-browser-regression.py"),reason:"Home, Library modes, Discover modes, Playlists overview/create, and selected-Playlist detail presentation are projected. Dynamic playlist rows/entry actions, nested Library/Import states, and Deleted remain owned by current browser proof until separately admitted."}],
   };
 }
 

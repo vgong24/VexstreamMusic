@@ -577,7 +577,7 @@ export function buildVexStreamVexBoardLens({html,css}){
             source:source("web/features/shell/navigation.js"),
             choices:[
               {condition:"projection.panel === 'home'",targetRef:HOME_PANEL_REF,selectorRefs:[elementRef("vexstream.shell.view.home")],realizedBy:"ShellNavigation.project",realizes:[]},
-              {condition:"projection.panel === 'library'",targetRef:LIBRARY_PANEL_REF,selectorRefs:[elementRef("vexstream.shell.view.library")],realizedBy:"ShellNavigation.project",realizes:[LIBRARY_MODE_REF,TRACK_CHOICES_REF]},
+              {condition:"projection.panel === 'library'",targetRef:LIBRARY_PANEL_REF,selectorRefs:[elementRef("vexstream.shell.view.songs"),elementRef("vexstream.shell.view.albums"),elementRef("vexstream.shell.view.artists")],realizedBy:"ShellNavigation.project",realizes:[LIBRARY_MODE_REF,TRACK_CHOICES_REF]},
               {condition:"projection.panel === 'discover'",targetRef:DISCOVER_PANEL_REF,selectorRefs:[elementRef("vexstream.shell.view.discover")],realizedBy:"ShellNavigation.project",realizes:[DISCOVER_MODE_REF]},
               {condition:"projection.panel === 'playlists'",targetRef:PLAYLISTS_PANEL_REF,selectorRefs:[elementRef("vexstream.shell.view.playlists")],realizedBy:"ShellNavigation.project",realizes:[]},
               {condition:"projection.panel === 'deleted'",targetRef:DELETED_PANEL_REF,selectorRefs:[elementRef("vexstream.shell.view.deleted")],realizedBy:"ShellNavigation.project",realizes:[]}
@@ -593,9 +593,9 @@ export function buildVexStreamVexBoardLens({html,css}){
             source:source("web/features/shell/navigation.js"),
             gate:{presenceRef:SHELL_SELECTION_REF,choice:1},
             choices:[
-              {condition:"projection.libraryMode === 'songs'",targetRef:LIBRARY_MODE_SONGS_REF,selectorRefs:[elementRef("vexstream.library.mode.songs")],realizedBy:"ShellNavigation.project",realizes:[TRACK_CHOICES_REF]},
-              {condition:"projection.libraryMode === 'albums'",targetRef:LIBRARY_MODE_ALBUMS_REF,selectorRefs:[elementRef("vexstream.library.mode.albums")],realizedBy:"ShellNavigation.project",realizes:[TRACK_CHOICES_REF]},
-              {condition:"projection.libraryMode === 'artists'",targetRef:LIBRARY_MODE_ARTISTS_REF,selectorRefs:[elementRef("vexstream.library.mode.artists")],realizedBy:"ShellNavigation.project",realizes:[TRACK_CHOICES_REF]}
+              {condition:"projection.libraryMode === 'songs'",targetRef:LIBRARY_MODE_SONGS_REF,selectorRefs:[elementRef("vexstream.shell.view.songs"),elementRef("vexstream.library.mode.songs")],realizedBy:"ShellNavigation.project",realizes:[TRACK_CHOICES_REF]},
+              {condition:"projection.libraryMode === 'albums'",targetRef:LIBRARY_MODE_ALBUMS_REF,selectorRefs:[elementRef("vexstream.shell.view.albums"),elementRef("vexstream.library.mode.albums")],realizedBy:"ShellNavigation.project",realizes:[TRACK_CHOICES_REF]},
+              {condition:"projection.libraryMode === 'artists'",targetRef:LIBRARY_MODE_ARTISTS_REF,selectorRefs:[elementRef("vexstream.shell.view.artists"),elementRef("vexstream.library.mode.artists")],realizedBy:"ShellNavigation.project",realizes:[TRACK_CHOICES_REF]}
             ]
           },
           {

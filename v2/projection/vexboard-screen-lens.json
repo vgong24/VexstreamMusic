@@ -1380,12 +1380,20 @@
               {
                 "condition": "projection.panel === 'home'",
                 "targetRef": "vexstream.desktop.library.panel.home",
+                "selectorRefs": [
+                  "element.vexstream.shell.view.home"
+                ],
                 "realizedBy": "ShellNavigation.project",
                 "realizes": []
               },
               {
                 "condition": "projection.panel === 'library'",
                 "targetRef": "vexstream.desktop.library.panel.library",
+                "selectorRefs": [
+                  "element.vexstream.shell.view.songs",
+                  "element.vexstream.shell.view.albums",
+                  "element.vexstream.shell.view.artists"
+                ],
                 "realizedBy": "ShellNavigation.project",
                 "realizes": [
                   "vexstream.desktop.library.mode-selection",
@@ -1395,6 +1403,9 @@
               {
                 "condition": "projection.panel === 'discover'",
                 "targetRef": "vexstream.desktop.library.panel.discover",
+                "selectorRefs": [
+                  "element.vexstream.shell.view.discover"
+                ],
                 "realizedBy": "ShellNavigation.project",
                 "realizes": [
                   "vexstream.desktop.library.discover-mode-selection"
@@ -1403,12 +1414,18 @@
               {
                 "condition": "projection.panel === 'playlists'",
                 "targetRef": "vexstream.desktop.library.panel.playlists",
+                "selectorRefs": [
+                  "element.vexstream.shell.view.playlists"
+                ],
                 "realizedBy": "ShellNavigation.project",
                 "realizes": []
               },
               {
                 "condition": "projection.panel === 'deleted'",
                 "targetRef": "vexstream.desktop.library.panel.deleted",
+                "selectorRefs": [
+                  "element.vexstream.shell.view.deleted"
+                ],
                 "realizedBy": "ShellNavigation.project",
                 "realizes": []
               }
@@ -1430,6 +1447,10 @@
               {
                 "condition": "projection.libraryMode === 'songs'",
                 "targetRef": "vexstream.desktop.library.mode-state.songs",
+                "selectorRefs": [
+                  "element.vexstream.shell.view.songs",
+                  "element.vexstream.library.mode.songs"
+                ],
                 "realizedBy": "ShellNavigation.project",
                 "realizes": [
                   "vexstream.desktop.library.track-choices"
@@ -1438,6 +1459,10 @@
               {
                 "condition": "projection.libraryMode === 'albums'",
                 "targetRef": "vexstream.desktop.library.mode-state.albums",
+                "selectorRefs": [
+                  "element.vexstream.shell.view.albums",
+                  "element.vexstream.library.mode.albums"
+                ],
                 "realizedBy": "ShellNavigation.project",
                 "realizes": [
                   "vexstream.desktop.library.track-choices"
@@ -1446,6 +1471,10 @@
               {
                 "condition": "projection.libraryMode === 'artists'",
                 "targetRef": "vexstream.desktop.library.mode-state.artists",
+                "selectorRefs": [
+                  "element.vexstream.shell.view.artists",
+                  "element.vexstream.library.mode.artists"
+                ],
                 "realizedBy": "ShellNavigation.project",
                 "realizes": [
                   "vexstream.desktop.library.track-choices"
@@ -1469,18 +1498,27 @@
               {
                 "condition": "projection.mode === 'pc'",
                 "targetRef": "vexstream.desktop.library.discover-panel.pc",
+                "selectorRefs": [
+                  "element.vexstream.discover.mode.pc"
+                ],
                 "realizedBy": "DiscoverNavigation.project",
                 "realizes": []
               },
               {
                 "condition": "projection.mode === 'youtube'",
                 "targetRef": "vexstream.desktop.library.discover-panel.youtube",
+                "selectorRefs": [
+                  "element.vexstream.discover.mode.youtube"
+                ],
                 "realizedBy": "DiscoverNavigation.project",
                 "realizes": []
               },
               {
                 "condition": "projection.mode === 'explore'",
                 "targetRef": "vexstream.desktop.library.discover-panel.explore",
+                "selectorRefs": [
+                  "element.vexstream.discover.mode.explore"
+                ],
                 "realizedBy": "DiscoverNavigation.project",
                 "realizes": []
               }

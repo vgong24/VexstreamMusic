@@ -114,3 +114,8 @@ test("identity alignment does not replace or reroute existing runtime handlers",
   assert.match(app,/librarySort\.addEventListener\("change",\(\)=>\{\s*if\(librarySort\.value==="custom"\)return;/);
   assert.match(app,/shuffleQueueUpcoming\.addEventListener\("click",\(\)=>\{\s*player\.shuffleUpcoming\(\);/);
 });
+
+test("ignored folders toggle keeps source identity without inventing an app handler",()=>{
+ assert.equal(SourceClientIntent.ToggleIgnored,"vexstream.sources.ignored.toggle");
+ assert.match(html,/<summary data-vex-action="vexstream\.sources\.ignored\.toggle">Ignored folders<\/summary>/);
+});

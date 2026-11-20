@@ -1521,7 +1521,7 @@
             "symbol": "playlist-card",
             "source": "v2:web/app.js",
             "summary": "One durable Playlist rendered in the overview; identity survives ordering and wording changes.",
-            "instanceFormation": "dynamicVexPresentationRef(\"element.vexstream.playlists.card\",[playlist.id])",
+            "instanceFormation": "playlistCardPresentationRef(playlist.id)",
             "instanceIdentity": {
               "kind": "RUNTIME_INSTANCE",
               "baseRef": "element.vexstream.playlists.card",
@@ -1591,7 +1591,7 @@
             "symbol": "playlist-entry",
             "source": "v2:web/app.js",
             "summary": "One current Playlist entry occurrence. Duplicate refs and reorder prevent a stronger durable entry claim without a source-owned entry ID.",
-            "instanceFormation": "dynamicVexPresentationRef(\"element.vexstream.playlists.entry\",[playlist.id,entry.ref,occurrenceWithinPlaylist])",
+            "instanceFormation": "playlistEntryPresentationRef({ playlistID: playlist.id, trackRef: entry.ref, occurrence: occurrenceWithinPlaylist })",
             "instanceIdentity": {
               "kind": "RUNTIME_INSTANCE",
               "baseRef": "element.vexstream.playlists.entry",

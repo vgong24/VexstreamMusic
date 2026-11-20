@@ -97,10 +97,10 @@ test("Library alternate terrain uses source-authored nested selections without P
   assert.equal(shell.kind,"SELECTION");
   assert.equal(shell.exhaustive,false);
   assert.equal(shell.defaultRef,"vexstream.desktop.library.panel.home");
-  assert.deepEqual(shell.choices.map(choice=>choice.targetRef),[
-    "vexstream.desktop.library.panel.home",
-    "vexstream.desktop.library.panel.library",
-  ]);
+  const shellTargets=shell.choices.map(choice=>choice.targetRef);
+  assert.ok(shellTargets.includes("vexstream.desktop.library.panel.home"));
+  assert.ok(shellTargets.includes("vexstream.desktop.library.panel.library"));
+  assert.equal(new Set(shellTargets).size,shellTargets.length,"Shell terrain refs stay unique as additional terrains are admitted");
   assert.equal(mode.kind,"SELECTION");
   assert.deepEqual(mode.choices.map(choice=>choice.targetRef),[
     "vexstream.desktop.library.mode-state.songs",

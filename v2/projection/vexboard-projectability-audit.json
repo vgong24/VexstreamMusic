@@ -27,12 +27,11 @@
       }
     },
     "latent:other": {
-      "total": 7,
+      "total": 1,
       "visible": 0,
-      "latent": 7,
+      "latent": 1,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 1,
-        "LATENT_UNIDENTIFIED": 6
+        "LATENT_WIRED_UNIDENTIFIED": 1
       }
     },
     "shell:home": {
@@ -44,32 +43,59 @@
       }
     },
     "hidden:#nowDetails": {
-      "total": 1,
+      "total": 6,
       "visible": 0,
-      "latent": 1,
+      "latent": 6,
       "statuses": {
-        "LATENT_UNIDENTIFIED": 1
-      }
-    },
-    "hidden:.song-more-menu": {
-      "total": 5,
-      "visible": 0,
-      "latent": 5,
-      "statuses": {
+        "LATENT_UNIDENTIFIED": 1,
         "ADDRESSABLE_HELD": 5
       }
     },
     "shell:library": {
-      "total": 39,
+      "total": 7,
       "visible": 0,
-      "latent": 39,
+      "latent": 7,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 24,
-        "ADDRESSABLE_HELD": 3,
-        "LATENT_UNIDENTIFIED": 12
+        "LATENT_WIRED_UNIDENTIFIED": 4,
+        "ADDRESSABLE_HELD": 3
       }
     },
-    "hidden:.section-heading": {
+    "shell:library/hidden:#librarySelectionBar": {
+      "total": 9,
+      "visible": 0,
+      "latent": 9,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 8,
+        "LATENT_UNIDENTIFIED": 1
+      }
+    },
+    "shell:library/hidden:#songLayoutPanel": {
+      "total": 7,
+      "visible": 0,
+      "latent": 7,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 2,
+        "LATENT_UNIDENTIFIED": 5
+      }
+    },
+    "shell:library/hidden:#bulkDisplayEditor": {
+      "total": 9,
+      "visible": 0,
+      "latent": 9,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 3,
+        "LATENT_UNIDENTIFIED": 6
+      }
+    },
+    "shell:library/hidden:#libraryGroupDetail": {
+      "total": 5,
+      "visible": 0,
+      "latent": 5,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 5
+      }
+    },
+    "shell:library/hidden:#artistDetailAlbums": {
       "total": 1,
       "visible": 0,
       "latent": 1,
@@ -77,20 +103,21 @@
         "LATENT_WIRED_UNIDENTIFIED": 1
       }
     },
-    "hidden:.track-source-panel": {
+    "shell:library/hidden:#artistDetailSongs": {
       "total": 1,
       "visible": 0,
       "latent": 1,
       "statuses": {
-        "LATENT_UNIDENTIFIED": 1
+        "LATENT_WIRED_UNIDENTIFIED": 1
       }
     },
-    "hidden:.library-editor-actions": {
-      "total": 4,
+    "hidden:#libraryEditor": {
+      "total": 12,
       "visible": 0,
-      "latent": 4,
+      "latent": 12,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 4
+        "LATENT_WIRED_UNIDENTIFIED": 5,
+        "LATENT_UNIDENTIFIED": 7
       }
     },
     "shell:discover": {
@@ -111,11 +138,19 @@
       }
     },
     "shell:discover/discover:youtube": {
-      "total": 10,
+      "total": 3,
       "visible": 0,
-      "latent": 10,
+      "latent": 3,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 5,
+        "LATENT_WIRED_UNIDENTIFIED": 3
+      }
+    },
+    "shell:discover/discover:youtube/hidden:#importReview": {
+      "total": 7,
+      "visible": 0,
+      "latent": 7,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 2,
         "LATENT_UNIDENTIFIED": 5
       }
     },
@@ -128,24 +163,24 @@
       }
     },
     "shell:playlists": {
-      "total": 9,
+      "total": 2,
       "visible": 0,
-      "latent": 9,
+      "latent": 2,
       "statuses": {
-        "LATENT_UNIDENTIFIED": 2,
-        "LATENT_WIRED_UNIDENTIFIED": 7
+        "LATENT_UNIDENTIFIED": 1,
+        "LATENT_WIRED_UNIDENTIFIED": 1
       }
     },
-    "shell:deleted": {
-      "total": 8,
+    "shell:playlists/hidden:#playlistDetail": {
+      "total": 7,
       "visible": 0,
-      "latent": 8,
+      "latent": 7,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 7,
+        "LATENT_WIRED_UNIDENTIFIED": 6,
         "LATENT_UNIDENTIFIED": 1
       }
     },
-    "hidden:.row": {
+    "shell:deleted": {
       "total": 1,
       "visible": 0,
       "latent": 1,
@@ -153,7 +188,24 @@
         "LATENT_WIRED_UNIDENTIFIED": 1
       }
     },
-    "hidden:.system-drawer-head": {
+    "shell:deleted/hidden:#trashSelectionBar": {
+      "total": 3,
+      "visible": 0,
+      "latent": 3,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 3
+      }
+    },
+    "shell:deleted/hidden:#trashPurgeConfirm": {
+      "total": 3,
+      "visible": 0,
+      "latent": 3,
+      "statuses": {
+        "LATENT_UNIDENTIFIED": 1,
+        "LATENT_WIRED_UNIDENTIFIED": 2
+      }
+    },
+    "shell:deleted/hidden:#purgeRecovery": {
       "total": 1,
       "visible": 0,
       "latent": 1,
@@ -161,7 +213,7 @@
         "LATENT_WIRED_UNIDENTIFIED": 1
       }
     },
-    "hidden:.system-status-card": {
+    "hidden:#modalBackdrop": {
       "total": 1,
       "visible": 0,
       "latent": 1,
@@ -169,11 +221,12 @@
         "LATENT_WIRED_UNIDENTIFIED": 1
       }
     },
-    "hidden:.system-drawer-actions": {
-      "total": 1,
+    "hidden:#systemDrawer": {
+      "total": 3,
       "visible": 0,
-      "latent": 1,
+      "latent": 3,
       "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 2,
         "ADDRESSABLE_HELD": 1
       }
     }
@@ -800,7 +853,9 @@
         "hiddenAncestor": {
           "tag": "details",
           "id": "nowDetails",
-          "className": "now-details"
+          "className": "now-details",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -828,9 +883,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "song-more-menu now-details-menu"
+          "tag": "details",
+          "id": "nowDetails",
+          "className": "now-details",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -857,9 +914,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "song-more-menu now-details-menu"
+          "tag": "details",
+          "id": "nowDetails",
+          "className": "now-details",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -886,9 +945,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "song-more-menu now-details-menu"
+          "tag": "details",
+          "id": "nowDetails",
+          "className": "now-details",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -915,9 +976,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "song-more-menu now-details-menu"
+          "tag": "details",
+          "id": "nowDetails",
+          "className": "now-details",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -943,9 +1006,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "song-more-menu now-details-menu"
+          "tag": "details",
+          "id": "nowDetails",
+          "className": "now-details",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1214,9 +1279,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "library-heading-actions"
+          "className": "library",
+          "shellPanel": "library",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1243,9 +1310,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "library-heading-actions"
+          "className": "library",
+          "shellPanel": "library",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1272,9 +1341,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "library-heading-actions"
+          "className": "library",
+          "shellPanel": "library",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1301,9 +1372,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
+          "tag": "section",
           "id": null,
-          "className": "library-sort-control"
+          "className": "library",
+          "shellPanel": "library",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1331,9 +1404,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "library-view-toggle"
+          "className": "library",
+          "shellPanel": "library",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1361,9 +1436,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "library-view-toggle"
+          "className": "library",
+          "shellPanel": "library",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1391,9 +1468,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "library-view-toggle"
+          "className": "library",
+          "shellPanel": "library",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1420,7 +1499,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "librarySelectionBar",
-          "className": "selection-bar"
+          "className": "selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1448,7 +1529,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "librarySelectionBar",
-          "className": "selection-bar"
+          "className": "selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1476,7 +1559,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "librarySelectionBar",
-          "className": "selection-bar"
+          "className": "selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1504,7 +1589,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "librarySelectionBar",
-          "className": "selection-bar"
+          "className": "selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1532,7 +1619,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "librarySelectionBar",
-          "className": "selection-bar"
+          "className": "selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1560,7 +1649,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "librarySelectionBar",
-          "className": "selection-bar"
+          "className": "selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1586,7 +1677,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "librarySelectionBar",
-          "className": "selection-bar"
+          "className": "selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1614,7 +1707,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "librarySelectionBar",
-          "className": "selection-bar"
+          "className": "selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1642,7 +1737,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "librarySelectionBar",
-          "className": "selection-bar"
+          "className": "selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1668,9 +1765,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "song-layout-head"
+          "tag": "section",
+          "id": "songLayoutPanel",
+          "className": "song-layout-panel",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1696,9 +1795,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "songLayoutPanel",
+          "className": "song-layout-panel",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1723,9 +1824,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "songLayoutPanel",
+          "className": "song-layout-panel",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1750,9 +1853,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "songLayoutPanel",
+          "className": "song-layout-panel",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1777,9 +1882,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "songLayoutPanel",
+          "className": "song-layout-panel",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1804,9 +1911,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "songLayoutPanel",
+          "className": "song-layout-panel",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1830,9 +1939,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "song-layout-actions"
+          "tag": "section",
+          "id": "songLayoutPanel",
+          "className": "song-layout-panel",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1858,9 +1969,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "section-heading"
+          "tag": "section",
+          "id": "bulkDisplayEditor",
+          "className": "library-editor bulk-display-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1886,9 +1999,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": "bulk-display-field"
+          "tag": "section",
+          "id": "bulkDisplayEditor",
+          "className": "library-editor bulk-display-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1912,9 +2027,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "bulk-display-grid"
+          "tag": "section",
+          "id": "bulkDisplayEditor",
+          "className": "library-editor bulk-display-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1939,9 +2056,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": "bulk-display-field"
+          "tag": "section",
+          "id": "bulkDisplayEditor",
+          "className": "library-editor bulk-display-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1965,9 +2084,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "bulk-display-grid"
+          "tag": "section",
+          "id": "bulkDisplayEditor",
+          "className": "library-editor bulk-display-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -1992,9 +2113,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": "bulk-display-field"
+          "tag": "section",
+          "id": "bulkDisplayEditor",
+          "className": "library-editor bulk-display-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2018,9 +2141,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "bulk-display-grid"
+          "tag": "section",
+          "id": "bulkDisplayEditor",
+          "className": "library-editor bulk-display-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2045,9 +2170,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-editor-actions"
+          "tag": "section",
+          "id": "bulkDisplayEditor",
+          "className": "library-editor bulk-display-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2074,9 +2201,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-editor-actions"
+          "tag": "section",
+          "id": "bulkDisplayEditor",
+          "className": "library-editor bulk-display-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2102,9 +2231,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-detail-head"
+          "tag": "section",
+          "id": "libraryGroupDetail",
+          "className": "library-group-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2130,9 +2261,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-detail-actions"
+          "tag": "section",
+          "id": "libraryGroupDetail",
+          "className": "library-group-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2159,9 +2292,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-detail-actions"
+          "tag": "section",
+          "id": "libraryGroupDetail",
+          "className": "library-group-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2187,9 +2322,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-detail-actions"
+          "tag": "section",
+          "id": "libraryGroupDetail",
+          "className": "library-group-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2215,9 +2352,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-detail-actions"
+          "tag": "section",
+          "id": "libraryGroupDetail",
+          "className": "library-group-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2245,7 +2384,9 @@
         "hiddenAncestor": {
           "tag": "section",
           "id": "artistDetailAlbums",
-          "className": "artist-detail-section"
+          "className": "artist-detail-section",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2273,9 +2414,11 @@
         "shellPanel": "library",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "artist-mini-search"
+          "tag": "section",
+          "id": "artistDetailSongs",
+          "className": "artist-detail-section artist-songs-section",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2303,9 +2446,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "section-heading"
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2331,9 +2476,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2357,9 +2504,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2383,9 +2532,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2409,9 +2560,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2435,9 +2588,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2463,9 +2618,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2491,9 +2648,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "details",
-          "id": null,
-          "className": "track-source-panel"
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {},
@@ -2514,9 +2673,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-editor-actions"
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2543,9 +2704,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-editor-actions"
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2571,9 +2734,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-editor-actions"
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2599,9 +2764,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "library-editor-actions"
+          "tag": "section",
+          "id": "libraryEditor",
+          "className": "library-editor",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2630,9 +2797,11 @@
         "shellPanel": "discover",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "discover-tabs"
+          "className": "discover-workspace",
+          "shellPanel": "discover",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2661,9 +2830,11 @@
         "shellPanel": "discover",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "discover-tabs"
+          "className": "discover-workspace",
+          "shellPanel": "discover",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2692,9 +2863,11 @@
         "shellPanel": "discover",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "discover-tabs"
+          "className": "discover-workspace",
+          "shellPanel": "discover",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2720,9 +2893,11 @@
         "shellPanel": "discover",
         "discoverPanel": "pc",
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "source-actions"
+          "className": "sources",
+          "shellPanel": null,
+          "discoverPanel": "pc"
         }
       },
       "attrs": {
@@ -2748,9 +2923,11 @@
         "shellPanel": "discover",
         "discoverPanel": "pc",
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "source-actions"
+          "className": "sources",
+          "shellPanel": null,
+          "discoverPanel": "pc"
         }
       },
       "attrs": {
@@ -2776,9 +2953,11 @@
         "shellPanel": "discover",
         "discoverPanel": "pc",
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "source-actions"
+          "className": "sources",
+          "shellPanel": null,
+          "discoverPanel": "pc"
         }
       },
       "attrs": {
@@ -2804,9 +2983,11 @@
         "shellPanel": "discover",
         "discoverPanel": "pc",
         "hiddenAncestor": {
-          "tag": "details",
-          "id": "ignoredSources",
-          "className": null
+          "tag": "section",
+          "id": null,
+          "className": "sources",
+          "shellPanel": null,
+          "discoverPanel": "pc"
         }
       },
       "attrs": {},
@@ -2827,9 +3008,11 @@
         "shellPanel": "discover",
         "discoverPanel": "pc",
         "hiddenAncestor": {
-          "tag": "details",
-          "id": "ignoredSources",
-          "className": null
+          "tag": "section",
+          "id": null,
+          "className": "sources",
+          "shellPanel": null,
+          "discoverPanel": "pc"
         }
       },
       "attrs": {
@@ -2855,9 +3038,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "youtube-import-row"
+          "className": "youtube-import",
+          "shellPanel": null,
+          "discoverPanel": "youtube"
         }
       },
       "attrs": {
@@ -2885,9 +3070,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "youtube-import-row"
+          "className": "youtube-import",
+          "shellPanel": null,
+          "discoverPanel": "youtube"
         }
       },
       "attrs": {
@@ -2914,9 +3101,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "section-heading"
+          "tag": "section",
+          "id": "importReview",
+          "className": "import-review",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2942,9 +3131,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "importReview",
+          "className": "import-review",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2967,9 +3158,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "importReview",
+          "className": "import-review",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -2992,9 +3185,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "importReview",
+          "className": "import-review",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3018,9 +3213,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "importReview",
+          "className": "import-review",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3045,9 +3242,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": null
+          "tag": "section",
+          "id": "importReview",
+          "className": "import-review",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3071,9 +3270,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "import-actions"
+          "tag": "section",
+          "id": "importReview",
+          "className": "import-review",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3100,9 +3301,11 @@
         "shellPanel": "discover",
         "discoverPanel": "youtube",
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "section-heading"
+          "className": "youtube-import",
+          "shellPanel": null,
+          "discoverPanel": "youtube"
         }
       },
       "attrs": {
@@ -3131,9 +3334,11 @@
         "shellPanel": "discover",
         "discoverPanel": "explore",
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "explore-actions"
+          "className": "explore",
+          "shellPanel": null,
+          "discoverPanel": "explore"
         }
       },
       "attrs": {
@@ -3163,9 +3368,11 @@
         "shellPanel": "discover",
         "discoverPanel": "explore",
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "explore-actions"
+          "className": "explore",
+          "shellPanel": null,
+          "discoverPanel": "explore"
         }
       },
       "attrs": {
@@ -3192,9 +3399,11 @@
         "shellPanel": "playlists",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "playlist-create"
+          "className": "playlists",
+          "shellPanel": "playlists",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3219,9 +3428,11 @@
         "shellPanel": "playlists",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "playlist-create"
+          "className": "playlists",
+          "shellPanel": "playlists",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3247,9 +3458,11 @@
         "shellPanel": "playlists",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "playlist-detail-head"
+          "tag": "section",
+          "id": "playlistDetail",
+          "className": "playlist-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3276,9 +3489,11 @@
         "shellPanel": "playlists",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "playlist-detail-copy"
+          "tag": "section",
+          "id": "playlistDetail",
+          "className": "playlist-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3303,9 +3518,11 @@
         "shellPanel": "playlists",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "playlist-detail-actions"
+          "tag": "section",
+          "id": "playlistDetail",
+          "className": "playlist-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3333,9 +3550,11 @@
         "shellPanel": "playlists",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "playlist-detail-actions"
+          "tag": "section",
+          "id": "playlistDetail",
+          "className": "playlist-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3362,9 +3581,11 @@
         "shellPanel": "playlists",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "playlist-detail-actions"
+          "tag": "section",
+          "id": "playlistDetail",
+          "className": "playlist-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3391,9 +3612,11 @@
         "shellPanel": "playlists",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "playlist-detail-actions"
+          "tag": "section",
+          "id": "playlistDetail",
+          "className": "playlist-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3420,9 +3643,11 @@
         "shellPanel": "playlists",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "playlist-detail-actions"
+          "tag": "section",
+          "id": "playlistDetail",
+          "className": "playlist-detail",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3449,9 +3674,11 @@
         "shellPanel": "deleted",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
+          "tag": "section",
           "id": null,
-          "className": "section-heading deleted-heading"
+          "className": "trash deleted-music-view",
+          "shellPanel": "deleted",
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3479,7 +3706,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "trashSelectionBar",
-          "className": "selection-bar trash-selection-bar"
+          "className": "selection-bar trash-selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3507,7 +3736,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "trashSelectionBar",
-          "className": "selection-bar trash-selection-bar"
+          "className": "selection-bar trash-selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3536,7 +3767,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "trashSelectionBar",
-          "className": "selection-bar trash-selection-bar"
+          "className": "selection-bar trash-selection-bar",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3562,9 +3795,11 @@
         "shellPanel": "deleted",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "label",
-          "id": null,
-          "className": "trash-preserve-history"
+          "tag": "section",
+          "id": "trashPurgeConfirm",
+          "className": "trash-purge-confirm",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3589,9 +3824,11 @@
         "shellPanel": "deleted",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "trash-confirm-actions"
+          "tag": "section",
+          "id": "trashPurgeConfirm",
+          "className": "trash-purge-confirm",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3617,9 +3854,11 @@
         "shellPanel": "deleted",
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "trash-confirm-actions"
+          "tag": "section",
+          "id": "trashPurgeConfirm",
+          "className": "trash-purge-confirm",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3648,7 +3887,9 @@
         "hiddenAncestor": {
           "tag": "div",
           "id": "purgeRecovery",
-          "className": "trash-recovery"
+          "className": "trash-recovery",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3764,8 +4005,10 @@
         "discoverPanel": null,
         "hiddenAncestor": {
           "tag": "div",
-          "id": null,
-          "className": "row between modal-head"
+          "id": "modalBackdrop",
+          "className": "modal-backdrop",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3794,9 +4037,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "system-drawer-head"
+          "tag": "aside",
+          "id": "systemDrawer",
+          "className": "system-drawer",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3823,9 +4068,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "section",
-          "id": null,
-          "className": "system-status-card system-session-review"
+          "tag": "aside",
+          "id": "systemDrawer",
+          "className": "system-drawer",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {
@@ -3855,9 +4102,11 @@
         "shellPanel": null,
         "discoverPanel": null,
         "hiddenAncestor": {
-          "tag": "div",
-          "id": null,
-          "className": "system-drawer-actions"
+          "tag": "aside",
+          "id": "systemDrawer",
+          "className": "system-drawer",
+          "shellPanel": null,
+          "discoverPanel": null
         }
       },
       "attrs": {

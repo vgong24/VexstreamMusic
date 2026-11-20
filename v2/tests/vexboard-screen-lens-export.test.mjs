@@ -87,3 +87,29 @@ test("phone and System shell controls expose full admitted pathways rather than 
   assert.ok(lens.pathways.find(pathway=>pathway.pathwayRef===phone.pathwayRef)?.nodes.some(node=>node.role==="CONNECTION"));
   assert.ok(lens.pathways.find(pathway=>pathway.pathwayRef===system.pathwayRef)?.nodes.some(node=>node.role==="PROJECTION"));
 });
+
+
+test("Library alternate terrain uses source-authored nested selections without Product JavaScript",()=>{
+  const lens=JSON.parse(committed);
+  const screen=lens.screens[0];
+  const shell=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.shell.primary-terrain");
+  const mode=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.library.mode");
+  assert.equal(shell.kind,"SELECTION");
+  assert.equal(shell.exhaustive,false);
+  assert.equal(shell.defaultRef,"vexstream.desktop.library.panel.home");
+  assert.deepEqual(shell.choices.map(choice=>choice.targetRef),[
+    "vexstream.desktop.library.panel.home",
+    "vexstream.desktop.library.panel.library",
+  ]);
+  assert.equal(mode.kind,"SELECTION");
+  assert.deepEqual(mode.choices.map(choice=>choice.targetRef),[
+    "vexstream.desktop.library.mode-state.songs",
+    "vexstream.desktop.library.mode-state.albums",
+    "vexstream.desktop.library.mode-state.artists",
+  ]);
+  assert.equal(mode.gate.presenceRef,shell.ref);
+  assert.equal(screen.view.scriptPolicy,"NONE");
+  assert.ok(screen.view.stateBindings.some(binding=>binding.presenceRef===mode.ref&&binding.value==="vexstream.desktop.library.mode-state.albums"));
+  assert.match(screen.view.html,/data-shell-panel="library"[^>]*data-vex-structural-ref="vexstream.desktop.library.panel.library"/);
+  assert.match(screen.view.html,/id="trackChoices"[^>]*data-vex-structural-ref="vexstream.desktop.library.track-choices"/);
+});

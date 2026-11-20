@@ -90,7 +90,7 @@ function allLensElements(lens){
 
 function lensElementFor(row,lens){
   const elements=allLensElements(lens);
-  if(row.relation&&(row.relation.kind==="vex-control"||row.relation.kind==="vex-action")){
+  if(row.relation){
     return elements.find(element=>element.ref==="element."+row.relation.identity)??null;
   }
   if(row.id){

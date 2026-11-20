@@ -57,9 +57,13 @@ test("every source-stable relationship is addressable in the exported inert view
     ["data-track-action",(value)=>"vexstream.track.action."+value],
   ];
   const identities=[];
-  for(const [attribute,identityFor] of relationPatterns){
-    const pattern=new RegExp(attribute+'="([^"]+)"','g');
-    for(const match of live.matchAll(pattern)) identities.push(identityFor(match[1]));
+  for(const tag of live.matchAll(/<[A-Za-z][^>]*>/g)){
+    for(const [attribute,identityFor] of relationPatterns){
+      const match=tag[0].match(new RegExp("\\b"+attribute+'="([^"]+)"'));
+      if(!match)continue;
+      identities.push(identityFor(match[1]));
+      break;
+    }
   }
   const elementRefs=new Set(lens.screens[0].elements.map(element=>element.ref));
   for(const identity of new Set(identities)){
@@ -68,6 +72,10 @@ test("every source-stable relationship is addressable in the exported inert view
   }
   assert.ok((view.html.match(/data-vex-ref="element\.vexstream\.shell\.view\.home"/g)??[]).length>=3,
     "repeated Home affordances share one relationship ref instead of inventing separate semantics");
+  assert.ok(elementRefs.has("element.vexstream.player.play-next"),
+    "a stronger data-vex-action identity wins over the same node's generic data-track-action");
+  assert.equal(elementRefs.has("element.vexstream.track.action.play-next"),false,
+    "one physical control does not receive two competing Lens identities");
 });
 
 test("phone and System shell controls expose full admitted pathways rather than silent pixels",()=>{

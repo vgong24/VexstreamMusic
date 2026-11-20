@@ -322,17 +322,17 @@
           <span id="sourceSummary">No folders included</span>
         </div>
         <div class="source-actions">
-          <button id="sourceAdd" type="button">Add folder…</button>
-          <button id="sourceDiscover" type="button">Find music</button>
-          <button id="sourceDiscoverDeep" type="button">Deep scan</button>
+          <button id="sourceAdd" type="button" data-vex-action="vexstream.sources.add-folder">Add folder…</button>
+          <button id="sourceDiscover" type="button" data-vex-action="vexstream.sources.discover">Find music</button>
+          <button id="sourceDiscoverDeep" type="button" data-vex-action="vexstream.sources.discover-deep">Deep scan</button>
         </div>
       </div>
       <div id="sourceList"></div>
       <div id="sourceDiscovery"></div>
       <details id="ignoredSources">
-        <summary>Ignored folders</summary>
+        <summary data-vex-action="vexstream.sources.ignored.toggle">Ignored folders</summary>
         <div id="ignoredSourceList"></div>
-        <button id="clearIgnoredSources" type="button">Restore all ignored folders</button>
+        <button id="clearIgnoredSources" type="button" data-vex-action="vexstream.sources.ignored.clear">Restore all ignored folders</button>
       </details>
     </section>
     <section class="youtube-import" data-discover-panel="youtube" hidden aria-labelledby="youtubeImportTitle">
@@ -345,8 +345,8 @@
       <div class="youtube-import-entry" id="youtubeImportEntry">
         <label for="youtubeImportURL">YouTube link</label>
         <div class="youtube-import-row">
-          <input id="youtubeImportURL" type="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
-          <button id="youtubeInspect" type="button" class="primary">Review</button>
+          <input id="youtubeImportURL" type="url" data-vex-action="vexstream.import.source-url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
+          <button id="youtubeInspect" type="button" class="primary" data-vex-action="vexstream.import.inspect">Review</button>
         </div>
         <div class="muted">Inspection and duplicate matching are read-only. Download begins only after the review step.</div>
       </div>
@@ -430,7 +430,7 @@
           <h2 id="importsTitle">Imports</h2>
           <span>Current preparation, review, and recovery state</span>
         </div>
-        <button id="importRefresh" type="button">Refresh</button>
+        <button id="importRefresh" type="button" data-vex-action="vexstream.import.jobs.refresh">Refresh</button>
       </div>
       <div id="importJobs"></div>
     </section>

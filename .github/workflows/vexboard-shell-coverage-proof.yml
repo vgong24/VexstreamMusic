@@ -1,0 +1,62 @@
+name: Shell Coverage Candidate Proof
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'v2/web/index.html'
+      - 'v2/web/features/phone/**'
+      - 'v2/web/features/system/**'
+      - 'v2/projection/**'
+      - 'v2/tests/phone-connection.test.mjs'
+      - 'v2/tests/system-status.test.mjs'
+      - 'v2/tests/vexboard-screen-lens-export.test.mjs'
+      - '.github/workflows/vexboard-shell-coverage-proof.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: VexStream source + export proof
+        run: |
+          node --test \
+            v2/tests/playback-behavior.test.mjs \
+            v2/tests/queue-behavior.test.mjs \
+            v2/tests/phone-connection.test.mjs \
+            v2/tests/system-status.test.mjs \
+            v2/tests/vexboard-screen-lens-export.test.mjs
+      - name: Checkout current VexWork projectability contract
+        uses: actions/checkout@v4
+        with:
+          repository: VexGPT/VexWork
+          ref: VXG-112026-vexstream-music-projectability-a001
+          path: vexwork
+      - name: Normalize expanded Lens through shared consumer seam
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import assert from "node:assert/strict";
+          import { normalizeScreenLens, containedPathways } from "./vexwork/src/shared/vexboard-screen-lens.mjs";
+          import * as Expressions from "./vexwork/src/shared/vexboard-screen-lens-source-expressions.mjs";
+
+          const raw=JSON.parse(fs.readFileSync("v2/projection/vexboard-screen-lens.json","utf8"));
+          const lens=normalizeScreenLens(raw);
+          const screen=lens.screens[0];
+          assert.equal(screen.elements.length,16);
+          assert.equal(lens.pathways.length,7);
+          assert.equal(containedPathways(lens,"vexstream.desktop.library.region.shell").length,7);
+          assert.equal(screen.elements.find(x=>x.ref==="element.vexstream.phone.connection.open")?.pathwayRef,"pathway.vexstream.phone.connection.open");
+          assert.equal(screen.elements.find(x=>x.ref==="element.vexstream.system.status.open")?.pathwayRef,"pathway.vexstream.system.status.open");
+          assert.ok(lens.pathways.find(x=>x.pathwayRef==="pathway.vexstream.phone.connection.open")?.nodes.some(x=>x.role==="CONNECTION"));
+          assert.ok(lens.pathways.find(x=>x.pathwayRef==="pathway.vexstream.system.status.open")?.nodes.some(x=>x.role==="PROJECTION"));
+          assert.ok(Expressions.expressionsFor(lens,screen.screenRef).length>0);
+          console.log(JSON.stringify({state:"PASS",elements:screen.elements.length,pathways:lens.pathways.length,contained:containedPathways(lens,"vexstream.desktop.library.region.shell").length},null,2));
+          NODE

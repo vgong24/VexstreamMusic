@@ -10,10 +10,10 @@
   "latent": 99,
   "counts": {
     "ADDRESSABLE_HELD": 51,
-    "MAPPED_PATHWAY": 7,
-    "LATENT_WIRED_UNIDENTIFIED": 44,
+    "MAPPED_PATHWAY": 14,
+    "LATENT_WIRED_UNIDENTIFIED": 38,
     "VISIBLE_DISABLED_UNIDENTIFIED": 2,
-    "LATENT_UNIDENTIFIED": 27
+    "LATENT_UNIDENTIFIED": 26
   },
   "groupedCoverage": {
     "default": {
@@ -173,8 +173,7 @@
       "visible": 0,
       "latent": 7,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 6,
-        "LATENT_UNIDENTIFIED": 1
+        "MAPPED_PATHWAY": 7
       }
     },
     "shell:deleted": {
@@ -3506,7 +3505,10 @@
       "id": "playlistDetailBack",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.playlists.detail.close"
+      },
       "textRef": "playlist.detail.back",
       "presentation": {
         "shellPanel": "playlists",
@@ -3522,11 +3524,12 @@
       "attrs": {
         "id": "playlistDetailBack",
         "type": "button",
+        "data-vex-action": "vexstream.playlists.detail.close",
         "data-text-ref": "playlist.detail.back"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
-      "pathwayRef": null,
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.playlists.detail.close",
+      "pathwayRef": "pathway.vexstream.playlists.detail.close",
       "events": [
         "click"
       ]
@@ -3537,7 +3540,10 @@
       "id": "playlistDetailName",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.playlists.rename.name"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "playlists",
@@ -3553,11 +3559,12 @@
       "attrs": {
         "id": "playlistDetailName",
         "type": "text",
+        "data-vex-action": "vexstream.playlists.rename.name",
         "aria-label": "Playlist name"
       },
-      "status": "LATENT_UNIDENTIFIED",
-      "elementRef": null,
-      "pathwayRef": null,
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.playlists.rename.name",
+      "pathwayRef": "pathway.vexstream.playlists.rename",
       "events": []
     },
     {
@@ -3566,7 +3573,10 @@
       "id": "playlistDetailPlay",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.player.play-playlist"
+      },
       "textRef": "playlist.play",
       "presentation": {
         "shellPanel": "playlists",
@@ -3583,11 +3593,12 @@
         "id": "playlistDetailPlay",
         "type": "button",
         "class": "primary",
+        "data-vex-action": "vexstream.player.play-playlist",
         "data-text-ref": "playlist.play"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
-      "pathwayRef": null,
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.player.play-playlist",
+      "pathwayRef": "pathway.vexstream.player.play-playlist",
       "events": [
         "click"
       ]
@@ -3598,7 +3609,10 @@
       "id": "playlistDetailShuffle",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.player.shuffle-playlist"
+      },
       "textRef": "playlist.shuffle",
       "presentation": {
         "shellPanel": "playlists",
@@ -3614,11 +3628,12 @@
       "attrs": {
         "id": "playlistDetailShuffle",
         "type": "button",
+        "data-vex-action": "vexstream.player.shuffle-playlist",
         "data-text-ref": "playlist.shuffle"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
-      "pathwayRef": null,
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.player.shuffle-playlist",
+      "pathwayRef": "pathway.vexstream.player.shuffle-playlist",
       "events": [
         "click"
       ]
@@ -3629,7 +3644,10 @@
       "id": "playlistDetailAddSongs",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.playlists.detail.add-songs"
+      },
       "textRef": "playlist.add-songs",
       "presentation": {
         "shellPanel": "playlists",
@@ -3645,11 +3663,12 @@
       "attrs": {
         "id": "playlistDetailAddSongs",
         "type": "button",
+        "data-vex-action": "vexstream.playlists.detail.add-songs",
         "data-text-ref": "playlist.add-songs"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
-      "pathwayRef": null,
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.playlists.detail.add-songs",
+      "pathwayRef": "pathway.vexstream.playlists.detail.add-songs",
       "events": [
         "click"
       ]
@@ -3660,7 +3679,10 @@
       "id": "playlistDetailRename",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.playlists.rename"
+      },
       "textRef": "playlist.rename",
       "presentation": {
         "shellPanel": "playlists",
@@ -3676,11 +3698,12 @@
       "attrs": {
         "id": "playlistDetailRename",
         "type": "button",
+        "data-vex-action": "vexstream.playlists.rename",
         "data-text-ref": "playlist.rename"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
-      "pathwayRef": null,
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.playlists.rename",
+      "pathwayRef": "pathway.vexstream.playlists.rename",
       "events": [
         "click"
       ]
@@ -3691,7 +3714,10 @@
       "id": "playlistDetailDelete",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.playlists.delete"
+      },
       "textRef": "playlist.delete",
       "presentation": {
         "shellPanel": "playlists",
@@ -3707,11 +3733,12 @@
       "attrs": {
         "id": "playlistDetailDelete",
         "type": "button",
+        "data-vex-action": "vexstream.playlists.delete",
         "data-text-ref": "playlist.delete"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
-      "pathwayRef": null,
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.playlists.delete",
+      "pathwayRef": "pathway.vexstream.playlists.delete",
       "events": [
         "click"
       ]

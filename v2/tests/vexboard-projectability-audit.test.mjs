@@ -87,3 +87,20 @@ test("selected Playlist detail has no unresolved fixed affordances once its pres
     {MAPPED_PATHWAY:7}
   );
 });
+
+
+test("admitted Deleted terrain makes its immediate stable control addressable while nested Trash states remain separate",()=>{
+  const audit=auditProjectability(readCurrentAuditInputs());
+  assert.deepEqual(
+    audit.groupedCoverage["shell:deleted"].statuses,
+    {ADDRESSABLE_HELD:1}
+  );
+  const refresh=audit.rows.find(row=>row.id==="trashRefresh");
+  assert.equal(refresh.relation?.identity,"vexstream.trash.refresh");
+  assert.equal(refresh.elementRef,"element.vexstream.trash.refresh");
+  assert.equal(refresh.status,"ADDRESSABLE_HELD");
+
+  assert.ok(audit.groupedCoverage["shell:deleted/hidden:#trashSelectionBar"]);
+  assert.ok(audit.groupedCoverage["shell:deleted/hidden:#trashPurgeConfirm"]);
+  assert.ok(audit.groupedCoverage["shell:deleted/hidden:#purgeRecovery"]);
+});

@@ -36,6 +36,11 @@ import {
   restoreTrashItems,
 } from "./features/library/trash.js";
 import {
+  TrashPresentationIdentity,
+  trashItemChildRef,
+  trashItemPresentationRef,
+} from "./features/library/trash-presentation.js";
+import {
   activateLibrarySortStack,
   groupLibrary,
   libraryGenres,
@@ -893,19 +898,26 @@ function renderTrash(){
  });
 
  trashItems.innerHTML=trashCountValue
-  ?trashSnapshot.trash.map(item=>`<article class="trash-row ${selectedTrashIDs.has(item.id)?"selected":""}" data-trash-id="${escapeHTML(item.id)}">
+  ?trashSnapshot.trash.map(item=>{
+    const rowRef=trashItemPresentationRef(item.id);
+    const childRef=path=>trashItemChildRef(item.id,path);
+    return `<article class="trash-row ${selectedTrashIDs.has(item.id)?"selected":""}"
+      data-trash-id="${escapeHTML(item.id)}"
+      data-vex-ref="${escapeHTML(rowRef)}"
+      data-vex-continuity="${TrashPresentationIdentity.Item.continuity}">
       <label class="trash-select">
-       <input type="checkbox" data-trash-select aria-label="Select ${escapeHTML(item.track?.title||resolveText(locale,"library.unknown-title"))}" ${selectedTrashIDs.has(item.id)?"checked":""}>
+       <input type="checkbox" data-trash-select data-vex-ref="${escapeHTML(childRef("selection"))}" aria-label="Select ${escapeHTML(item.track?.title||resolveText(locale,"library.unknown-title"))}" ${selectedTrashIDs.has(item.id)?"checked":""}>
       </label>
       <div class="trash-copy">
        <strong>${escapeHTML(item.track?.title||resolveText(locale,"library.unknown-title"))}</strong>
        <small>${escapeHTML(item.track?.artist||resolveText(locale,"library.unknown-artist"))} · trashed ${escapeHTML(item.trashedAt||"")}</small>
       </div>
       <div class="trash-actions">
-       <button data-trash-action="restore">${escapeHTML(resolveText(locale,"trash.restore"))}</button>
-       <button data-trash-action="purge" class="danger">Permanently delete…</button>
+       <button data-trash-action="restore" data-vex-ref="${escapeHTML(childRef("actions/restore"))}">${escapeHTML(resolveText(locale,"trash.restore"))}</button>
+       <button data-trash-action="purge" data-vex-ref="${escapeHTML(childRef("actions/purge"))}" class="danger">Permanently delete…</button>
       </div>
-     </article>`).join("")
+     </article>`;
+   }).join("")
   :`<div class="empty-state">${escapeHTML(resolveText(locale,"trash.empty"))}</div>`;
 
  deletedHistory.innerHTML=historyCountValue

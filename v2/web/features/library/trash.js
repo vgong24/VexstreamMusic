@@ -1,6 +1,10 @@
 // [VXG RealForever]
 // Browser client for explicit local Trash custody.
 
+export const TrashClientIntent=Object.freeze({
+  Refresh:"vexstream.trash.refresh"
+});
+
 export async function loadTrash(
   {request=globalThis.fetch}={}
 ){

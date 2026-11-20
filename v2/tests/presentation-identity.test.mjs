@@ -15,6 +15,11 @@ import {
  playlistEntryChildRef,
  playlistEntryPresentationRef,
 } from "../web/features/playlists/presentation.js";
+import {
+ TrashPresentationIdentity,
+ trashItemChildRef,
+ trashItemPresentationRef,
+} from "../web/features/library/trash-presentation.js";
 
 test("nested presentation identity follows the same normalized parent-child law",()=>{
  assert.equal(
@@ -95,5 +100,24 @@ test("Playlist-owned runtime identities use the portable formation law without t
    occurrence:2,
   },"actions/remove"),
   second+".actions.remove"
+ );
+});
+
+
+test("Trash runtime identity reuses the portable law under a different Product owner",()=>{
+ const row=trashItemPresentationRef("trash-42");
+ assert.equal(
+  row,
+  "element.vexstream.trash.item.dynamic.utf8hex.74726173682d3432"
+ );
+ assert.equal(TrashPresentationIdentity.Item.continuity,"STABLE_INSTANCE");
+ assert.deepEqual(TrashPresentationIdentity.Item.partSources,["item.id"]);
+ assert.equal(
+  trashItemChildRef("trash-42","actions/restore"),
+  row+".actions.restore"
+ );
+ assert.equal(
+  trashItemChildRef("trash-42","selection"),
+  row+".selection"
  );
 });

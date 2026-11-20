@@ -1637,6 +1637,7 @@ def main() -> int:
             lambda: require(
                 journey["ref"]
                 == "journey.vexstream.desktop.player.queue-basics"
+                and journey["screenRef"] == "vexstream.desktop.library"
                 and len(journey["steps"]) == 6,
                 "journey drift",
             ),
@@ -1977,13 +1978,22 @@ def main() -> int:
         )
         nxt = page.locator('[data-vex-control="vexstream.queue.next"]')
         prev = page.locator(
-            '[data-vex-control="vexstream.queue.previous"]'
+            '[data-vex-action="vexstream.player.previous"]'
         )
         shuf = page.locator(
             '[data-vex-control="vexstream.queue.shuffle"]'
         )
         rep = page.locator(
             '[data-vex-control="vexstream.queue.repeat"]'
+        )
+
+        checked(
+            "top-level-previous-keeps-player-composition-identity",
+            lambda: require(
+                prev.count() == 1
+                and prev.get_attribute("data-vex-control") is None,
+                "Previous overclaimed QueueControl identity",
+            ),
         )
 
         checked(

@@ -15,6 +15,169 @@
     "VISIBLE_DISABLED_UNIDENTIFIED": 2,
     "LATENT_UNIDENTIFIED": 29
   },
+  "groupedCoverage": {
+    "default": {
+      "total": 31,
+      "visible": 31,
+      "latent": 0,
+      "statuses": {
+        "ADDRESSABLE_HELD": 22,
+        "MAPPED_PATHWAY": 7,
+        "VISIBLE_DISABLED_UNIDENTIFIED": 2
+      }
+    },
+    "latent:other": {
+      "total": 7,
+      "visible": 0,
+      "latent": 7,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 1,
+        "LATENT_UNIDENTIFIED": 6
+      }
+    },
+    "shell:home": {
+      "total": 1,
+      "visible": 1,
+      "latent": 0,
+      "statuses": {
+        "ADDRESSABLE_HELD": 1
+      }
+    },
+    "hidden:#nowDetails": {
+      "total": 1,
+      "visible": 0,
+      "latent": 1,
+      "statuses": {
+        "LATENT_UNIDENTIFIED": 1
+      }
+    },
+    "hidden:.song-more-menu": {
+      "total": 5,
+      "visible": 0,
+      "latent": 5,
+      "statuses": {
+        "ADDRESSABLE_HELD": 5
+      }
+    },
+    "shell:library": {
+      "total": 39,
+      "visible": 0,
+      "latent": 39,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 24,
+        "ADDRESSABLE_HELD": 3,
+        "LATENT_UNIDENTIFIED": 12
+      }
+    },
+    "hidden:.section-heading": {
+      "total": 1,
+      "visible": 0,
+      "latent": 1,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 1
+      }
+    },
+    "hidden:.track-source-panel": {
+      "total": 1,
+      "visible": 0,
+      "latent": 1,
+      "statuses": {
+        "LATENT_UNIDENTIFIED": 1
+      }
+    },
+    "hidden:.library-editor-actions": {
+      "total": 4,
+      "visible": 0,
+      "latent": 4,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 4
+      }
+    },
+    "shell:discover": {
+      "total": 3,
+      "visible": 0,
+      "latent": 3,
+      "statuses": {
+        "ADDRESSABLE_HELD": 3
+      }
+    },
+    "shell:discover/discover:pc": {
+      "total": 5,
+      "visible": 0,
+      "latent": 5,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 4,
+        "LATENT_UNIDENTIFIED": 1
+      }
+    },
+    "shell:discover/discover:youtube": {
+      "total": 10,
+      "visible": 0,
+      "latent": 10,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 5,
+        "LATENT_UNIDENTIFIED": 5
+      }
+    },
+    "shell:discover/discover:explore": {
+      "total": 2,
+      "visible": 0,
+      "latent": 2,
+      "statuses": {
+        "ADDRESSABLE_HELD": 2
+      }
+    },
+    "shell:playlists": {
+      "total": 9,
+      "visible": 0,
+      "latent": 9,
+      "statuses": {
+        "LATENT_UNIDENTIFIED": 2,
+        "LATENT_WIRED_UNIDENTIFIED": 7
+      }
+    },
+    "shell:deleted": {
+      "total": 8,
+      "visible": 0,
+      "latent": 8,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 7,
+        "LATENT_UNIDENTIFIED": 1
+      }
+    },
+    "hidden:.row": {
+      "total": 1,
+      "visible": 0,
+      "latent": 1,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 1
+      }
+    },
+    "hidden:.system-drawer-head": {
+      "total": 1,
+      "visible": 0,
+      "latent": 1,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 1
+      }
+    },
+    "hidden:.system-status-card": {
+      "total": 1,
+      "visible": 0,
+      "latent": 1,
+      "statuses": {
+        "LATENT_WIRED_UNIDENTIFIED": 1
+      }
+    },
+    "hidden:.system-drawer-actions": {
+      "total": 1,
+      "visible": 0,
+      "latent": 1,
+      "statuses": {
+        "ADDRESSABLE_HELD": 1
+      }
+    }
+  },
   "blocking": [],
   "rows": [
     {
@@ -28,6 +191,11 @@
         "identity": "vexstream.shell.sidebar.toggle"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "libraryNavToggle",
         "class": "nav-toggle",
@@ -55,6 +223,11 @@
         "identity": "vexstream.shell.view.home"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "brandHome",
         "class": "brand brand-home",
@@ -79,6 +252,11 @@
         "identity": "vexstream.shell.view.home"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "libraryTopTab",
         "type": "button",
@@ -101,6 +279,11 @@
         "identity": "vexstream.shell.view.discover"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "discoverTopTab",
         "type": "button",
@@ -122,6 +305,11 @@
         "identity": "vexstream.phone.connection.open"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "phoneConnectButton",
         "class": "system-bell",
@@ -149,6 +337,11 @@
         "identity": "vexstream.system.status.open"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "systemStatusButton",
         "class": "system-bell",
@@ -176,6 +369,11 @@
         "identity": "vexstream.shell.view.home"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "type": "button",
         "data-shell-view": "home",
@@ -197,6 +395,11 @@
         "identity": "vexstream.shell.view.songs"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "type": "button",
         "data-shell-view": "songs"
@@ -217,6 +420,11 @@
         "identity": "vexstream.shell.view.albums"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "type": "button",
         "data-shell-view": "albums"
@@ -237,6 +445,11 @@
         "identity": "vexstream.shell.view.artists"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "type": "button",
         "data-shell-view": "artists"
@@ -257,6 +470,11 @@
         "identity": "vexstream.shell.view.playlists"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "type": "button",
         "data-shell-view": "playlists"
@@ -277,6 +495,11 @@
         "identity": "vexstream.shell.view.deleted"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "type": "button",
         "data-shell-view": "deleted"
@@ -297,6 +520,11 @@
         "identity": "vexstream.library.rescan"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "rescanLibraryBtn",
         "type": "button",
@@ -320,6 +548,11 @@
         "identity": "vexstream.player.shuffle-library"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "shuffleAllBtn",
         "type": "button",
@@ -343,6 +576,11 @@
         "identity": "vexstream.library.search.query"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "librarySearch",
         "type": "search",
@@ -369,6 +607,11 @@
         "identity": "vexstream.library.search.execute"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "librarySearchExecute",
         "class": "search-go",
@@ -392,6 +635,11 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "librarySearchClear",
         "class": "search-clear",
@@ -417,6 +665,11 @@
         "identity": "vexstream.library.filter.genre"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "libraryGenre",
         "data-vex-action": "vexstream.library.filter.genre",
@@ -440,6 +693,11 @@
         "identity": "vexstream.discover.add.open"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "goDiscoverAdd",
         "type": "button",
@@ -463,6 +721,11 @@
         "identity": "vexstream.shell.view.songs"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": "home",
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "type": "button",
         "data-shell-view": "songs"
@@ -480,6 +743,11 @@
       "disabled": true,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "nowArtButton",
         "class": "now-art-button",
@@ -501,6 +769,11 @@
       "disabled": true,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "nowTitleButton",
         "class": "now-title-button",
@@ -521,6 +794,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "details",
+          "id": "nowDetails",
+          "className": "now-details"
+        }
+      },
       "attrs": {
         "class": "now-details-toggle",
         "aria-label": "Current track actions",
@@ -542,6 +824,15 @@
         "identity": "vexstream.player.play-next"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "song-more-menu now-details-menu"
+        }
+      },
       "attrs": {
         "data-track-action": "play-next",
         "data-vex-action": "vexstream.player.play-next"
@@ -562,6 +853,15 @@
         "identity": "vexstream.player.add-queue"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "song-more-menu now-details-menu"
+        }
+      },
       "attrs": {
         "data-track-action": "append",
         "data-vex-action": "vexstream.player.add-queue"
@@ -582,6 +882,15 @@
         "identity": "vexstream.explore.from-track"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "song-more-menu now-details-menu"
+        }
+      },
       "attrs": {
         "data-track-action": "explore",
         "data-vex-action": "vexstream.explore.from-track"
@@ -602,6 +911,15 @@
         "identity": "vexstream.track.action.edit"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "song-more-menu now-details-menu"
+        }
+      },
       "attrs": {
         "data-track-action": "edit"
       },
@@ -621,6 +939,15 @@
         "identity": "vexstream.track.action.trash"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "song-more-menu now-details-menu"
+        }
+      },
       "attrs": {
         "data-track-action": "trash"
       },
@@ -640,6 +967,11 @@
         "identity": "vexstream.player.previous"
       },
       "textRef": "queue.previous",
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "previous",
         "type": "button",
@@ -664,6 +996,11 @@
         "identity": "vexstream.playback.play-pause"
       },
       "textRef": "playback.play",
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "playPause",
         "type": "button",
@@ -689,6 +1026,11 @@
         "identity": "vexstream.queue.next"
       },
       "textRef": "queue.next",
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "next",
         "type": "button",
@@ -713,6 +1055,11 @@
         "identity": "vexstream.queue.shuffle"
       },
       "textRef": "queue.shuffle",
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "shuffle",
         "type": "button",
@@ -738,6 +1085,11 @@
         "identity": "vexstream.queue.repeat"
       },
       "textRef": "queue.repeat",
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "repeat",
         "type": "button",
@@ -763,6 +1115,11 @@
         "identity": "vexstream.playback.timeline.seek"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "seek",
         "type": "range",
@@ -791,6 +1148,11 @@
         "identity": "vexstream.playback.volume.set"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "volume",
         "type": "range",
@@ -819,6 +1181,11 @@
         "identity": "vexstream.queue.drawer.toggle"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "queueMiniBtn",
         "class": "queue-mini",
@@ -843,6 +1210,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-heading-actions"
+        }
+      },
       "attrs": {
         "id": "songLayoutButton",
         "type": "button",
@@ -863,6 +1239,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "library.play-all",
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-heading-actions"
+        }
+      },
       "attrs": {
         "id": "playAllSongs",
         "type": "button",
@@ -883,6 +1268,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "library.selection.select",
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-heading-actions"
+        }
+      },
       "attrs": {
         "id": "selectSongs",
         "type": "button",
@@ -903,6 +1297,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": "library-sort-control"
+        }
+      },
       "attrs": {
         "id": "librarySort"
       },
@@ -924,6 +1327,15 @@
         "identity": "vexstream.library.mode.songs"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-view-toggle"
+        }
+      },
       "attrs": {
         "type": "button",
         "data-library-mode": "songs",
@@ -945,6 +1357,15 @@
         "identity": "vexstream.library.mode.albums"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-view-toggle"
+        }
+      },
       "attrs": {
         "type": "button",
         "data-library-mode": "albums",
@@ -966,6 +1387,15 @@
         "identity": "vexstream.library.mode.artists"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-view-toggle"
+        }
+      },
       "attrs": {
         "type": "button",
         "data-library-mode": "artists",
@@ -984,6 +1414,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "librarySelectionBar",
+          "className": "selection-bar"
+        }
+      },
       "attrs": {
         "id": "selectVisibleSongs",
         "type": "button"
@@ -1003,6 +1442,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "librarySelectionBar",
+          "className": "selection-bar"
+        }
+      },
       "attrs": {
         "id": "bulkPlaySelected",
         "type": "button"
@@ -1022,6 +1470,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "librarySelectionBar",
+          "className": "selection-bar"
+        }
+      },
       "attrs": {
         "id": "bulkPlayNextSelected",
         "type": "button"
@@ -1041,6 +1498,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "librarySelectionBar",
+          "className": "selection-bar"
+        }
+      },
       "attrs": {
         "id": "bulkQueueSelected",
         "type": "button"
@@ -1060,6 +1526,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "librarySelectionBar",
+          "className": "selection-bar"
+        }
+      },
       "attrs": {
         "id": "bulkEditSelected",
         "type": "button"
@@ -1079,6 +1554,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "librarySelectionBar",
+          "className": "selection-bar"
+        }
+      },
       "attrs": {
         "id": "bulkPlaylistTarget",
         "aria-label": "Playlist"
@@ -1096,6 +1580,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "librarySelectionBar",
+          "className": "selection-bar"
+        }
+      },
       "attrs": {
         "id": "bulkPlaylistSelected",
         "type": "button"
@@ -1115,6 +1608,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "librarySelectionBar",
+          "className": "selection-bar"
+        }
+      },
       "attrs": {
         "id": "bulkTrashSelected",
         "type": "button"
@@ -1134,6 +1636,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "librarySelectionBar",
+          "className": "selection-bar"
+        }
+      },
       "attrs": {
         "id": "clearSongSelection",
         "type": "button"
@@ -1153,6 +1664,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "song-layout-head"
+        }
+      },
       "attrs": {
         "id": "songLayoutDone",
         "type": "button"
@@ -1172,6 +1692,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "type": "checkbox",
         "data-song-layout-field": "artist",
@@ -1190,6 +1719,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "type": "checkbox",
         "data-song-layout-field": "album",
@@ -1208,6 +1746,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "type": "checkbox",
         "data-song-layout-field": "added",
@@ -1226,6 +1773,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "type": "checkbox",
         "data-song-layout-field": "duration",
@@ -1244,6 +1800,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "type": "checkbox",
         "data-song-layout-field": "genre"
@@ -1261,6 +1826,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "song-layout-actions"
+        }
+      },
       "attrs": {
         "id": "songLayoutReset",
         "type": "button"
@@ -1280,6 +1854,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "section-heading"
+        }
+      },
       "attrs": {
         "id": "bulkDisplayEditorClose",
         "type": "button"
@@ -1299,6 +1882,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": "bulk-display-field"
+        }
+      },
       "attrs": {
         "id": "bulkApplyArtist",
         "type": "checkbox"
@@ -1316,6 +1908,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "bulk-display-grid"
+        }
+      },
       "attrs": {
         "id": "bulkArtist",
         "type": "text",
@@ -1334,6 +1935,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": "bulk-display-field"
+        }
+      },
       "attrs": {
         "id": "bulkApplyAlbum",
         "type": "checkbox"
@@ -1351,6 +1961,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "bulk-display-grid"
+        }
+      },
       "attrs": {
         "id": "bulkAlbum",
         "type": "text",
@@ -1369,6 +1988,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": "bulk-display-field"
+        }
+      },
       "attrs": {
         "id": "bulkApplyGenre",
         "type": "checkbox"
@@ -1386,6 +2014,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "bulk-display-grid"
+        }
+      },
       "attrs": {
         "id": "bulkGenre",
         "type": "text",
@@ -1404,6 +2041,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-editor-actions"
+        }
+      },
       "attrs": {
         "id": "applyBulkDisplay",
         "type": "button",
@@ -1424,6 +2070,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-editor-actions"
+        }
+      },
       "attrs": {
         "id": "cancelBulkDisplay",
         "type": "button"
@@ -1443,6 +2098,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-detail-head"
+        }
+      },
       "attrs": {
         "id": "libraryGroupBack",
         "type": "button"
@@ -1462,6 +2126,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-detail-actions"
+        }
+      },
       "attrs": {
         "id": "libraryGroupPlay",
         "type": "button",
@@ -1482,6 +2155,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-detail-actions"
+        }
+      },
       "attrs": {
         "id": "libraryGroupShuffle",
         "type": "button"
@@ -1501,6 +2183,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-detail-actions"
+        }
+      },
       "attrs": {
         "id": "libraryGroupPlayNext",
         "type": "button"
@@ -1520,6 +2211,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-detail-actions"
+        }
+      },
       "attrs": {
         "id": "libraryGroupAppend",
         "type": "button"
@@ -1539,6 +2239,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "section",
+          "id": "artistDetailAlbums",
+          "className": "artist-detail-section"
+        }
+      },
       "attrs": {
         "id": "artistAlbumsToggle",
         "class": "artist-section-toggle",
@@ -1560,6 +2269,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "library",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "artist-mini-search"
+        }
+      },
       "attrs": {
         "id": "artistSongSearch",
         "type": "search",
@@ -1581,6 +2299,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "section-heading"
+        }
+      },
       "attrs": {
         "id": "libraryEditorClose",
         "type": "button"
@@ -1600,6 +2327,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "editTitle",
         "type": "text"
@@ -1617,6 +2353,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "editArtist",
         "type": "text"
@@ -1634,6 +2379,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "editAlbum",
         "type": "text"
@@ -1651,6 +2405,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "editGenre",
         "type": "text"
@@ -1668,6 +2431,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "editPlaybackStart",
         "type": "number",
@@ -1687,6 +2459,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "editPlaybackEnd",
         "type": "number",
@@ -1706,6 +2487,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "details",
+          "id": null,
+          "className": "track-source-panel"
+        }
+      },
       "attrs": {},
       "status": "LATENT_UNIDENTIFIED",
       "elementRef": null,
@@ -1720,6 +2510,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-editor-actions"
+        }
+      },
       "attrs": {
         "id": "saveTrackDisplay",
         "type": "button",
@@ -1740,6 +2539,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-editor-actions"
+        }
+      },
       "attrs": {
         "id": "restoreTrackDisplay",
         "type": "button"
@@ -1759,6 +2567,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-editor-actions"
+        }
+      },
       "attrs": {
         "id": "savePlaybackWindow",
         "type": "button"
@@ -1778,6 +2595,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "library-editor-actions"
+        }
+      },
       "attrs": {
         "id": "restorePlaybackWindow",
         "type": "button"
@@ -1800,6 +2626,15 @@
         "identity": "vexstream.discover.mode.pc"
       },
       "textRef": "discover.pc",
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "discover-tabs"
+        }
+      },
       "attrs": {
         "type": "button",
         "data-discover-mode": "pc",
@@ -1822,6 +2657,15 @@
         "identity": "vexstream.discover.mode.youtube"
       },
       "textRef": "discover.youtube",
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "discover-tabs"
+        }
+      },
       "attrs": {
         "type": "button",
         "data-discover-mode": "youtube",
@@ -1844,6 +2688,15 @@
         "identity": "vexstream.discover.mode.explore"
       },
       "textRef": "discover.explore",
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "discover-tabs"
+        }
+      },
       "attrs": {
         "type": "button",
         "data-discover-mode": "explore",
@@ -1863,6 +2716,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "pc",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "source-actions"
+        }
+      },
       "attrs": {
         "id": "sourceAdd",
         "type": "button"
@@ -1882,6 +2744,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "pc",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "source-actions"
+        }
+      },
       "attrs": {
         "id": "sourceDiscover",
         "type": "button"
@@ -1901,6 +2772,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "pc",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "source-actions"
+        }
+      },
       "attrs": {
         "id": "sourceDiscoverDeep",
         "type": "button"
@@ -1920,6 +2800,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "pc",
+        "hiddenAncestor": {
+          "tag": "details",
+          "id": "ignoredSources",
+          "className": null
+        }
+      },
       "attrs": {},
       "status": "LATENT_UNIDENTIFIED",
       "elementRef": null,
@@ -1934,6 +2823,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "pc",
+        "hiddenAncestor": {
+          "tag": "details",
+          "id": "ignoredSources",
+          "className": null
+        }
+      },
       "attrs": {
         "id": "clearIgnoredSources",
         "type": "button"
@@ -1953,6 +2851,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "youtube-import-row"
+        }
+      },
       "attrs": {
         "id": "youtubeImportURL",
         "type": "url",
@@ -1974,6 +2881,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "youtube-import-row"
+        }
+      },
       "attrs": {
         "id": "youtubeInspect",
         "type": "button",
@@ -1994,6 +2910,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "section-heading"
+        }
+      },
       "attrs": {
         "id": "importReviewClose",
         "type": "button"
@@ -2013,6 +2938,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "importDestination"
       },
@@ -2029,6 +2963,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "importMode"
       },
@@ -2045,6 +2988,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "importCollection",
         "type": "text"
@@ -2062,6 +3014,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "importArtist",
         "type": "text",
@@ -2080,6 +3041,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": null
+        }
+      },
       "attrs": {
         "id": "importGenre",
         "type": "text"
@@ -2097,6 +3067,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "import-actions"
+        }
+      },
       "attrs": {
         "id": "importStart",
         "type": "button",
@@ -2117,6 +3096,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "youtube",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "section-heading"
+        }
+      },
       "attrs": {
         "id": "importRefresh",
         "type": "button"
@@ -2139,6 +3127,15 @@
         "identity": "vexstream.explore.back"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "explore",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "explore-actions"
+        }
+      },
       "attrs": {
         "id": "exploreBack",
         "type": "button",
@@ -2162,6 +3159,15 @@
         "identity": "vexstream.explore.clear"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": "discover",
+        "discoverPanel": "explore",
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "explore-actions"
+        }
+      },
       "attrs": {
         "id": "exploreClear",
         "type": "button",
@@ -2182,6 +3188,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "playlists",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "playlist-create"
+        }
+      },
       "attrs": {
         "id": "newPlaylistName",
         "type": "text",
@@ -2200,6 +3215,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "playlists",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "playlist-create"
+        }
+      },
       "attrs": {
         "id": "createPlaylist",
         "type": "button"
@@ -2219,6 +3243,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "playlist.detail.back",
+      "presentation": {
+        "shellPanel": "playlists",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "playlist-detail-head"
+        }
+      },
       "attrs": {
         "id": "playlistDetailBack",
         "type": "button",
@@ -2239,6 +3272,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "playlists",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "playlist-detail-copy"
+        }
+      },
       "attrs": {
         "id": "playlistDetailName",
         "type": "text",
@@ -2257,6 +3299,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "playlist.play",
+      "presentation": {
+        "shellPanel": "playlists",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "playlist-detail-actions"
+        }
+      },
       "attrs": {
         "id": "playlistDetailPlay",
         "type": "button",
@@ -2278,6 +3329,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "playlist.shuffle",
+      "presentation": {
+        "shellPanel": "playlists",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "playlist-detail-actions"
+        }
+      },
       "attrs": {
         "id": "playlistDetailShuffle",
         "type": "button",
@@ -2298,6 +3358,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "playlist.add-songs",
+      "presentation": {
+        "shellPanel": "playlists",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "playlist-detail-actions"
+        }
+      },
       "attrs": {
         "id": "playlistDetailAddSongs",
         "type": "button",
@@ -2318,6 +3387,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "playlist.rename",
+      "presentation": {
+        "shellPanel": "playlists",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "playlist-detail-actions"
+        }
+      },
       "attrs": {
         "id": "playlistDetailRename",
         "type": "button",
@@ -2338,6 +3416,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "playlist.delete",
+      "presentation": {
+        "shellPanel": "playlists",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "playlist-detail-actions"
+        }
+      },
       "attrs": {
         "id": "playlistDetailDelete",
         "type": "button",
@@ -2358,6 +3445,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "deleted",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "section-heading deleted-heading"
+        }
+      },
       "attrs": {
         "id": "trashRefresh",
         "type": "button"
@@ -2377,6 +3473,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "deleted",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "trashSelectionBar",
+          "className": "selection-bar trash-selection-bar"
+        }
+      },
       "attrs": {
         "id": "restoreSelectedTrash",
         "type": "button"
@@ -2396,6 +3501,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "deleted",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "trashSelectionBar",
+          "className": "selection-bar trash-selection-bar"
+        }
+      },
       "attrs": {
         "id": "purgeSelectedTrash",
         "type": "button",
@@ -2416,6 +3530,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "deleted",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "trashSelectionBar",
+          "className": "selection-bar trash-selection-bar"
+        }
+      },
       "attrs": {
         "id": "clearTrashSelection",
         "type": "button"
@@ -2435,6 +3558,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "deleted",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "label",
+          "id": null,
+          "className": "trash-preserve-history"
+        }
+      },
       "attrs": {
         "id": "preserveDeletedMetadata",
         "type": "checkbox",
@@ -2453,6 +3585,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "deleted",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "trash-confirm-actions"
+        }
+      },
       "attrs": {
         "id": "trashPurgeCancel",
         "type": "button"
@@ -2472,6 +3613,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "deleted",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "trash-confirm-actions"
+        }
+      },
       "attrs": {
         "id": "trashPurgeCommit",
         "type": "button",
@@ -2492,6 +3642,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": "deleted",
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": "purgeRecovery",
+          "className": "trash-recovery"
+        }
+      },
       "attrs": {
         "id": "recoverTrashPurge",
         "type": "button"
@@ -2514,6 +3673,11 @@
         "identity": "vexstream.queue.drawer.toggle"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "queueDrawerHandle",
         "class": "queue-handle",
@@ -2540,6 +3704,11 @@
         "identity": "vexstream.queue.shuffle-upcoming"
       },
       "textRef": "queue.shuffle-upcoming",
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "shuffleQueueUpcoming",
         "type": "button",
@@ -2564,6 +3733,11 @@
         "identity": "vexstream.queue.clear-after-current"
       },
       "textRef": "queue.clear-after-current",
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": null
+      },
       "attrs": {
         "id": "clearAfterCurrent",
         "type": "button",
@@ -2585,6 +3759,15 @@
       "disabled": false,
       "relation": null,
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "row between modal-head"
+        }
+      },
       "attrs": {
         "id": "modalCloseBtn",
         "class": "modal-close",
@@ -2607,6 +3790,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "system.status.close",
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "system-drawer-head"
+        }
+      },
       "attrs": {
         "id": "systemDrawerClose",
         "type": "button",
@@ -2627,6 +3819,15 @@
       "disabled": false,
       "relation": null,
       "textRef": "system.sessions.review",
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "section",
+          "id": null,
+          "className": "system-status-card system-session-review"
+        }
+      },
       "attrs": {
         "id": "reviewOldSessions",
         "type": "button",
@@ -2650,6 +3851,15 @@
         "identity": "vexstream.system.exit"
       },
       "textRef": null,
+      "presentation": {
+        "shellPanel": null,
+        "discoverPanel": null,
+        "hiddenAncestor": {
+          "tag": "div",
+          "id": null,
+          "className": "system-drawer-actions"
+        }
+      },
       "attrs": {
         "id": "exitVexStream",
         "type": "button",

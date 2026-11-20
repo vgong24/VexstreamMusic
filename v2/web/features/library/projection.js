@@ -7,7 +7,9 @@
 export const LibraryProjectionIntent=Object.freeze({
  SearchQuery:"vexstream.library.search.query",
  SearchExecute:"vexstream.library.search.execute",
- FilterGenre:"vexstream.library.filter.genre"
+ FilterGenre:"vexstream.library.filter.genre",
+ SortPreset:"vexstream.library.sort.preset",
+ OpenSongLayout:"vexstream.library.song-layout.open"
 });
 
 const SORT_KEYS=new Set([

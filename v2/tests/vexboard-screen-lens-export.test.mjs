@@ -138,3 +138,19 @@ test("Discover alternate terrain uses source-authored nested selection without P
  assert.ok(screen.view.stateBindings.some(binding=>binding.presenceRef===discover.ref&&binding.value==="vexstream.desktop.library.discover-panel.youtube"));
  assert.ok(screen.view.stateBindings.some(binding=>binding.presenceRef===discover.ref&&binding.value==="vexstream.desktop.library.discover-panel.explore"));
 });
+
+
+test("Playlists list/create terrain is a source-authored Shell expression while detail remains held",()=>{
+ const lens=JSON.parse(committed);
+ const screen=lens.screens[0];
+ const shell=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.shell.primary-terrain");
+ assert.equal(screen.view.scriptPolicy,"NONE");
+ assert.ok(shell.choices.some(choice=>choice.targetRef==="vexstream.desktop.library.panel.playlists"));
+ assert.ok(screen.view.stateBindings.some(binding=>
+  binding.presenceRef===shell.ref&&binding.value==="vexstream.desktop.library.panel.playlists"
+ ));
+ assert.match(screen.view.html,/data-shell-panel="playlists"[^>]*data-vex-structural-ref="vexstream\.desktop\.library\.panel\.playlists"/);
+ assert.ok(screen.elements.some(element=>element.ref==="element.vexstream.playlists.create.name"));
+ assert.ok(screen.elements.some(element=>element.ref==="element.vexstream.playlists.create"));
+ assert.ok(screen.realization.held.some(value=>/Playlist detail/.test(value)));
+});

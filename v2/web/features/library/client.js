@@ -2,6 +2,10 @@
 // Browser consumer for the local read-only V4 Library projection.
 // Filesystem paths/source-folder custody remain server-side; song metadata remains data, not TextRef.
 
+export const LibraryClientIntent=Object.freeze({
+  Rescan:"vexstream.library.rescan"
+});
+
 export function mediaURLFor(trackRef) {
   const ref = String(trackRef ?? "").trim();
   if (!ref) throw new Error("media URL requires trackRef");

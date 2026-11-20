@@ -1,0 +1,2651 @@
+{
+  "schemaVersion": "vexstream.vexboard-projectability-audit/v1",
+  "generatedFrom": {
+    "html": "v2/web/index.html",
+    "runtime": "v2/web/app.js",
+    "lens": "v2/projection/vexboard-screen-lens.json"
+  },
+  "total": 131,
+  "defaultVisible": 32,
+  "latent": 99,
+  "counts": {
+    "VISIBLE_WIRED_UNIDENTIFIED": 12,
+    "SOURCE_RELATIONSHIP_UNMAPPED": 18,
+    "MAPPED_PATHWAY": 7,
+    "LATENT_WIRED_UNIDENTIFIED": 56,
+    "VISIBLE_DISABLED_UNIDENTIFIED": 2,
+    "LATENT_UNIDENTIFIED": 29,
+    "ADDRESSABLE_HELD": 7
+  },
+  "blocking": [
+    1,
+    2,
+    3,
+    4,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    18,
+    19,
+    20,
+    27,
+    28,
+    34,
+    35,
+    36,
+    41,
+    42,
+    43,
+    88,
+    89,
+    90,
+    125,
+    126
+  ],
+  "rows": [
+    {
+      "ordinal": 1,
+      "tag": "button",
+      "id": "libraryNavToggle",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "libraryNavToggle",
+        "class": "nav-toggle",
+        "type": "button",
+        "title": "Toggle library navigation",
+        "aria-label": "Toggle library navigation",
+        "aria-expanded": "true"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 2,
+      "tag": "button",
+      "id": "brandHome",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.home"
+      },
+      "textRef": null,
+      "attrs": {
+        "id": "brandHome",
+        "class": "brand brand-home",
+        "type": "button",
+        "data-shell-view": "home",
+        "title": "Go to Library home",
+        "aria-label": "Go to Library home"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 3,
+      "tag": "button",
+      "id": "libraryTopTab",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.home"
+      },
+      "textRef": null,
+      "attrs": {
+        "id": "libraryTopTab",
+        "type": "button",
+        "data-shell-view": "home",
+        "class": "active"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 4,
+      "tag": "button",
+      "id": "discoverTopTab",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.discover"
+      },
+      "textRef": null,
+      "attrs": {
+        "id": "discoverTopTab",
+        "type": "button",
+        "data-shell-view": "discover"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 5,
+      "tag": "button",
+      "id": "phoneConnectButton",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.phone.connection.open"
+      },
+      "textRef": null,
+      "attrs": {
+        "id": "phoneConnectButton",
+        "class": "system-bell",
+        "type": "button",
+        "data-vex-action": "vexstream.phone.connection.open",
+        "title": "Connect VexLife phone",
+        "aria-label": "Connect VexLife phone",
+        "aria-expanded": "false"
+      },
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.phone.connection.open",
+      "pathwayRef": "pathway.vexstream.phone.connection.open",
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 6,
+      "tag": "button",
+      "id": "systemStatusButton",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.system.status.open"
+      },
+      "textRef": null,
+      "attrs": {
+        "id": "systemStatusButton",
+        "class": "system-bell",
+        "type": "button",
+        "data-vex-action": "vexstream.system.status.open",
+        "title": "System status",
+        "aria-label": "System status",
+        "aria-expanded": "false"
+      },
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.system.status.open",
+      "pathwayRef": "pathway.vexstream.system.status.open",
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 7,
+      "tag": "button",
+      "id": null,
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.home"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-shell-view": "home",
+        "class": "active"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 8,
+      "tag": "button",
+      "id": null,
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.songs"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-shell-view": "songs"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 9,
+      "tag": "button",
+      "id": null,
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.albums"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-shell-view": "albums"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 10,
+      "tag": "button",
+      "id": null,
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.artists"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-shell-view": "artists"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 11,
+      "tag": "button",
+      "id": null,
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.playlists"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-shell-view": "playlists"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 12,
+      "tag": "button",
+      "id": null,
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.deleted"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-shell-view": "deleted"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 13,
+      "tag": "button",
+      "id": "rescanLibraryBtn",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "rescanLibraryBtn",
+        "type": "button"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 14,
+      "tag": "button",
+      "id": "shuffleAllBtn",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "shuffleAllBtn",
+        "type": "button"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 15,
+      "tag": "input",
+      "id": "librarySearch",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "librarySearch",
+        "type": "search",
+        "placeholder": "Search this library…",
+        "aria-label": "Search library"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "input",
+        "keydown"
+      ]
+    },
+    {
+      "ordinal": 16,
+      "tag": "button",
+      "id": "librarySearchExecute",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "librarySearchExecute",
+        "class": "search-go",
+        "type": "button",
+        "title": "Search",
+        "aria-label": "Search"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 17,
+      "tag": "button",
+      "id": "librarySearchClear",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "librarySearchClear",
+        "class": "search-clear",
+        "type": "button",
+        "title": "Clear search",
+        "hidden": true
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 18,
+      "tag": "select",
+      "id": "libraryGenre",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "libraryGenre",
+        "title": "Filter by genre"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "change"
+      ]
+    },
+    {
+      "ordinal": 19,
+      "tag": "button",
+      "id": "goDiscoverAdd",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "goDiscoverAdd",
+        "type": "button"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 20,
+      "tag": "button",
+      "id": null,
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "shell-view",
+        "identity": "vexstream.shell.view.songs"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-shell-view": "songs"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 21,
+      "tag": "button",
+      "id": "nowArtButton",
+      "hidden": false,
+      "disabled": true,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "nowArtButton",
+        "class": "now-art-button",
+        "type": "button",
+        "title": "Open current track actions",
+        "aria-label": "Open current track actions",
+        "disabled": true
+      },
+      "status": "VISIBLE_DISABLED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 22,
+      "tag": "button",
+      "id": "nowTitleButton",
+      "hidden": false,
+      "disabled": true,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "nowTitleButton",
+        "class": "now-title-button",
+        "type": "button",
+        "title": "Open current track actions",
+        "disabled": true
+      },
+      "status": "VISIBLE_DISABLED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 23,
+      "tag": "summary",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "class": "now-details-toggle",
+        "aria-label": "Current track actions",
+        "title": "Current track actions"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 24,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.player.play-next"
+      },
+      "textRef": null,
+      "attrs": {
+        "data-track-action": "play-next",
+        "data-vex-action": "vexstream.player.play-next"
+      },
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.player.play-next",
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 25,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.player.add-queue"
+      },
+      "textRef": null,
+      "attrs": {
+        "data-track-action": "append",
+        "data-vex-action": "vexstream.player.add-queue"
+      },
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.player.add-queue",
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 26,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.explore.from-track"
+      },
+      "textRef": null,
+      "attrs": {
+        "data-track-action": "explore",
+        "data-vex-action": "vexstream.explore.from-track"
+      },
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.explore.from-track",
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 27,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "track-action",
+        "identity": "vexstream.track.action.edit"
+      },
+      "textRef": null,
+      "attrs": {
+        "data-track-action": "edit"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 28,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "track-action",
+        "identity": "vexstream.track.action.trash"
+      },
+      "textRef": null,
+      "attrs": {
+        "data-track-action": "trash"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 29,
+      "tag": "button",
+      "id": "previous",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.player.previous"
+      },
+      "textRef": "queue.previous",
+      "attrs": {
+        "id": "previous",
+        "type": "button",
+        "data-vex-action": "vexstream.player.previous",
+        "data-text-ref": "queue.previous"
+      },
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.player.previous",
+      "pathwayRef": "pathway.vexstream.player.previous",
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 30,
+      "tag": "button",
+      "id": "playPause",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-control",
+        "identity": "vexstream.playback.play-pause"
+      },
+      "textRef": "playback.play",
+      "attrs": {
+        "id": "playPause",
+        "type": "button",
+        "class": "primary",
+        "data-vex-control": "vexstream.playback.play-pause",
+        "data-text-ref": "playback.play"
+      },
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.playback.play-pause",
+      "pathwayRef": "pathway.vexstream.playback.play-pause",
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 31,
+      "tag": "button",
+      "id": "next",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-control",
+        "identity": "vexstream.queue.next"
+      },
+      "textRef": "queue.next",
+      "attrs": {
+        "id": "next",
+        "type": "button",
+        "data-vex-control": "vexstream.queue.next",
+        "data-text-ref": "queue.next"
+      },
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.queue.next",
+      "pathwayRef": "pathway.vexstream.queue.next",
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 32,
+      "tag": "button",
+      "id": "shuffle",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-control",
+        "identity": "vexstream.queue.shuffle"
+      },
+      "textRef": "queue.shuffle",
+      "attrs": {
+        "id": "shuffle",
+        "type": "button",
+        "data-vex-control": "vexstream.queue.shuffle",
+        "data-text-ref": "queue.shuffle",
+        "aria-pressed": "false"
+      },
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.queue.shuffle",
+      "pathwayRef": "pathway.vexstream.queue.shuffle",
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 33,
+      "tag": "button",
+      "id": "repeat",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-control",
+        "identity": "vexstream.queue.repeat"
+      },
+      "textRef": "queue.repeat",
+      "attrs": {
+        "id": "repeat",
+        "type": "button",
+        "data-vex-control": "vexstream.queue.repeat",
+        "data-text-ref": "queue.repeat",
+        "aria-pressed": "false"
+      },
+      "status": "MAPPED_PATHWAY",
+      "elementRef": "element.vexstream.queue.repeat",
+      "pathwayRef": "pathway.vexstream.queue.repeat",
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 34,
+      "tag": "input",
+      "id": "seek",
+      "hidden": false,
+      "disabled": true,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "seek",
+        "type": "range",
+        "min": "0",
+        "max": "1000",
+        "value": "0",
+        "aria-label": "Seek",
+        "disabled": true
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "input"
+      ]
+    },
+    {
+      "ordinal": 35,
+      "tag": "input",
+      "id": "volume",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "volume",
+        "type": "range",
+        "min": "0",
+        "max": "1",
+        "step": "0.01",
+        "value": "0.8",
+        "aria-label": "Volume"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "input"
+      ]
+    },
+    {
+      "ordinal": 36,
+      "tag": "button",
+      "id": "queueMiniBtn",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "queueMiniBtn",
+        "class": "queue-mini",
+        "type": "button",
+        "aria-controls": "queueDrawer",
+        "aria-expanded": "false",
+        "title": "Open Queue"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 37,
+      "tag": "button",
+      "id": "songLayoutButton",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "songLayoutButton",
+        "type": "button",
+        "title": "Choose visible fields and title space"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 38,
+      "tag": "button",
+      "id": "playAllSongs",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "library.play-all",
+      "attrs": {
+        "id": "playAllSongs",
+        "type": "button",
+        "data-text-ref": "library.play-all"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 39,
+      "tag": "button",
+      "id": "selectSongs",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "library.selection.select",
+      "attrs": {
+        "id": "selectSongs",
+        "type": "button",
+        "data-text-ref": "library.selection.select"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 40,
+      "tag": "select",
+      "id": "librarySort",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "librarySort"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "change"
+      ]
+    },
+    {
+      "ordinal": 41,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "library-mode",
+        "identity": "vexstream.library.mode.songs"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-library-mode": "songs",
+        "aria-pressed": "true"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 42,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "library-mode",
+        "identity": "vexstream.library.mode.albums"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-library-mode": "albums",
+        "aria-pressed": "false"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 43,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "library-mode",
+        "identity": "vexstream.library.mode.artists"
+      },
+      "textRef": null,
+      "attrs": {
+        "type": "button",
+        "data-library-mode": "artists",
+        "aria-pressed": "false"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 44,
+      "tag": "button",
+      "id": "selectVisibleSongs",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "selectVisibleSongs",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 45,
+      "tag": "button",
+      "id": "bulkPlaySelected",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkPlaySelected",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 46,
+      "tag": "button",
+      "id": "bulkPlayNextSelected",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkPlayNextSelected",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 47,
+      "tag": "button",
+      "id": "bulkQueueSelected",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkQueueSelected",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 48,
+      "tag": "button",
+      "id": "bulkEditSelected",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkEditSelected",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 49,
+      "tag": "select",
+      "id": "bulkPlaylistTarget",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkPlaylistTarget",
+        "aria-label": "Playlist"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 50,
+      "tag": "button",
+      "id": "bulkPlaylistSelected",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkPlaylistSelected",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 51,
+      "tag": "button",
+      "id": "bulkTrashSelected",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkTrashSelected",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 52,
+      "tag": "button",
+      "id": "clearSongSelection",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "clearSongSelection",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 53,
+      "tag": "button",
+      "id": "songLayoutDone",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "songLayoutDone",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 54,
+      "tag": "input",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "type": "checkbox",
+        "data-song-layout-field": "artist",
+        "checked": true
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 55,
+      "tag": "input",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "type": "checkbox",
+        "data-song-layout-field": "album",
+        "checked": true
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 56,
+      "tag": "input",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "type": "checkbox",
+        "data-song-layout-field": "added",
+        "checked": true
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 57,
+      "tag": "input",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "type": "checkbox",
+        "data-song-layout-field": "duration",
+        "checked": true
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 58,
+      "tag": "input",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "type": "checkbox",
+        "data-song-layout-field": "genre"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 59,
+      "tag": "button",
+      "id": "songLayoutReset",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "songLayoutReset",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 60,
+      "tag": "button",
+      "id": "bulkDisplayEditorClose",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkDisplayEditorClose",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 61,
+      "tag": "input",
+      "id": "bulkApplyArtist",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkApplyArtist",
+        "type": "checkbox"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 62,
+      "tag": "input",
+      "id": "bulkArtist",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkArtist",
+        "type": "text",
+        "placeholder": "Mixed / unchanged"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 63,
+      "tag": "input",
+      "id": "bulkApplyAlbum",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkApplyAlbum",
+        "type": "checkbox"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 64,
+      "tag": "input",
+      "id": "bulkAlbum",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkAlbum",
+        "type": "text",
+        "placeholder": "Mixed / unchanged"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 65,
+      "tag": "input",
+      "id": "bulkApplyGenre",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkApplyGenre",
+        "type": "checkbox"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 66,
+      "tag": "input",
+      "id": "bulkGenre",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "bulkGenre",
+        "type": "text",
+        "placeholder": "Mixed / unchanged"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 67,
+      "tag": "button",
+      "id": "applyBulkDisplay",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "applyBulkDisplay",
+        "type": "button",
+        "class": "primary"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 68,
+      "tag": "button",
+      "id": "cancelBulkDisplay",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "cancelBulkDisplay",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 69,
+      "tag": "button",
+      "id": "libraryGroupBack",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "libraryGroupBack",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 70,
+      "tag": "button",
+      "id": "libraryGroupPlay",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "libraryGroupPlay",
+        "type": "button",
+        "class": "primary"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 71,
+      "tag": "button",
+      "id": "libraryGroupShuffle",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "libraryGroupShuffle",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 72,
+      "tag": "button",
+      "id": "libraryGroupPlayNext",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "libraryGroupPlayNext",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 73,
+      "tag": "button",
+      "id": "libraryGroupAppend",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "libraryGroupAppend",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 74,
+      "tag": "button",
+      "id": "artistAlbumsToggle",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "artistAlbumsToggle",
+        "class": "artist-section-toggle",
+        "type": "button",
+        "aria-expanded": "false"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 75,
+      "tag": "input",
+      "id": "artistSongSearch",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "artistSongSearch",
+        "type": "search",
+        "placeholder": "Search artist songs…",
+        "aria-label": "Search this artist's songs"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "input"
+      ]
+    },
+    {
+      "ordinal": 76,
+      "tag": "button",
+      "id": "libraryEditorClose",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "libraryEditorClose",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 77,
+      "tag": "input",
+      "id": "editTitle",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "editTitle",
+        "type": "text"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 78,
+      "tag": "input",
+      "id": "editArtist",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "editArtist",
+        "type": "text"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 79,
+      "tag": "input",
+      "id": "editAlbum",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "editAlbum",
+        "type": "text"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 80,
+      "tag": "input",
+      "id": "editGenre",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "editGenre",
+        "type": "text"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 81,
+      "tag": "input",
+      "id": "editPlaybackStart",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "editPlaybackStart",
+        "type": "number",
+        "min": "0",
+        "step": "0.1"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 82,
+      "tag": "input",
+      "id": "editPlaybackEnd",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "editPlaybackEnd",
+        "type": "number",
+        "min": "0",
+        "step": "0.1"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 83,
+      "tag": "summary",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {},
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 84,
+      "tag": "button",
+      "id": "saveTrackDisplay",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "saveTrackDisplay",
+        "type": "button",
+        "class": "primary"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 85,
+      "tag": "button",
+      "id": "restoreTrackDisplay",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "restoreTrackDisplay",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 86,
+      "tag": "button",
+      "id": "savePlaybackWindow",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "savePlaybackWindow",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 87,
+      "tag": "button",
+      "id": "restorePlaybackWindow",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "restorePlaybackWindow",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 88,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "discover-mode",
+        "identity": "vexstream.discover.mode.pc"
+      },
+      "textRef": "discover.pc",
+      "attrs": {
+        "type": "button",
+        "data-discover-mode": "pc",
+        "aria-pressed": "true",
+        "data-text-ref": "discover.pc"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 89,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "discover-mode",
+        "identity": "vexstream.discover.mode.youtube"
+      },
+      "textRef": "discover.youtube",
+      "attrs": {
+        "type": "button",
+        "data-discover-mode": "youtube",
+        "aria-pressed": "false",
+        "data-text-ref": "discover.youtube"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 90,
+      "tag": "button",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "discover-mode",
+        "identity": "vexstream.discover.mode.explore"
+      },
+      "textRef": "discover.explore",
+      "attrs": {
+        "type": "button",
+        "data-discover-mode": "explore",
+        "aria-pressed": "false",
+        "data-text-ref": "discover.explore"
+      },
+      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 91,
+      "tag": "button",
+      "id": "sourceAdd",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "sourceAdd",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 92,
+      "tag": "button",
+      "id": "sourceDiscover",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "sourceDiscover",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 93,
+      "tag": "button",
+      "id": "sourceDiscoverDeep",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "sourceDiscoverDeep",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 94,
+      "tag": "summary",
+      "id": null,
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {},
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 95,
+      "tag": "button",
+      "id": "clearIgnoredSources",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "clearIgnoredSources",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 96,
+      "tag": "input",
+      "id": "youtubeImportURL",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "youtubeImportURL",
+        "type": "url",
+        "placeholder": "https://www.youtube.com/watch?v=…",
+        "autocomplete": "off"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "keydown"
+      ]
+    },
+    {
+      "ordinal": 97,
+      "tag": "button",
+      "id": "youtubeInspect",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "youtubeInspect",
+        "type": "button",
+        "class": "primary"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 98,
+      "tag": "button",
+      "id": "importReviewClose",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "importReviewClose",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 99,
+      "tag": "select",
+      "id": "importDestination",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "importDestination"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 100,
+      "tag": "select",
+      "id": "importMode",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "importMode"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 101,
+      "tag": "input",
+      "id": "importCollection",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "importCollection",
+        "type": "text"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 102,
+      "tag": "input",
+      "id": "importArtist",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "importArtist",
+        "type": "text",
+        "placeholder": "Unknown — set if you know it"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 103,
+      "tag": "input",
+      "id": "importGenre",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "importGenre",
+        "type": "text"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 104,
+      "tag": "button",
+      "id": "importStart",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "importStart",
+        "type": "button",
+        "class": "primary"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 105,
+      "tag": "button",
+      "id": "importRefresh",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "importRefresh",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 106,
+      "tag": "button",
+      "id": "exploreBack",
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-control",
+        "identity": "vexstream.explore.back"
+      },
+      "textRef": null,
+      "attrs": {
+        "id": "exploreBack",
+        "type": "button",
+        "data-vex-control": "vexstream.explore.back"
+      },
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.explore.back",
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 107,
+      "tag": "button",
+      "id": "exploreClear",
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-control",
+        "identity": "vexstream.explore.clear"
+      },
+      "textRef": null,
+      "attrs": {
+        "id": "exploreClear",
+        "type": "button",
+        "data-vex-control": "vexstream.explore.clear"
+      },
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.explore.clear",
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 108,
+      "tag": "input",
+      "id": "newPlaylistName",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "newPlaylistName",
+        "type": "text",
+        "placeholder": "New playlist name"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 109,
+      "tag": "button",
+      "id": "createPlaylist",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "createPlaylist",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 110,
+      "tag": "button",
+      "id": "playlistDetailBack",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "playlist.detail.back",
+      "attrs": {
+        "id": "playlistDetailBack",
+        "type": "button",
+        "data-text-ref": "playlist.detail.back"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 111,
+      "tag": "input",
+      "id": "playlistDetailName",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "playlistDetailName",
+        "type": "text",
+        "aria-label": "Playlist name"
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 112,
+      "tag": "button",
+      "id": "playlistDetailPlay",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "playlist.play",
+      "attrs": {
+        "id": "playlistDetailPlay",
+        "type": "button",
+        "class": "primary",
+        "data-text-ref": "playlist.play"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 113,
+      "tag": "button",
+      "id": "playlistDetailShuffle",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "playlist.shuffle",
+      "attrs": {
+        "id": "playlistDetailShuffle",
+        "type": "button",
+        "data-text-ref": "playlist.shuffle"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 114,
+      "tag": "button",
+      "id": "playlistDetailAddSongs",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "playlist.add-songs",
+      "attrs": {
+        "id": "playlistDetailAddSongs",
+        "type": "button",
+        "data-text-ref": "playlist.add-songs"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 115,
+      "tag": "button",
+      "id": "playlistDetailRename",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "playlist.rename",
+      "attrs": {
+        "id": "playlistDetailRename",
+        "type": "button",
+        "data-text-ref": "playlist.rename"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 116,
+      "tag": "button",
+      "id": "playlistDetailDelete",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "playlist.delete",
+      "attrs": {
+        "id": "playlistDetailDelete",
+        "type": "button",
+        "data-text-ref": "playlist.delete"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 117,
+      "tag": "button",
+      "id": "trashRefresh",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "trashRefresh",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 118,
+      "tag": "button",
+      "id": "restoreSelectedTrash",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "restoreSelectedTrash",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 119,
+      "tag": "button",
+      "id": "purgeSelectedTrash",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "purgeSelectedTrash",
+        "type": "button",
+        "class": "danger"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 120,
+      "tag": "button",
+      "id": "clearTrashSelection",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "clearTrashSelection",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 121,
+      "tag": "input",
+      "id": "preserveDeletedMetadata",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "preserveDeletedMetadata",
+        "type": "checkbox",
+        "checked": true
+      },
+      "status": "LATENT_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": []
+    },
+    {
+      "ordinal": 122,
+      "tag": "button",
+      "id": "trashPurgeCancel",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "trashPurgeCancel",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 123,
+      "tag": "button",
+      "id": "trashPurgeCommit",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "trashPurgeCommit",
+        "type": "button",
+        "class": "danger"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 124,
+      "tag": "button",
+      "id": "recoverTrashPurge",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "recoverTrashPurge",
+        "type": "button"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 125,
+      "tag": "button",
+      "id": "queueDrawerHandle",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "queueDrawerHandle",
+        "class": "queue-handle",
+        "type": "button",
+        "aria-controls": "queueDrawerBody",
+        "aria-expanded": "false"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 126,
+      "tag": "button",
+      "id": "shuffleQueueUpcoming",
+      "hidden": false,
+      "disabled": false,
+      "relation": null,
+      "textRef": "queue.shuffle-upcoming",
+      "attrs": {
+        "id": "shuffleQueueUpcoming",
+        "type": "button",
+        "data-text-ref": "queue.shuffle-upcoming"
+      },
+      "status": "VISIBLE_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 127,
+      "tag": "button",
+      "id": "clearAfterCurrent",
+      "hidden": false,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-control",
+        "identity": "vexstream.queue.clear-after-current"
+      },
+      "textRef": "queue.clear-after-current",
+      "attrs": {
+        "id": "clearAfterCurrent",
+        "type": "button",
+        "data-vex-control": "vexstream.queue.clear-after-current",
+        "data-text-ref": "queue.clear-after-current"
+      },
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.queue.clear-after-current",
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 128,
+      "tag": "button",
+      "id": "modalCloseBtn",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": null,
+      "attrs": {
+        "id": "modalCloseBtn",
+        "class": "modal-close",
+        "type": "button",
+        "title": "Close",
+        "aria-label": "Close"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 129,
+      "tag": "button",
+      "id": "systemDrawerClose",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "system.status.close",
+      "attrs": {
+        "id": "systemDrawerClose",
+        "type": "button",
+        "data-text-ref": "system.status.close"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 130,
+      "tag": "button",
+      "id": "reviewOldSessions",
+      "hidden": true,
+      "disabled": false,
+      "relation": null,
+      "textRef": "system.sessions.review",
+      "attrs": {
+        "id": "reviewOldSessions",
+        "type": "button",
+        "data-text-ref": "system.sessions.review"
+      },
+      "status": "LATENT_WIRED_UNIDENTIFIED",
+      "elementRef": null,
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    },
+    {
+      "ordinal": 131,
+      "tag": "button",
+      "id": "exitVexStream",
+      "hidden": true,
+      "disabled": false,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.system.exit"
+      },
+      "textRef": null,
+      "attrs": {
+        "id": "exitVexStream",
+        "type": "button",
+        "data-vex-action": "vexstream.system.exit"
+      },
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.system.exit",
+      "pathwayRef": null,
+      "events": [
+        "click"
+      ]
+    }
+  ]
+}

@@ -9,27 +9,13 @@
   "defaultVisible": 32,
   "latent": 99,
   "counts": {
-    "VISIBLE_WIRED_UNIDENTIFIED": 12,
-    "ADDRESSABLE_HELD": 25,
+    "ADDRESSABLE_HELD": 37,
     "MAPPED_PATHWAY": 7,
     "LATENT_WIRED_UNIDENTIFIED": 56,
     "VISIBLE_DISABLED_UNIDENTIFIED": 2,
     "LATENT_UNIDENTIFIED": 29
   },
-  "blocking": [
-    1,
-    13,
-    14,
-    15,
-    16,
-    18,
-    19,
-    34,
-    35,
-    36,
-    125,
-    126
-  ],
+  "blocking": [],
   "rows": [
     {
       "ordinal": 1,
@@ -37,18 +23,22 @@
       "id": "libraryNavToggle",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.shell.sidebar.toggle"
+      },
       "textRef": null,
       "attrs": {
         "id": "libraryNavToggle",
         "class": "nav-toggle",
         "type": "button",
+        "data-vex-action": "vexstream.shell.sidebar.toggle",
         "title": "Toggle library navigation",
         "aria-label": "Toggle library navigation",
         "aria-expanded": "true"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.sidebar.toggle",
       "pathwayRef": null,
       "events": [
         "click"
@@ -302,14 +292,18 @@
       "id": "rescanLibraryBtn",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.library.rescan"
+      },
       "textRef": null,
       "attrs": {
         "id": "rescanLibraryBtn",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.library.rescan"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.rescan",
       "pathwayRef": null,
       "events": [
         "click"
@@ -321,14 +315,18 @@
       "id": "shuffleAllBtn",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.player.shuffle-library"
+      },
       "textRef": null,
       "attrs": {
         "id": "shuffleAllBtn",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.player.shuffle-library"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.player.shuffle-library",
       "pathwayRef": null,
       "events": [
         "click"
@@ -340,16 +338,20 @@
       "id": "librarySearch",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.library.search.query"
+      },
       "textRef": null,
       "attrs": {
         "id": "librarySearch",
         "type": "search",
+        "data-vex-action": "vexstream.library.search.query",
         "placeholder": "Search this library…",
         "aria-label": "Search library"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.search.query",
       "pathwayRef": null,
       "events": [
         "input",
@@ -362,17 +364,21 @@
       "id": "librarySearchExecute",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.library.search.execute"
+      },
       "textRef": null,
       "attrs": {
         "id": "librarySearchExecute",
         "class": "search-go",
         "type": "button",
+        "data-vex-action": "vexstream.library.search.execute",
         "title": "Search",
         "aria-label": "Search"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.search.execute",
       "pathwayRef": null,
       "events": [
         "click"
@@ -406,14 +412,18 @@
       "id": "libraryGenre",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.library.filter.genre"
+      },
       "textRef": null,
       "attrs": {
         "id": "libraryGenre",
+        "data-vex-action": "vexstream.library.filter.genre",
         "title": "Filter by genre"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.filter.genre",
       "pathwayRef": null,
       "events": [
         "change"
@@ -425,14 +435,18 @@
       "id": "goDiscoverAdd",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.discover.add.open"
+      },
       "textRef": null,
       "attrs": {
         "id": "goDiscoverAdd",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.discover.add.open"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.discover.add.open",
       "pathwayRef": null,
       "events": [
         "click"
@@ -744,19 +758,23 @@
       "id": "seek",
       "hidden": false,
       "disabled": true,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.playback.timeline.seek"
+      },
       "textRef": null,
       "attrs": {
         "id": "seek",
         "type": "range",
+        "data-vex-action": "vexstream.playback.timeline.seek",
         "min": "0",
         "max": "1000",
         "value": "0",
         "aria-label": "Seek",
         "disabled": true
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.playback.timeline.seek",
       "pathwayRef": null,
       "events": [
         "input"
@@ -768,19 +786,23 @@
       "id": "volume",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.playback.volume.set"
+      },
       "textRef": null,
       "attrs": {
         "id": "volume",
         "type": "range",
+        "data-vex-action": "vexstream.playback.volume.set",
         "min": "0",
         "max": "1",
         "step": "0.01",
         "value": "0.8",
         "aria-label": "Volume"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.playback.volume.set",
       "pathwayRef": null,
       "events": [
         "input"
@@ -792,18 +814,22 @@
       "id": "queueMiniBtn",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.queue.drawer.toggle"
+      },
       "textRef": null,
       "attrs": {
         "id": "queueMiniBtn",
         "class": "queue-mini",
         "type": "button",
+        "data-vex-action": "vexstream.queue.drawer.toggle",
         "aria-controls": "queueDrawer",
         "aria-expanded": "false",
         "title": "Open Queue"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.queue.drawer.toggle",
       "pathwayRef": null,
       "events": [
         "click"
@@ -2483,17 +2509,21 @@
       "id": "queueDrawerHandle",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.queue.drawer.toggle"
+      },
       "textRef": null,
       "attrs": {
         "id": "queueDrawerHandle",
         "class": "queue-handle",
         "type": "button",
+        "data-vex-action": "vexstream.queue.drawer.toggle",
         "aria-controls": "queueDrawerBody",
         "aria-expanded": "false"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.queue.drawer.toggle",
       "pathwayRef": null,
       "events": [
         "click"
@@ -2505,15 +2535,19 @@
       "id": "shuffleQueueUpcoming",
       "hidden": false,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.queue.shuffle-upcoming"
+      },
       "textRef": "queue.shuffle-upcoming",
       "attrs": {
         "id": "shuffleQueueUpcoming",
         "type": "button",
+        "data-vex-action": "vexstream.queue.shuffle-upcoming",
         "data-text-ref": "queue.shuffle-upcoming"
       },
-      "status": "VISIBLE_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.queue.shuffle-upcoming",
       "pathwayRef": null,
       "events": [
         "click"

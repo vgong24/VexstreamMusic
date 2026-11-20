@@ -9,9 +9,9 @@
   "defaultVisible": 32,
   "latent": 99,
   "counts": {
-    "ADDRESSABLE_HELD": 51,
+    "ADDRESSABLE_HELD": 52,
     "MAPPED_PATHWAY": 14,
-    "LATENT_WIRED_UNIDENTIFIED": 38,
+    "LATENT_WIRED_UNIDENTIFIED": 37,
     "VISIBLE_DISABLED_UNIDENTIFIED": 2,
     "LATENT_UNIDENTIFIED": 26
   },
@@ -181,7 +181,7 @@
       "visible": 0,
       "latent": 1,
       "statuses": {
-        "LATENT_WIRED_UNIDENTIFIED": 1
+        "ADDRESSABLE_HELD": 1
       }
     },
     "shell:deleted/hidden:#trashSelectionBar": {
@@ -3749,7 +3749,10 @@
       "id": "trashRefresh",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.trash.refresh"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "deleted",
@@ -3764,10 +3767,11 @@
       },
       "attrs": {
         "id": "trashRefresh",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.trash.refresh"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.trash.refresh",
       "pathwayRef": null,
       "events": [
         "click"

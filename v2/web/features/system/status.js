@@ -5,6 +5,10 @@
 // Player session, Imports, and Trash. It performs no repair, diagnostics,
 // lifecycle, provider, or mobile effect.
 
+export const SystemStatusIntent=Object.freeze({
+ Open:"vexstream.system.status.open"
+});
+
 const HELD_SESSION_KINDS=new Set([
  "held-current-unavailable",
  "held-schema",

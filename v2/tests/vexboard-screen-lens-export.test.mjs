@@ -263,15 +263,19 @@ test("source-authored selections name the controls that choose each projected ch
 
   assert.deepEqual(shell.choices.map(choice=>choice.selectorRefs),[
     ["element.vexstream.shell.view.home"],
-    ["element.vexstream.shell.view.library"],
+    [
+      "element.vexstream.shell.view.songs",
+      "element.vexstream.shell.view.albums",
+      "element.vexstream.shell.view.artists",
+    ],
     ["element.vexstream.shell.view.discover"],
     ["element.vexstream.shell.view.playlists"],
     ["element.vexstream.shell.view.deleted"],
   ]);
   assert.deepEqual(library.choices.map(choice=>choice.selectorRefs),[
-    ["element.vexstream.library.mode.songs"],
-    ["element.vexstream.library.mode.albums"],
-    ["element.vexstream.library.mode.artists"],
+    ["element.vexstream.shell.view.songs","element.vexstream.library.mode.songs"],
+    ["element.vexstream.shell.view.albums","element.vexstream.library.mode.albums"],
+    ["element.vexstream.shell.view.artists","element.vexstream.library.mode.artists"],
   ]);
   assert.deepEqual(discover.choices.map(choice=>choice.selectorRefs),[
     ["element.vexstream.discover.mode.pc"],

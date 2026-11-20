@@ -1,6 +1,10 @@
 // [VXG RealForever]
 import { QueueControl, resolveQueueControl } from "./behavior.js";
 
+export const QueuePresentationIntent=Object.freeze({
+  ToggleDrawer:"vexstream.queue.drawer.toggle"
+});
+
 const TEXT = new Map([
   [QueueControl.Previous, "queue.previous"],
   [QueueControl.Next, "queue.next"],

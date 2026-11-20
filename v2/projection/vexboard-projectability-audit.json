@@ -9,11 +9,11 @@
   "defaultVisible": 32,
   "latent": 99,
   "counts": {
-    "ADDRESSABLE_HELD": 49,
+    "ADDRESSABLE_HELD": 51,
     "MAPPED_PATHWAY": 7,
-    "LATENT_WIRED_UNIDENTIFIED": 45,
+    "LATENT_WIRED_UNIDENTIFIED": 44,
     "VISIBLE_DISABLED_UNIDENTIFIED": 2,
-    "LATENT_UNIDENTIFIED": 28
+    "LATENT_UNIDENTIFIED": 27
   },
   "groupedCoverage": {
     "default": {
@@ -165,8 +165,7 @@
       "visible": 0,
       "latent": 2,
       "statuses": {
-        "LATENT_UNIDENTIFIED": 1,
-        "LATENT_WIRED_UNIDENTIFIED": 1
+        "ADDRESSABLE_HELD": 2
       }
     },
     "shell:playlists/hidden:#playlistDetail": {
@@ -3440,7 +3439,10 @@
       "id": "newPlaylistName",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.playlists.create.name"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "playlists",
@@ -3456,10 +3458,11 @@
       "attrs": {
         "id": "newPlaylistName",
         "type": "text",
+        "data-vex-action": "vexstream.playlists.create.name",
         "placeholder": "New playlist name"
       },
-      "status": "LATENT_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.playlists.create.name",
       "pathwayRef": null,
       "events": []
     },
@@ -3469,7 +3472,10 @@
       "id": "createPlaylist",
       "hidden": true,
       "disabled": false,
-      "relation": null,
+      "relation": {
+        "kind": "vex-action",
+        "identity": "vexstream.playlists.create"
+      },
       "textRef": null,
       "presentation": {
         "shellPanel": "playlists",
@@ -3484,10 +3490,11 @@
       },
       "attrs": {
         "id": "createPlaylist",
-        "type": "button"
+        "type": "button",
+        "data-vex-action": "vexstream.playlists.create"
       },
-      "status": "LATENT_WIRED_UNIDENTIFIED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.playlists.create",
       "pathwayRef": null,
       "events": [
         "click"

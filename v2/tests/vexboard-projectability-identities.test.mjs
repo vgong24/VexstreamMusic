@@ -19,6 +19,7 @@ import { SourceClientIntent } from "../web/features/sources/client.js";
 import { ImportClientIntent } from "../web/features/imports/client.js";
 import { PlaylistClientIntent } from "../web/features/playlists/client.js";
 import { PlaylistNavigationIntent } from "../web/features/playlists/navigation.js";
+import { TrashClientIntent } from "../web/features/library/trash.js";
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
 const V2=path.resolve(HERE,"..");
@@ -153,4 +154,17 @@ test("selected Playlist detail controls keep truthful source identity without re
   assert.match(app,/playlistDetailAddSongs\.addEventListener\("click",\(\)=>\{\s*const resolved=currentPlaylistDetail\(\);[\s\S]*playlistSelectionTargetID=resolved\.playlist\.id;[\s\S]*librarySelection\.activate\(\);[\s\S]*shellNavigation\.select\(ShellView\.SONGS\);/);
   assert.match(app,/playlistDetailRename\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{[\s\S]*await renamePlaylist\(resolved\.playlist\.id,playlistDetailName\.value\);/);
   assert.match(app,/playlistDetailDelete\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{[\s\S]*await deletePlaylist\(resolved\.playlist\.id\);/);
+});
+
+
+test("Deleted terrain refresh keeps source identity without rerouting the existing handler",()=>{
+  assert.equal(TrashClientIntent.Refresh,"vexstream.trash.refresh");
+  assert.match(
+    html,
+    /<button id="trashRefresh"[^>]*data-vex-action="vexstream\.trash\.refresh"/
+  );
+  assert.match(
+    app,
+    /trashRefresh\.addEventListener\("click",\(\)=>void guarded\(\(\)=>refreshTrash\(\)\)\);/
+  );
 });

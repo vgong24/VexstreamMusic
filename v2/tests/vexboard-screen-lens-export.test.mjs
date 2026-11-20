@@ -220,3 +220,35 @@ test("Playlist runtime populations project typed cross-platform identity formati
   ));
   assert.ok(screen.realization.held.some(value=>/does not yet own a durable per-entry ID/.test(value)));
 });
+
+
+test("Deleted terrain and Trash population reuse the generic expression and runtime identity grammar",()=>{
+  const lens=JSON.parse(committed);
+  const screen=lens.screens[0];
+  const shell=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.shell.primary-terrain");
+  const trashPopulation=screen.realization.presence.find(entry=>entry.ref==="presence.vexstream.trash.items");
+  const trashTemplate=screen.realization.templates.find(entry=>entry.ref==="template.vexstream.trash.item");
+
+  assert.ok(shell.choices.some(choice=>choice.targetRef==="vexstream.desktop.library.panel.deleted"));
+  assert.ok(screen.view.stateBindings.some(binding=>
+    binding.presenceRef===shell.ref&&binding.value==="vexstream.desktop.library.panel.deleted"
+  ));
+  assert.match(
+    screen.view.html,
+    /data-shell-panel="deleted"[^>]*data-vex-structural-ref="vexstream\.desktop\.library\.panel\.deleted"/
+  );
+  assert.ok(screen.elements.some(element=>element.ref==="element.vexstream.trash.refresh"));
+
+  assert.equal(trashPopulation.kind,"POPULATION");
+  assert.equal(trashPopulation.itemKey,"item.id");
+  assert.equal(trashPopulation.gate.presenceRef,shell.ref);
+  assert.equal(trashPopulation.gate.choice,4);
+
+  assert.equal(trashTemplate.instanceIdentity.kind,"RUNTIME_INSTANCE");
+  assert.equal(trashTemplate.instanceIdentity.continuity,"STABLE_INSTANCE");
+  assert.deepEqual(trashTemplate.instanceIdentity.partSources,["item.id"]);
+  assert.ok(trashTemplate.slots.filter(slot=>slot.depth>0).every(slot=>
+    slot.instanceIdentity?.kind==="DERIVED_CHILD"
+  ));
+  assert.ok(screen.realization.held.some(value=>/Trash selection, purge confirmation and purge recovery/.test(value)));
+});

@@ -3,6 +3,10 @@
 // Higher composition for human listening actions that legitimately span Queue + Playback.
 // This is feature-local composition, not a fifth semantic family and not a generic command bus.
 
+export const PlayerCompositionIntent=Object.freeze({
+  ShuffleLibrary:"vexstream.player.shuffle-library"
+});
+
 import { PlaybackControl } from "../playback/behavior.js";
 import { QueueControl, currentQueueRef } from "../queue/behavior.js";
 

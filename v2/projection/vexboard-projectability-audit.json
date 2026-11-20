@@ -10,42 +10,23 @@
   "latent": 99,
   "counts": {
     "VISIBLE_WIRED_UNIDENTIFIED": 12,
-    "SOURCE_RELATIONSHIP_UNMAPPED": 18,
+    "ADDRESSABLE_HELD": 25,
     "MAPPED_PATHWAY": 7,
     "LATENT_WIRED_UNIDENTIFIED": 56,
     "VISIBLE_DISABLED_UNIDENTIFIED": 2,
-    "LATENT_UNIDENTIFIED": 29,
-    "ADDRESSABLE_HELD": 7
+    "LATENT_UNIDENTIFIED": 29
   },
   "blocking": [
     1,
-    2,
-    3,
-    4,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
     13,
     14,
     15,
     16,
     18,
     19,
-    20,
-    27,
-    28,
     34,
     35,
     36,
-    41,
-    42,
-    43,
-    88,
-    89,
-    90,
     125,
     126
   ],
@@ -92,8 +73,8 @@
         "title": "Go to Library home",
         "aria-label": "Go to Library home"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.home",
       "pathwayRef": null,
       "events": []
     },
@@ -114,8 +95,8 @@
         "data-shell-view": "home",
         "class": "active"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.home",
       "pathwayRef": null,
       "events": []
     },
@@ -135,8 +116,8 @@
         "type": "button",
         "data-shell-view": "discover"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.discover",
       "pathwayRef": null,
       "events": []
     },
@@ -210,8 +191,8 @@
         "data-shell-view": "home",
         "class": "active"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.home",
       "pathwayRef": null,
       "events": []
     },
@@ -230,8 +211,8 @@
         "type": "button",
         "data-shell-view": "songs"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.songs",
       "pathwayRef": null,
       "events": []
     },
@@ -250,8 +231,8 @@
         "type": "button",
         "data-shell-view": "albums"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.albums",
       "pathwayRef": null,
       "events": []
     },
@@ -270,8 +251,8 @@
         "type": "button",
         "data-shell-view": "artists"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.artists",
       "pathwayRef": null,
       "events": []
     },
@@ -290,8 +271,8 @@
         "type": "button",
         "data-shell-view": "playlists"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.playlists",
       "pathwayRef": null,
       "events": []
     },
@@ -310,8 +291,8 @@
         "type": "button",
         "data-shell-view": "deleted"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.deleted",
       "pathwayRef": null,
       "events": []
     },
@@ -472,8 +453,8 @@
         "type": "button",
         "data-shell-view": "songs"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.shell.view.songs",
       "pathwayRef": null,
       "events": []
     },
@@ -610,8 +591,8 @@
       "attrs": {
         "data-track-action": "edit"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.track.action.edit",
       "pathwayRef": null,
       "events": []
     },
@@ -629,8 +610,8 @@
       "attrs": {
         "data-track-action": "trash"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.track.action.trash",
       "pathwayRef": null,
       "events": []
     },
@@ -922,8 +903,8 @@
         "data-library-mode": "songs",
         "aria-pressed": "true"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.mode.songs",
       "pathwayRef": null,
       "events": []
     },
@@ -943,8 +924,8 @@
         "data-library-mode": "albums",
         "aria-pressed": "false"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.mode.albums",
       "pathwayRef": null,
       "events": []
     },
@@ -964,8 +945,8 @@
         "data-library-mode": "artists",
         "aria-pressed": "false"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.library.mode.artists",
       "pathwayRef": null,
       "events": []
     },
@@ -1799,8 +1780,8 @@
         "aria-pressed": "true",
         "data-text-ref": "discover.pc"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.discover.mode.pc",
       "pathwayRef": null,
       "events": []
     },
@@ -1821,8 +1802,8 @@
         "aria-pressed": "false",
         "data-text-ref": "discover.youtube"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.discover.mode.youtube",
       "pathwayRef": null,
       "events": []
     },
@@ -1843,8 +1824,8 @@
         "aria-pressed": "false",
         "data-text-ref": "discover.explore"
       },
-      "status": "SOURCE_RELATIONSHIP_UNMAPPED",
-      "elementRef": null,
+      "status": "ADDRESSABLE_HELD",
+      "elementRef": "element.vexstream.discover.mode.explore",
       "pathwayRef": null,
       "events": []
     },

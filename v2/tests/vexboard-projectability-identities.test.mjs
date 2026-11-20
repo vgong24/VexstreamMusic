@@ -17,6 +17,7 @@ import { QueuePresentationIntent } from "../web/features/queue/presentation.js";
 import { QueueConnectionIntent } from "../web/features/queue/connection.js";
 import { SourceClientIntent } from "../web/features/sources/client.js";
 import { ImportClientIntent } from "../web/features/imports/client.js";
+import { PlaylistClientIntent } from "../web/features/playlists/client.js";
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
 const V2=path.resolve(HERE,"..");
@@ -118,4 +119,13 @@ test("identity alignment does not replace or reroute existing runtime handlers",
 test("ignored folders toggle keeps source identity without inventing an app handler",()=>{
  assert.equal(SourceClientIntent.ToggleIgnored,"vexstream.sources.ignored.toggle");
  assert.match(html,/<summary data-vex-action="vexstream\.sources\.ignored\.toggle">Ignored folders<\/summary>/);
+});
+
+
+test("Playlists terrain create controls keep source identity without rerouting behavior",()=>{
+  assert.equal(PlaylistClientIntent.CreateName,"vexstream.playlists.create.name");
+  assert.equal(PlaylistClientIntent.Create,"vexstream.playlists.create");
+  assert.match(html,/<input id="newPlaylistName"[^>]*data-vex-action="vexstream\.playlists\.create\.name"/);
+  assert.match(html,/<button id="createPlaylist"[^>]*data-vex-action="vexstream\.playlists\.create"/);
+  assert.match(app,/createPlaylistButton\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{\s*const name=newPlaylistName\.value\.trim\(\);\s*if\(!name\)return;\s*await createPlaylist\(name,\[\]\);/);
 });

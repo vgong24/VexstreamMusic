@@ -5,6 +5,11 @@
 // one durable playlist. Playlist data, availability, mutations, Playback,
 // Queue, and Library truth remain with their existing owners.
 
+export const PlaylistNavigationIntent=Object.freeze({
+ CloseDetail:"vexstream.playlists.detail.close",
+ AddSongs:"vexstream.playlists.detail.add-songs"
+});
+
 export function createPlaylistNavigation({
  initialPlaylistID=""
 }={}){

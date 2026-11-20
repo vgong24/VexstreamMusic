@@ -5,7 +5,9 @@
 
 export const PlayerCompositionIntent=Object.freeze({
   ShuffleLibrary:"vexstream.player.shuffle-library",
-  PlayLibraryView:"vexstream.player.play-library-view"
+  PlayLibraryView:"vexstream.player.play-library-view",
+  PlayPlaylist:"vexstream.player.play-playlist",
+  ShufflePlaylist:"vexstream.player.shuffle-playlist"
 });
 
 import { PlaybackControl } from "../playback/behavior.js";

@@ -18,6 +18,7 @@ import { QueueConnectionIntent } from "../web/features/queue/connection.js";
 import { SourceClientIntent } from "../web/features/sources/client.js";
 import { ImportClientIntent } from "../web/features/imports/client.js";
 import { PlaylistClientIntent } from "../web/features/playlists/client.js";
+import { PlaylistNavigationIntent } from "../web/features/playlists/navigation.js";
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
 const V2=path.resolve(HERE,"..");
@@ -128,4 +129,28 @@ test("Playlists terrain create controls keep source identity without rerouting b
   assert.match(html,/<input id="newPlaylistName"[^>]*data-vex-action="vexstream\.playlists\.create\.name"/);
   assert.match(html,/<button id="createPlaylist"[^>]*data-vex-action="vexstream\.playlists\.create"/);
   assert.match(app,/createPlaylistButton\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{\s*const name=newPlaylistName\.value\.trim\(\);\s*if\(!name\)return;\s*await createPlaylist\(name,\[\]\);/);
+});
+
+
+test("selected Playlist detail controls keep truthful source identity without rerouting behavior",()=>{
+  const expectedDetail=[
+    ["playlistDetailBack",PlaylistNavigationIntent.CloseDetail],
+    ["playlistDetailName",PlaylistClientIntent.RenameName],
+    ["playlistDetailPlay",PlayerCompositionIntent.PlayPlaylist],
+    ["playlistDetailShuffle",PlayerCompositionIntent.ShufflePlaylist],
+    ["playlistDetailAddSongs",PlaylistNavigationIntent.AddSongs],
+    ["playlistDetailRename",PlaylistClientIntent.Rename],
+    ["playlistDetailDelete",PlaylistClientIntent.Delete],
+  ];
+  for(const [id,identity] of expectedDetail){
+    const tag=html.match(new RegExp("<[^>]*\\bid=\\\""+id+"\\\"[^>]*>"))?.[0];
+    assert.ok(tag,id+" remains in the lived shell");
+    assert.match(tag,new RegExp('data-vex-action="'+identity.replaceAll(".","\\.")+'"'));
+  }
+  assert.match(app,/playlistDetailBack\.addEventListener\("click",\(\)=>\{\s*playlistNavigation\.close\(\);/);
+  assert.match(app,/playlistDetailPlay\.addEventListener\("click",\(\)=>\{\s*const resolved=currentPlaylistDetail\(\);\s*if\(resolved\?\.playableRefs\.length\)\{\s*void guarded\(\(\)=>player\.playContext\(resolved\.playableRefs,0\)\);/);
+  assert.match(app,/playlistDetailShuffle\.addEventListener\("click",\(\)=>\{\s*const resolved=currentPlaylistDetail\(\);\s*const shuffled=shuffleRefs/);
+  assert.match(app,/playlistDetailAddSongs\.addEventListener\("click",\(\)=>\{\s*const resolved=currentPlaylistDetail\(\);[\s\S]*playlistSelectionTargetID=resolved\.playlist\.id;[\s\S]*librarySelection\.activate\(\);[\s\S]*shellNavigation\.select\(ShellView\.SONGS\);/);
+  assert.match(app,/playlistDetailRename\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{[\s\S]*await renamePlaylist\(resolved\.playlist\.id,playlistDetailName\.value\);/);
+  assert.match(app,/playlistDetailDelete\.addEventListener\("click",\(\)=>void guarded\(async\(\)=>\{[\s\S]*await deletePlaylist\(resolved\.playlist\.id\);/);
 });

@@ -78,3 +78,12 @@ test("admitted Playlists terrain has addressable create controls while selected-
  assert.ok(audit.groupedCoverage["shell:playlists/hidden:#playlistDetail"]);
  assert.equal(audit.groupedCoverage["shell:playlists/hidden:#playlistDetail"].total,7);
 });
+
+
+test("selected Playlist detail has no unresolved fixed affordances once its presentation is admitted",()=>{
+  const audit=auditProjectability(readCurrentAuditInputs());
+  assert.deepEqual(
+    audit.groupedCoverage["shell:playlists/hidden:#playlistDetail"].statuses,
+    {MAPPED_PATHWAY:7}
+  );
+});

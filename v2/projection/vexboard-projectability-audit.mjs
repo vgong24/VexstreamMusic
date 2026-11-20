@@ -31,6 +31,35 @@ function relationOf(a){
   return null;
 }
 
+function nearestContext(stack,attribute){
+  for(let index=stack.length-1;index>=0;index-=1){
+    const value=stack[index].attrs?.[attribute];
+    if(typeof value==="string"&&value)return value;
+  }
+  return null;
+}
+
+function nearestHiddenAncestor(stack){
+  for(let index=stack.length-1;index>=0;index-=1){
+    const entry=stack[index];
+    if(!entry.hidden)continue;
+    return {
+      tag:entry.tag,
+      id:typeof entry.attrs?.id==="string"?entry.attrs.id:null,
+      className:typeof entry.attrs?.class==="string"?entry.attrs.class:null
+    };
+  }
+  return null;
+}
+
+function presentationContext(stack){
+  return {
+    shellPanel:nearestContext(stack,"data-shell-panel"),
+    discoverPanel:nearestContext(stack,"data-discover-panel"),
+    hiddenAncestor:nearestHiddenAncestor(stack)
+  };
+}
+
 export function scanInteractiveHTML(html){
   const stack=[];
   const rows=[];
@@ -49,7 +78,8 @@ export function scanInteractiveHTML(html){
     if(!open)continue;
     const tag=open[1].toLowerCase();
     const a=attrs(open[2]);
-    const hidden=stack.some(entry=>entry.hidden)||Object.hasOwn(a,"hidden");
+    const parentHidden=stack.some(entry=>entry.hidden);
+    const hidden=parentHidden||Object.hasOwn(a,"hidden");
     if(INTERACTIVE.has(tag)&&!(tag==="a"&&!a.href)){
       ordinal+=1;
       rows.push({
@@ -60,10 +90,11 @@ export function scanInteractiveHTML(html){
         disabled:Object.hasOwn(a,"disabled"),
         relation:relationOf(a),
         textRef:typeof a["data-text-ref"]==="string"?a["data-text-ref"]:null,
+        presentation:presentationContext(stack),
         attrs:a
       });
     }
-    if(!VOID.has(tag)&&!token.endsWith("/>"))stack.push({tag,hidden});
+    if(!VOID.has(tag)&&!token.endsWith("/>"))stack.push({tag,hidden,attrs:a});
   }
   return rows;
 }
@@ -111,6 +142,31 @@ function classify(row,lens,eventsById){
   return {status:"VISIBLE_UNIDENTIFIED",elementRef:null,pathwayRef:null,events};
 }
 
+function terrainKey(row){
+  const shell=row.presentation?.shellPanel;
+  const discover=row.presentation?.discoverPanel;
+  if(shell==="discover"&&discover)return "shell:discover/discover:"+discover;
+  if(shell)return "shell:"+shell;
+  const hidden=row.presentation?.hiddenAncestor;
+  if(hidden?.id)return "hidden:#"+hidden.id;
+  if(hidden?.className)return "hidden:."+String(hidden.className).trim().split(/\s+/)[0];
+  return row.hidden?"latent:other":"default";
+}
+
+function groupedCoverage(rows){
+  const groups={};
+  for(const row of rows){
+    const key=terrainKey(row);
+    const group=groups[key]??{total:0,visible:0,latent:0,statuses:{}};
+    group.total+=1;
+    if(row.hidden)group.latent+=1;
+    else group.visible+=1;
+    group.statuses[row.status]=(group.statuses[row.status]??0)+1;
+    groups[key]=group;
+  }
+  return groups;
+}
+
 export function auditProjectability({html,app,lens}){
   const eventsById=directRuntimeEvents(app);
   const rows=scanInteractiveHTML(html).map(row=>({...row,...classify(row,lens,eventsById)}));
@@ -132,7 +188,8 @@ export function auditProjectability({html,app,lens}){
     defaultVisible:rows.filter(row=>!row.hidden).length,
     latent:rows.filter(row=>row.hidden).length,
     counts,
-    blocking: blocking.map(row=>row.ordinal),
+    groupedCoverage:groupedCoverage(rows),
+    blocking:blocking.map(row=>row.ordinal),
     rows
   };
 }

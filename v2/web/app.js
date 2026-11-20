@@ -113,10 +113,12 @@ import {
 } from "./features/discover/navigation.js";
 import { escapeHTML } from "./foundation/html.js";
 import {
-  VexPresentationContinuity,
-  appendVexPresentationPath,
-  dynamicVexPresentationRef,
-} from "./foundation/identity.js";
+  PlaylistPresentationIdentity,
+  playlistCardChildRef,
+  playlistCardPresentationRef,
+  playlistEntryChildRef,
+  playlistEntryPresentationRef,
+} from "./features/playlists/presentation.js";
 import { marqueeDurationSeconds } from "./foundation/marquee.js";
 import { resolveText } from "./foundation/text.js";
 import { en } from "./locales/en.js";
@@ -2669,17 +2671,19 @@ function playlistEntryHTML(entry,index,total,playlistID,occurrence){
  const metadata=entry.available
   ?[trackArtist(item),String(item?.album??"").trim()].filter(Boolean).join(" · ")
   :[item?trackArtist(item):entry.ref,witness.status].filter(Boolean).join(" · ");
- const entryPresentationRef=dynamicVexPresentationRef(
-  "element.vexstream.playlists.entry",
-  [playlistID,entry.ref,String(occurrence)]
- );
- const childRef=path=>appendVexPresentationPath(entryPresentationRef,path);
+ const entryIdentity={
+  playlistID,
+  trackRef:entry.ref,
+  occurrence,
+ };
+ const entryPresentationRef=playlistEntryPresentationRef(entryIdentity);
+ const childRef=path=>playlistEntryChildRef(entryIdentity,path);
  return `<li class="playlist-entry ${entry.available?"":"missing"}"
       data-playlist-track-ref="${escapeHTML(entry.ref)}"
       data-track-ref="${escapeHTML(entry.ref)}"
       data-playlist-index="${index}"
       data-vex-ref="${escapeHTML(entryPresentationRef)}"
-      data-vex-continuity="${VexPresentationContinuity.CURRENT_OCCURRENCE}"
+      data-vex-continuity="${PlaylistPresentationIdentity.DetailEntry.continuity}"
       data-available="${String(entry.available)}">
    <span class="playlist-entry-order">${index+1}</span>
    ${item
@@ -2726,12 +2730,9 @@ function renderPlaylistChoices(){
     available:resolved.playableRefs.length,
     missing:resolved.missingRefs.length
    });
-   const cardRef=dynamicVexPresentationRef(
-    "element.vexstream.playlists.card",
-    [playlist.id]
-   );
-   const cardChild=path=>appendVexPresentationPath(cardRef,path);
-   return `<article class="playlist-card" data-playlist-id="${escapeHTML(playlist.id)}" data-vex-ref="${escapeHTML(cardRef)}" data-vex-continuity="${VexPresentationContinuity.STABLE_INSTANCE}">
+   const cardRef=playlistCardPresentationRef(playlist.id);
+   const cardChild=path=>playlistCardChildRef(playlist.id,path);
+   return `<article class="playlist-card" data-playlist-id="${escapeHTML(playlist.id)}" data-vex-ref="${escapeHTML(cardRef)}" data-vex-continuity="${PlaylistPresentationIdentity.Card.continuity}">
     <div class="playlist-heading">
      <strong>${escapeHTML(playlist.name)}</strong>
      <small>${escapeHTML(availability)}</small>

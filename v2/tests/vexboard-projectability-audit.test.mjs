@@ -44,3 +44,20 @@ test("audit groups latent debt by source presentation terrain",()=>{
   assert.equal(groupedTotal,audit.total);
   assert.equal(groupedLatent,audit.latent);
 });
+
+
+test("explicit hidden owners distinguish Library terrain from nested Library states",()=>{
+  const audit=auditProjectability(readCurrentAuditInputs());
+  const layout=audit.rows.find(row=>row.id==="songLayoutButton");
+  const selection=audit.rows.find(row=>row.id==="bulkPlaySelected");
+  const detail=audit.rows.find(row=>row.id==="libraryGroupPlay");
+  assert.equal(layout.presentation.hiddenAncestor?.shellPanel,"library",
+    "main Library controls are latent because the Library terrain itself is hidden");
+  assert.equal(selection.presentation.hiddenAncestor?.id,"librarySelectionBar",
+    "selection actions keep their nested presentation owner");
+  assert.equal(detail.presentation.hiddenAncestor?.id,"libraryGroupDetail",
+    "group-detail actions keep their nested presentation owner");
+  assert.ok(audit.groupedCoverage["shell:library"]);
+  assert.ok(audit.groupedCoverage["shell:library/hidden:#librarySelectionBar"]);
+  assert.ok(audit.groupedCoverage["shell:library/hidden:#libraryGroupDetail"]);
+});

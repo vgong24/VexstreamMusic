@@ -1,7 +1,7 @@
 // [VXG RealForever]
 export const playerJourney = Object.freeze({
   ref: "journey.vexstream.desktop.player.queue-basics",
-  screenRef: "vexstream.desktop.player-practicum",
+  screenRef: "vexstream.desktop.library",
   title: "Start listening and move through the queue",
   steps: Object.freeze([
     Object.freeze({ kind: "observe", controlRef: "vexstream.playback.play-pause", expectTextRef: "playback.play" }),

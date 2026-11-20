@@ -70,3 +70,11 @@ test("admitted Discover modes have addressable immediate controls while Import r
  assert.deepEqual(audit.groupedCoverage["shell:discover/discover:explore"].statuses,{ADDRESSABLE_HELD:2});
  assert.ok(audit.groupedCoverage["shell:discover/discover:youtube/hidden:#importReview"]);
 });
+
+
+test("admitted Playlists terrain has addressable create controls while selected-playlist detail remains nested debt",()=>{
+ const audit=auditProjectability(readCurrentAuditInputs());
+ assert.deepEqual(audit.groupedCoverage["shell:playlists"].statuses,{ADDRESSABLE_HELD:2});
+ assert.ok(audit.groupedCoverage["shell:playlists/hidden:#playlistDetail"]);
+ assert.equal(audit.groupedCoverage["shell:playlists/hidden:#playlistDetail"].total,7);
+});

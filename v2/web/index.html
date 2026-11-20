@@ -465,8 +465,8 @@
             <span>Durable local collections. Playlist order persists; the playback queue stays temporary.</span>
           </div>
           <div class="playlist-create">
-            <input id="newPlaylistName" type="text" placeholder="New playlist name">
-            <button id="createPlaylist" type="button">Create</button>
+            <input id="newPlaylistName" type="text" data-vex-action="vexstream.playlists.create.name" placeholder="New playlist name">
+            <button id="createPlaylist" type="button" data-vex-action="vexstream.playlists.create">Create</button>
           </div>
         </div>
         <div id="playlistChoices"></div>

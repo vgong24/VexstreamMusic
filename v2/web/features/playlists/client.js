@@ -4,6 +4,11 @@
 // Playlist owns durable ordered references. Library owns whether a ref resolves today.
 // Queue owns the playable listening context formed from those truths right now.
 
+export const PlaylistClientIntent=Object.freeze({
+ CreateName:"vexstream.playlists.create.name",
+ Create:"vexstream.playlists.create"
+});
+
 export function projectPlaylists(payload) {
   if (!payload || !Array.isArray(payload.playlists)) {
     throw new Error("playlist response requires playlists[]");

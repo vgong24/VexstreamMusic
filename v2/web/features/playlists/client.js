@@ -6,7 +6,10 @@
 
 export const PlaylistClientIntent=Object.freeze({
  CreateName:"vexstream.playlists.create.name",
- Create:"vexstream.playlists.create"
+ Create:"vexstream.playlists.create",
+ RenameName:"vexstream.playlists.rename.name",
+ Rename:"vexstream.playlists.rename",
+ Delete:"vexstream.playlists.delete"
 });
 
 export function projectPlaylists(payload) {

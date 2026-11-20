@@ -14,6 +14,8 @@ import { DiscoverMode } from "../web/features/discover/navigation.js";
 import { SourceClientIntent } from "../web/features/sources/client.js";
 import { ImportClientIntent } from "../web/features/imports/client.js";
 import { PlaylistClientIntent } from "../web/features/playlists/client.js";
+import { PlaylistNavigationIntent } from "../web/features/playlists/navigation.js";
+import { PlayerCompositionIntent } from "../web/features/player/composition.js";
 
 export const VEXBOARD_SCREEN_LENS_SCHEMA="vexboard.screen-lens/v1";
 export const VEXSTREAM_VEXBOARD_EXPORTER_VERSION="vexstream-vexboard-exporter/1";
@@ -27,6 +29,8 @@ const HOME_PANEL_REF="vexstream.desktop.library.panel.home";
 const LIBRARY_PANEL_REF="vexstream.desktop.library.panel.library";
 const DISCOVER_PANEL_REF="vexstream.desktop.library.panel.discover";
 const PLAYLISTS_PANEL_REF="vexstream.desktop.library.panel.playlists";
+const PLAYLISTS_OVERVIEW_REF="vexstream.desktop.library.playlists.overview";
+const PLAYLIST_DETAIL_REF="vexstream.desktop.library.playlists.detail";
 const DISCOVER_MODE_REF="vexstream.desktop.library.discover-mode-selection";
 const DISCOVER_PC_PANEL_REF="vexstream.desktop.library.discover-panel.pc";
 const DISCOVER_YOUTUBE_PANEL_REF="vexstream.desktop.library.discover-panel.youtube";
@@ -39,6 +43,7 @@ const TRACK_CHOICES_REF="vexstream.desktop.library.track-choices";
 const SHELL_SELECTION_REF="presence.vexstream.shell.primary-terrain";
 const LIBRARY_MODE_SELECTION_REF="presence.vexstream.library.mode";
 const DISCOVER_MODE_SELECTION_REF="presence.vexstream.discover.mode";
+const PLAYLIST_DETAIL_PRESENTATION_REF="presence.vexstream.playlists.detail-open";
 const PREVIOUS_ACTION="vexstream.player.previous";
 const semanticIdentity=token=>token.familyRef+"."+token.ref;
 const elementRef=identity=>"element."+identity;
@@ -71,10 +76,11 @@ function relationshipIdentity(attribute,value){
 }
 
 function sourceRelationshipForTag(tagSource){
+  const tag=String(tagSource).match(/^<\s*([A-Za-z][\w:-]*)/)?.[1]?.toLowerCase()??"button";
   for(const attribute of RELATIONSHIP_ATTRIBUTES){
     const value=attributeValue(tagSource,attribute);
     if(!value)continue;
-    return Object.freeze({attribute,value,identity:relationshipIdentity(attribute,value)});
+    return Object.freeze({attribute,value,identity:relationshipIdentity(attribute,value),tag});
   }
   return null;
 }
@@ -120,6 +126,10 @@ function viewHTML(sourceHTML){
     '<section$1 data-vex-structural-ref="'+DISCOVER_PANEL_REF+'">');
   html=html.replace(/<section([^>]*\bdata-shell-panel="playlists"[^>]*)>/,
     '<section$1 data-vex-structural-ref="'+PLAYLISTS_PANEL_REF+'">');
+  html=html.replace(/<div([^>]*\bid="playlistOverview"[^>]*)>/,
+    '<div$1 data-vex-structural-ref="'+PLAYLISTS_OVERVIEW_REF+'">');
+  html=html.replace(/<section([^>]*\bid="playlistDetail"[^>]*)>/,
+    '<section$1 data-vex-structural-ref="'+PLAYLIST_DETAIL_REF+'">');
   html=html.replace(/<section([^>]*\bdata-discover-panel="pc"[^>]*)>/,
     '<section$1 data-vex-structural-ref="'+DISCOVER_PC_PANEL_REF+'">');
   html=html.replace(/<section([^>]*\bdata-discover-panel="youtube"[^>]*)>/,
@@ -274,6 +284,12 @@ function mappedPathwayRef(identity){
   if(identity===semanticIdentity(QueueControl.Next))return "pathway.vexstream.queue.next";
   if(identity===semanticIdentity(QueueControl.Shuffle))return "pathway.vexstream.queue.shuffle";
   if(identity===semanticIdentity(QueueControl.Repeat))return "pathway.vexstream.queue.repeat";
+  if(identity===PlaylistNavigationIntent.CloseDetail)return "pathway.vexstream.playlists.detail.close";
+  if(identity===PlayerCompositionIntent.PlayPlaylist)return "pathway.vexstream.player.play-playlist";
+  if(identity===PlayerCompositionIntent.ShufflePlaylist)return "pathway.vexstream.player.shuffle-playlist";
+  if(identity===PlaylistNavigationIntent.AddSongs)return "pathway.vexstream.playlists.detail.add-songs";
+  if(identity===PlaylistClientIntent.RenameName||identity===PlaylistClientIntent.Rename)return "pathway.vexstream.playlists.rename";
+  if(identity===PlaylistClientIntent.Delete)return "pathway.vexstream.playlists.delete";
   return null;
 }
 
@@ -282,14 +298,23 @@ function relationshipParentRef(relation){
   if(relation.attribute==="data-discover-mode")return DISCOVER_MODE_REF;
   if(Object.values(SourceClientIntent).includes(relation.identity))return DISCOVER_PC_PANEL_REF;
   if(Object.values(ImportClientIntent).includes(relation.identity))return DISCOVER_YOUTUBE_PANEL_REF;
-  if(Object.values(PlaylistClientIntent).includes(relation.identity))return PLAYLISTS_PANEL_REF;
+  if(relation.identity===PlaylistClientIntent.CreateName||relation.identity===PlaylistClientIntent.Create)return PLAYLISTS_OVERVIEW_REF;
+  if([
+    PlaylistClientIntent.RenameName,PlaylistClientIntent.Rename,PlaylistClientIntent.Delete,
+    PlaylistNavigationIntent.CloseDetail,PlaylistNavigationIntent.AddSongs,
+    PlayerCompositionIntent.PlayPlaylist,PlayerCompositionIntent.ShufflePlaylist
+  ].includes(relation.identity))return PLAYLIST_DETAIL_REF;
   if(relation.identity==="vexstream.explore.back"||relation.identity==="vexstream.explore.clear")return DISCOVER_EXPLORE_PANEL_REF;
   return SHELL_REF;
 }
 
-function button(identity,label,pathwayRef,attribute,value=null,parentRef=SHELL_REF){
-  const declaredValue=value??identity;
-  return {ref:elementRef(identity),kind:"BUTTON",label,parentRef,symbol:identity,declared:attribute+'="'+declaredValue+'"',intent:identity,...(pathwayRef?{pathwayRef}:{}),layer:"CHROME",interactions:["ACTIVATE"]};
+function interactionKind(relation){
+  return ["input","select","textarea"].includes(relation.tag)?"FIELD":"BUTTON";
+}
+
+function interactionElement(relation,label,pathwayRef,parentRef=SHELL_REF){
+  const declaredValue=relation.value??relation.identity;
+  return {ref:elementRef(relation.identity),kind:interactionKind(relation),label,parentRef,symbol:relation.identity,declared:relation.attribute+'="'+declaredValue+'"',intent:relation.identity,...(pathwayRef?{pathwayRef}:{}),layer:"CHROME",interactions:["ACTIVATE"]};
 }
 
 export function buildVexStreamVexBoardLens({html,css}){
@@ -308,14 +333,19 @@ export function buildVexStreamVexBoardLens({html,css}){
     [SystemStatusIntent.Open,"System status"],
     [PlaylistClientIntent.CreateName,"New playlist name"],
     [PlaylistClientIntent.Create,"Create playlist"],
+    [PlaylistNavigationIntent.CloseDetail,"Back to all playlists"],
+    [PlaylistClientIntent.RenameName,"Playlist name"],
+    [PlayerCompositionIntent.PlayPlaylist,"Play playlist"],
+    [PlayerCompositionIntent.ShufflePlaylist,"Shuffle playlist"],
+    [PlaylistNavigationIntent.AddSongs,"Add songs"],
+    [PlaylistClientIntent.Rename,"Rename playlist"],
+    [PlaylistClientIntent.Delete,"Delete playlist"],
   ]);
   const stableElements=relationships.map((relation)=>
-    button(
-      relation.identity,
+    interactionElement(
+      relation,
       explicitLabels.get(relation.identity)??relationLabel(relation),
       mappedPathwayRef(relation.identity),
-      relation.attribute,
-      relation.value,
       relationshipParentRef(relation)
     ));
   const libraryModeButtons=Object.freeze({

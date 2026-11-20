@@ -63,13 +63,7 @@ test("every source-stable relationship is addressable in the exported inert view
   }
   const elementRefs=new Set(lens.screens[0].elements.map(element=>element.ref));
   for(const identity of new Set(identities)){
-    assert.match(view.html,new RegExp('data-vex-ref="element\\.'+identity.replace(/[.*+?^$()|[\\]{}]/g,"\\  const identities=[...live.matchAll(/data-vex-(?:control|action)="([^"]+)"/g)].map(match=>match[1]);
-  assert.equal(new Set(identities).size,identities.length,"stable source identities must be unique within the bounded shell");
-  const elementRefs=new Set(lens.screens[0].elements.map(element=>element.ref));
-  for(const identity of identities){
-    assert.match(view.html,new RegExp('data-vex-ref="element\\.'+identity.replace(/[.*+?^$()|[\\]{}]/g,"\\$&")+'"'));
-    assert.ok(elementRefs.has("element."+identity),identity+" is addressable in the Lens tree");
-  }")+'"'));
+    assert.ok(view.html.includes('data-vex-ref="element.'+identity+'"'),identity+" is anchored in the inert view");
     assert.ok(elementRefs.has("element."+identity),identity+" is addressable in the Lens tree");
   }
   assert.ok((view.html.match(/data-vex-ref="element\.vexstream\.shell\.view\.home"/g)??[]).length>=3,

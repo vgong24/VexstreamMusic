@@ -47,6 +47,7 @@ function nearestExplicitHiddenAncestor(stack){
       tag:entry.tag,
       id:typeof entry.attrs?.id==="string"?entry.attrs.id:null,
       className:typeof entry.attrs?.class==="string"?entry.attrs.class:null,
+      structuralRef:typeof entry.attrs?.["data-vex-structural-ref"]==="string"?entry.attrs["data-vex-structural-ref"]:null,
       shellPanel:typeof entry.attrs?.["data-shell-panel"]==="string"?entry.attrs["data-shell-panel"]:null,
       discoverPanel:typeof entry.attrs?.["data-discover-panel"]==="string"?entry.attrs["data-discover-panel"]:null
     };
@@ -133,16 +134,31 @@ function lensElementFor(row,lens){
   return null;
 }
 
-function classify(row,lens,eventsById){
+function admittedScenarioStructuralRefs(lens){
+  const refs=new Set();
+  for(const screen of lens.screens??[]){
+    for(const presence of screen.realization?.presence??[]){
+      for(const choice of presence.choices??[]){
+        if(choice.targetRef)refs.add(choice.targetRef);
+        for(const ref of choice.realizes??[])refs.add(ref);
+      }
+    }
+  }
+  return refs;
+}
+
+function classify(row,lens,eventsById,{scenarioStructuralRef=null,scenarioRefs=new Set()}={}){
   const element=lensElementFor(row,lens);
   const events=row.id?[...(eventsById.get(row.id)??[])]:[];
-  if(element?.pathwayRef)return {status:"MAPPED_PATHWAY",elementRef:element.ref,pathwayRef:element.pathwayRef,events};
-  if(element)return {status:"ADDRESSABLE_HELD",elementRef:element.ref,pathwayRef:null,events};
-  if(row.relation)return {status:"SOURCE_RELATIONSHIP_UNMAPPED",elementRef:null,pathwayRef:null,events};
-  if(row.hidden)return {status:events.length?"LATENT_WIRED_UNIDENTIFIED":"LATENT_UNIDENTIFIED",elementRef:null,pathwayRef:null,events};
-  if(row.disabled&&!events.length)return {status:"VISIBLE_DISABLED_UNIDENTIFIED",elementRef:null,pathwayRef:null,events};
-  if(events.length)return {status:"VISIBLE_WIRED_UNIDENTIFIED",elementRef:null,pathwayRef:null,events};
-  return {status:"VISIBLE_UNIDENTIFIED",elementRef:null,pathwayRef:null,events};
+  const scenarioVisible=Boolean(row.hidden&&scenarioStructuralRef&&scenarioRefs.has(scenarioStructuralRef));
+  if(element?.pathwayRef)return {status:"MAPPED_PATHWAY",elementRef:element.ref,pathwayRef:element.pathwayRef,events,scenarioVisible};
+  if(element)return {status:"ADDRESSABLE_HELD",elementRef:element.ref,pathwayRef:null,events,scenarioVisible};
+  if(row.relation)return {status:"SOURCE_RELATIONSHIP_UNMAPPED",elementRef:null,pathwayRef:null,events,scenarioVisible};
+  if(scenarioVisible)return {status:events.length?"SCENARIO_WIRED_UNIDENTIFIED":"SCENARIO_UNIDENTIFIED",elementRef:null,pathwayRef:null,events,scenarioVisible};
+  if(row.hidden)return {status:events.length?"LATENT_WIRED_UNIDENTIFIED":"LATENT_UNIDENTIFIED",elementRef:null,pathwayRef:null,events,scenarioVisible};
+  if(row.disabled&&!events.length)return {status:"VISIBLE_DISABLED_UNIDENTIFIED",elementRef:null,pathwayRef:null,events,scenarioVisible};
+  if(events.length)return {status:"VISIBLE_WIRED_UNIDENTIFIED",elementRef:null,pathwayRef:null,events,scenarioVisible};
+  return {status:"VISIBLE_UNIDENTIFIED",elementRef:null,pathwayRef:null,events,scenarioVisible};
 }
 
 function hiddenKey(hidden){
@@ -186,13 +202,29 @@ function groupedCoverage(rows){
 
 export function auditProjectability({html,app,lens}){
   const eventsById=directRuntimeEvents(app);
-  const rows=scanInteractiveHTML(html).map(row=>({...row,...classify(row,lens,eventsById)}));
+  const sourceRows=scanInteractiveHTML(html);
+  const exportedRows=scanInteractiveHTML(lens.screens?.[0]?.view?.html??html);
+  if(sourceRows.length!==exportedRows.length){
+    throw new Error("projectability audit requires inert view to preserve interactive source ordering");
+  }
+  const scenarioRefs=admittedScenarioStructuralRefs(lens);
+  const rows=sourceRows.map((row,index)=>{
+    const exported=exportedRows[index];
+    const scenarioStructuralRef=exported.presentation?.hiddenAncestor?.structuralRef??null;
+    return {
+      ...row,
+      exportedPresentation:exported.presentation,
+      ...classify(row,lens,eventsById,{scenarioStructuralRef,scenarioRefs})
+    };
+  });
   const counts={};
   for(const row of rows)counts[row.status]=(counts[row.status]??0)+1;
   const blocking=rows.filter(row=>
     row.status==="SOURCE_RELATIONSHIP_UNMAPPED"||
     row.status==="VISIBLE_WIRED_UNIDENTIFIED"||
-    row.status==="VISIBLE_UNIDENTIFIED"
+    row.status==="VISIBLE_UNIDENTIFIED"||
+    row.status==="SCENARIO_WIRED_UNIDENTIFIED"||
+    row.status==="SCENARIO_UNIDENTIFIED"
   );
   return {
     schemaVersion:"vexstream.vexboard-projectability-audit/v1",
@@ -204,6 +236,7 @@ export function auditProjectability({html,app,lens}){
     total:rows.length,
     defaultVisible:rows.filter(row=>!row.hidden).length,
     latent:rows.filter(row=>row.hidden).length,
+    admittedScenarioStructuralRefs:[...scenarioRefs],
     counts,
     groupedCoverage:groupedCoverage(rows),
     blocking:blocking.map(row=>row.ordinal),

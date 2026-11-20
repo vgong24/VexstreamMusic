@@ -676,7 +676,7 @@ export function buildVexStreamVexBoardLens({html,css}){
             ],
             usedBy:[PLAYLIST_CARD_POPULATION_REF],
             slots:[
-              {path:"card",kind:"CARD",primitive:"article.playlist-card",instanceFormation:"playlistCardRef",instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistCardRef",localPath:"card"},depth:0},
+              {path:"card",kind:"CARD",primitive:"article.playlist-card",instanceFormation:"playlistCardRef",depth:0},
               {path:"actions.play",kind:"BUTTON",primitive:"button[data-playlist-action=play]",realizes:elementRef(PlayerCompositionIntent.PlayPlaylist),instanceFormation:'appendVexPresentationPath(playlistCardRef,"actions/play")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistCardRef",localPath:"actions/play"},depth:1},
               {path:"actions.shuffle",kind:"BUTTON",primitive:"button[data-playlist-action=shuffle]",realizes:elementRef(PlayerCompositionIntent.ShufflePlaylist),instanceFormation:'appendVexPresentationPath(playlistCardRef,"actions/shuffle")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistCardRef",localPath:"actions/shuffle"},depth:1},
               {path:"actions.open",kind:"BUTTON",primitive:"button[data-playlist-action=open]",instanceFormation:'appendVexPresentationPath(playlistCardRef,"actions/open")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistCardRef",localPath:"actions/open"},depth:1}
@@ -704,7 +704,7 @@ export function buildVexStreamVexBoardLens({html,css}){
             ],
             usedBy:[PLAYLIST_ENTRY_POPULATION_REF],
             slots:[
-              {path:"entry",kind:"ROW",primitive:"li.playlist-entry",instanceFormation:"playlistEntryRef",instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"entry"},depth:0},
+              {path:"entry",kind:"ROW",primitive:"li.playlist-entry",instanceFormation:"playlistEntryRef",depth:0},
               {path:"actions.play",kind:"BUTTON",primitive:"button[data-track-action=play]",instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/play")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/play"},depth:1},
               {path:"actions.add-queue",kind:"BUTTON",primitive:"button[data-track-action=append]",realizes:elementRef("vexstream.player.add-queue"),instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/add-queue")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/add-queue"},depth:1},
               {path:"actions.play-next",kind:"BUTTON",primitive:"button[data-track-action=play-next]",realizes:elementRef("vexstream.player.play-next"),instanceFormation:'appendVexPresentationPath(playlistEntryRef,"actions/play-next")',instanceIdentity:{kind:"DERIVED_CHILD",parentSource:"playlistEntryRef",localPath:"actions/play-next"},depth:1},

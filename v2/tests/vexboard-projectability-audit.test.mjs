@@ -61,3 +61,17 @@ test("explicit hidden owners distinguish Library terrain from nested Library sta
   assert.ok(audit.groupedCoverage["shell:library/hidden:#librarySelectionBar"]);
   assert.ok(audit.groupedCoverage["shell:library/hidden:#libraryGroupDetail"]);
 });
+
+
+test("admitted expressions promote scenario-visible unresolved controls into blockers",()=>{
+  const audit=auditProjectability(readCurrentAuditInputs());
+  const scenario=audit.rows.filter(row=>row.status==="SCENARIO_WIRED_UNIDENTIFIED"||row.status==="SCENARIO_UNIDENTIFIED");
+  assert.deepEqual(
+    scenario.filter(row=>row.status==="SCENARIO_WIRED_UNIDENTIFIED").map(row=>row.id).sort(),
+    ["librarySort","playAllSongs","selectSongs","songLayoutButton"].sort()
+  );
+  assert.equal(scenario.some(row=>row.presentation?.hiddenAncestor?.id==="librarySelectionBar"),false,
+    "nested Library selection bar remains latent until that presentation state is admitted");
+  assert.ok(audit.admittedScenarioStructuralRefs.includes("vexstream.desktop.library.panel.library"));
+  assert.ok(audit.blocking.length>=4);
+});
